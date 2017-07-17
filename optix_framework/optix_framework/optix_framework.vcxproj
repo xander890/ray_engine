@@ -46,7 +46,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(ProjectDir);$(SolutionDir);$(Optix_Dir)\include;$(CUDA_INC_PATH);$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>..\..\..\..\..\Desktop\rendering_folder_alt</OutDir>
+    <OutDir>../build</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
