@@ -1,0 +1,520 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="CUDA_files\normal_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\subsurface_scattering_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\triangle_mesh.cu">
+      <Filter>CUDA_files\Mesh</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\box.cu">
+      <Filter>CUDA_files\Mesh</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\obj_material.cu">
+      <Filter>CUDA_files\Mesh</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\sample_camera.cu">
+      <Filter>CUDA_files\Cameras</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\pinhole_camera.cu">
+      <Filter>CUDA_files\Cameras</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\tonemap_camera.cu">
+      <Filter>CUDA_files\Cameras</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\lambertian_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\sky_model_background.cu">
+      <Filter>CUDA_files\Miss Programs</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\constant_background.cu">
+      <Filter>CUDA_files\Miss Programs</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\environment_map_background.cu">
+      <Filter>CUDA_files\Miss Programs</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\glass_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\mirror_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\metal_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\constant_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\glossy_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\chull.cu">
+      <Filter>CUDA_files\Mesh</Filter>
+    </CudaCompile>
+    <CudaCompile Include="sphere.cu">
+      <Filter>CUDA_files\Mesh</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\triangle_mesh_gbuffer.cu">
+      <Filter>CUDA_files\Mesh</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\env_cameras.cu">
+      <Filter>CUDA_files\Cameras</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\dispersion_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\absorbing_glass.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="obj_scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scattering_material.cpp">
+      <Filter>Source Files\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="rendering_method.cpp">
+      <Filter>Source Files\Methods</Filter>
+    </ClCompile>
+    <ClCompile Include="simple_tracing.cpp">
+      <Filter>Source Files\Methods</Filter>
+    </ClCompile>
+    <ClCompile Include="material_library.cpp">
+      <Filter>Source Files\Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="ambient_occlusion.cpp">
+      <Filter>Source Files\Methods</Filter>
+    </ClCompile>
+    <ClCompile Include="path_tracing.cpp">
+      <Filter>Source Files\Methods</Filter>
+    </ClCompile>
+    <ClCompile Include="box.cpp">
+      <Filter>Source Files\Procedural</Filter>
+    </ClCompile>
+    <ClCompile Include="procedural_loader.cpp">
+      <Filter>Source Files\Procedural</Filter>
+    </ClCompile>
+    <ClCompile Include="plint.cpp">
+      <Filter>Source Files\Procedural</Filter>
+    </ClCompile>
+    <ClCompile Include="procedural_mesh.cpp">
+      <Filter>Source Files\Procedural</Filter>
+    </ClCompile>
+    <ClCompile Include="chull.cpp">
+      <Filter>Source Files\Procedural</Filter>
+    </ClCompile>
+    <ClCompile Include="sphere.cpp">
+      <Filter>Source Files\Procedural</Filter>
+    </ClCompile>
+    <ClCompile Include="aisceneloader.cpp" />
+    <ClCompile Include="parameter_parser.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="brdf_utils.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="obj_loader.cpp">
+      <Filter>Source Files\Loaders</Filter>
+    </ClCompile>
+    <ClCompile Include="sky_model.cpp">
+      <Filter>Source Files\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="folders.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="apple_juice.cpp">
+      <Filter>Source Files\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="logger.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="dialogs.cpp">
+      <Filter>Source Files\Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shader_factory.cpp">
+      <Filter>Source Files\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="shader.cpp">
+      <Filter>Source Files\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="presampled_surface_bssrdf.cpp">
+      <Filter>Source Files\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="glossy.cpp">
+      <Filter>Source Files\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="default_shader.cpp">
+      <Filter>Source Files\Shaders</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="obj_scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scattering_material.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="directional_dipole.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="optix_helpers.h">
+      <Filter>Header Files\Optix</Filter>
+    </ClInclude>
+    <ClInclude Include="intersection_refinement.h">
+      <Filter>Header Files\Optix</Filter>
+    </ClInclude>
+    <ClInclude Include="random.h">
+      <Filter>Header Files\Optix</Filter>
+    </ClInclude>
+    <ClInclude Include="area_light.h">
+      <Filter>Header Files\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="point_light.h">
+      <Filter>Header Files\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="directional_light.h">
+      <Filter>Header Files\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="rendering_method.h">
+      <Filter>Header Files\Methods</Filter>
+    </ClInclude>
+    <ClInclude Include="simple_tracing.h">
+      <Filter>Header Files\Methods</Filter>
+    </ClInclude>
+    <ClInclude Include="sky_model.h">
+      <Filter>Header Files\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="parameter_parser.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="optical_helper.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="folders.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sampling_helpers.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="color_helpers.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="material_library.h">
+      <Filter>Header Files\Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="ambient_occlusion.h">
+      <Filter>Header Files\Methods</Filter>
+    </ClInclude>
+    <ClInclude Include="path_tracing.h">
+      <Filter>Header Files\Methods</Filter>
+    </ClInclude>
+    <ClInclude Include="ray_trace_helpers.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="box.h">
+      <Filter>Header Files\Procedural</Filter>
+    </ClInclude>
+    <ClInclude Include="plint.h">
+      <Filter>Header Files\Procedural</Filter>
+    </ClInclude>
+    <ClInclude Include="procedural_mesh.h">
+      <Filter>Header Files\Procedural</Filter>
+    </ClInclude>
+    <ClInclude Include="chull.h">
+      <Filter>Header Files\Procedural</Filter>
+    </ClInclude>
+    <ClInclude Include="sphere.h">
+      <Filter>Header Files\Procedural</Filter>
+    </ClInclude>
+    <ClInclude Include="aisceneloader.h" />
+    <ClInclude Include="brdf_utils.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="improved_enum.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="distribution1d.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="CUDA_files\phong.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="structs.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="structs_device.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="math_helpers.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_loader.h">
+      <Filter>Header Files\Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="procedural_loader.h">
+      <Filter>Header Files\Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="parserstringhelpers.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="apple_juice.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="environment_map.h">
+      <Filter>Header Files\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="optix_common.h">
+      <Filter>Header Files\Optix</Filter>
+    </ClInclude>
+    <ClInclude Include="logger.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="dialogs.h">
+      <Filter>Header Files\Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="cgla_optix_type_converter.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="host_device_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="device_common_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="enums.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="merl_common.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="default_shader.h">
+      <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="glossy.h">
+      <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="presampled_surface_bssrdf.h">
+      <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="shader.h">
+      <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="shader_factory.h">
+      <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CUDA_files">
+      <UniqueIdentifier>{fdb98983-7cae-4b1b-b9b5-d522074711c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{e01dc3b3-ec4f-4caa-b243-f2348dee6b58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{8d9a0b34-8d37-4b13-b97f-1f6c85fc135c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA_files\Mesh">
+      <UniqueIdentifier>{729678eb-d7e0-4cf8-a65a-853f085f18a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Lights">
+      <UniqueIdentifier>{86dcfb8f-442a-4917-87b7-36b32deb23e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Optix">
+      <UniqueIdentifier>{e7b850f3-f301-453a-b7d5-ce0c1b46da08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Methods">
+      <UniqueIdentifier>{4d7cf019-4594-467d-98dd-a2ac56fd0079}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA_files\Cameras">
+      <UniqueIdentifier>{5e6c334f-0c4d-4285-9133-72016027ce3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Methods">
+      <UniqueIdentifier>{971f1609-3b66-4a81-bc35-3428474432e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{1aeed6de-5585-41f5-b749-d8d5f53aff06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA_files\Miss Programs">
+      <UniqueIdentifier>{14f73944-7fef-44c9-9375-6348ec8a4ef3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models">
+      <UniqueIdentifier>{4f260485-e4ba-44e1-952e-3946a35f7c6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utils">
+      <UniqueIdentifier>{bd227399-3f09-46ca-8e9d-414ec07a1d7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Wrappers">
+      <UniqueIdentifier>{dc59391f-88f9-4aa5-855f-d7780189cb89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Wrappers">
+      <UniqueIdentifier>{fa01da2b-92a5-46c5-a89b-1754de0a4bd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Materials">
+      <UniqueIdentifier>{d32ee363-10da-4d21-9f35-382c0752534b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Materials">
+      <UniqueIdentifier>{9a5da57f-9997-4f2c-b9d3-688db2d31d8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Procedural">
+      <UniqueIdentifier>{8be36179-7724-4a5c-8c68-dc149551277a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Procedural">
+      <UniqueIdentifier>{1787d055-10bf-48df-aba2-e18e5e1d5760}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utils">
+      <UniqueIdentifier>{be5c5a03-2528-496b-9753-f9bf4ab01ab1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Loaders">
+      <UniqueIdentifier>{97cb81ba-79fd-474a-beac-b6b85b89decb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Loaders">
+      <UniqueIdentifier>{f855bdc8-5cb7-4619-8330-d36db5cdf1fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Dialogs">
+      <UniqueIdentifier>{9a71ac01-87fb-4c74-a05e-9932e766ec35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Dialogs">
+      <UniqueIdentifier>{81c5bd26-2b98-478b-96c8-34f7fad32149}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Shaders">
+      <UniqueIdentifier>{15ee89fb-54f7-4391-b06d-bf42942c1f1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders">
+      <UniqueIdentifier>{cad6cfdc-9ade-43e9-942b-db83b8078577}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="models\bunny.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\candle_holder_vn.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\CornellBox.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\CornellLeftSphere.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\CornellRightSphere.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\justelephant.accelcache">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\justElephant.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\media.mpml">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\procedural_materials.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\alogen_light_cylinder.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\bunny_vn.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\wall.mtl">
+      <Filter>Models</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="models\bunny.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\candle_holder.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\candle_holder_vn.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\closed_bunny.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\closed_bunny_vn.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\CornellBlocks.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\CornellBox.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\CornellLeftSphere.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\CornellRightSphere.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\cow.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\cow_vn.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\dragon.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\dragon_normals.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\justElephant.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\table.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\CornellBox_vn.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\CornellBlocks_vn.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\alogen_light_cylinder.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\wall.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\bunny_vn.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\placeholder.obj">
+      <Filter>Models</Filter>
+    </Object>
+    <Object Include="models\table_checkerboard.obj">
+      <Filter>Models</Filter>
+    </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="config.xml">
+      <Filter>Configuration</Filter>
+    </Xml>
+  </ItemGroup>
+</Project>

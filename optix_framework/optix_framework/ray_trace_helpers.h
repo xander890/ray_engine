@@ -1,0 +1,63 @@
+#ifndef  RAY_TRACE_HELPERS
+#define RAY_TRACE_HELPERS
+#include "random.h"
+#include "sampling_helpers.h"
+#include "optical_helper.h"
+
+
+__inline__ __device__ float trace_shadow_ray(const optix::float3 & hit_pos, const optix::float3 & direction, float tmin, float tmax, optix::float3 & emission)
+{
+	PerRayData_shadow shadow_prd;
+	shadow_prd.attenuation = 1.0f;
+	shadow_prd.emission = optix::make_float3(0.0f);
+	optix::Ray shadow_ray = optix::make_Ray(hit_pos, direction, shadow_ray_type, tmin, tmax);
+	optix::Ray ray = shadow_ray;
+
+	rtTrace(top_object, shadow_ray, shadow_prd);
+	emission = shadow_prd.emission;
+	return shadow_prd.attenuation;
+}
+
+namespace optix
+{
+	__forceinline__ __device__ optix::float3 fpowf(const optix::float3 & p, const float ex)
+	{
+		return optix::make_float3(powf(p.x, ex), powf(p.y, ex), powf(p.z, ex));
+	}
+
+}
+__inline__ __device__ float trace_shadow_ray(const optix::float3 & hit_pos, const optix::float3 & direction, float tmin, float tmax)
+{
+	float3 emission;
+	return trace_shadow_ray(hit_pos, direction, tmin, tmax, emission);
+}
+
+
+
+__device__ __inline__ void get_glass_rays(const optix::float3& wo, const float ior, const float3& hit_pos, float3& normal, optix::Ray& reflected_ray, optix::Ray& refracted_ray, float& R, float& cos_theta_signed)
+{
+	// Compute Fresnel reflectance
+	cos_theta_signed = dot(normal, -wo);
+	float eta = cos_theta_signed < 0.0f ? 1.0f / ior : ior;
+	float recip_eta = 1.0f / eta;
+	normal = normal*copysignf(1.0f, cos_theta_signed);
+	float cos_theta = fabsf(cos_theta_signed);
+	float sin_theta_t_sqr = recip_eta*recip_eta*(1.0f - cos_theta*cos_theta);
+	float cos_theta_t = sqrtf(1.0f - sin_theta_t_sqr);
+	R = sin_theta_t_sqr < 1.0f ? fresnel_R(cos_theta, cos_theta_t, eta) : 1.0f;
+
+	float3 refr_dir = recip_eta*wo + normal*(recip_eta*cos_theta - cos_theta_t);
+	refracted_ray = optix::make_Ray(hit_pos, refr_dir, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
+
+	float3 reflected_dir = reflect(wo, normal);
+	reflected_ray = optix::make_Ray(hit_pos, reflected_dir, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
+}
+
+
+__device__ __inline__ void get_glass_rays(const optix::Ray& ray, const float ior, const float3& hit_pos, float3& normal, optix::Ray& reflected_ray, optix::Ray& refracted_ray, float& R, float& cos_theta_signed)
+{
+	get_glass_rays(ray.direction, ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta_signed);
+}
+
+
+#endif

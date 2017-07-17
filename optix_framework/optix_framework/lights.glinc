@@ -1,0 +1,18 @@
+#ifdef DIRECTIONAL
+layout (std140) uniform directional_light
+{
+  vec3 direction;
+  vec3 emission;
+  int casts_shadow; 
+};
+#endif
+
+#ifdef POINT
+layout (std140) uniform point_light
+{
+  vec3 light_position;
+  vec3 light_intensity;
+  int casts_shadow; 
+};
+#endif
+

@@ -1,0 +1,1 @@
+ArithSqMat3x3Float.cpp ArithSqMat4x4Float.cpp ArithVec2Float.cpp ArithVec3Float.cpp Mat3x3d.cpp Mat3x3f.cpp Mat4x4d.cpp Mat4x4f.cpp TableTrigonometry.cpp Vec2i.cpp Vec3f.cpp Vec3i.cpp eigensolution.cpp gel_rand.cpp statistics.cpp 

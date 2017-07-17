@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<ex:Optix_Framework_Parameters xmlns:ex="schemas.example.com/2008/">
+
+  <config>
+  <property comment="configure the ray tracer to try to use the MERL brdf database whenever possible." key="use_merl_brdf" value="true"/>
+  <property comment="Default miss program." key="default_miss_type" value="CONSTANT_BACKGROUND"/>
+  <property key="background_types" value=" CONSTANT_BACKGROUND ENVIRONMENT_MAP SKY_MODEL"/>
+  <property comment="Allocated stack size for context" key="stack_size" value="30000"/>
+  <property comment="Maximum recursion depth of the raytracer" key="max_depth" value="300"/>
+  <property comment="Rendering method" key="rendering_type" value="PATH_TRACING"/>
+  <property key="rendering_types" value=" RECURSIVE_RAY_TRACING AMBIENT_OCCLUSION PATH_TRACING"/>
+  <property comment="Maximum splits in russian roulette." key="max_splits_rr" value="0"/>
+  <property comment="Use splitting in path tracing." key="use_splitting" value="false"/>
+  <property comment="Monte carlo samples." key="N" value="1"/>
+  <property comment="Chrome correction enabled." key="enable_chrome_correction" value="true"/>
+  <property comment="Use absorption." key="use_absorption" value="true"/>
+  
+  </config>
+
+    <folders>
+  <property comment="The folder where to look for all the configuration files." key="config_folder" value="./config/"/>
+  <property comment="Folder with all the data necessary for rendering excluding configuration files. All model/file paths will be relative to this folder." key="data_folder" value="../data/"/>
+  <property comment="MPML File for material properties." key="mpml_file" value="/materials/media.mpml"/>
+  <property comment="Folder where to look for MERL database BRDFs." key="merl_folder" value="materials/"/>
+  <property comment="Text file that contains a list of the MERL data to load." key="merl_database" value="database.txt"/>
+  <property comment="Image folder for MTL files." key="texture_folder" value="images/"/>
+  <property comment="Shader folder." key="shader_folder" value="shaders/"/>
+  <property comment="Compiled cuda files folder. Visual studio needs to be also set in case to output the files to the right folder!" key="ptx_path" value="PTX_files"/>
+    </folders>
+
+      <light>
+  <property comment="Type of the default light" key="default_light_type" value="DIRECTIONAL_LIGHT"/>
+  <property key="light_types" value=" DIRECTIONAL_LIGHT POINT_LIGHT SKY_LIGHT AREA_LIGHT"/>
+  <property comment="Direction of the default directional light" key="default_directional_light_direction" value="0.000000 -1.00000 0.000000"/>
+  <property comment="Intensity of the default directional light" key="default_directional_light_intensity" value="4 4 4"/>
+  <property comment="Position of the default point light." key="default_point_light_position" value="125.00000 90.00000 -40.0000"/>
+  <property comment="Intensity of the default point light." key="default_point_light_intensity" value="20000.000 20000.000 20000.000"/>
+  <property comment="The ambient light color" key="ambient_light_color" value="0.25 0.25 0.25"/>
+  <property comment="Environment map multiplier" key="lightmap_multiplier" value="1.0000000000 1.0000000000 1.0000000000"/>
+  <property comment="Environment map file" key="environment_map" value="probe.raw"/>
+  <property comment="Environment map rotation" key="envmap_deltas" value="0.0000000000 0.0000000000 0.0000000000"/>
+  <property comment="Environment map rotation" key="lightmap_rotation_matrix" value="0.0000000000 -1.0000000000 0.0000000000 0.0000000000 0.0000000000 -1.0000000000 1.0000000000 0.0000000000 0.0000000000"/>
+  <property comment="Use shadows in rendering." key="shadows" value="1"/>
+  </light>
+
+    <camera>
+  <property comment="Use a automatic placed camera or use the current data." key="use_auto_camera" value="true"/>
+  <property comment="The camera FOVs (h|v)" key="camera_fov" value="42.2001004137 34.3290716095"/>
+  <property comment="The camera initial position" key="camera_position" value="0.061138 2.59121 -3.63106"/>
+  <property comment="Type of the camera." key="camera_definition_type" value="EYE_LOOKAT_UP_VECTORS"/>
+  <property key="light_types" value=" INVERSE_CAMERA_MATRIX EYE_LOOKAT_UP_VECTORS"/>
+  <property comment="The camera inverse calibration matrix K^-1 * R^-1" key="inv_camera_matrix" value="0.3761038637 0.0570914410 0.1258195312 0.0578536310 -0.2958081234 0.2457522696 -0.0639815863 0.0681248745 0.9611322977"/>
+  <property comment="The camera lookat point" key="camera_lookat_point" value="-2.89084 0.949608 1.44402 "/>
+  <property comment="The camera initial up" key="camera_up" value="0 1 0"/>
+  <property comment="The width of the window" key="window_width" value="1024"/>
+  <property comment="The height of the window" key="window_height" value="1024"/>
+  <property comment="Downsampling" key="camera_downsampling" value="1"/>
+  </camera>
+  
+   <sky>
+      <property comment="Default day for the sun model." key="day" value="12"/>
+    <property comment="Default hour of the day for the sun model." key="hour" value="20"/>
+    <property comment="Default latitude (deg) for the sun model." key="latitude" value="45.000000"/>
+    <property comment="Default turbidity of the sky." key="turbidity" value="2.000000"/>
+    </sky>
+    
+    <glossy>
+      <property comment="Multiplication factor for MERL materials. Premultiplied on sampling the brdf." key="merl_multiplier" value="1.0000000000 0.9945030400 0.9727792400"/>
+    </glossy>
+</ex:Optix_Framework_Parameters>
