@@ -64,7 +64,7 @@ void evaluate_point_light(const float3 & hit_point, const float3 & hit_normal, f
 }
 
 __forceinline__ __device__
-int area_light_size() { return 1; } // This means that we will randomly sample from triangle lights instead of going though all of them.
+int area_light_size() { return area_lights.size() > 0? 1 : 0; } // This means that we will randomly sample from triangle lights instead of going though all of them.
 
 __device__ __inline__ void evaluate_area_light_inline(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index, float tmin = scene_epsilon)
 {
@@ -152,10 +152,10 @@ __device__ __inline__ void evaluate_direct_light(const float3& hit_point, const 
     switch (light_type)
     {
     case LIGHT_TYPE_POINT: evaluate_point_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index); break;
-    case LIGHT_TYPE_AREA: evaluate_area_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index);  break;
+    case LIGHT_TYPE_AREA:  evaluate_area_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index);  break;
     default:
     case LIGHT_TYPE_SKY:
-    case LIGHT_TYPE_DIR: evaluate_directional_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index); break;
+    case LIGHT_TYPE_DIR:   evaluate_directional_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index); break;
     }
 }
 

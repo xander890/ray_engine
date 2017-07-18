@@ -6,8 +6,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <climits>
-#include <optix_world.h>
 #include <sutil.h>
 #include "obj_loader.h"
 #include "directional_light.h"
@@ -20,22 +18,11 @@
 #include "material_library.h"
 #include "ambient_occlusion.h"
 #include "path_tracing.h"
-#include "merl_common.h"
 #include "logger.h"
 #include "procedural_loader.h"
 #include "sphere.h"
-#include "plint.h"
-#include "box.h"
 #include "dialogs.h"
 
-#include "cgla_optix_type_converter.h"
-
-
-#ifdef NEW_SCENE
-#include "aisceneloader.h"
-#endif
-
-#include "brdf_utils.h"
 #include <sutil/ImageLoader.h>
 #include "presampled_surface_bssrdf.h"
 #include "apple_juice.h"
@@ -239,8 +226,6 @@ void ObjScene::initUI()
 	gui->addFloatVariableCallBack("Delta Y", setDeltaY, getDeltaY, this, env_map_correction_group, -180.0, 180.0f, .010f);
 	gui->addFloatVariableCallBack("Delta Z", setDeltaZ, getDeltaZ, this, env_map_correction_group, -180.0, 180.0f, .010f);
 
-	gui->addCheckBox("MERL   correction", reinterpret_cast<bool*>(&enable_merl_correction), "Settings");
-
 	gui->addButton("Reset Camera", resetCameraCallback, this, "Settings");
 	gui->addButton("Save RAW File", saveRawCallback, this, "Settings");
 
@@ -321,12 +306,6 @@ void ObjScene::initScene(InitialCameraData& camera_data)
 		rendering_rectangle.z << " " <<
 		rendering_rectangle.w << " Camera: " << camera_width << " " << camera_height << endl; 
 
-	bool use_merl_brdf = ParameterParser::get_parameter<bool>("config", "use_merl_brdf", false, "configure the ray tracer to try to use the MERL brdf database whenever possible.");
-
-	if (use_merl_brdf)
-		initializeMERLBRDFs();
-
-
 	default_miss = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
 
 
@@ -399,7 +378,6 @@ void ObjScene::initScene(InitialCameraData& camera_data)
 
     execute_on_scene_elements([=](Mesh & m)
     {
-        addMERLBRDFtoGeometry(m, use_merl_brdf);
         m.load_shader(m, t);
     });
 
@@ -588,10 +566,6 @@ void ObjScene::trace(const RayGenCameraData& camera_data, bool& display)
 	context["show_difference_image"]->setInt(show_difference_image);
 	context["comparison_texture"]->setInt(comparison_image->getId());
 
-	if (enable_merl_correction == 1)
-		context["merl_brdf_multiplier"]->setFloat(merl_correction);
-	else
-		context["merl_brdf_multiplier"]->setFloat(make_float3(1));
 	//Logger::debug({ "Merl correction factor: ", to_string(merl_correction.x), " ", to_string(merl_correction.y), " ", to_string(merl_correction.z) });
 
 	context["eye"]->setFloat(camera_data.eye);
@@ -929,61 +903,6 @@ void ObjScene::set_rendering_method(RenderingMethodType::EnumType t)
 	}
     method->init();
 }
-
-
-void ObjScene::initializeMERLBRDFs()
-{
-	read_all_brdfs(merl_brdf_database);
-	std::stringstream ss;
-	ss << "Found the following MERL brdfs: ";
-	for (auto& c : merl_brdf_database)
-	{
-		ss << c.first << " " << integrate_brdf(*c.second, 100000) << endl;
-	}
-	Logger::info << ss.str() << endl;
-	merl_correction = ParameterParser::get_parameter<float3>("glossy", "merl_multiplier", make_float3(1.0f), "Multiplication factor for MERL materials. Premultiplied on sampling the brdf.");
-	Logger::debug << "Merl correction factor: " << to_string(merl_correction.x) << " " << to_string(merl_correction.y) << " " << to_string(merl_correction.z)  <<endl;
-}
-
-void ObjScene::addMERLBRDFtoGeometry(Mesh& m, bool merlenabled)
-{
-    GeometryInstance instance = m.mGeometryInstance;
-    string n = m.mMaterialData.name;
-
-	if (merlenabled && merl_brdf_database.count(n) != 0)
-	{
-		Logger::info <<"Loading MERL data..." << endl;
-		vector<float>* brdf = merl_brdf_database[n];
-		Buffer buff = context->createBuffer(RT_BUFFER_INPUT);
-		buff->setFormat(RT_FORMAT_FLOAT);
-		buff->setSize(brdf->size());
-		void* b = buff->map();
-		memcpy(b, brdf->data(), brdf->size() * sizeof(float));
-		buff->unmap();
-		instance["has_merl_brdf"]->setUint(1);
-		instance["merl_brdf_buffer"]->setBuffer(buff);
-
-		float3 reflectance = integrate_brdf(*brdf, 100000);
-
-		// Replacing default
-		instance["diffuse_map"]->setTextureSampler(loadTexture(m_context, "", reflectance));
-		instance["merl_brdf_buffer"]->setBuffer(buff);
-
-		Logger::info <<"Scene uses material " << n << " << with integrated reflectance " << to_string(reflectance.x) << " " << to_string(reflectance.y) << " "  << to_string(reflectance.z)<< endl;
-	}
-	else
-	{
-		float e = 0.0f;
-		Buffer buff = context->createBuffer(RT_BUFFER_INPUT);
-		buff->setFormat(RT_FORMAT_FLOAT);
-		buff->setSize(1);
-		memcpy(buff->map(), &e, sizeof(float));
-		buff->unmap();
-		instance["has_merl_brdf"]->setUint(0);
-		instance["merl_brdf_buffer"]->setBuffer(buff);
-	}
-}
-
 
 
 void ObjScene::setDebugEnabled(bool var)

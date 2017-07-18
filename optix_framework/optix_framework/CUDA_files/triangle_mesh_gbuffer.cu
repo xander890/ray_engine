@@ -20,7 +20,7 @@
  */
 
 
-
+#include <device_common_data.h>
 #include <optixu/optixu_math_namespace.h>
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixu_aabb_namespace.h>
@@ -48,7 +48,6 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 rtDeclareVariable(PerRayData_cache, prd_cache, rtPayload, );
 
-rtDeclareVariable(uint, dummy_ray_type, , );
 rtDeclareVariable(int, window_width, , );
 rtDeclareVariable(int, window_height, , );
 rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );

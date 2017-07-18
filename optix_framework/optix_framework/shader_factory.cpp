@@ -105,7 +105,6 @@ void ShaderFactory::init(optix::Context& ctx)
 Shader* ShaderFactory::get_shader(int illum, RenderingMethodType::EnumType method)
 {
     std::string shader;
-    Logger::error << illum << std::endl;
     if (mShaderMap.count(illum) != 0)
     {
         mShaderMap[illum]->method = method;

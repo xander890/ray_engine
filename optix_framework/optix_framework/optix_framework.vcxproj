@@ -46,7 +46,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(ProjectDir);$(SolutionDir);$(Optix_Dir)\include;$(CUDA_INC_PATH);$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>../build</OutDir>
+    <OutDir>..\build\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -69,6 +69,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>..\lib64\$(Configuration)\nfd.lib;..\lib64\AntTweakBar64.lib;..\lib64\assimp.lib;..\lib64\xerces-c_3.lib;..\lib64\$(Configuration)\GEL.lib;..\lib64\$(Configuration)\optprops.lib;$(Optix_Dir)\SDK\support\freeglut\win64\Release\freeglut.lib;$(Optix_Dir)\lib64\optix.1.lib;$(Optix_Dir)\lib64\optixu.1.lib;..\lib64\glew32.lib;..\lib64\$(Configuration)\sutil.lib;..\lib64\$(Configuration)\rasterizer.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <ShowProgress>LinkVerbose</ShowProgress>
     </Link>
     <PostBuildEvent>
       <Command>echo Copying OptiX, freeglut and CUDA DLLs to output folder..
@@ -491,6 +492,9 @@ echo Done.</Command>
       </CodeGeneration>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\volume_shader.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="sphere.cu">
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

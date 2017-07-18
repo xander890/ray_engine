@@ -120,27 +120,23 @@ RT_PROGRAM void shade()
 	//optix_print("%f", k_a.x);
 	float3 view = normalize(W);
 	uint s = prd_radiance.seed;
-	for (int i = 0; i < light_size(); ++i)
+	for (uint i = 0; i < light_size(); ++i)
 	{
 		// Diffuse
-		
-		HitInfo data(hit_pos, normal);
-		for (unsigned int i = 0; i < light_size(); i++)
+		float3 direct = make_float3(0);
+		int M = 20;
+		for (int j = 0; j < M; j++)
 		{
-			float3 direct = make_float3(0);
-			int M = 20;
-			for (int j = 0; j < M; j++)
-			{
-				float3 light_vector;
-				float3 light_radiance;
-				int cast_shadows;
-				s = lcg(s);
-				evaluate_direct_light(data.hit_point, data.hit_normal, light_vector, light_radiance, cast_shadows, s, i);
-				float attenuation = 1.0f;
-				direct += shade_specular(hit_pos, ffnormal, light_vector, light_radiance, view);
-			}
-			color += direct / static_cast<float>(M);
+			float3 light_vector;
+			float3 light_radiance;
+			int cast_shadows;
+			s = lcg(s);
+			evaluate_direct_light(hit_pos, normal, light_vector, light_radiance, cast_shadows, s, i);
+			float attenuation = 1.0f;
+			direct += shade_specular(hit_pos, ffnormal, light_vector, light_radiance, view);
 		}
+		color += direct / static_cast<float>(M);
+		
 	}
 	prd_radiance.result = color;
 	prd_radiance.seed = s;
@@ -168,7 +164,7 @@ RT_PROGRAM void shade_path_tracing()
 			for (int j = 0; j < N; j++)
 			{
 				float3 wi, L; int sh;
-				evaluate_direct_light(hit_pos, data.hit_normal, wi, L, sh, t, i);
+				evaluate_direct_light(hit_pos, normal, wi, L, sh, t, i);
 				direct += L;
 			}
 		}

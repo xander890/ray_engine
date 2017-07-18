@@ -24,6 +24,9 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Dd]ata/
+[Bb]uild/
+
+*.cu.ptx
 
 # Visual Studio 2015 cache/options directory
 .vs/

@@ -40,32 +40,49 @@ void convert_array_type(int size, std::vector<T>& new_array, S*& old_array)
 	delete[] old_array;
 }
 
+void get_merl_brdf_list(const char* merl_database, std::vector<std::string>& brdfs)
+{
+    ifstream ifs(merl_database);
+    if (!ifs.is_open())
+    {
+        cout << "Could not find MERL file database." << endl;
+    }
+    std::string line;
+    brdfs.clear();
+    while (std::getline(ifs, line))
+    {
+        brdfs.push_back(line);
+    }
+    ifs.close();
+}
+
+void read_brdf_f(const std::string& merl_folder, const std::string& name, vector<float> & brdf_f)
+{
+    double * brdf_d;
+    int size;
+    string file = merl_folder + name;
+    if (read_brdf(file.c_str(), size, brdf_d))
+    {
+        convert_array_type(size, brdf_f, brdf_d);
+        auto c = file.find_last_of(".");
+        file.erase(c);
+        Logger::info << "Max: " << to_string(*std::max_element(brdf_f.begin(), brdf_f.end())) << endl;
+    }
+}
+
+
 void read_all_brdfs(const char * merl_folder, const char * merl_database, std::map<std::string, vector<float>*>& brdfs)
 {
-	ifstream ifs(merl_database);
-	if (!ifs.is_open())
-	{
-		cout << "Could not find MERL file database." << endl; 
-	}
-	std::string line;
+    std::vector<std::string> brdf_names;
+    get_merl_brdf_list(merl_database, brdf_names);
 
-	while (std::getline(ifs, line))
+    for (auto name : brdf_names)
 	{
-		string file = (std::string(merl_folder) + line);
-
-		double * brdf;
-		int size;
-		if(read_brdf(file.c_str(),size, brdf))
-		{
-			vector<float> * brdf_f = new vector<float>();
-			convert_array_type(size, *brdf_f, brdf);
-			auto c = line.find_last_of(".");
-			line.erase(c);
-			brdfs[line] = brdf_f;
-			Logger::info << "Max: "  << to_string(*std::max_element(brdf_f->begin(), brdf_f->end())) << endl;
-		}
+        string file = (std::string(merl_folder) + name);
+        vector<float> * brdf_f = new vector<float>();
+        read_brdf_f(merl_folder, name, *brdf_f);
+        brdfs[name] = brdf_f;
 	}
-	ifs.close();
 }
 
 

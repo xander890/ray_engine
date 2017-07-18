@@ -124,8 +124,6 @@ private:
 	bool mAutoMode = false;
 	string mOutputFile = "rendering.raw";
 	int mFrames = -1;
-	int enable_merl_correction = 1;
-	::optix::float3 merl_correction;
 	unsigned int camera_downsampling = 1;
 	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, unsigned width, unsigned height);
 
@@ -161,9 +159,6 @@ private:
 	int render_width() { return rendering_rectangle.z; }
 	int render_height() { return rendering_rectangle.w; }
 
-	void initializeMERLBRDFs();
-	void addMERLBRDFtoGeometry(Mesh& instance, bool merlenabled);
-	std::map<std::string, std::vector<float>*> merl_brdf_database;
 	GUI* gui = nullptr;
 	float3 lightmap_multiplier = make_float3(1.0f);
 	void add_result_image(const string& image_file);

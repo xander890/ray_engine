@@ -38,3 +38,5 @@
 SUTILAPI optix::TextureSampler loadTexture( optix::Context context,
                                             const std::string& filename,
                                             const optix::float3& default_color );
+
+SUTILAPI optix::TextureSampler createOneElementSampler(optix::Context context, const optix::float3& default_color);

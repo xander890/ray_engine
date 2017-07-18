@@ -33,6 +33,37 @@
 //
 //-----------------------------------------------------------------------------
 
+SUTILAPI optix::TextureSampler createOneElementSampler(optix::Context context, const optix::float3& default_color)
+{
+    optix::TextureSampler sampler = context->createTextureSampler();
+    sampler->setWrapMode(0, RT_WRAP_REPEAT);
+    sampler->setWrapMode(1, RT_WRAP_REPEAT);
+    sampler->setWrapMode(2, RT_WRAP_REPEAT);
+    sampler->setIndexingMode(RT_TEXTURE_INDEX_NORMALIZED_COORDINATES);
+    sampler->setReadMode(RT_TEXTURE_READ_ELEMENT_TYPE);
+    sampler->setMaxAnisotropy(1.0f);
+    sampler->setMipLevelCount(1u);
+    sampler->setArraySize(1u);
+
+    // Create buffer with single texel set to default_color
+    optix::Buffer buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT4, 1u, 1u);
+    float* buffer_data = static_cast<float*>(buffer->map());
+    buffer_data[0] = default_color.x;
+    buffer_data[1] = default_color.y;
+    buffer_data[2] = default_color.z;
+    buffer_data[3] = 1.0f;
+    buffer->unmap();
+
+    sampler->setBuffer(0u, 0u, buffer);
+    // Although it would be possible to use nearest filtering here, we chose linear
+    // to be consistent with the textures that have been loaded from a file. This
+    // allows OptiX to perform some optimizations.
+
+    sampler->setFilteringModes(RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE);
+
+    return sampler;
+}
+
 SUTILAPI optix::TextureSampler loadTexture( optix::Context context,
                                             const std::string& filename,
                                             const optix::float3& default_color )
@@ -63,33 +94,7 @@ SUTILAPI optix::TextureSampler loadTexture( optix::Context context,
   }
   else
   {
-	optix::TextureSampler sampler = context->createTextureSampler();
-	sampler->setWrapMode(0, RT_WRAP_REPEAT);
-	sampler->setWrapMode(1, RT_WRAP_REPEAT);
-	sampler->setWrapMode(2, RT_WRAP_REPEAT);
-	sampler->setIndexingMode(RT_TEXTURE_INDEX_NORMALIZED_COORDINATES);
-	sampler->setReadMode(RT_TEXTURE_READ_ELEMENT_TYPE);
-	sampler->setMaxAnisotropy(1.0f);
-	sampler->setMipLevelCount(1u);
-	sampler->setArraySize(1u);
-
-	// Create buffer with single texel set to default_color
-	optix::Buffer buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT4, 1u, 1u);
-	float* buffer_data = static_cast<float*>(buffer->map());
-	buffer_data[0] = default_color.x;
-	buffer_data[1] = default_color.y;
-	buffer_data[2] = default_color.z;
-	buffer_data[3] = 1.0f;
-	buffer->unmap();
-
-	sampler->setBuffer(0u, 0u, buffer);
-	// Although it would be possible to use nearest filtering here, we chose linear
-	// to be consistent with the textures that have been loaded from a file. This
-	// allows OptiX to perform some optimizations.
-
-	sampler->setFilteringModes(RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE);
-
-	return sampler;
+      return createOneElementSampler(context, default_color);
   }
     
 }
