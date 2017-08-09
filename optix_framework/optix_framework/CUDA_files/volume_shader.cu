@@ -5,6 +5,7 @@
 #include <environment_map.h>
 #include "structs.h"
 #include "scattering_properties.h"
+#include "light.h"
 
 using namespace optix;
 
@@ -18,6 +19,7 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 
 // Material properties
 rtDeclareVariable(ScatteringMaterialProperties, scattering_properties, , );
+rtDeclareVariable(unsigned int, N, , );
 rtDeclareVariable(float3, glass_abs, , );
 
 
@@ -202,10 +204,23 @@ RT_PROGRAM void shade()
     }
     else
     {
+        float3 direct = make_float3(0.0f);
+        for (unsigned int i = 0; i < light_size(); i++)
+        {
+            for (int j = 0; j < N; j++)
+            {
+                float3 wi, L; int sh;
+                evaluate_direct_light(hit_pos, normal, wi, L, sh, t, i);
+                direct += L;
+            }
+        }
+        direct /= static_cast<float>(N);
+
         // Trace outside, i.e., refract from inside or reflect from outside
         float3 dir_outside = inside ? refracted_dir : reflected_dir;
         Ray ray_outside(hit_pos, dir_outside, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
         rtTrace(top_object, ray_outside, prd_radiance);
-        prd_radiance.result *= beam_T;
+        prd_radiance.result = beam_T * (prd_radiance.result + direct);
+
     }
 }
