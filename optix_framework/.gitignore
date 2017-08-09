@@ -26,7 +26,7 @@ bld/
 [Dd]ata/
 [Bb]uild/
 
-*.cu.ptx
+optix_framework/PTX_files/
 
 # Visual Studio 2015 cache/options directory
 .vs/
