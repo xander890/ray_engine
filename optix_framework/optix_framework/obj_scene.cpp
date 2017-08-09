@@ -34,6 +34,7 @@
 #include "CGLA/Mat3x3f.h"
 #include "aisceneloader.h"
 #include "shader_factory.h"
+#include "scattering_material.h"
 
 using namespace std;
 using namespace optix;
@@ -233,7 +234,7 @@ void ObjScene::initUI()
 
     execute_on_scene_elements([=](Mesh & m)
     {
-        if (m.mMaterialData.illum == 17)
+        if (m.mMaterialData.illum == 17 || m.mMaterialData.illum == 12)
         {
             m.mMaterialData.scattering_material->set_into_gui(gui);
         }
@@ -262,13 +263,13 @@ void ObjScene::initUI()
 	//gui->addButton("End Simulation", endSimulationCallback, this, simulation_group);
 
 	const char * limit_rendering_group = "Rendering Bounds";
-	gui->addIntVariable("X", &render_bounds.x, limit_rendering_group, 0, camera_width);
-	gui->addIntVariable("Y", &render_bounds.y, limit_rendering_group, 0, camera_height);
-	gui->addIntVariable("W", &render_bounds.z, limit_rendering_group, 0, camera_width);
-	gui->addIntVariable("H", &render_bounds.w, limit_rendering_group, 0, camera_height);
+	gui->addIntVariable("X", (int*)&camera->data.render_bounds.x, limit_rendering_group, 0, camera->data.camera_size.x);
+	gui->addIntVariable("Y", (int*)&camera->data.render_bounds.y, limit_rendering_group, 0, camera->data.camera_size.y);
+	gui->addIntVariable("W", (int*)&camera->data.render_bounds.z, limit_rendering_group, 0, camera->data.camera_size.x);
+	gui->addIntVariable("H", (int*)&camera->data.render_bounds.w, limit_rendering_group, 0, camera->data.camera_size.y);
 }
 
-void ObjScene::initScene(InitialCameraData& camera_data)
+void ObjScene::initScene(InitialCameraData& init_camera_data)
 {
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(200);
@@ -291,20 +292,17 @@ void ObjScene::initScene(InitialCameraData& camera_data)
 
 	float3 ambient_light_color_p = ParameterParser::get_parameter<float3>("light", "ambient_light_color", make_float3(0.0f), "The ambient light color");
 
-	camera_width = ParameterParser::get_parameter<int>("camera","window_width", 512, "The width of the window");
-	camera_height = ParameterParser::get_parameter<int>("camera", "window_height", 512, "The height of the window");
-	camera_downsampling = static_cast<unsigned int>(ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, ""));
-	if (std::any_of(&rendering_rectangle.x, &rendering_rectangle.w, [](int & v){ return v == -1; }))
-	{
-		rendering_rectangle = make_int4(0, 0, camera_width, camera_height);
-	}
+	int camera_width = ParameterParser::get_parameter<int>("camera","window_width", 512, "The width of the window");
+	int camera_height = ParameterParser::get_parameter<int>("camera", "window_height", 512, "The height of the window");
+	int downsampling = ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, "");
 
-	rendering_rectangle.z /= camera_downsampling;
-	rendering_rectangle.w /= camera_downsampling;
+	camera = new Camera(camera_width, camera_height, downsampling, custom_rr);
 
-	Logger::info << "Rendering rectangle: " << rendering_rectangle.x << " " << rendering_rectangle.y << " " <<
-		rendering_rectangle.z << " " <<
-		rendering_rectangle.w << " Camera: " << camera_width << " " << camera_height << endl; 
+
+
+	Logger::info << "Rendering rectangle: " << camera->data.rendering_rectangle.x << " " << camera->data.rendering_rectangle.y << " " <<
+		camera->data.rendering_rectangle.z << " " <<
+		camera->data.rendering_rectangle.w << " Camera: " << camera_width << " " << camera_height << endl;
 
 	default_miss = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
 
@@ -319,7 +317,7 @@ void ObjScene::initScene(InitialCameraData& camera_data)
 	context["dummy_ray_type"]->setUint(RAY_TYPE_DUMMY);
 
 	context["max_depth"]->setInt(ParameterParser::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
-	context[OUTPUT_BUFFER]->set(createPBOOutputBuffer(OUTPUT_BUFFER, RT_FORMAT_FLOAT4, render_width(), render_height()));
+	context[OUTPUT_BUFFER]->set(createPBOOutputBuffer(OUTPUT_BUFFER, RT_FORMAT_FLOAT4, camera->get_width(), camera->get_height()));
 
 	// Constant colors
 	context["bad_color"]->setFloat(0.0f, 1.0f, 0.0f);
@@ -329,7 +327,7 @@ void ObjScene::initScene(InitialCameraData& camera_data)
 	Logger::debug << "Absorption is " << (use_abs ? "ON" : "OFF") << endl;
 
 	// Tone mapping pass
-	context["tonemap_output_buffer"]->set(createPBOOutputBuffer("tonemap_output_buffer", RT_FORMAT_FLOAT4, render_width(), render_height()));
+	context["tonemap_output_buffer"]->set(createPBOOutputBuffer("tonemap_output_buffer", RT_FORMAT_FLOAT4, camera->get_width(), camera->get_height()));
 
 	// Create group for scene objects and add acceleration structure
 	scene = context->createGroup();
@@ -505,7 +503,7 @@ void ObjScene::initScene(InitialCameraData& camera_data)
 	Logger::info <<"Loading camera parameters..."<<endl;
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	
-	load_camera(camera_data);
+	load_camera(init_camera_data);
 
 	// Set ray tracing epsilon for intersection tests
 	float scene_epsilon = 1.e-4f * max_dim;
@@ -529,7 +527,7 @@ void ObjScene::initScene(InitialCameraData& camera_data)
 	}
 
 	if (gui == nullptr)
-		gui = new GUI("GUI", render_width(), render_height());
+		gui = new GUI("GUI", camera->get_width(), camera->get_height());
 
 	if (mAutoMode)
 	{
@@ -537,12 +535,6 @@ void ObjScene::initScene(InitialCameraData& camera_data)
 		GLUTDisplay::setContinuousMode(GLUTDisplay::CDBenchmark);
 	}
 	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
-
-	render_bounds.x = 0;
-	render_bounds.y = 0;
-	render_bounds.z = render_width();
-	render_bounds.w = render_height();
-	context["render_bounds"]->setInt(render_bounds);
 
 	initUI();
 	context["show_difference_image"]->setInt(show_difference_image);
@@ -559,19 +551,16 @@ Matrix3x3 get_offset_lightmap_rotation_matrix(float delta_x, float delta_y, floa
 	return optix_matrix;
 }
 
-void ObjScene::trace(const RayGenCameraData& camera_data, bool& display)
+void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 {
-	context["render_bounds"]->setInt(render_bounds);
 	context["comparison_image_weight"]->setFloat(comparison_image_weight);
 	context["show_difference_image"]->setInt(show_difference_image);
 	context["comparison_texture"]->setInt(comparison_image->getId());
 
 	//Logger::debug({ "Merl correction factor: ", to_string(merl_correction.x), " ", to_string(merl_correction.y), " ", to_string(merl_correction.z) });
 
-	context["eye"]->setFloat(camera_data.eye);
-	context["U"]->setFloat(camera_data.U);
-	context["V"]->setFloat(camera_data.V);
-	context["W"]->setFloat(camera_data.W);
+	camera->update_camera(s_camera_data);
+	camera->set_into_gpu(context);
 	context["lightmap_multiplier"]->setFloat(lightmap_multiplier);
 	context["tonemap_multiplier"]->setFloat(tonemap_multiplier);
 	context["tonemap_exponent"]->setFloat(tonemap_exponent);
@@ -579,7 +568,6 @@ void ObjScene::trace(const RayGenCameraData& camera_data, bool& display)
 
 	Matrix3x3 l = get_offset_lightmap_rotation_matrix(envmap_deltas.x, envmap_deltas.y, envmap_deltas.z, rotation_matrix_envmap);
 	context["lightmap_rotation_matrix"]->setMatrix3x3fv(false, l.getData());
-	m_current_camera_data = camera_data;
 
 	if (m_camera_changed)
 	{
@@ -606,19 +594,17 @@ void ObjScene::trace(const RayGenCameraData& camera_data, bool& display)
 	Buffer buffer = context[OUTPUT_BUFFER]->getBuffer();
 	RTsize buffer_width, buffer_height;
 	buffer->getSize(buffer_width, buffer_height);
-	context["window_width"]->setInt(render_width());
-	context["window_height"]->setInt(render_height());
-	context["rendering_rectangle"]->setUint(static_cast<unsigned int>(rendering_rectangle.x), static_cast<unsigned int>(rendering_rectangle.y), static_cast<unsigned int>(rendering_rectangle.z), static_cast<unsigned int>(rendering_rectangle.w));
-	context["camera_size"]->setUint(camera_width, camera_height);
-	context["downsampling"]->setUint(camera_downsampling);
-	context->launch(as_integer(CameraType::STANDARD_RT), static_cast<unsigned int>(buffer_width), static_cast<unsigned int>(buffer_height));
+
+	unsigned int width = camera->get_width();
+	unsigned int height = camera->get_height();
+	context->launch(as_integer(CameraType::STANDARD_RT), width, height);
 
 	double time1;
 	sutilCurrentTime(&time1);
 	// cout << "Elapsed (ray tracing): " << (time1 - time) * 1000 << endl;
 	// Apply tone mapping
 	if (use_tonemap)
-		context->launch(as_integer(CameraType::TONE_MAPPING), static_cast<unsigned int>(buffer_width), static_cast<unsigned int>(buffer_height));
+		context->launch(as_integer(CameraType::TONE_MAPPING), width, height);
 
 
 	collect_image(m_frame);
@@ -765,12 +751,12 @@ bool ObjScene::export_raw(string& raw_path)
 		Logger::error <<  "Unable to open file " << txt_file << endl;
 		return false;
 	}
-	ofs_data << m_frame << endl << render_width() << " " << render_height() << endl;
+	ofs_data << m_frame << endl << camera->get_width() << " " << camera->get_height() << endl;
 	ofs_data << 1.0 << " " << 1.0f << " " << 1.0f;
 	ofs_data.close();
 
 	Buffer out = getOutputBuffer();
-	int size_buffer = render_width() * render_height() * 4;
+	int size_buffer = camera->get_width() * camera->get_height() * 4;
 	float* mapped = new float[size_buffer];
 	memcpy(mapped, out->map(), size_buffer * sizeof(float));
 	out->unmap();
@@ -782,7 +768,7 @@ bool ObjScene::export_raw(string& raw_path)
 		return false;
 	}
 
-	int size_image = render_width() * render_height() * 3;
+	int size_image = camera->get_width() * camera->get_height() * 3;
 	float* converted = new float[size_image];
 	float average = 0.0f;
 	for (int i = 0; i < size_image / 3; ++i)
@@ -808,7 +794,7 @@ bool ObjScene::export_raw(string& raw_path)
 
 void ObjScene::doResize(unsigned int width, unsigned int height)
 {
-	glutReshapeWindow(render_width(), render_height());
+	glutReshapeWindow(camera->get_width(), camera->get_height());
 }
 
 void ObjScene::resize(unsigned int width, unsigned int height)
@@ -838,7 +824,7 @@ void ObjScene::postDrawCallBack()
 
 void ObjScene::setDebugPixel(int i, int y)
 {
-	y = get_window_height() - y;
+	y = camera->get_height() - y;
 
 	Logger::info <<"Setting debug pixel to " << to_string(i) << " << " << to_string(y) <<endl;
 	context->setPrintLaunchIndex(i, y);

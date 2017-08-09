@@ -10,7 +10,6 @@
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 
-rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
 // Variables for shading
 rtDeclareVariable(float3, bg_color, , );
 

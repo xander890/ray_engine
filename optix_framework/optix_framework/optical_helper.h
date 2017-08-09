@@ -146,7 +146,7 @@ static __host__ float C_1(float ni)
     return c * 0.5f;
 }
 
-static __host__ float C_Sigma(float ni)
+static __host__ float C_phi(float ni)
 {
 
     return 0.25f * (1.0f - 2.0f * C_1(ni));
@@ -182,7 +182,7 @@ static __host__ float C_2(float ni)
     return c * (1.0f/3.0f);
 }
 
-static __host__ float C_e(float ni)
+static __host__ float C_E(float ni)
 {
     return 0.5f * (1.0f - 3.0f * C_2(ni));
 }

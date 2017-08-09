@@ -38,5 +38,4 @@ private:
     void create_and_bind_optix_data();
     optix::Program         mIntersectProgram;
     optix::Program         mBoundingboxProgram;
-
 };

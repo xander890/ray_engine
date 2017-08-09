@@ -10,14 +10,13 @@
 #include "../optical_helper.h"
 #include "../structs.h"
 #include <ray_trace_helpers.h>
+#include <scattering_properties.h>
 
 using namespace optix;
 
 //#define REFLECT
 
 // Standard ray variables
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
-rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 
@@ -66,7 +65,7 @@ RT_PROGRAM void shade()
   uint t = prd_radiance.seed;
   
   const ScatteringMaterialProperties& props = scattering_properties;
-  const float ior = props.indexOfRefraction;
+  const float ior = props.relative_ior;
   const float recip_ior = 1.0f / ior;
   //optix_print("Interface ior: %f\n", ior);
   //printvec3(props.absorption);

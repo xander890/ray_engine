@@ -4,16 +4,14 @@
 
 
 #include <device_common_data.h>
-#include "..\structs.h"
-#include "..\optical_helper.h"
-#include "..\random.h"
-#include "..\ray_trace_helpers.h"
+#include <structs.h>
+#include <optical_helper.h>
+#include <random.h>
+#include <ray_trace_helpers.h>
 
 using namespace optix;
 
 // Standard ray variables
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
-rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 

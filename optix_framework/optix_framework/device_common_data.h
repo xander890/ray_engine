@@ -8,6 +8,18 @@ rtDeclareVariable(float, scene_epsilon, , );
 rtDeclareVariable(rtObject, top_shadower, , );
 rtDeclareVariable(rtObject, top_object, , );
 
+// Ray generation variables
+rtDeclareVariable(uint, frame, , );
+rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
+rtDeclareVariable(uint2, launch_dim, rtLaunchDim, );
+rtDeclareVariable(uint2, debug_index, , );
+// Exception and debugging variables
+rtDeclareVariable(float3, bad_color, , );
+
+// Current ray information
+rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
+rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
+
 // Shadow variables
 
 // Recursive ray tracing variables

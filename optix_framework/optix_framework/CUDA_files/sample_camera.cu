@@ -25,12 +25,6 @@ rtDeclareVariable(unsigned int, N, , );
 // Window variables
 rtBuffer<PositionSample> sampling_output_buffer;
 
-
-rtDeclareVariable(uint, launch_index, rtLaunchIndex, );
-rtDeclareVariable(uint, launch_dim, rtLaunchDim, );
-//rtDeclareVariable(uint, current_translucent_obj, , );
-rtDeclareVariable(uint, frame, , );
-
 __forceinline__ __device__ unsigned int cdf_bsearch(float xi)
 {
   uint table_size = area_cdf.size();
@@ -48,7 +42,7 @@ __forceinline__ __device__ unsigned int cdf_bsearch(float xi)
 
 RT_PROGRAM void sample_camera()
 {
-    uint idx = launch_index;
+    uint idx = launch_index.x;
     PositionSample& sample = sampling_output_buffer[idx];
     uint t = tea<16>(idx, frame);
     // sample a triangle

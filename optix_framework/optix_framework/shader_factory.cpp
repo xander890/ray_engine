@@ -100,6 +100,14 @@ void ShaderFactory::init(optix::Context& ctx)
     load_normalized_CIE_functions(context);
     add_shader<GlossyShader>(2);
     add_shader<PresampledSurfaceBssrdf>(17);
+
+    for (auto& n: DefaultShader::default_shaders)
+    {
+        int illum = n.first;
+        DefaultShader* s = new DefaultShader();
+        s->initialize_shader(context, illum);
+        mShaderMap[illum] = s;
+    }
 }
 
 Shader* ShaderFactory::get_shader(int illum, RenderingMethodType::EnumType method)
@@ -109,15 +117,6 @@ Shader* ShaderFactory::get_shader(int illum, RenderingMethodType::EnumType metho
     {
         mShaderMap[illum]->method = method;
         return mShaderMap[illum];
-    }
-    if (DefaultShader::default_shader_exists(illum))
-    {
-
-        DefaultShader* s = new DefaultShader();
-        s->initialize_shader(context, illum);
-        s->method = method;       
-        mShaderMap[illum] = s;
-        return s;
     }
     Logger::error << "Shader for illum " << illum << " not found" << std::endl;
     return nullptr;

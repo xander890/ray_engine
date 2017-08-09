@@ -9,6 +9,7 @@
 #include "mesh.h"
 #include "default_shader.h"
 #include "shader_factory.h"
+#include "scattering_material.h"
 
 using namespace optix;
 using namespace std;

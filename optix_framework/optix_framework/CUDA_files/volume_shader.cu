@@ -4,13 +4,12 @@
 #include <optical_helper.h>
 #include <environment_map.h>
 #include "structs.h"
+#include "scattering_properties.h"
 
 using namespace optix;
 
 // Standard ray variables
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
-rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
-rtDeclareVariable(PerRayDataVolumetric_radiance, prd_radiance, rtPayload, );
+rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 rtDeclareVariable(int, max_depth, , );
 
@@ -104,7 +103,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, float g, float extinc
 
 
 // Any hit program for checking that we are still inside
-RT_PROGRAM void any_hit()
+RT_PROGRAM void any_hit_shadow()
 {
     // this material is opaque, so it fully attenuates all shadow rays	
     //rtPrintf("any hit %f\n", t_hit);
@@ -114,7 +113,7 @@ RT_PROGRAM void any_hit()
 
 
 // Closest hit program
-RT_PROGRAM void volume_shader()
+RT_PROGRAM void shade()
 {
     prd_radiance.result = make_float3(0.0f);
     if (prd_radiance.depth > max_depth) return;
@@ -159,7 +158,7 @@ RT_PROGRAM void volume_shader()
 
     // Sample new ray inside or outside
     ++prd_radiance.depth;
-    prd_radiance.emit = true;
+    prd_radiance.flags |= RayFlags::USE_EMISSION;
     float xi = rnd(t);
     if ((xi < R && inside) || (xi > R && !inside))
     {

@@ -26,6 +26,8 @@
 #include "gui.h"
 #include "structs.h"
 #include <functional>
+#include "camera.h"
+#include "camera_host.h"
 
 class ObjScene : public SampleScene
 {
@@ -34,27 +36,28 @@ public:
 
 	ObjScene(const std::vector<std::string>& obj_filenames, const std::string& shader_name, const std::string& config_file, optix::int4 rendering_r = make_int4(-1))
         : context(m_context),
-          current_scene_type(Scene::OPTIX_ONLY), default_miss(), m_current_camera_data(), filenames(obj_filenames), method(nullptr), sky_model(make_float3(0, 1, 0), make_float3(0, 0, 1)),
+          current_scene_type(Scene::OPTIX_ONLY), default_miss(), filenames(obj_filenames), method(nullptr), sky_model(make_float3(0, 1, 0), make_float3(0, 0, 1)),
           m_frame(0u),
           deforming(false),
-          use_tonemap(true), camera_width(0), camera_height(0),
-          config_file(config_file), rendering_rectangle(rendering_r)
+          use_tonemap(true), 
+          config_file(config_file)
     {
         calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
+		custom_rr = rendering_r;
         mMeshes.clear();
     }
 
 	ObjScene()
 		: context(m_context),
-		current_scene_type(Scene::OPTIX_ONLY), m_current_camera_data(), filenames(1, "test.obj"), sky_model(make_float3(0, 1, 0), make_float3(0, 0, 1)),
+		current_scene_type(Scene::OPTIX_ONLY), filenames(1, "test.obj"), sky_model(make_float3(0, 1, 0), make_float3(0, 0, 1)),
 		  m_frame(0u),
 		  deforming(true),
 		  use_tonemap(true),
-		  config_file("config.xml"), rendering_rectangle(make_int4(-1))
+		  config_file("config.xml")
 	{
 		calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
         mMeshes.clear();
-
+		custom_rr = make_int4(-1);
 	}
 
 	virtual ~ObjScene()
@@ -92,8 +95,6 @@ public:
 	void setDebugPixel(int i, int y);
 	bool mousePressed(int button, int state, int x, int y) override;
 	bool mouseMoving(int x, int y) override;
-	int get_window_width() { return rendering_rectangle.y; }
-	int get_window_height() { return rendering_rectangle.z; }
 	void reset_renderer();
 
 #ifdef IOR_EST
@@ -124,14 +125,12 @@ private:
 	bool mAutoMode = false;
 	string mOutputFile = "rendering.raw";
 	int mFrames = -1;
-	unsigned int camera_downsampling = 1;
 	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, unsigned width, unsigned height);
 
 	void add_lights(vector<TriangleLight>& area_lights);
 	void set_miss_program();
 	optix::TextureSampler environment_sampler;
 
-	RayGenCameraData m_current_camera_data;
 	optix::float2 fov;
 
 	// Geometry and transformation getters
@@ -151,13 +150,7 @@ private:
 	unsigned int m_frame;
 	bool deforming;
 	bool use_tonemap;
-
-	int camera_width;
-	int camera_height;
-
-	int4 rendering_rectangle;
-	int render_width() { return rendering_rectangle.z; }
-	int render_height() { return rendering_rectangle.w; }
+	Camera* camera;
 
 	GUI* gui = nullptr;
 	float3 lightmap_multiplier = make_float3(1.0f);
@@ -239,8 +232,7 @@ private:
 	std::string get_name();
 
 	const std::string config_file = "config.xml";
-
-	int4 render_bounds;
+	int4 custom_rr;
 };
 
 #endif // OBJSCENE_H

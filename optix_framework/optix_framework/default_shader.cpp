@@ -1,46 +1,26 @@
 #include "default_shader.h"
 
+std::map<int, std::string> DefaultShader::default_shaders = 
+{
+    {0, "constant_shader.cu" },
+    {1, "lambertian_shader.cu"},
+    {3, "mirror_shader.cu"},
+    {4, "glass_shader.cu"},
+    {5, "dispersion_shader.cu"},
+    {6, "absorbing_glass.cu"},
+    {11, "metal_shader.cu"},
+    {12, "volume_shader.cu"}
+};
+
+void DefaultShader::initialize_shader(optix::Context ctx, int illum)
+{
+    Shader::initialize_shader(ctx, illum);
+    shader = default_shaders[illum];
+}
 
 void DefaultShader::initialize_mesh(Mesh& object)
 {
     Shader::initialize_mesh(object);
-    std::string shader;
-    if (!get_default_shader(illum, shader))
-    {
-        Logger::error << "Illum " << illum << " is not default. Exiting..." << std::endl;
-        exit(2);
-    }
     set_hit_programs(object, shader, method);
 }
 
-bool DefaultShader::get_default_shader(const int illum, std::string & shader)
-{
-    switch (illum)
-    {
-    case 0:
-        shader = "constant_shader.cu";
-        break;
-    case 1:
-        shader = "lambertian_shader.cu";
-        break;
-        //  see glossy.h
-    case 3:
-        shader = "mirror_shader.cu";
-        break;
-    case 4:
-        shader = "glass_shader.cu";
-        break;
-    case 5:
-        shader = "dispersion_shader.cu";
-        break;
-    case 6:
-        shader = "absorbing_glass.cu";
-        break;
-    case 11:
-        shader = "metal_shader.cu";
-        break;
-    default:
-        return false;
-    }
-    return true;
-}

@@ -10,8 +10,6 @@ using namespace optix;
 // Window variables
 rtBuffer<float4, 2> output_buffer;
 rtBuffer<float4, 2> tonemap_output_buffer;
-rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
-rtDeclareVariable(uint2, launch_dim, rtLaunchDim, );
 
 rtDeclareVariable(float, tonemap_multiplier,,) = 1.0f;
 rtDeclareVariable(float, tonemap_exponent,,) = 1.8f;
@@ -19,8 +17,6 @@ rtDeclareVariable(float, tonemap_exponent,,) = 1.8f;
 rtDeclareVariable(float, comparison_image_weight, , ) = 0;
 rtDeclareVariable(int, show_difference_image, , ) = 0;
 rtDeclareVariable(int, comparison_texture, , ) = 0;
-
-rtDeclareVariable(uint2, debug_index, , );
 
 RT_PROGRAM void tonemap_camera()
 {

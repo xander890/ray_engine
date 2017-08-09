@@ -321,7 +321,7 @@ void GLUTDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   wglSwapIntervalEXT(0);
 #endif
 
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
   // If m_app_continuous_mode was already set to CDBenchmark* on the command line then preserve it.
   setContinuousMode( m_app_continuous_mode == CDNone ? continuous_mode : m_app_continuous_mode );

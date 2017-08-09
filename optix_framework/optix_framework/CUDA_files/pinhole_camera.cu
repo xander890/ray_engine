@@ -5,39 +5,22 @@
 #include <device_common_data.h>
 #include <random.h>
 #include <environment_map.h>
+#include <camera.h>
 
 using namespace optix;
 
 // Camera variables
-rtDeclareVariable(float3,   eye, , );
-rtDeclareVariable(float3,   U, , );
-rtDeclareVariable(float3,   V, , );
-rtDeclareVariable(float3,   W, , );
-
-// Ray generation variables
-rtDeclareVariable(uint,     frame, , );
+rtDeclareVariable(CameraData,   camera_data, , );
 
 // Window variables
 rtBuffer<float4, 2> output_buffer;
-rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
-rtDeclareVariable(uint2, launch_dim,   rtLaunchDim, );
-rtDeclareVariable(uint2, debug_index, , );
-rtDeclareVariable(int4, render_bounds, , );
-rtDeclareVariable(uint4, rendering_rectangle, , );
-rtDeclareVariable(uint2, camera_size, , );
-rtDeclareVariable(uint, downsampling, , );
-// Exception and debugging variables
-rtDeclareVariable(float3, bad_color, , );
-rtDeclareVariable(Matrix3x3, inv_calibration_matrix, , ) = Matrix3x3();
-
-rtDeclareVariable(float, time_view_scale, , ) = 1e-6f;
 
 //#define TIME_VIEW
 
 __forceinline__ __device__ bool check_bounds()
 {
-	return	launch_index.x >= render_bounds.x && launch_index.x < render_bounds.x + render_bounds.z &&
-		launch_index.y >= render_bounds.y && launch_index.y < render_bounds.y + render_bounds.w;
+	return	launch_index.x >= camera_data.render_bounds.x && launch_index.x < camera_data.render_bounds.x + camera_data.render_bounds.z &&
+		launch_index.y >= camera_data.render_bounds.y && launch_index.y < camera_data.render_bounds.y + camera_data.render_bounds.w;
 }
 
 __forceinline__ __device__ void trace(const Ray& ray, PerRayData_radiance & prd)
@@ -74,22 +57,18 @@ RT_PROGRAM void pinhole_camera()
 {
 	if (check_bounds())
 	{
-
-	#ifdef TIME_VIEW
-		clock_t t0 = clock(); 
-	#endif
 		PerRayData_radiance prd;
 		init_payload(prd);
-		float2 jitter = make_float2(rnd(prd.seed), rnd(prd.seed)) * downsampling;
-		uint2 real_pixel = launch_index * downsampling + make_uint2(rendering_rectangle.x, rendering_rectangle.y);
-		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(camera_size) * 2.0f - 1.0f;
+		float2 jitter = make_float2(rnd(prd.seed), rnd(prd.seed)) * camera_data.downsampling;
+		uint2 real_pixel = launch_index * camera_data.downsampling + make_uint2(camera_data.rendering_rectangle.x, camera_data.rendering_rectangle.y);
+		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(camera_data.camera_size) * 2.0f - 1.0f;
 
 	#ifdef ORTHO
 		float3 direction = normalize(W);
 		float3 origin = eye + ip_coords.x*U + ip_coords.y*V;
 	#else
-		float3 origin = eye;
-		float3 direction = normalize(ip_coords.x*U + ip_coords.y*V + W);
+		float3 origin = camera_data.eye;
+		float3 direction = normalize(ip_coords.x*camera_data.U + ip_coords.y*camera_data.V + camera_data.W);
 	#endif
 		Ray ray(origin, direction, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
 		trace(ray, prd);
@@ -105,19 +84,14 @@ RT_PROGRAM void pinhole_camera_w_matrix()
 {
 	if (check_bounds())
 	{
-
-#ifdef TIME_VIEW
-		clock_t t0 = clock();
-#endif
 		PerRayData_radiance prd;
 		init_payload(prd);
-
-		float2 jitter = make_float2(rnd(prd.seed), rnd(prd.seed))* downsampling;
-		uint2 real_pixel = launch_index * downsampling + make_uint2(rendering_rectangle.x, rendering_rectangle.y);
-		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(camera_size) * 2.0f - 1.0f;
+		float2 jitter = make_float2(rnd(prd.seed), rnd(prd.seed))* camera_data.downsampling;
+		uint2 real_pixel = launch_index * camera_data.downsampling + make_uint2(camera_data.rendering_rectangle.x, camera_data.rendering_rectangle.y);
+		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(camera_data.camera_size) * 2.0f - 1.0f;
 		float3 a_coords = make_float3(ip_coords, 1.0f);
-		float3 vec = inv_calibration_matrix * a_coords;
-		float3 origin = eye;
+		float3 vec = camera_data.inv_calibration_matrix * a_coords;
+		float3 origin = camera_data.eye;
 		float3 direction = normalize(vec);
 		Ray ray(origin, direction, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
 		trace(ray, prd);
@@ -125,8 +99,7 @@ RT_PROGRAM void pinhole_camera_w_matrix()
 	else
 	{
 		output_buffer[launch_index] = make_float4(0);
-	}
-	
+	}	
 }
 
 RT_PROGRAM void exception()

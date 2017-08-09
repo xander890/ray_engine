@@ -11,13 +11,11 @@
 #include <structs_device.h>
 #include <optical_helper.h>
 #include <environment_map.h>
-
+#include <camera.h>
 
 using namespace optix;
 
 // Standard ray variables
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
-rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 rtDeclareVariable(PerRayData_cache, prd_cache, rtPayload, );
@@ -27,9 +25,9 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
+rtDeclareVariable(CameraData, camera_data, , );
 
 rtDeclareVariable(float3, ambient_light_color, , );
-rtDeclareVariable(float3, W, , );
 rtDeclareVariable(float, phong_exp, , );
 rtDeclareVariable(uint, ray_traced_reflection, , );
 
@@ -44,7 +42,6 @@ rtDeclareVariable(unsigned int, N, , );
 rtDeclareVariable(int, max_depth, , );
 rtDeclareVariable(int, max_splits, , );
 rtDeclareVariable(int, use_split, , );
-rtDeclareVariable(uint, frame, , );
 
 
 rtDeclareVariable(float3, eye, , );
@@ -118,7 +115,7 @@ RT_PROGRAM void shade()
 	float3 color = make_float3(0.0f);
 	color += k_a;  
 	//optix_print("%f", k_a.x);
-	float3 view = normalize(W);
+	float3 view = normalize(camera_data.W);
 	uint s = prd_radiance.seed;
 	for (uint i = 0; i < light_size(); ++i)
 	{

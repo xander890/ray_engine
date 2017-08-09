@@ -10,8 +10,6 @@ using namespace optix;
 //#define USE_SPECTRAL_RENDERING
 
 // Standard ray variables
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
-rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 
@@ -20,7 +18,6 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
 rtDeclareVariable(float3, ambient_light_color, , );
-rtDeclareVariable(float3, W, , );
 rtDeclareVariable(float, phong_exp, , );
 rtDeclareVariable(uint, ray_traced_reflection, , );
 rtDeclareVariable(float, ior, , );

@@ -3,8 +3,6 @@
 
 #include <optix_world.h>
 #include "rendering_method.h"
-#include "scattering_material.h"
-#include "structs.h"
 
 using namespace optix;
 

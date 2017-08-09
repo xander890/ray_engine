@@ -10,9 +10,6 @@ using namespace optix;
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
-rtDeclareVariable(Ray, ray, rtCurrentRay, );
-rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
-rtDeclareVariable(uint2, launch_dim, rtLaunchDim, );
 
 rtDeclareVariable(Matrix3x3, lightmap_rotation_matrix, , );
 rtDeclareVariable(float3, lightmap_multiplier, , );

@@ -35,12 +35,16 @@ bool GUI::keyPressed(unsigned char key, int x, int y)
 
 bool GUI::mousePressed(int button, int state, int x, int y)
 {
-	return TwEventMouseButtonGLUT(button, state, x, y);
+    if (isVisible())
+    	return TwEventMouseButtonGLUT(button, state, x, y);
+    return false;
 }
 
 bool GUI::mouseMoving(int x, int y)
 {
-	return TwEventMouseMotionGLUT(x, y);
+    if (isVisible())
+        return TwEventMouseMotionGLUT(x, y);
+    return false;
 }
 
 void GUI::setWindowSize(int x, int y)

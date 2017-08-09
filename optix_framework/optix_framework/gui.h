@@ -23,13 +23,11 @@ public:
 	virtual ~GUI();
 
 
-	static bool keyPressed(unsigned char key, int x, int y);
+	bool keyPressed(unsigned char key, int x, int y);
 	// Use this to add additional keys. Some are already handled but
 	// can be overridden.  Should return true if key was handled, false otherwise.
-	static bool mousePressed(int button, int state, int x, int y);
-	static bool mouseMoving(int x, int y);
-
-
+	bool mousePressed(int button, int state, int x, int y);
+	bool mouseMoving(int x, int y);
 	static void setWindowSize(int x, int y);
 
 	void draw() const;

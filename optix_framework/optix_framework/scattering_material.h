@@ -5,6 +5,7 @@
 #include "structs.h"
 #include "GUI.h"
 #include <functional>
+#include "scattering_properties.h"
 
 enum DefaultScatteringMaterial
 {
@@ -52,6 +53,7 @@ public:
     }
 
     ScatteringMaterial& operator=(const ScatteringMaterial& cp);
+    ScatteringMaterial(const ScatteringMaterial& cp);
 
     void getDefaultMaterial(DefaultScatteringMaterial material);
     void loadParameters(const char* name, optix::GeometryInstance& context);
@@ -68,7 +70,9 @@ public:
     void set_scattering(optix::float3 sc);
     void set_asymmetry(float asymm);
     void set_into_gui(GUI* gui);
+    const char* get_name() { return name; }
 
+    static std::vector<ScatteringMaterial> defaultMaterials;
 
 private:
     ScatteringMaterialProperties properties;
@@ -91,6 +95,7 @@ private:
     static void GUI_CALL getAsymmetry(void* var, void* data);
     static void GUI_CALL setScale(const void* var, void* data);
     static void GUI_CALL getScale(void* var, void* data);
+    static std::vector<ScatteringMaterial> initializeDefaultMaterials();
 };
 
 #endif // scattering_material_h__

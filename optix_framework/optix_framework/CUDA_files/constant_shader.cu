@@ -1,14 +1,13 @@
 #include <structs.h>
-
+#include <device_common_data.h>
 // Standard ray variables
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
-rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 
 // Variables for shading
 rtDeclareVariable(optix::float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(optix::float3, texcoord, attribute texcoord, ); 
 
 rtDeclareVariable(int, gi, , ); 
+rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 
 rtTextureSampler<optix::float4, 2> diffuse_map; 
 

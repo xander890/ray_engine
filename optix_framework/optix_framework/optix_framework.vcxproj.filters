@@ -136,9 +136,6 @@
     <ClCompile Include="apple_juice.cpp">
       <Filter>Source Files\Materials</Filter>
     </ClCompile>
-    <ClCompile Include="gui.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="logger.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -162,6 +159,15 @@
     </ClCompile>
     <ClCompile Include="default_shader.cpp">
       <Filter>Source Files\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.cpp">
+      <Filter>Source Files\Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="orthocamera.cpp">
+      <Filter>Source Files\Cameras</Filter>
+    </ClCompile>
+    <ClCompile Include="camera_host.cpp">
+      <Filter>Source Files\Cameras</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -277,9 +283,6 @@
     <ClInclude Include="apple_juice.h">
       <Filter>Header Files\Materials</Filter>
     </ClInclude>
-    <ClInclude Include="gui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="environment_map.h">
       <Filter>Header Files\Lights</Filter>
     </ClInclude>
@@ -327,6 +330,18 @@
     </ClInclude>
     <ClInclude Include="shader_factory.h">
       <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="scattering_properties.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>Header Files\Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.h">
+      <Filter>Header Files\Cameras</Filter>
+    </ClInclude>
+    <ClInclude Include="camera_host.h">
+      <Filter>Header Files\Cameras</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -407,6 +422,12 @@
     </Filter>
     <Filter Include="Source Files\Shaders">
       <UniqueIdentifier>{cad6cfdc-9ade-43e9-942b-db83b8078577}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Cameras">
+      <UniqueIdentifier>{8346dfa2-f3f0-444d-bfd8-0e73e7a83114}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Cameras">
+      <UniqueIdentifier>{e56028e4-8dec-4bb5-937a-cc9208c8046a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

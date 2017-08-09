@@ -14,14 +14,11 @@
 #include <environment_map.h>
 
 //#define IMPORTANCE_SAMPLE_BRDF
-rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
 #include <merl_common.h>
 
 using namespace optix;
 
 // Standard ray variables
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, "");
-rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 
@@ -44,11 +41,9 @@ rtTextureSampler<float4, 2> specular_map;
 // Monte carlo variables
 rtDeclareVariable(unsigned int, N, , );
 
-rtDeclareVariable(int, window_width, , );
 rtDeclareVariable(int, max_depth, , );
 rtDeclareVariable(int, max_splits, , );
 rtDeclareVariable(int, use_split, , );
-rtDeclareVariable(uint, frame, , );
 
 
 rtDeclareVariable(float, exponent_blinn, , );

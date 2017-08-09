@@ -1,9 +1,18 @@
 #include "mesh.h"
 #include "shader_factory.h"
 #include "material_library.h"
+#include "scattering_material.h"
+#include <algorithm>
 
 Mesh::Mesh(optix::Context ctx) : mContext(ctx)
 {
+}
+
+bool findAndReturnMaterial(const std::string &name, ScatteringMaterial & s)
+{
+    auto ss = std::find_if(ScatteringMaterial::defaultMaterials.begin(), ScatteringMaterial::defaultMaterials.end(), [&](ScatteringMaterial & v){ return name.compare(v.get_name()) == 0; });
+    s = *ss;
+    return ss != ScatteringMaterial::defaultMaterials.end();
 }
 
 void Mesh::init(MeshData meshdata, MaterialData material)
@@ -26,21 +35,30 @@ void Mesh::init(MeshData meshdata, MaterialData material)
         mMaterialData.absorption = optix::make_float3(0.0f);
 
 
+    Logger::info << "Looking for scattering material " << mMaterialData.name << "..." << std::endl;
+    ScatteringMaterial def = ScatteringMaterial(DefaultScatteringMaterial::Marble);
     if (MaterialLibrary::media.count(mMaterialData.name) != 0)
-    {
+    {        
+        Logger::info << "Material found in mpml file. " << std::endl;
         MPMLMedium mat = MaterialLibrary::media[mMaterialData.name];
         mMaterialData.scattering_material = new ScatteringMaterial(mat.ior_real.x, mat.absorption, mat.scattering, mat.asymmetry);
     }
     else if (MaterialLibrary::interfaces.count(mMaterialData.name) != 0)
     {
+        Logger::info << "Material found in mpml file as interface. " << std::endl;
         MPMLInterface interface = MaterialLibrary::interfaces[mMaterialData.name];
         float relative_index = interface.med_out->ior_real.x / interface.med_in->ior_real.x;
-        cout << "Found interface: " << mMaterialData.name << "(eta : " << relative_index << ")" << endl;
         mMaterialData.scattering_material = new ScatteringMaterial(relative_index, interface.med_in->absorption, interface.med_in->scattering, interface.med_in->asymmetry);
+    }
+    else if (findAndReturnMaterial(mMaterialData.name, def))
+    {
+        Logger::info << "Material found in default materials. " << std::endl;
+        mMaterialData.scattering_material = new ScatteringMaterial(def);
     }
     else
     {
-        mMaterialData.scattering_material = nullptr;
+        Logger::error << "Material not found, defaulting to marble. " << std::endl;
+        mMaterialData.scattering_material = new ScatteringMaterial(def);
     }
 
     load_geometry();

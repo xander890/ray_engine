@@ -4,36 +4,7 @@
 #pragma once
 #include <optix_world.h>
 
-struct ScatteringMaterialProperties
-{
-	 // base parameters
-     float indexOfRefraction; //The usual assumption is that this can be intercheangeably the material ior or the ratio between it and air (ior = 1)
-     optix::float3 absorption;
-     optix::float3 scattering;
-     optix::float3 meancosine;
 
-    // derived parameters
-     optix::float3 D;
-     optix::float3 reducedExtinction;
-     optix::float3 transport;
-     optix::float3 reducedScattering;
-     float C_s;
-     float C_s_inv;
-     float C_E;
-     float A;
-     optix::float3 de;
-     optix::float3 reducedAlbedo;
-     optix::float3 extinction;
-     optix::float3 three_D;
-     optix::float3 rev_D;
-     float global_coeff;
-     optix::float3 two_a_de;
-     optix::float3 two_de;
-     optix::float3 one_over_three_ext;
-     optix::float3 de_sqr;
-     float iorsq;
-     float min_transport;
-};
 
 struct MPMLMedium
 {

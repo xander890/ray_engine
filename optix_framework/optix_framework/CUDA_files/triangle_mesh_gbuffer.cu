@@ -45,13 +45,8 @@ rtBuffer<uint>   material_buffer; // per-face material index
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); 
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 rtDeclareVariable(PerRayData_cache, prd_cache, rtPayload, );
 
-rtDeclareVariable(int, window_width, , );
-rtDeclareVariable(int, window_height, , );
-rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
-rtDeclareVariable(uint2, launch_dim, rtLaunchDim, );
 rtDeclareVariable(float3, eye, , );
 
 rtBuffer<float4, 1> vertex_data;

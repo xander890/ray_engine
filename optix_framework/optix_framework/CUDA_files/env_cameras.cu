@@ -12,10 +12,6 @@ using namespace optix;
 rtDeclareVariable(int, environment_map_tex_id, , ) = 0;
 rtDeclareVariable(Matrix3x3, lightmap_rotation_matrix, , );
 
-// Window variables
-rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
-rtDeclareVariable(uint2, launch_dim, rtLaunchDim, );
-
 // Output buffers
 rtBuffer<float, 2> env_luminance;
 rtBuffer<float> marginal_f;
