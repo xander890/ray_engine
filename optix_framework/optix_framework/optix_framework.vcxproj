@@ -578,6 +578,7 @@ echo Done.</Command>
     <ClInclude Include="logger.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="optix_common.h" />
+    <ClInclude Include="optix_host_fwd.h" />
     <ClInclude Include="procedural_mesh.h" />
     <ClInclude Include="color_helpers.h" />
     <ClInclude Include="CUDA_files\phong.h" />

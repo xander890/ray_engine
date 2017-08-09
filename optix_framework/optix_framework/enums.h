@@ -1,6 +1,6 @@
 #pragma once
 #include "host_device_common.h"
-enum class CameraType { STANDARD_RT = 0, TONE_MAPPING = 1, TEXTURE_PASS = 2, HYBRID_START = 3, ENV_1 = 5, ENV_2 = 6, ENV_3 = 7, COUNT = 8 };
+enum class CameraType { STANDARD_RT = 0, TONE_MAPPING = 1, ENV_1 = 2, ENV_2 = 3, ENV_3 = 4, COUNT = 5 };
 
 template <typename E>
 auto as_integer(E const value)

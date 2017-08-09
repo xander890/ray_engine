@@ -1,6 +1,7 @@
 #include "dialogs.h"
 #include "nfd/include/nfd.h"
 
+
 bool Dialogs::openFileDialog(std::string& selectedFilePath, const std::string& filters)
 {
 	nfdchar_t *outPath = nullptr;

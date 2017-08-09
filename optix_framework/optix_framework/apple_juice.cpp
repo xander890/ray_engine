@@ -1,10 +1,10 @@
+#include "apple_juice.h"
 #include <iostream>
 #include <cmath>
 #include <complex>
 #include <algorithm>
 #include "optprops/cdf_bsearch.h"
 #include "LorenzMie.h"
-#include "apple_juice.h"
 
 using namespace std;
 using namespace LorenzMie;

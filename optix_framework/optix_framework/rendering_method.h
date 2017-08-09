@@ -7,19 +7,16 @@
 #include "folders.h"
 #include "mesh.h"
 
-using namespace optix;
-using namespace std;
-
 class RenderingMethod 
 {
 public:
     virtual ~RenderingMethod() = default;
-    RenderingMethod(Context & context);
+    RenderingMethod(optix::Context & context);
 	virtual void init() = 0;
 	virtual void pre_trace() = 0;
 
 protected:
-	Context& context;
+    optix::Context& context;
 };
 
 #endif // RENDERINGMETHOD_H

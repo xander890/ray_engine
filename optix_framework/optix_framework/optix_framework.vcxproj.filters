@@ -343,6 +343,9 @@
     <ClInclude Include="camera_host.h">
       <Filter>Header Files\Cameras</Filter>
     </ClInclude>
+    <ClInclude Include="optix_host_fwd.h">
+      <Filter>Header Files\Optix</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

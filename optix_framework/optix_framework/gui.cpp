@@ -1,4 +1,5 @@
 #include "gui.h"
+#include <optixu/optixu_vector_functions.h>
 
 #include "anttweak/AntTweakBar.h"
 #include "GL/glut.h"

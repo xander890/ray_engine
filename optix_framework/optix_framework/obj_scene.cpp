@@ -35,6 +35,7 @@
 #include "aisceneloader.h"
 #include "shader_factory.h"
 #include "scattering_material.h"
+#include "Medium.h"
 
 using namespace std;
 using namespace optix;
@@ -263,10 +264,10 @@ void ObjScene::initUI()
 	//gui->addButton("End Simulation", endSimulationCallback, this, simulation_group);
 
 	const char * limit_rendering_group = "Rendering Bounds";
-	gui->addIntVariable("X", (int*)&camera->data.render_bounds.x, limit_rendering_group, 0, camera->data.camera_size.x);
-	gui->addIntVariable("Y", (int*)&camera->data.render_bounds.y, limit_rendering_group, 0, camera->data.camera_size.y);
-	gui->addIntVariable("W", (int*)&camera->data.render_bounds.z, limit_rendering_group, 0, camera->data.camera_size.x);
-	gui->addIntVariable("H", (int*)&camera->data.render_bounds.w, limit_rendering_group, 0, camera->data.camera_size.y);
+	gui->addIntVariable("X", (int*)&camera->data->render_bounds.x, limit_rendering_group, 0, camera->data->camera_size.x);
+	gui->addIntVariable("Y", (int*)&camera->data->render_bounds.y, limit_rendering_group, 0, camera->data->camera_size.y);
+	gui->addIntVariable("W", (int*)&camera->data->render_bounds.z, limit_rendering_group, 0, camera->data->camera_size.x);
+	gui->addIntVariable("H", (int*)&camera->data->render_bounds.w, limit_rendering_group, 0, camera->data->camera_size.y);
 }
 
 void ObjScene::initScene(InitialCameraData& init_camera_data)
@@ -300,9 +301,9 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
 
 
-	Logger::info << "Rendering rectangle: " << camera->data.rendering_rectangle.x << " " << camera->data.rendering_rectangle.y << " " <<
-		camera->data.rendering_rectangle.z << " " <<
-		camera->data.rendering_rectangle.w << " Camera: " << camera_width << " " << camera_height << endl;
+	Logger::info << "Rendering rectangle: " << camera->data->rendering_rectangle.x << " " << camera->data->rendering_rectangle.y << " " <<
+		camera->data->rendering_rectangle.z << " " <<
+		camera->data->rendering_rectangle.w << " Camera: " << camera_width << " " << camera_height << endl;
 
 	default_miss = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
 
@@ -452,17 +453,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	Program ray_gen_program_t = context->createProgramFromPTXFile(ptx_path_t, "tonemap_camera");
 
 	context->setRayGenerationProgram(as_integer(CameraType::TONE_MAPPING), ray_gen_program_t);
-
-	// Opengl Camera
-	std::string ptx_path2 = get_path_ptx("opengl_camera.cu");
-	Program ogl_ray_gen_program = context->createProgramFromPTXFile(ptx_path2, "opengl_camera");
-	context->setRayGenerationProgram(as_integer(CameraType::TEXTURE_PASS), ogl_ray_gen_program);
-
-
-	// Opengl Camera
-	std::string ptx_path3 = get_path_ptx("hybrid_cameras.cu");
-	Program hyb_ray_gen_program = context->createProgramFromPTXFile(ptx_path3, "hybrid_camera");
-	context->setRayGenerationProgram(as_integer(CameraType::HYBRID_START), hyb_ray_gen_program);
 
 	// Environment cameras
 	bool is_env = false;

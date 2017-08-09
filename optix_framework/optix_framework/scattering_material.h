@@ -1,10 +1,10 @@
+#pragma once
 #ifndef scattering_material_h__
 #define scattering_material_h__
 
 #include <optix_world.h>
 #include "structs.h"
 #include "GUI.h"
-#include <functional>
 #include "scattering_properties.h"
 
 enum DefaultScatteringMaterial

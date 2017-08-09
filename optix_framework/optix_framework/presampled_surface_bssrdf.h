@@ -1,9 +1,8 @@
 #ifndef PRESAMPLED_H
 #define PRESAMPLED_H
 
-#include <optix_world.h>
-#include "rendering_method.h"
-
+#include <shader.h>
+#include <mesh.h>
 using namespace optix;
 
 const unsigned int SAMPLES_FRAME = 100;

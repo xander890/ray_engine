@@ -4,7 +4,6 @@
 #include "../structs.h"
 #include "math_helpers.h"
 #include <scattering_properties.h>
-using namespace optix;
   
 __forceinline__  __device__ float3 S_infinite(const float3& _r_sqr, const float x_dot_w12, const float no_dot_w12, const float x_dot_no,
                              const ScatteringMaterialProperties& properties)

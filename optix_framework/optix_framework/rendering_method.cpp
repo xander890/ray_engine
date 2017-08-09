@@ -3,7 +3,7 @@
 #include "host_device_common.h"
 
 
-RenderingMethod::RenderingMethod(Context & context) : context(context)
+RenderingMethod::RenderingMethod(optix::Context & context) : context(context)
 {
 }
 

@@ -50,7 +50,7 @@ static __host__ __device__ __inline__ optix::float3 rgb2Yxy( optix::float3 rgb)
 
 static __host__ __device__ __inline__ float luminance_NTSC(optix::float3 & color)
 {
-	return optix::dot(color, make_float3(0.2989f, 0.5866f, 0.1145f));
+    return optix::dot(color, optix::make_float3(0.2989f, 0.5866f, 0.1145f));
 }
 
 static __host__ __device__ __inline__ optix::float3 tonemap( const optix::float3 &hdr_value, float Y_log_av, float Y_max)
@@ -64,7 +64,7 @@ static __host__ __device__ __inline__ optix::float3 tonemap( const optix::float3
 	float Y_rel = a * Y / Y_log_av;
 	float mapped_Y = Y_rel * (1.0f + Y_rel / (Y_max * Y_max)) / (1.0f + Y_rel);
 
-	float3 mapped_Yxy = make_float3( mapped_Y, val_Yxy.y, val_Yxy.z ); 
+    float3 mapped_Yxy = optix::make_float3(mapped_Y, val_Yxy.y, val_Yxy.z);
 	float3 mapped_rgb = Yxy2rgb( mapped_Yxy ); 
 
 	return mapped_rgb;

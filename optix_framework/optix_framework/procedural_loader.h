@@ -1,7 +1,6 @@
 #pragma once
 #include "obj_loader.h"
-#include "chull.h"
-
+#include "procedural_mesh.h"
 /**
 *	Procedural object loader: instead of loading objects from a triangle mesh, loads them from a ConvexChull and a 
 *	material file.

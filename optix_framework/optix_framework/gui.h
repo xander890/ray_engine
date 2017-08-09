@@ -1,5 +1,4 @@
 #pragma once
-#include <optixu/optixu_vector_functions.h>
 #include <exception>
 #include <vector>
 
@@ -8,6 +7,11 @@ typedef void (__stdcall * GuiSetVarCallback)(const void *value, void *clientData
 typedef void(__stdcall * GuiGetVarCallback)(void *value, void *clientData);
 typedef void(__stdcall * GuiButtonCallback)(void *clientData);
 #define GUI_CALL          __stdcall
+
+namespace optix{
+    struct float3;
+    struct float4;
+}
 
 struct GuiDropdownElement
 {
