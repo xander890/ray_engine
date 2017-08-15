@@ -2,6 +2,9 @@
 #include <optix_world.h>
 #include "shader.h"
 #include "enums.h"
+#include <memory>
+
+class MaterialHost;
 
 struct MeshData
 {
@@ -20,13 +23,14 @@ class Mesh
 public:
     Mesh(optix::Context ctx);
         
-    void init(MeshData meshdata, MaterialData material);
+    void init(MeshData meshdata, std::shared_ptr<MaterialHost> material);
 
     optix::GeometryInstance mGeometryInstance = nullptr;
     optix::Geometry mGeometry = nullptr;
     optix::Context  mContext;
     optix::Material mMaterial = nullptr;
-    MaterialData mMaterialData;
+
+    std::shared_ptr<MaterialHost> mMaterialData;
     MeshData mMeshData;
     Shader * mShader;
 

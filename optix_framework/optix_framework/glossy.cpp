@@ -5,6 +5,8 @@
 #include "brdf_utils.h"
 #include "merl_common.h"
 #include <ImageLoader.h>
+#include "host_material.h"
+#include "scattering_material.h"
 
 optix::TextureSampler createOneElementSampler(optix::Context context, const optix::float3& default_color)
 {
@@ -63,7 +65,7 @@ void GlossyShader::initialize_mesh(Mesh& object)
 {
     Shader::initialize_mesh(object);
     set_data(object);
-    string n = object.mMaterialData.name;
+    string n = object.mMaterialData->get_name();
 
     string n_ext = n + ".binary";
     MERLBrdf * mat = nullptr;

@@ -1,7 +1,7 @@
 #ifndef sky_model_h__
 #define sky_model_h__
 
-#include "directional_light.h"
+#include "singular_light.h"
 
 #include <optix_math.h>
 #include "math_helpers.h"
@@ -48,7 +48,7 @@ public:
 	SkyModel(float3 up, float3 north) : up(up), north(north) {  }
 	~SkyModel(void);
 	float3 get_sky_color(float3 v);
-	void get_directional_light(DirectionalLight & light);
+	void get_directional_light(SingularLightData & light);
 	void load_data_on_GPU(optix::Context & context);
 	void init();
 

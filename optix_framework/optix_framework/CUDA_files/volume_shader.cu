@@ -6,19 +6,19 @@
 #include "structs.h"
 #include "scattering_properties.h"
 #include "light.h"
+#include <material.h>
 
 using namespace optix;
 
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
-rtDeclareVariable(int, max_depth, , );
 
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 
 // Material properties
-rtDeclareVariable(ScatteringMaterialProperties, scattering_properties, , );
+rtDeclareVariable(MaterialDataCommon, material, , ); 
 rtDeclareVariable(unsigned int, N, , );
 rtDeclareVariable(float3, glass_abs, , );
 
@@ -124,7 +124,7 @@ RT_PROGRAM void shade()
     float3 hit_pos = ray.origin + t_hit*ray.direction;
     float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
     float3 w_i = -ray.direction;
-    ScatteringMaterialProperties& props = scattering_properties;
+    ScatteringMaterialProperties& props = material.scattering_properties;
     float n1_over_n2 = 1.0f / props.relative_ior;
     float cos_theta_in = dot(normal, w_i);
     float3 beam_T = make_float3(1.0f);
@@ -204,23 +204,11 @@ RT_PROGRAM void shade()
     }
     else
     {
-        float3 direct = make_float3(0.0f);
-        for (unsigned int i = 0; i < light_size(); i++)
-        {
-            for (int j = 0; j < N; j++)
-            {
-                float3 wi, L; int sh;
-                evaluate_direct_light(hit_pos, normal, wi, L, sh, t, i);
-                direct += L;
-            }
-        }
-        direct /= static_cast<float>(N);
-
         // Trace outside, i.e., refract from inside or reflect from outside
         float3 dir_outside = inside ? refracted_dir : reflected_dir;
         Ray ray_outside(hit_pos, dir_outside, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
         rtTrace(top_object, ray_outside, prd_radiance);
-        prd_radiance.result = beam_T * (prd_radiance.result + direct);
+        prd_radiance.result = beam_T * (prd_radiance.result);
 
     }
 }

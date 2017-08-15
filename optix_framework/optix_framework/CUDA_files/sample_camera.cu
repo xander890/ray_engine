@@ -109,9 +109,7 @@ RT_PROGRAM void sample_camera()
 
         Le /= static_cast<float>(N);
     }
-    
-
-    
+        
     sample.dir = light_vector;
 
     // Compute transmitted radiance

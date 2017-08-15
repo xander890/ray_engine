@@ -15,6 +15,7 @@
 
 //#define IMPORTANCE_SAMPLE_BRDF
 #include <merl_common.h>
+#include <material.h>
 
 using namespace optix;
 
@@ -27,21 +28,11 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
-rtDeclareVariable(float3, ambient_light_color, , );
-rtDeclareVariable(float3, W, , );
-rtDeclareVariable(float, phong_exp, , );
-rtDeclareVariable(float, ior, , );
-rtDeclareVariable(uint, ray_traced_reflection, , );
-
-// Material properties (corresponding to OBJ mtl params)
-rtTextureSampler<float4, 2> ambient_map;
-rtTextureSampler<float4, 2> diffuse_map;
-rtTextureSampler<float4, 2> specular_map;
+rtDeclareVariable(MaterialDataCommon, material, , );
 
 // Monte carlo variables
 rtDeclareVariable(unsigned int, N, , );
 
-rtDeclareVariable(int, max_depth, , );
 rtDeclareVariable(int, max_splits, , );
 rtDeclareVariable(int, use_split, , );
 
@@ -74,7 +65,7 @@ __device__ __inline__
 float blinn_microfacet_distribution(const optix::float3& n, const optix::float3& brdf_normal)
 {
 	float cos_theta = fabsf(dot(n, brdf_normal));
-	float D = 0.5f * M_1_PIf * (phong_exp + 2.0f) * pow(cos_theta, phong_exp);
+	float D = 0.5f * M_1_PIf * (material.phong_exp + 2.0f) * pow(cos_theta, material.phong_exp);
 	return D;
 }
 
@@ -117,10 +108,10 @@ RT_PROGRAM void any_hit_shadow() {
 
 __inline__ __device__ float3 get_importance_sampled_brdf(const float3& hit_pos, float3 & normal, const float3 & wi, const float3 & new_normal, const float3 & out_v)
 {
-	float3 k_d = make_float3(tex2D(diffuse_map, texcoord.x, texcoord.y));
-	float3 k_s = make_float3(tex2D(specular_map, texcoord.x, texcoord.y));
+	float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
+    float3 k_s = make_float3(rtTex2D<float4>(material.specular_map, texcoord.x, texcoord.y));
 	float3 f_d = k_d * M_1_PIf;
-	return f_d + torrance_sparrow_brdf_sampled(normal, normalize(wi), normalize(out_v), new_normal, ior) * k_s;
+	return f_d + torrance_sparrow_brdf_sampled(normal, normalize(wi), normalize(out_v), new_normal, material.ior) * k_s;
 }
 
 __inline__ __device__ float3 get_brdf(const float3& hit_pos, float3 & normal, const float3 & wi, const float3 & out_v)
@@ -132,10 +123,10 @@ __inline__ __device__ float3 get_brdf(const float3& hit_pos, float3 & normal, co
 	}
 	else
 	{
-		float3 k_d = make_float3(tex2D(diffuse_map, texcoord.x, texcoord.y));
-		float3 k_s = make_float3(tex2D(specular_map, texcoord.x, texcoord.y));
-		float3 f_d = k_d * M_1_PIf;
-		f = f_d + torrance_sparrow_brdf(normal, normalize(wi), normalize(out_v), ior) * k_s;
+        float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
+        float3 k_s = make_float3(rtTex2D<float4>(material.specular_map, texcoord.x, texcoord.y));
+        float3 f_d = k_d * M_1_PIf;
+		f = f_d + torrance_sparrow_brdf(normal, normalize(wi), normalize(out_v), material.ior) * k_s;
 	}
 	return f;
 }
@@ -188,8 +179,8 @@ RT_PROGRAM void shade_path_tracing()
 	float3 hit_pos;
 	normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	float3 wo = -ray.direction;
-	float3 k_d = make_float3(tex2D(diffuse_map, texcoord.x, texcoord.y));
-	float3 brdf_normal = normal;
+    float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
+    float3 brdf_normal = normal;
 
 	hit_pos = ray.origin + t_hit * ray.direction;
 	hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
@@ -233,7 +224,7 @@ RT_PROGRAM void shade_path_tracing()
 		{
 			// Only the first hit uses direct illumination
 			prd_radiance.flags &= ~(RayFlags::USE_EMISSION); //Unset use emission
-			emission += make_float3(tex2D(ambient_map, texcoord.x, texcoord.y));
+			emission += make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
 		}
 
 		// Indirect illumination

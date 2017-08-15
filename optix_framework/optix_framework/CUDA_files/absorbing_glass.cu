@@ -8,6 +8,7 @@
 #include <optical_helper.h>
 #include <random.h>
 #include <ray_trace_helpers.h>
+#include <material.h>
 
 using namespace optix;
 
@@ -18,19 +19,18 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
-rtTextureSampler<float4, 2> ambient_map;
+
 rtDeclareVariable(float3, ior_complex_real_sq, , ); 
 rtDeclareVariable(float3, ior_complex_imag_sq, , ); 
-rtDeclareVariable(float, ior, , );
+rtDeclareVariable(MaterialDataCommon, material, , );
 
 // Recursive ray tracing variables
-rtDeclareVariable(int, max_depth, , );
 rtDeclareVariable(int, max_splits, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() { 
-	float3 emission = make_float3(tex2D(ambient_map, texcoord.x, texcoord.y));
-	shadow_hit(prd_shadow,emission);
+    float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
+    shadow_hit(prd_shadow, emission);
 }
 
 __forceinline__ __device__ void absorbing_glass()
@@ -43,7 +43,7 @@ __forceinline__ __device__ void absorbing_glass()
   {
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray, ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+		get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		float xi = rnd(prd_radiance.seed);
 		

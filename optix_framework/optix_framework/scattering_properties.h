@@ -28,5 +28,5 @@ struct ScatteringMaterialProperties
     float mean_transport;
     optix::float3 one_over_three_ext;
     float min_transport;
-
+    optix::float3 deltaEddExtinction;
 };

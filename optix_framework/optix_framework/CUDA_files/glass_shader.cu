@@ -5,6 +5,8 @@
 #include <device_common_data.h>
 #include <color_helpers.h>
 #include <environment_map.h>
+#include <material.h>
+#include <ray_trace_helpers.h>
 
 using namespace optix;
 
@@ -16,20 +18,10 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 
-rtDeclareVariable(float3, ambient_light_color, , );
-rtDeclareVariable(float, phong_exp, , );
-rtDeclareVariable(uint, ray_traced_reflection, ,);
-rtDeclareVariable(float, ior, , );
+rtDeclareVariable(MaterialDataCommon, material, , );
+
 rtDeclareVariable(float3, ior_complex_real_sq, , );
 rtDeclareVariable(float3, ior_complex_imag_sq, , );
-rtDeclareVariable(float3, absorption, , );
-
-// Material properties (corresponding to OBJ mtl params)
-rtTextureSampler<float4, 2> ambient_map;
-rtTextureSampler<float4, 2> diffuse_map; 
-rtTextureSampler<float4, 2> specular_map; 
-
-rtDeclareVariable(int, max_depth, , );
 
 // Russian roulette variables
 rtDeclareVariable(int, max_splits, , );
@@ -37,9 +29,8 @@ rtDeclareVariable(int, max_splits, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() { 
-	 float3 emission = make_float3(tex2D(ambient_map, texcoord.x, texcoord.y));
-
-	 shadow_hit(prd_shadow, emission);
+    float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
+ shadow_hit(prd_shadow, emission);
 }
 
 
@@ -68,7 +59,7 @@ RT_PROGRAM void shade()
 
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray, ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+		get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		rtTrace(top_object, reflected_ray, prd_refl);
 		color += R * prd_refl.result;
@@ -94,7 +85,7 @@ RT_PROGRAM void shade_rr(void)
 
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray, ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+		get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		uint t = prd_radiance.seed;
 		float random = rnd(t);
@@ -146,14 +137,14 @@ RT_PROGRAM void shade_path_tracing(void)
 
     Ray reflected_ray, refracted_ray;
     float R, cos_theta;
-    get_glass_rays(ray, ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+    get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 
 	// Russian roulette with absorption if inside
 	float3 beam_T = make_float3(1.0f);
 	if (cos_theta < 0.0f)
 	{
-		beam_T = expf(-t_hit*absorption);
+		beam_T = expf(-t_hit*material.absorption);
 		float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
 		if (rnd(t) >= prob)
 		{

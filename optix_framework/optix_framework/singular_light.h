@@ -7,10 +7,10 @@
 
 #include <optix_math.h>
 
-struct DirectionalLight
+struct SingularLightData
 {
   optix::float3 direction;
-  int padding;
+  int type;
   optix::float3 emission;
   int casts_shadow; 
 };

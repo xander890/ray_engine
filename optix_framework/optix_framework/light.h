@@ -1,7 +1,6 @@
 #pragma once
 #include "device_common_data.h"
-#include <directional_light.h>
-#include <point_light.h>
+#include <singular_light.h>
 #include <area_light.h>
 #include <ray_trace_helpers.h>
 #include "host_device_common.h"
@@ -9,9 +8,7 @@
 // Helper functions and data structures for lights. Note that every time a light is used this header must be included.
 
 // Directional lights
-rtBuffer<DirectionalLight, 1> directional_lights;
-// Point light code
-rtBuffer<PointLight, 1> point_lights;
+rtBuffer<SingularLightData, 1> singular_lights;
 // Area light code
 rtBuffer<TriangleLight, 1> area_lights;
 
@@ -24,13 +21,14 @@ __forceinline__ __device__
 void evaluate_no_light(const float3& test, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index) { radiance = make_float3(1, 0, 0); }
 
 __forceinline__ __device__
-int directional_light_size() { return directional_lights.size(); }
+int singular_light_size() { return singular_lights.size(); }
 
 __forceinline__ __device__
-void evaluate_directional_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index)
+void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index)
 {
-    DirectionalLight l = directional_lights[light_index];
-    wi = -l.direction;
+    SingularLightData l = singular_lights[light_index];
+    wi = (l.type == LIGHT_TYPE_POINT)? l.direction - hit_point  : -l.direction ;
+    wi = normalize(wi);
 
     float V = 1.0f;
 
@@ -39,27 +37,8 @@ void evaluate_directional_light(const float3 & hit_point, const float3 & hit_nor
         V = trace_shadow_ray(hit_point, wi, scene_epsilon, RT_DEFAULT_MAX);
     }
 
-    radiance = V * l.emission;
-    casts_shadows = l.casts_shadow;
-}
-
-__forceinline__ __device__
-int point_light_size() { return point_lights.size(); }
-
-__forceinline__ __device__
-void evaluate_point_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index)
-{
-    PointLight l = point_lights[light_index];
-    wi = l.position - hit_point;
-    float dist_sq = dot(wi, wi);
-    float dist = sqrt(dist_sq);
-    wi /= dist;
-    float V = 1.0f;
-    if (l.casts_shadow)
-    {
-        V = trace_shadow_ray(hit_point, wi, scene_epsilon, dist);
-    }
-    radiance = l.intensity / dist_sq * max(dot(wi, hit_normal), 0.0f);
+    float atten = (l.type == LIGHT_TYPE_POINT) ? dot(wi, wi) : 1.0f;
+    radiance = V * l.emission / atten;
     casts_shadows = l.casts_shadow;
 }
 
@@ -151,11 +130,11 @@ __device__ __inline__ void evaluate_direct_light(const float3& hit_point, const 
 {
     switch (light_type)
     {
-    case LIGHT_TYPE_POINT: evaluate_point_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index); break;
     case LIGHT_TYPE_AREA:  evaluate_area_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index);  break;
     default:
     case LIGHT_TYPE_SKY:
-    case LIGHT_TYPE_DIR:   evaluate_directional_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index); break;
+    case LIGHT_TYPE_POINT: 
+    case LIGHT_TYPE_DIR:   evaluate_singular_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index); break;
     }
 }
 
@@ -165,10 +144,10 @@ __device__ __forceinline__ int light_size()
 {
     switch (light_type)
     {
-    case LIGHT_TYPE_POINT: return point_light_size(); break;
     case LIGHT_TYPE_AREA: return area_light_size();  break;
     default:
     case LIGHT_TYPE_SKY:
-    case LIGHT_TYPE_DIR: return directional_light_size(); break;
+    case LIGHT_TYPE_POINT: 
+    case LIGHT_TYPE_DIR: return singular_light_size(); break;
     }
 }

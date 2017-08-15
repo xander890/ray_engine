@@ -39,7 +39,10 @@ void Camera::update_camera(const SampleScene::RayGenCameraData& camera_data)
 void Camera::set_into_gpu(optix::Context & context) { 
     context["camera_data"]->setUserData(sizeof(CameraData), data.get()); 
 }
-//virtual void set_into_gui(GUI * gui) = 0;
+
+void Camera::set_into_gui(GUI * gui) {
+    
+}
 
 int Camera::get_width() const { return data->render_bounds.z; }
 int Camera::get_height() const { return data->render_bounds.w; }

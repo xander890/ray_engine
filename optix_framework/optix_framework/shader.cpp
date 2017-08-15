@@ -10,6 +10,7 @@
 #include "default_shader.h"
 #include "shader_factory.h"
 #include "scattering_material.h"
+#include "host_material.h"
 
 using namespace optix;
 using namespace std;
@@ -33,7 +34,7 @@ void get_relative_ior(const MPMLMedium& med_in, const MPMLMedium& med_out, optix
 void Shader::initialize_mesh(Mesh & object)
 {
     // Setting MPML data
-    string n = object.mMaterialData.name;
+    string n = object.mMaterialData->get_name();
     if (MaterialLibrary::media.count(n) != 0)
     {
         MPMLMedium mat = MaterialLibrary::media[n];

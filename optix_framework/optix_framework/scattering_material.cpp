@@ -12,7 +12,7 @@ ScatteringMaterial& ScatteringMaterial::operator=(const ScatteringMaterial& cp)
     asymmetry = cp.asymmetry;
     name = cp.name;
     scale = cp.scale;
-    computeCoefficients();
+    dirty = true;
     return *this;
 }
 
@@ -24,7 +24,7 @@ ScatteringMaterial::ScatteringMaterial(const ScatteringMaterial& cp)
     asymmetry = cp.asymmetry;
     name = cp.name;
     scale = cp.scale;
-    computeCoefficients();
+    dirty = true;
 }
 
 std::vector<ScatteringMaterial> ScatteringMaterial::initializeDefaultMaterials()
@@ -156,40 +156,31 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
   case Count: break;
   default: ;
   }
-  computeCoefficients();
-}
-
-void ScatteringMaterial::loadParameters(const char* name, optix::GeometryInstance & geom) 
-{
-    if (dirty)
-    {
-        geom[name]->setUserData(sizeof(ScatteringMaterialProperties), &properties);
-        dirty = false;
-    }  
+  dirty = true;
 }
 
 void ScatteringMaterial::set_ior(float ior)
 {
 	this->ior = ior;
-	computeCoefficients();
+	dirty = true;
 }
 
 void ScatteringMaterial::set_absorption(optix::float3 abs)
 {
 	absorption = abs;
-	computeCoefficients();
+	dirty = true;
 }
 
 void ScatteringMaterial::set_scattering(optix::float3 sc)
 {
 	scattering = sc;
-	computeCoefficients();
+	dirty = true;
 }
 
 void ScatteringMaterial::set_asymmetry(float asymm)
 {
 	asymmetry = make_float3(asymm);
-	computeCoefficients();
+	dirty = true;
 }
 
 void ScatteringMaterial::set_into_gui(GUI* gui)
@@ -240,7 +231,7 @@ void ScatteringMaterial::setAsymmetry(const void* var, void* data)
 {
     ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
     s->set_asymmetry(*(float*)var);
-    s->computeCoefficients();
+    s->dirty = true;
 }
 
 void ScatteringMaterial::getAsymmetry(void* var, void* data)
@@ -253,7 +244,7 @@ void ScatteringMaterial::setScale(const void* var, void* data)
 {
     ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
     s->scale = *(float*)var;
-    s->computeCoefficients();
+    s->dirty = true;
 }
 
 void ScatteringMaterial::getScale(void* var, void* data)
@@ -268,6 +259,7 @@ void ScatteringMaterial::computeCoefficients()
   properties.scattering = scattering * scale;
   properties.meancosine = asymmetry;
   properties.relative_ior = ior;
+  properties.deltaEddExtinction = properties.scattering*(1.0f - properties.meancosine*properties.meancosine) + properties.absorption;
 
   auto reducedScattering = properties.scattering * (make_float3(1.0f) - properties.meancosine);
   properties.reducedExtinction = reducedScattering + properties.absorption;
@@ -291,5 +283,14 @@ void ScatteringMaterial::computeCoefficients()
   //properties.iorsq = properties.relative_ior * properties.relative_ior;
   properties.min_transport = fminf(fminf(properties.transport.x, properties.transport.y), properties.transport.z);
   properties.mean_transport = (properties.transport.x + properties.transport.y + properties.transport.z) / 3.0f;
-    dirty = true;
+    dirty = false;
+}
+
+ScatteringMaterialProperties ScatteringMaterial::get_data()
+{
+    if (dirty)
+    {
+        computeCoefficients();
+    }
+    return properties;
 }

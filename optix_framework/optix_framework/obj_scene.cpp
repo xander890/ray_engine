@@ -8,8 +8,7 @@
 #include <string>
 #include <sutil.h>
 #include "obj_loader.h"
-#include "directional_light.h"
-#include "point_light.h"
+#include "singular_light.h"
 #include "obj_scene.h"
 #include "folders.h"
 #include "simple_tracing.h"
@@ -34,8 +33,12 @@
 #include "CGLA/Mat3x3f.h"
 #include "aisceneloader.h"
 #include "shader_factory.h"
-#include "scattering_material.h"
 #include "Medium.h"
+
+
+#include "mesh.h"
+#include "host_material.h"
+#include <scattering_material.h>
 
 using namespace std;
 using namespace optix;
@@ -235,9 +238,9 @@ void ObjScene::initUI()
 
     execute_on_scene_elements([=](Mesh & m)
     {
-        if (m.mMaterialData.illum == 17 || m.mMaterialData.illum == 12)
+        if (m.mMaterialData->get_data().illum == 17 || m.mMaterialData->get_data().illum == 12)
         {
-            m.mMaterialData.scattering_material->set_into_gui(gui);
+            m.mMaterialData->set_into_gui(gui);
         }
     });
 
@@ -504,7 +507,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	context->compile();
 
 	// Opengl setup
-	glClearColor(0.0, 0.0, 0.0, 1.0);
 	float3 envmap_deltas_deg = ParameterParser::get_parameter<float3>("light", "envmap_deltas", make_float3(0), "Rotation offsetof environment map.");
 	setDeltaX(&envmap_deltas_deg.x, this);
 	setDeltaY(&envmap_deltas_deg.y, this);
@@ -642,13 +644,8 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 	std::string ptx_path_light = get_path_ptx("light_programs.cu");
     Buffer dir_light_buffer = context->createBuffer(RT_BUFFER_INPUT);
 	dir_light_buffer->setFormat(RT_FORMAT_USER);
-    dir_light_buffer->setElementSize(sizeof(DirectionalLight));
+    dir_light_buffer->setElementSize(sizeof(SingularLightData));
     dir_light_buffer->setSize(1);
-
-    Buffer point_light_buffer = context->createBuffer(RT_BUFFER_INPUT);
-    point_light_buffer->setFormat(RT_FORMAT_USER);
-    point_light_buffer->setElementSize(sizeof(PointLight));
-    point_light_buffer->setSize(1);
 
     Buffer area_light_buffer = context->createBuffer(RT_BUFFER_INPUT);
     area_light_buffer->setFormat(RT_FORMAT_USER);
@@ -659,24 +656,24 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 	{
 	case LightTypes::SKY_LIGHT:
 		{
-			DirectionalLight light;
+			SingularLightData light;
 			sky_model.get_directional_light(light);
-            memcpy(dir_light_buffer->map(), &light, sizeof(DirectionalLight));
+            memcpy(dir_light_buffer->map(), &light, sizeof(SingularLightData));
             dir_light_buffer->unmap();
 		}
 		break;
 	case LightTypes::DIRECTIONAL_LIGHT:
 		{
-			DirectionalLight light = {normalize(light_dir), 0, light_radiance, shadows};
-            memcpy(dir_light_buffer->map(), &light, sizeof(DirectionalLight));
+            SingularLightData light = { normalize(light_dir), LIGHT_TYPE_DIR, light_radiance, shadows };
+            memcpy(dir_light_buffer->map(), &light, sizeof(SingularLightData));
             dir_light_buffer->unmap();
 		}
 		break;
 	case LightTypes::POINT_LIGHT:
 		{
-			PointLight light = {light_pos, 0, light_intensity, shadows};
-            memcpy(point_light_buffer->map(), &light, sizeof(PointLight));
-            point_light_buffer->unmap();
+            SingularLightData light = { light_pos, LIGHT_TYPE_POINT, light_intensity, shadows };
+            memcpy(dir_light_buffer->map(), &light, sizeof(SingularLightData));
+            dir_light_buffer->unmap();
 		}
 		break;
 	case LightTypes::AREA_LIGHT:
@@ -707,8 +704,7 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 	default: break;
 	}
 
-	context["directional_lights"]->set(dir_light_buffer);
-	context["point_lights"]->set(point_light_buffer);
+	context["singular_lights"]->set(dir_light_buffer);
 	context["area_lights"]->set(area_light_buffer);
 }
 

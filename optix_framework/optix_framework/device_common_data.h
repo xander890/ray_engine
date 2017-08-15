@@ -27,6 +27,8 @@ rtDeclareVariable(unsigned int, radiance_ray_type, , );
 rtDeclareVariable(unsigned int, shadow_ray_type, , );
 rtDeclareVariable(unsigned int, dummy_ray_type, , );
 
+rtDeclareVariable(int, max_depth, , );
+
 static __device__ __inline__ void shadow_hit(PerRayData_shadow & shadow_payload, float3 & emission)
 {
 	if (!(emission.x + emission.y + emission.z > 0.0f))
@@ -38,5 +40,6 @@ static __device__ __inline__ void shadow_hit(PerRayData_shadow & shadow_payload,
 }
 
 #define optix_print rtPrintf
+
 
 #endif // light_common_h__

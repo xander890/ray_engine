@@ -183,6 +183,8 @@ echo Done.</Command>
     <ClCompile Include="dialogs.cpp" />
     <ClCompile Include="folders.cpp" />
     <ClCompile Include="gui.cpp" />
+    <ClCompile Include="host_material.cpp" />
+    <ClCompile Include="light_host.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="mesh.cpp" />
     <ClCompile Include="orthocamera.cpp" />
@@ -566,7 +568,10 @@ echo Done.</Command>
     <ClInclude Include="camera_host.h" />
     <ClInclude Include="default_shader.h" />
     <ClInclude Include="host_device_common.h" />
+    <ClInclude Include="host_material.h" />
     <ClInclude Include="light.h" />
+    <ClInclude Include="light_host.h" />
+    <ClInclude Include="material.h" />
     <ClInclude Include="merl_common.h" />
     <ClInclude Include="brdf_utils.h" />
     <ClInclude Include="cgla_optix_type_converter.h" />
@@ -583,7 +588,7 @@ echo Done.</Command>
     <ClInclude Include="color_helpers.h" />
     <ClInclude Include="CUDA_files\phong.h" />
     <ClInclude Include="directional_dipole.h" />
-    <ClInclude Include="directional_light.h" />
+    <ClInclude Include="singular_light.h" />
     <ClInclude Include="distribution1d.h" />
     <ClInclude Include="folders.h" />
     <ClInclude Include="glossy.h" />
@@ -599,7 +604,6 @@ echo Done.</Command>
     <ClInclude Include="parameter_parser.h" />
     <ClInclude Include="path_tracing.h" />
     <ClInclude Include="plint.h" />
-    <ClInclude Include="point_light.h" />
     <ClInclude Include="presampled_surface_bssrdf.h" />
     <ClInclude Include="procedural_loader.h" />
     <ClInclude Include="random.h" />

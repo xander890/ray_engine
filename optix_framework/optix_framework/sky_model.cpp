@@ -123,7 +123,7 @@ float3 SkyModel::get_sun_color()
 }
 
 
-void SkyModel::get_directional_light(DirectionalLight & light)
+void SkyModel::get_directional_light(SingularLightData & light)
 {
 	light.direction = -sun_position;
 	light.emission = sun_color * 6.87e-5;

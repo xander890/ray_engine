@@ -56,7 +56,6 @@ public:
     ScatteringMaterial(const ScatteringMaterial& cp);
 
     void getDefaultMaterial(DefaultScatteringMaterial material);
-    void loadParameters(const char* name, optix::GeometryInstance& context);
     void computeCoefficients();
 
     float get_scale() const { return scale; }
@@ -71,6 +70,7 @@ public:
     void set_asymmetry(float asymm);
     void set_into_gui(GUI* gui);
     const char* get_name() { return name; }
+    ScatteringMaterialProperties get_data();
 
     static std::vector<ScatteringMaterial> defaultMaterials;
 

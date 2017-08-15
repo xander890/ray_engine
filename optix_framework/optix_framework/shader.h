@@ -8,21 +8,6 @@
 class ScatteringMaterial;
 class Mesh;
 
-struct MaterialData
-{
-    std::string name;
-    optix::float3 emissive;
-    optix::float3 reflectivity;
-    optix::float3 absorption;
-    float  phong_exp;
-    float  ior;
-    int    illum;
-    optix::TextureSampler ambient_map;
-    optix::TextureSampler diffuse_map;
-    optix::TextureSampler specular_map;
-    ScatteringMaterial * scattering_material;
-};
-
 class Shader
 {
 public:    

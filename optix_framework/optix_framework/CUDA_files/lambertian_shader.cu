@@ -12,6 +12,7 @@
 #include <optical_helper.h>
 #include <environment_map.h>
 #include <camera.h>
+#include <material.h>
 
 using namespace optix;
 
@@ -26,20 +27,10 @@ rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
 rtDeclareVariable(CameraData, camera_data, , );
-
-rtDeclareVariable(float3, ambient_light_color, , );
-rtDeclareVariable(float, phong_exp, , );
-rtDeclareVariable(uint, ray_traced_reflection, , );
-
-// Material properties (corresponding to OBJ mtl params)
-rtTextureSampler<float4, 2> ambient_map;
-rtTextureSampler<float4, 2> diffuse_map;
-rtTextureSampler<float4, 2> specular_map;
-
+rtDeclareVariable(MaterialDataCommon, material, , );
 
 // Monte carlo variables
 rtDeclareVariable(unsigned int, N, , );
-rtDeclareVariable(int, max_depth, , );
 rtDeclareVariable(int, max_splits, , );
 rtDeclareVariable(int, use_split, , );
 
@@ -48,7 +39,7 @@ rtDeclareVariable(float3, eye, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() {
-	float3 emission = make_float3(tex2D(ambient_map, texcoord.x, texcoord.y));
+    float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
 	 //optix_print("%f %f %f", emission.x,emission.y,emission.z);
 	shadow_hit(prd_shadow, emission);
 }
@@ -83,7 +74,8 @@ __inline__ __device__ float3 sample_procedural_tex(float3 & position_local)
 
 __inline__ __device__ float3 get_k_d()
 {
-	float3 k_d = make_float3(tex2D(diffuse_map, texcoord.x, texcoord.y));
+
+    float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
 	//float3 k_d = make_float3(texcoord.x, texcoord.y, 0);
 	return k_d;
 }
@@ -106,7 +98,7 @@ RT_PROGRAM void shade()
 {
 	float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	float3 ffnormal = faceforward(normal, -ray.direction, normal);
-	float3 k_a = make_float3(tex2D(ambient_map, texcoord.x, texcoord.y));
+    float3 k_a = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
 	float3 hit_pos = ray.origin + t_hit * ray.direction;
 
 	hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
@@ -184,7 +176,7 @@ RT_PROGRAM void shade_path_tracing()
 		{
 			// Only the first hit uses emission
 			radiance.flags &= ~(RayFlags::USE_EMISSION); //Unset use emission
-			emission += make_float3(tex2D(ambient_map, texcoord.x, texcoord.y));
+            emission += make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
 			//if (radiance.depth > 0 && emission.x > 0)
 			//	optix_print("Emission requested. Path depth %d. Emission %f %f %f", radiance.depth, emission.x, emission.y, emission.z);
 		}

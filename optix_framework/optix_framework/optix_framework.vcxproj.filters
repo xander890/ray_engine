@@ -169,6 +169,12 @@
     <ClCompile Include="camera_host.cpp">
       <Filter>Source Files\Cameras</Filter>
     </ClCompile>
+    <ClCompile Include="light_host.cpp">
+      <Filter>Source Files\Lights</Filter>
+    </ClCompile>
+    <ClCompile Include="host_material.cpp">
+      <Filter>Source Files\Materials</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -188,15 +194,6 @@
     </ClInclude>
     <ClInclude Include="random.h">
       <Filter>Header Files\Optix</Filter>
-    </ClInclude>
-    <ClInclude Include="area_light.h">
-      <Filter>Header Files\Lights</Filter>
-    </ClInclude>
-    <ClInclude Include="point_light.h">
-      <Filter>Header Files\Lights</Filter>
-    </ClInclude>
-    <ClInclude Include="directional_light.h">
-      <Filter>Header Files\Lights</Filter>
     </ClInclude>
     <ClInclude Include="rendering_method.h">
       <Filter>Header Files\Methods</Filter>
@@ -298,13 +295,7 @@
     <ClInclude Include="cgla_optix_type_converter.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="host_device_common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="light.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="device_common_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="enums.h">
@@ -331,20 +322,41 @@
     <ClInclude Include="shader_factory.h">
       <Filter>Header Files\Shaders</Filter>
     </ClInclude>
-    <ClInclude Include="scattering_properties.h">
-      <Filter>Header Files\Materials</Filter>
-    </ClInclude>
     <ClInclude Include="gui.h">
       <Filter>Header Files\Dialogs</Filter>
-    </ClInclude>
-    <ClInclude Include="camera.h">
-      <Filter>Header Files\Cameras</Filter>
     </ClInclude>
     <ClInclude Include="camera_host.h">
       <Filter>Header Files\Cameras</Filter>
     </ClInclude>
     <ClInclude Include="optix_host_fwd.h">
       <Filter>Header Files\Optix</Filter>
+    </ClInclude>
+    <ClInclude Include="light_host.h">
+      <Filter>Header Files\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="host_device_common.h">
+      <Filter>Header Files\HostDeviceStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="device_common_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.h">
+      <Filter>Header Files\HostDeviceStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="scattering_properties.h">
+      <Filter>Header Files\HostDeviceStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="singular_light.h">
+      <Filter>Header Files\HostDeviceStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="area_light.h">
+      <Filter>Header Files\HostDeviceStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="material.h">
+      <Filter>Header Files\HostDeviceStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="host_material.h">
+      <Filter>Header Files\Materials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -431,6 +443,12 @@
     </Filter>
     <Filter Include="Source Files\Cameras">
       <UniqueIdentifier>{e56028e4-8dec-4bb5-937a-cc9208c8046a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lights">
+      <UniqueIdentifier>{6d4457fe-a797-4995-a46f-56afa577e457}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\HostDeviceStructs">
+      <UniqueIdentifier>{14ef9eba-8627-4ec9-b7d9-730cbffb0f72}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

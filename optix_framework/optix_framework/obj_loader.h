@@ -21,15 +21,16 @@
 
 #pragma once
 #include <sutil.h>
-#include <optixu/optixpp_namespace.h>
-#include <optixu/optixu_aabb_namespace.h>
-#include <optixu/optixu_matrix_namespace.h>
+#include <optix_world.h>
 #include <glm.h>
 #include <string>
 #include <folders.h>
 #include <area_light.h>
 #include "shader.h"
 #include "mesh.h"
+#include <memory>
+
+class MaterialHost;
 
 //-----------------------------------------------------------------------------
 // 
@@ -70,7 +71,7 @@ public:
   virtual void getAreaLights(std::vector<TriangleLight> & lights);
   static bool isMyFile(const char* filename);
 
-  std::vector<MaterialData> getMaterialParameters()
+  std::vector<std::shared_ptr<MaterialHost>> getMaterialParameters()
   {
 	  return m_material_params;
   }
@@ -81,7 +82,7 @@ protected:
   std::vector<Mesh> createGeometryInstances(GLMmodel* model);
   void loadVertexData( GLMmodel* model, const optix::Matrix4x4& transform );
   void createMaterialParams( GLMmodel* model );
-    MaterialData getMaterial(unsigned int index);
+  std::shared_ptr<MaterialHost> getMaterial(unsigned int index);
 
   void createLightBuffer( GLMmodel* model, const optix::Matrix4x4& transform );
 
@@ -105,7 +106,7 @@ protected:
   const char*            m_ASRefine;
   bool                   m_large_geom;
   optix::Aabb            m_aabb;
-  std::vector<MaterialData> m_material_params;
+  std::vector<std::shared_ptr<MaterialHost>> m_material_params;
 };
 
 

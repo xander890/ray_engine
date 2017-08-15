@@ -151,6 +151,7 @@ private:
 	bool deforming;
 	bool use_tonemap;
 	Camera* camera;
+   
 
 	GUI* gui = nullptr;
 	float3 lightmap_multiplier = make_float3(1.0f);
