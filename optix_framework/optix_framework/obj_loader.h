@@ -78,7 +78,6 @@ public:
 
 protected:
 
-  void createMaterial();
   std::vector<Mesh> createGeometryInstances(GLMmodel* model);
   void loadVertexData( GLMmodel* model, const optix::Matrix4x4& transform );
   void createMaterialParams( GLMmodel* model );
@@ -96,7 +95,6 @@ protected:
   optix::Buffer          m_vbuffer;
   optix::Buffer          m_nbuffer;
   optix::Buffer          m_tbuffer;
-  optix::Material        m_material;
 
   optix::Buffer          m_light_buffer;
   bool                   m_have_default_material;

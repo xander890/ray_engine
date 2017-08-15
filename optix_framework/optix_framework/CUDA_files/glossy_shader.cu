@@ -143,7 +143,7 @@ RT_PROGRAM void shade()
 	//hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
 
 	//float3 color = make_float3(0.0f);
-	////color += ambient_light_color * k_a;  
+	////color +=  k_a;  
 	//float3 view = -normalize(W);
 	//for (unsigned int i = 0; i < light_size(); ++i)
 	//{

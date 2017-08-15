@@ -76,7 +76,6 @@ ObjLoader::ObjLoader( const char* filename,
   m_vbuffer( 0 ),
   m_nbuffer( 0 ),
   m_tbuffer( 0 ),
-  m_material( material ),
   m_have_default_material( true ),
   m_force_load_material_params( force_load_material_params ),
   m_ASBuilder  (ASBuilder),
@@ -103,7 +102,6 @@ ObjLoader::ObjLoader( const char* filename,
   m_vbuffer( 0 ),
   m_nbuffer( 0 ),
   m_tbuffer( 0 ),
-  m_material( 0 ),
   m_have_default_material( false ),
   m_force_load_material_params( false ),
   m_ASBuilder  (ASBuilder),
@@ -141,9 +139,6 @@ std::vector<Mesh> ObjLoader::load(const optix::Matrix4x4& transform)
 	ss << "ObjLoader::loadImpl - glmReadOBJ( '" << m_filename << "' ) failed" << std::endl;
 	throw Exception( ss.str() );
   }
-
-  // Create a single material to be shared by all GeometryInstances
-  createMaterial(); 
   
   // Create vertex data buffers to be shared by all Geometries
   loadVertexData( model, transform );
@@ -157,20 +152,6 @@ std::vector<Mesh> ObjLoader::load(const optix::Matrix4x4& transform)
 
   glmDelete( model );
   return meshes;
-}
-
-
-void ObjLoader::createMaterial()
-{
-  if ( m_have_default_material ) return;
-
-  std::string path = std::string(PATH_TO_MY_PTX_FILES) + "/obj_material.cu.ptx";
-
-  Program closest_hit = m_context->createProgramFromPTXFile( path, "closest_hit_radiance" );
-  Program any_hit     = m_context->createProgramFromPTXFile( path, "any_hit_shadow" );
-  m_material           = m_context->createMaterial();
-  m_material->setClosestHitProgram( 0u, closest_hit );
-  m_material->setAnyHitProgram( 1u, any_hit );
 }
 
 

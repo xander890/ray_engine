@@ -13,9 +13,6 @@
     <CudaCompile Include="CUDA_files\box.cu">
       <Filter>CUDA_files\Mesh</Filter>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\obj_material.cu">
-      <Filter>CUDA_files\Mesh</Filter>
-    </CudaCompile>
     <CudaCompile Include="CUDA_files\sample_camera.cu">
       <Filter>CUDA_files\Cameras</Filter>
     </CudaCompile>
@@ -255,9 +252,6 @@
     </ClInclude>
     <ClInclude Include="distribution1d.h">
       <Filter>Header Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="CUDA_files\phong.h">
-      <Filter>Header Files\Materials</Filter>
     </ClInclude>
     <ClInclude Include="structs.h">
       <Filter>Header Files\Utils</Filter>

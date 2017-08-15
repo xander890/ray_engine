@@ -293,9 +293,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	sky_model.init();
 
 	
-
-	float3 ambient_light_color_p = ParameterParser::get_parameter<float3>("light", "ambient_light_color", make_float3(0.0f), "The ambient light color");
-
 	int camera_width = ParameterParser::get_parameter<int>("camera","window_width", 512, "The width of the window");
 	int camera_height = ParameterParser::get_parameter<int>("camera", "window_height", 512, "The height of the window");
 	int downsampling = ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, "");
@@ -311,7 +308,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	default_miss = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
 
 
-	context["ambient_light_color"]->setFloat(ambient_light_color_p);
 	// Setup context
 	context->setRayTypeCount(3);
 	context->setStackSize(ParameterParser::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
@@ -325,7 +321,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
 	// Constant colors
 	context["bad_color"]->setFloat(0.0f, 1.0f, 0.0f);
-	context["bg_color"]->setFloat(ambient_light_color_p);
+    context["bg_color"]->setFloat(0.3f, 0.3f, 0.3f);
 	
 	bool use_abs = ParameterParser::get_parameter<bool>("config", "use_absorption", true, "Use absorption in rendering.");
 	Logger::debug << "Absorption is " << (use_abs ? "ON" : "OFF") << endl;

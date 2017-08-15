@@ -386,22 +386,6 @@ echo Done.</Command>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\obj_material.cu">
-      <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
-      <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
-      <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
-      <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-    </CudaCompile>
     <CudaCompile Include="CUDA_files\lambertian_shader.cu">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling phong.cu into phong.cu.ptx...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">phong.cu.ptx</Outputs>
@@ -586,7 +570,6 @@ echo Done.</Command>
     <ClInclude Include="optix_host_fwd.h" />
     <ClInclude Include="procedural_mesh.h" />
     <ClInclude Include="color_helpers.h" />
-    <ClInclude Include="CUDA_files\phong.h" />
     <ClInclude Include="directional_dipole.h" />
     <ClInclude Include="singular_light.h" />
     <ClInclude Include="distribution1d.h" />
