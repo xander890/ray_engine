@@ -34,7 +34,7 @@ void get_relative_ior(const MPMLMedium& med_in, const MPMLMedium& med_out, optix
 void Shader::initialize_mesh(Mesh & object)
 {
     // Setting MPML data
-    string n = object.mMaterialData->get_name();
+    string n = object.get_main_material()->get_name();
     if (MaterialLibrary::media.count(n) != 0)
     {
         MPMLMedium mat = MaterialLibrary::media[n];

@@ -238,9 +238,9 @@ void ObjScene::initUI()
 
     execute_on_scene_elements([=](Mesh & m)
     {
-        if (m.mMaterialData->get_data().illum == 17 || m.mMaterialData->get_data().illum == 12)
+        if (m.get_main_material()->get_data().illum == 17 || m.get_main_material()->get_data().illum == 12)
         {
-            m.mMaterialData->set_into_gui(gui);
+            m.get_main_material()->set_into_gui(gui);
         }
     });
 
@@ -527,6 +527,24 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	initUI();
 	context["show_difference_image"]->setInt(show_difference_image);
 	context["merl_brdf_multiplier"]->setFloat(make_float3(1));
+
+    MaterialDataCommon params;
+    
+    params.absorption = make_float3(0);
+    params.emissive = make_float3(0);
+    params.illum = 2;
+    params.ior = 1.3f;
+    params.phong_exp = 0;
+    params.reflectivity = make_float3(0);
+    params.ambient_map = loadTexture(m_context, "", make_float3(0))->getId();
+    params.diffuse_map = loadTexture(m_context, "", make_float3(1,0,0))->getId();
+    params.specular_map = loadTexture(m_context, "", make_float3(0))->getId();
+
+    material_ketchup = std::shared_ptr<MaterialHost>(new MaterialHost("ketchup", params));
+    execute_on_scene_elements([=](Mesh & m)
+    {
+        m.add_material(material_ketchup);
+    });
 
 	 Logger::info<<"Scene initialized."<<endl;
 }

@@ -13,6 +13,7 @@ public:
 
     void set_into_gui(GUI * gui);
     const MaterialDataCommon& get_data(); 
+    MaterialDataCommon get_data_copy();
     std::string get_name() { return mMaterialName; }
 
 private:

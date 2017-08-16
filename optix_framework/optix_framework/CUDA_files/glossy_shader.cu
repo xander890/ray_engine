@@ -15,7 +15,7 @@
 
 //#define IMPORTANCE_SAMPLE_BRDF
 #include <merl_common.h>
-#include <material.h>
+#include <material_device.h>
 
 using namespace optix;
 
@@ -28,7 +28,7 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
-rtDeclareVariable(MaterialDataCommon, material, , );
+
 
 // Monte carlo variables
 rtDeclareVariable(unsigned int, N, , );
@@ -64,6 +64,7 @@ float geometric_term_torrance_sparrow(const optix::float3& n, const optix::float
 __device__ __inline__
 float blinn_microfacet_distribution(const optix::float3& n, const optix::float3& brdf_normal)
 {
+    const MaterialDataCommon & material = get_material();
 	float cos_theta = fabsf(dot(n, brdf_normal));
 	float D = 0.5f * M_1_PIf * (material.phong_exp + 2.0f) * pow(cos_theta, material.phong_exp);
 	return D;
@@ -108,6 +109,7 @@ RT_PROGRAM void any_hit_shadow() {
 
 __inline__ __device__ float3 get_importance_sampled_brdf(const float3& hit_pos, float3 & normal, const float3 & wi, const float3 & new_normal, const float3 & out_v)
 {
+    const MaterialDataCommon & material = get_material();
 	float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
     float3 k_s = make_float3(rtTex2D<float4>(material.specular_map, texcoord.x, texcoord.y));
 	float3 f_d = k_d * M_1_PIf;
@@ -123,10 +125,12 @@ __inline__ __device__ float3 get_brdf(const float3& hit_pos, float3 & normal, co
 	}
 	else
 	{
-        float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
-        float3 k_s = make_float3(rtTex2D<float4>(material.specular_map, texcoord.x, texcoord.y));
+       
+        const MaterialDataCommon& mat = get_material();
+        float3 k_d = make_float3(rtTex2D<float4>(mat.diffuse_map, texcoord.x, texcoord.y));
+        float3 k_s = make_float3(rtTex2D<float4>(mat.specular_map, texcoord.x, texcoord.y));
         float3 f_d = k_d * M_1_PIf;
-		f = f_d + torrance_sparrow_brdf(normal, normalize(wi), normalize(out_v), material.ior) * k_s;
+        f = f_d + torrance_sparrow_brdf(normal, normalize(wi), normalize(out_v), mat.ior) * k_s;
 	}
 	return f;
 }
@@ -174,7 +178,7 @@ RT_PROGRAM void shade()
 
 RT_PROGRAM void shade_path_tracing()
 {
-
+    const MaterialDataCommon & material = get_material();
 	float3 normal;
 	float3 hit_pos;
 	normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));

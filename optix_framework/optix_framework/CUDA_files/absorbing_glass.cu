@@ -8,7 +8,7 @@
 #include <optical_helper.h>
 #include <random.h>
 #include <ray_trace_helpers.h>
-#include <material.h>
+#include <material_device.h>
 
 using namespace optix;
 
@@ -20,15 +20,12 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 
-rtDeclareVariable(float3, ior_complex_real_sq, , ); 
-rtDeclareVariable(float3, ior_complex_imag_sq, , ); 
-rtDeclareVariable(MaterialDataCommon, material, , );
-
 // Recursive ray tracing variables
 rtDeclareVariable(int, max_splits, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() { 
+    const MaterialDataCommon & material = get_material();
     float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
     shadow_hit(prd_shadow, emission);
 }
@@ -38,6 +35,7 @@ __forceinline__ __device__ void absorbing_glass()
   float3 hit_pos = ray.origin + t_hit * ray.direction;
   float3 normal = rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal);
   float3 ffnormal = faceforward(normal, -ray.direction, normal);
+  const MaterialDataCommon & material = get_material();
 
   if(prd_radiance.depth < max_depth)
   {

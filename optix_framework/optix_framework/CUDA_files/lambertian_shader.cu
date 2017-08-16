@@ -12,7 +12,7 @@
 #include <optical_helper.h>
 #include <environment_map.h>
 #include <camera.h>
-#include <material.h>
+#include <material_device.h>
 
 using namespace optix;
 
@@ -27,7 +27,7 @@ rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
 rtDeclareVariable(CameraData, camera_data, , );
-rtDeclareVariable(MaterialDataCommon, material, , );
+
 
 // Monte carlo variables
 rtDeclareVariable(unsigned int, N, , );
@@ -39,6 +39,7 @@ rtDeclareVariable(float3, eye, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() {
+    const MaterialDataCommon & material = get_material();
     float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
 	 //optix_print("%f %f %f", emission.x,emission.y,emission.z);
 	shadow_hit(prd_shadow, emission);
@@ -74,9 +75,8 @@ __inline__ __device__ float3 sample_procedural_tex(float3 & position_local)
 
 __inline__ __device__ float3 get_k_d()
 {
-
+    const MaterialDataCommon & material = get_material();
     float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
-	//float3 k_d = make_float3(texcoord.x, texcoord.y, 0);
 	return k_d;
 }
 
@@ -96,9 +96,10 @@ __inline__ __device__ float3 shade_specular(const float3& hit_pos, const float3 
 // Closest hit program for Lambertian shading using the basic light as a directional source + specular term (blinn phong)
 RT_PROGRAM void shade()
 {
+    const MaterialDataCommon & material = get_material();
 	float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	float3 ffnormal = faceforward(normal, -ray.direction, normal);
-    float3 k_a = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
+    float3 k_a = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
 	float3 hit_pos = ray.origin + t_hit * ray.direction;
 
 	hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
@@ -135,6 +136,7 @@ RT_PROGRAM void shade()
 
 RT_PROGRAM void shade_path_tracing()
 {
+    const MaterialDataCommon & material = get_material();
 	PerRayData_radiance& radiance = (ray.ray_type == dummy_ray_type) ? prd_cache.radiance : prd_radiance;
 	optix_print("Lambertian Hit\n");
 	float3 k_d = get_k_d();

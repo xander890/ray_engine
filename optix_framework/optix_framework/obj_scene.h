@@ -157,6 +157,7 @@ private:
 	float3 lightmap_multiplier = make_float3(1.0f);
 	void add_result_image(const string& image_file);
     std::vector<Mesh> mMeshes;
+    std::shared_ptr<MaterialHost> material_ketchup;
 
     void execute_on_scene_elements(function<void(Mesh&)> operation);
 

@@ -14,7 +14,7 @@
 #include "../structs.h"
 #include <ray_trace_helpers.h>
 #include <scattering_properties.h>
-#include <material.h>
+#include <material_device.h>
 
 using namespace optix;
 
@@ -25,7 +25,7 @@ rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 
 // SS properties
-rtDeclareVariable(MaterialDataCommon, material, , );
+
 
 // Variables for shading
 rtBuffer<PositionSample> sampling_output_buffer;
@@ -55,7 +55,8 @@ RT_PROGRAM void shade()
     float3 xo = ray.origin + t_hit*ray.direction;
     float3 wo = -ray.direction;
     float3 no = faceforward(n, wo, n);
-    ScatteringMaterialProperties& props = material.scattering_properties;
+    const MaterialDataCommon & material = get_material(xo);
+    const ScatteringMaterialProperties& props = material.scattering_properties;
     float recip_ior = 1.0f / props.relative_ior;
     uint& t = prd_radiance.seed;
     float reflect_xi = rnd(t);

@@ -30,16 +30,20 @@ public:
     optix::Context  mContext;
     optix::Material mMaterial = nullptr;
 
-    std::shared_ptr<MaterialHost> mMaterialData;
     MeshData mMeshData;
     Shader * mShader;
 
     void load_material();  
     void load_geometry();
     void load_shader(Mesh& object, RenderingMethodType::EnumType method);
+    void add_material(std::shared_ptr<MaterialHost> material);
+
+    std::shared_ptr<MaterialHost> get_main_material() { return mMaterialData[0]; }
 
 private:
+    std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
     void create_and_bind_optix_data();
     optix::Program         mIntersectProgram;
     optix::Program         mBoundingboxProgram;
+    optix::Buffer          mMaterialBuffer;
 };

@@ -65,7 +65,7 @@ void GlossyShader::initialize_mesh(Mesh& object)
 {
     Shader::initialize_mesh(object);
     set_data(object);
-    string n = object.mMaterialData->get_name();
+    string n = object.get_main_material()->get_name();
 
     string n_ext = n + ".binary";
     MERLBrdf * mat = nullptr;

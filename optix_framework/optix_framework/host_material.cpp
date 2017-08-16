@@ -58,4 +58,8 @@ const MaterialDataCommon& MaterialHost::get_data()
     return mMaterialData;
 }
 
-
+MaterialDataCommon MaterialHost::get_data_copy()
+{
+    mMaterialData.scattering_properties = scattering_material->get_data();
+    return mMaterialData;
+}

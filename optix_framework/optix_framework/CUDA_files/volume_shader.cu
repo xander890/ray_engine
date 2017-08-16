@@ -6,7 +6,7 @@
 #include "structs.h"
 #include "scattering_properties.h"
 #include "light.h"
-#include <material.h>
+#include <material_device.h>
 
 using namespace optix;
 
@@ -18,7 +18,7 @@ rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 
 // Material properties
-rtDeclareVariable(MaterialDataCommon, material, , ); 
+ 
 rtDeclareVariable(unsigned int, N, , );
 rtDeclareVariable(float3, glass_abs, , );
 
@@ -26,12 +26,20 @@ rtDeclareVariable(float3, glass_abs, , );
 //#define USE_SIMILARITY
 #define SIMILARITY_STEPS 10
 
-#ifdef USE_SIMILARITY
-__device__ __inline__ bool scatter_inside(optix::Ray& ray, float g, float extinction, float red_extinction, float albedo, uint& t)
-#else
-__device__ __inline__ bool scatter_inside(optix::Ray& ray, float g, float extinction, float albedo, uint& t)
-#endif
+__device__ __inline__ void update_properties(const optix::float3 & pos, int colorband, float & albedo, float & extinction, float & g, float & red_extinction)
 {
+    const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
+    albedo = *(&props.albedo.x + colorband);
+    extinction = *(&props.extinction.x + colorband);
+    g = *(&props.meancosine.x + colorband);
+    red_extinction = *(&props.reducedExtinction.x + colorband);
+}
+
+__device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& t)
+{
+    float albedo, extinction, g, red_extinction;
+    update_properties(ray.origin, colorband, albedo, extinction, g, red_extinction);
+
     // Input: 
     // ray: initial position and direction
     //
@@ -54,6 +62,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, float g, float extinc
     int counter = 0;
     while (!stop)
     {
+        update_properties(ray.origin, colorband, albedo, extinction, g, red_extinction);
         // Sample new distance
         float dist_exponent = (counter < SIMILARITY_STEPS) ? extinction : red_extinction;
         ray.tmax = -log(rnd(t)) / dist_exponent;
@@ -79,6 +88,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, float g, float extinc
 #else
     for (;;)
     {
+        update_properties(ray.origin, colorband, albedo, extinction, g, red_extinction);
         // Sample new distance
         ray.tmax = -log(rnd(t)) / extinction;
 
@@ -124,7 +134,8 @@ RT_PROGRAM void shade()
     float3 hit_pos = ray.origin + t_hit*ray.direction;
     float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
     float3 w_i = -ray.direction;
-    ScatteringMaterialProperties& props = material.scattering_properties;
+    const MaterialDataCommon & material = get_material();
+    const ScatteringMaterialProperties& props = material.scattering_properties;
     float n1_over_n2 = 1.0f / props.relative_ior;
     float cos_theta_in = dot(normal, w_i);
     float3 beam_T = make_float3(1.0f);
@@ -178,19 +189,13 @@ RT_PROGRAM void shade()
             colorband = prd_radiance.colorband;
             weight = 1.0f;
         }
-        float color_albedo = *(&props.albedo.x + colorband);
-        float color_extinction = *(&props.extinction.x + colorband);
-        float g = *(&props.meancosine.x + colorband);
+
 
         // Trace inside, i.e., reflect from inside or refract from outside
         float3 dir_inside = inside ? reflected_dir : refracted_dir;
         Ray ray_inside(hit_pos, dir_inside, shadow_ray_type, scene_epsilon, RT_DEFAULT_MAX);
-#ifdef USE_SIMILARITY
-        float reduced_color_extinction = *(&props.reducedExtinction.x + colorband);
-        if (scatter_inside(ray_inside, g, color_extinction, reduced_color_extinction, color_albedo, t))
-#else
-        if (scatter_inside(ray_inside, g, color_extinction, color_albedo, t))
-#endif
+
+        if (scatter_inside(ray_inside, colorband, t))
         {
             // Switch to radiance ray and intersect with boundary
             ray_inside.ray_type = radiance_ray_type;
