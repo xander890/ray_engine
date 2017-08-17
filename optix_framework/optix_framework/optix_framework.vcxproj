@@ -191,7 +191,7 @@ echo Done.</Command>
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="mesh.cpp" />
     <ClCompile Include="miss_program.cpp" />
-    <ClCompile Include="orthocamera.cpp" />
+    <ClCompile Include="PerlinNoise.cpp" />
     <ClCompile Include="procedural_mesh.cpp" />
     <ClCompile Include="glossy.cpp" />
     <ClCompile Include="material_library.cpp" />
@@ -577,6 +577,7 @@ echo Done.</Command>
     <ClInclude Include="miss_program.h" />
     <ClInclude Include="optix_common.h" />
     <ClInclude Include="optix_host_fwd.h" />
+    <ClInclude Include="PerlinNoise.h" />
     <ClInclude Include="procedural_mesh.h" />
     <ClInclude Include="color_helpers.h" />
     <ClInclude Include="directional_dipole.h" />

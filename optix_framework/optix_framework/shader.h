@@ -4,8 +4,8 @@
 #include <optix_world.h>
 #include <map>
 #include <enums.h>
+#include <scattering_material.h>
 
-class ScatteringMaterial;
 class Mesh;
 
 class Shader

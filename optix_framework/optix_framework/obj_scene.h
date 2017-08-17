@@ -148,7 +148,7 @@ private:
 	unsigned int m_frame;
 	bool deforming;
 	bool use_tonemap;
-	Camera* camera;
+	std::unique_ptr<Camera> camera = nullptr;
    
 
 	GUI* gui = nullptr;
@@ -202,7 +202,7 @@ private:
 	optix::TextureSampler comparison_image;
 	float comparison_image_weight = 0.0;
 
-	void load_camera(InitialCameraData & data);
+	void load_camera_extrinsics(InitialCameraData & data);
 
 	struct SimulationParameters
 	{

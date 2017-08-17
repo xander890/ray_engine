@@ -160,9 +160,6 @@
     <ClCompile Include="gui.cpp">
       <Filter>Source Files\Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="orthocamera.cpp">
-      <Filter>Source Files\Cameras</Filter>
-    </ClCompile>
     <ClCompile Include="camera_host.cpp">
       <Filter>Source Files\Cameras</Filter>
     </ClCompile>

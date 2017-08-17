@@ -21,24 +21,16 @@
 #include "procedural_loader.h"
 #include "sphere.h"
 #include "dialogs.h"
-
 #include <sutil/ImageLoader.h>
 #include "presampled_surface_bssrdf.h"
-#include "apple_juice.h"
-#include "GEL/GLGraphics/SOIL.h"
 #include "GLUTDisplay.h"
-#include <optprops/glass.h>
 #include <GEL/GL/glut.h>
-#include "optical_helper.h"
 #include "CGLA/Mat3x3f.h"
 #include "aisceneloader.h"
 #include "shader_factory.h"
 #include "Medium.h"
-
-
 #include "mesh.h"
 #include "host_material.h"
-#include <scattering_material.h>
 #include "environment_map_background.h"
 #include "constant_background.h"
 
@@ -201,12 +193,12 @@ void ObjScene::initUI()
 	gui->addFloatVariable("Multiplier", &tonemap_multiplier, tmg, 0.0f, 1.0f, 0.05f);
 	gui->addFloatVariable("Exponent", &tonemap_exponent, tmg, 0.5f, 3.5f, 0.05f);
 
-	const char* glass_group = "Glass";
-	gui->addFloatVariableCallBack("Index of refraction", setIor, getIor, this, glass_group);
-	gui->addFloatVariableCallBack("Absorption - R", setAbsorptionColorR, getAbsorptionColorR, this, glass_group);
-	gui->addFloatVariableCallBack("Absorption - G", setAbsorptionColorG, getAbsorptionColorG, this, glass_group);
-	gui->addFloatVariableCallBack("Absorption - B", setAbsorptionColorB, getAbsorptionColorB, this, glass_group);
-	gui->addFloatVariableCallBack("Absorption inv. multiplier", setAbsorptionInverseMultiplier, getAbsorptionInverseMultiplier, this, glass_group);
+	//const char* glass_group = "Glass";
+	//gui->addFloatVariableCallBack("Index of refraction", setIor, getIor, this, glass_group);
+	//gui->addFloatVariableCallBack("Absorption - R", setAbsorptionColorR, getAbsorptionColorR, this, glass_group);
+	//gui->addFloatVariableCallBack("Absorption - G", setAbsorptionColorG, getAbsorptionColorG, this, glass_group);
+	//gui->addFloatVariableCallBack("Absorption - B", setAbsorptionColorB, getAbsorptionColorB, this, glass_group);
+	//gui->addFloatVariableCallBack("Absorption inv. multiplier", setAbsorptionInverseMultiplier, getAbsorptionInverseMultiplier, this, glass_group);
 
 	vector<GuiDropdownElement> elems;
 	int count = 0;
@@ -232,11 +224,8 @@ void ObjScene::initUI()
         }
     });
 
-	const char * limit_rendering_group = "Rendering Bounds";
-	gui->addIntVariable("X", (int*)&camera->data->render_bounds.x, limit_rendering_group, 0, camera->data->camera_size.x);
-	gui->addIntVariable("Y", (int*)&camera->data->render_bounds.y, limit_rendering_group, 0, camera->data->camera_size.y);
-	gui->addIntVariable("W", (int*)&camera->data->render_bounds.z, limit_rendering_group, 0, camera->data->camera_size.x);
-	gui->addIntVariable("H", (int*)&camera->data->render_bounds.w, limit_rendering_group, 0, camera->data->camera_size.y);
+
+    camera->set_into_gui(gui);
 }
 
 void ObjScene::initScene(InitialCameraData& init_camera_data)
@@ -249,25 +238,20 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
 
+    auto camera_type = PinholeCameraDefinitionType::String2Enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraDefinitionType::Enum2String(PinholeCameraDefinitionType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));
 
-    context->setEntryPointCount(as_integer(CameraType::COUNT));
+
+    int camera_width = ParameterParser::get_parameter<int>("camera", "window_width", 512, "The width of the window");
+    int camera_height = ParameterParser::get_parameter<int>("camera", "window_height", 512, "The height of the window");
+    int downsampling = ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, "");
+    camera = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
+    
     ShaderFactory::init(context);
     for (auto& kv : MaterialLibrary::media)
 	{
 		available_media.push_back(&kv.second);
 	}
 
-	
-	int camera_width = ParameterParser::get_parameter<int>("camera","window_width", 512, "The width of the window");
-	int camera_height = ParameterParser::get_parameter<int>("camera", "window_height", 512, "The height of the window");
-	int downsampling = ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, "");    
-	camera = new Camera(camera_width, camera_height, downsampling, custom_rr);
-
-
-
-	Logger::info << "Rendering rectangle: " << camera->data->rendering_rectangle.x << " " << camera->data->rendering_rectangle.y << " " <<
-		camera->data->rendering_rectangle.z << " " <<
-		camera->data->rendering_rectangle.w << " Camera: " << camera_width << " " << camera_height << endl;
 
 	default_miss = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
 
@@ -304,11 +288,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	Aabb bbox;
 
 	
-	const string ptx_path_def = get_path_ptx("pinhole_camera.cu");
-	Program empty = context->createProgramFromPTXFile(ptx_path_def, "empty");
-	for (int i = 0; i < as_integer(CameraType::COUNT); i++)
-		context->setRayGenerationProgram(i, empty);
-
     RenderingMethodType::EnumType t = RenderingMethodType::String2Enum(ParameterParser::get_parameter<string>("config", "rendering_type", RenderingMethodType::Enum2String(RenderingMethodType::RECURSIVE_RAY_TRACING), "Rendering method"));
 	set_rendering_method(t);
 
@@ -400,19 +379,8 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	// The default used by the ObjLoader is SBVH.
 
 	// Set up camera
-	auto camera_type = PinholeCameraDefinitionType::String2Enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraDefinitionType::Enum2String(PinholeCameraDefinitionType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));
-
-	const string ptx_path = get_path_ptx("pinhole_camera.cu");
-	string camera_name = (camera_type == PinholeCameraDefinitionType::INVERSE_CAMERA_MATRIX) ? "pinhole_camera_w_matrix" : "pinhole_camera";
-	// Exception / miss programs
-
-	Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, camera_name);
-
-	context->setRayGenerationProgram(as_integer(CameraType::STANDARD_RT), ray_gen_program);
-	context->setExceptionProgram(as_integer(CameraType::STANDARD_RT), context->createProgramFromPTXFile(ptx_path, "exception"));
-
-
-
+	
+    
 	std::string ptx_path_t = get_path_ptx("tonemap_camera.cu");
 	Program ray_gen_program_t = context->createProgramFromPTXFile(ptx_path_t, "tonemap_camera");
 
@@ -424,12 +392,12 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	Logger::info <<"Loading camera parameters..."<<endl;
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	
-	load_camera(init_camera_data);
+
+    load_camera_extrinsics(init_camera_data);
 
 	// Set ray tracing epsilon for intersection tests
 	float scene_epsilon = 1.e-4f * max_dim;
 	context["scene_epsilon"]->setFloat(scene_epsilon);
-
 	// Prepare to run 
 	context->validate();
 	context->compile();
@@ -935,7 +903,7 @@ void ObjScene::resetCameraCallback(void* data)
 {
 	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
 	InitialCameraData i;
-	scene->load_camera(i);
+	scene->load_camera_extrinsics(i);
 	GLUTDisplay::setCamera(i);
 }
 
@@ -974,21 +942,21 @@ void ObjScene::updateGlassObjects()
 }
 
 
-void ObjScene::load_camera(InitialCameraData & camera_data)
+void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 {
-	Logger::info <<"Loading camera parameters..." << endl;
+    auto camera_type = PinholeCameraDefinitionType::String2Enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraDefinitionType::Enum2String(PinholeCameraDefinitionType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));  
+
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	float3 eye = m_scene_bounding_box.center();
 	eye.z += 1.75f * max_dim;
-	//*
-	auto camera_type = PinholeCameraDefinitionType::String2Enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraDefinitionType::Enum2String(PinholeCameraDefinitionType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));
 
 	bool use_auto_camera = ParameterParser::get_parameter<bool>("camera", "use_auto_camera", false, "Use a automatic placed camera or use the current data.");
 
 	Matrix3x3 camera_matrix = Matrix3x3::identity();
 
 	fov = ParameterParser::get_parameter<float2>("camera", "camera_fov", make_float2(53.1301f, 53.1301f), "The camera FOVs (h|v)");
-	if (use_auto_camera)
+
+    if (use_auto_camera)
 	{
 		camera_data = InitialCameraData(eye, // eye
 			m_scene_bounding_box.center(), // lookat
@@ -1008,12 +976,6 @@ void ObjScene::load_camera(InitialCameraData & camera_data)
 		camera_matrix = ParameterParser::get_parameter<Matrix3x3>("camera", "inv_camera_matrix", Matrix3x3::identity(), "The camera inverse calibration matrix K^-1 * R^-1");
 	}
 
-	// Declare camera variables.  The values do not matter, they will be overwritten in trace.
-	context["inv_calibration_matrix"]->setMatrix3x3fv(false, camera_matrix.getData());
-	context["eye"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
-	context["U"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
-	context["V"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
-	context["W"]->setFloat(make_float3(0.0f, 0.0f, 0.0f));
 	reset_renderer();
 }
 

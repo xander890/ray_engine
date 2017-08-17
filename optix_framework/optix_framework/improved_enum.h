@@ -308,10 +308,10 @@ namespace IMPROVED_ENUM_NAME
 	STATIC_METHOD inline const std::string AllElementsString()
 	{
 		EnumType first = FirstEnumItem();
-		std::string res = string("");
+		std::string res = std::string("");
 		do
 		{
-			res += string(" ") + Enum2String(first);
+			res += std::string(" ") + Enum2String(first);
 			first = NextEnumItem(first);
 		} while(first != NotValidEnumItem);
 		return res;
