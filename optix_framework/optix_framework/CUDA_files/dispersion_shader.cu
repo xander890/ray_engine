@@ -6,6 +6,7 @@
 #include <color_helpers.h>
 #include <environment_map.h>
 #include <material_device.h>
+#include "ray_trace_helpers.h"
 using namespace optix;
 
 //#define USE_SPECTRAL_RENDERING

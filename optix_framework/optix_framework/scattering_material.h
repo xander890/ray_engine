@@ -69,6 +69,7 @@ public:
     void set_scattering(optix::float3 sc);
     void set_asymmetry(float asymm);
     void set_into_gui(GUI* gui);
+    void remove_from_gui(GUI * gui);
     const char* get_name() { return name; }
     ScatteringMaterialProperties get_data();
 

@@ -58,8 +58,6 @@ public:
 	void addDropdownMenuCallback(const char * name, std::vector<GuiDropdownElement> & values, GuiSetVarCallback set_var, GuiGetVarCallback get_var, void * data, const char * group = "") const;
 	void addColorVariableCallback(const char * name, GuiSetVarCallback set_var, GuiGetVarCallback get_var, void * data, const char * group = "") const;
     void addHDRColorVariableCallback(const char * name, GuiSetVarCallback set_varr, GuiGetVarCallback get_varr, GuiSetVarCallback set_varg, GuiGetVarCallback get_varg, GuiSetVarCallback set_varb, GuiGetVarCallback get_varb, void * data, const char * group = "") const;
-
-
     void addHDRColorVariableCallback(const char * name, GuiSetVarCallback set_color, GuiGetVarCallback get_color, GuiSetVarCallback set_scale, GuiGetVarCallback get_scale, void * data, const char * group = "") const;
 
 	void addSeparator() const;
@@ -67,7 +65,6 @@ public:
 	void setReadOnly(const char* name) const;
 	void setReadWrite(const char* name) const;
 	void setVisible(const char * name, bool isVisible) const;
-
 	void removeVar(const char * name) const;
 
 private:

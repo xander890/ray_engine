@@ -29,17 +29,15 @@
     </folders>
 
       <light>
-  <property comment="Type of the default light" key="default_light_type" value="DIRECTIONAL_LIGHT"/>
+  <property comment="Type of the default light" key="default_light_type" value="AREA_LIGHT"/>
   <property key="light_types" value=" DIRECTIONAL_LIGHT POINT_LIGHT SKY_LIGHT AREA_LIGHT"/>
   <property comment="Direction of the default directional light" key="default_directional_light_direction" value="0.000000 -1.00000 0.000000"/>
-  <property comment="Intensity of the default directional light" key="default_directional_light_intensity" value="4 4 4"/>
+  <property comment="Intensity of the default directional light" key="default_directional_light_intensity" value="10 10 10"/>
   <property comment="Position of the default point light." key="default_point_light_position" value="125.00000 90.00000 -40.0000"/>
   <property comment="Intensity of the default point light." key="default_point_light_intensity" value="20000.000 20000.000 20000.000"/>
-  <property comment="The ambient light color" key="ambient_light_color" value="0.25 0.25 0.25"/>
   <property comment="Environment map multiplier" key="lightmap_multiplier" value="1.0000000000 1.0000000000 1.0000000000"/>
   <property comment="Environment map file" key="environment_map" value="summer_road2.hdr"/>
   <property comment="Environment map rotation" key="envmap_deltas" value="0.0000000000 0.0000000000 0.0000000000"/>
-  <property comment="Environment map rotation" key="lightmap_rotation_matrix" value="0.0000000000 -1.0000000000 0.0000000000 0.0000000000 0.0000000000 -1.0000000000 1.0000000000 0.0000000000 0.0000000000"/>
   <property comment="Use shadows in rendering." key="shadows" value="1"/>
   </light>
 

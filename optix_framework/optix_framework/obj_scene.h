@@ -36,8 +36,7 @@ public:
 
 	ObjScene(const std::vector<std::string>& obj_filenames, const std::string& shader_name, const std::string& config_file, optix::int4 rendering_r = make_int4(-1))
         : context(m_context),
-          current_scene_type(Scene::OPTIX_ONLY), default_miss(), filenames(obj_filenames), method(nullptr), sky_model(make_float3(0, 1, 0), make_float3(0, 0, 1)),
-          m_frame(0u),
+          current_scene_type(Scene::OPTIX_ONLY), default_miss(), filenames(obj_filenames), method(nullptr),        m_frame(0u),
           deforming(false),
           use_tonemap(true), 
           config_file(config_file)
@@ -49,7 +48,7 @@ public:
 
 	ObjScene()
 		: context(m_context),
-		current_scene_type(Scene::OPTIX_ONLY), filenames(1, "test.obj"), sky_model(make_float3(0, 1, 0), make_float3(0, 0, 1)),
+		current_scene_type(Scene::OPTIX_ONLY), filenames(1, "test.obj"), 
 		  m_frame(0u),
 		  deforming(true),
 		  use_tonemap(true),
@@ -114,7 +113,7 @@ public:
 
 private:
 	Context context;
-	bool debug_mode_enabled = false;
+	bool debug_mode_enabled = true;
 
 	Scene::EnumType current_scene_type;
 
@@ -130,6 +129,7 @@ private:
 	void add_lights(vector<TriangleLight>& area_lights);
 	void set_miss_program();
 	optix::TextureSampler environment_sampler;
+    std::unique_ptr<MissProgram> miss_program;
 
 	optix::float2 fov;
 
@@ -145,8 +145,6 @@ private:
 	//std::vector<optix::uint2> lights;
 	RenderingMethod* method;
 
-	SkyModel sky_model;
-
 	unsigned int m_frame;
 	bool deforming;
 	bool use_tonemap;
@@ -154,7 +152,6 @@ private:
    
 
 	GUI* gui = nullptr;
-	float3 lightmap_multiplier = make_float3(1.0f);
 	void add_result_image(const string& image_file);
     std::vector<Mesh> mMeshes;
     std::shared_ptr<MaterialHost> material_ketchup;
@@ -181,12 +178,6 @@ private:
 	static void GUI_CALL getAbsorptionInverseMultiplier(void* var, void* data);
 	static void GUI_CALL setMedium(const void* var, void* data);
 	static void GUI_CALL getMedium(void* var, void* data);
-	static void GUI_CALL setDeltaX(const void* var, void* data);
-	static void GUI_CALL getDeltaX(void* var, void* data);
-	static void GUI_CALL setDeltaY(const void* var, void* data);
-	static void GUI_CALL getDeltaY(void* var, void* data);
-	static void GUI_CALL setDeltaZ(const void* var, void* data);
-	static void GUI_CALL getDeltaZ(void* var, void* data);
 
 	static void GUI_CALL loadImage(void* data);
 	static void GUI_CALL resetCameraCallback(void* data);
@@ -207,10 +198,7 @@ private:
 
 
 	int mtx_method = 1;
-	float3 envmap_deltas = make_float3(0);
-	Matrix3x3 rotation_matrix_envmap = optix::Matrix3x3::identity();
-	void presample_environment_map();
-
+	
 	optix::TextureSampler comparison_image;
 	float comparison_image_weight = 0.0;
 
@@ -223,7 +211,7 @@ private:
 		float * additional_parameters;
 		float end = 1.7f;
 		int samples = 1000;
-		enum SimulationElement { IOR, ANGLE_X, ANGLE_Y, ANGLE_Z, LIGHTMAP_MULTIPLIER, ALL_ANGLES, ABSORPTION_R, ABSORPTION_G, ABSORPTION_B, ABSORPTION_M } parameter_to_simulate = IOR;
+		enum SimulationElement { IOR, ABSORPTION_R, ABSORPTION_G, ABSORPTION_B, ABSORPTION_M } parameter_to_simulate = IOR;
 		enum SimulationStatus {RUNNING, FINISHED} status = RUNNING;
 
 	} m_simulation_parameters;

@@ -96,7 +96,7 @@ xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"
       </AdditionalDeps>
       <Include>"$(Optix_Dir)/include";%(AdditionalDeps)</Include>
       <FastMath>true</FastMath>
-      <AdditionalOptions>-D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options  /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
       <NvccCompilation>ptx</NvccCompilation>
       <CudaRuntime>Shared</CudaRuntime>
       <CodeGeneration>compute_35,sm_35</CodeGeneration>
@@ -104,6 +104,7 @@ xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"
       <HostDebugInfo>false</HostDebugInfo>
       <Optimization>O3</Optimization>
       <GPUDebugInfo>false</GPUDebugInfo>
+      <AdditionalCompilerOptions> /Gm </AdditionalCompilerOptions>
     </CudaCompile>
     <PreBuildEvent>
       <Command>echo Creating directories "PTX_files" if they don't exist yet...
@@ -179,14 +180,17 @@ echo Done.</Command>
     <ClCompile Include="brdf_utils.cpp" />
     <ClCompile Include="camera_host.cpp" />
     <ClCompile Include="chull.cpp" />
+    <ClCompile Include="constant_background.cpp" />
     <ClCompile Include="default_shader.cpp" />
     <ClCompile Include="dialogs.cpp" />
+    <ClCompile Include="environment_map_background.cpp" />
     <ClCompile Include="folders.cpp" />
     <ClCompile Include="gui.cpp" />
     <ClCompile Include="host_material.cpp" />
     <ClCompile Include="light_host.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="mesh.cpp" />
+    <ClCompile Include="miss_program.cpp" />
     <ClCompile Include="orthocamera.cpp" />
     <ClCompile Include="procedural_mesh.cpp" />
     <ClCompile Include="glossy.cpp" />
@@ -550,12 +554,16 @@ echo Done.</Command>
     <ClInclude Include="box.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="camera_host.h" />
+    <ClInclude Include="constant_background.h" />
     <ClInclude Include="default_shader.h" />
+    <ClInclude Include="device_environment_map.h" />
+    <ClInclude Include="environment_map_background.h" />
     <ClInclude Include="host_device_common.h" />
     <ClInclude Include="host_material.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="light_host.h" />
     <ClInclude Include="material.h" />
+    <ClInclude Include="material_device.h" />
     <ClInclude Include="merl_common.h" />
     <ClInclude Include="brdf_utils.h" />
     <ClInclude Include="cgla_optix_type_converter.h" />
@@ -566,6 +574,7 @@ echo Done.</Command>
     <ClInclude Include="gui.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="mesh.h" />
+    <ClInclude Include="miss_program.h" />
     <ClInclude Include="optix_common.h" />
     <ClInclude Include="optix_host_fwd.h" />
     <ClInclude Include="procedural_mesh.h" />

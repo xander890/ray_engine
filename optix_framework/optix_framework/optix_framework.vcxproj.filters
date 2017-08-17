@@ -172,6 +172,15 @@
     <ClCompile Include="host_material.cpp">
       <Filter>Source Files\Materials</Filter>
     </ClCompile>
+    <ClCompile Include="miss_program.cpp">
+      <Filter>Source Files\Background</Filter>
+    </ClCompile>
+    <ClCompile Include="constant_background.cpp">
+      <Filter>Source Files\Background</Filter>
+    </ClCompile>
+    <ClCompile Include="environment_map_background.cpp">
+      <Filter>Source Files\Background</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -265,9 +274,6 @@
     <ClInclude Include="obj_loader.h">
       <Filter>Header Files\Loaders</Filter>
     </ClInclude>
-    <ClInclude Include="procedural_loader.h">
-      <Filter>Header Files\Loaders</Filter>
-    </ClInclude>
     <ClInclude Include="parserstringhelpers.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
@@ -351,6 +357,24 @@
     </ClInclude>
     <ClInclude Include="host_material.h">
       <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="material_device.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="miss_program.h">
+      <Filter>Header Files\Backgrounds</Filter>
+    </ClInclude>
+    <ClInclude Include="constant_background.h">
+      <Filter>Header Files\Backgrounds</Filter>
+    </ClInclude>
+    <ClInclude Include="environment_map_background.h">
+      <Filter>Header Files\Backgrounds</Filter>
+    </ClInclude>
+    <ClInclude Include="procedural_loader.h">
+      <Filter>Header Files\Procedural</Filter>
+    </ClInclude>
+    <ClInclude Include="device_environment_map.h">
+      <Filter>Header Files\Lights</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -443,6 +467,12 @@
     </Filter>
     <Filter Include="Header Files\HostDeviceStructs">
       <UniqueIdentifier>{14ef9eba-8627-4ec9-b7d9-730cbffb0f72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Backgrounds">
+      <UniqueIdentifier>{3f80de25-d4ee-424c-87c2-45c4e2c0d768}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Background">
+      <UniqueIdentifier>{81ead0c4-2cf4-4af4-b294-afdf9420143d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -41,16 +41,20 @@ static __inline__ __device__ __host__ float3 sky_color(int ray_depth, float3 & v
 #include "parameter_parser.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include "miss_program.h"
 
-class SkyModel
+class SkyModel : public MissProgram
 {
 public:
 	SkyModel(float3 up, float3 north) : up(up), north(north) {  }
 	~SkyModel(void);
 	float3 get_sky_color(float3 v);
 	void get_directional_light(SingularLightData & light);
-	void load_data_on_GPU(optix::Context & context);
-	void init();
+
+    virtual void init(optix::Context & ctx) override;
+    virtual void set_into_gpu(optix::Context & ctx) override;
+    virtual void set_into_gui(GUI * gui) override {}
+    virtual void remove_from_gui(GUI * gui) override {}
 
 private:
 
@@ -77,13 +81,16 @@ private:
 
 	static const float cie_table[38][4];   
 	static const PreethamData data[38]; 
-	
+    void update_data();
 
 	float get_solar_declination();
 	float2 get_solar_coordinates();
 	float3 get_sun_position(float2 & coords);
 	float calculate_absorption( float sun_theta, float m, float lambda, float turbidity, float k_o, float k_wa );
 	float3 get_sun_color();
+
+private:
+    virtual bool get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program) override;
 
 };
 #endif // !__CUDA_ARCH__

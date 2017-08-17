@@ -9,6 +9,7 @@
 #include <sampling_helpers.h>
 #include <environment_map.h>
 #include "light.h"
+#include "device_environment_map.h"
 
 using namespace optix;
 #define DIRLIGHT

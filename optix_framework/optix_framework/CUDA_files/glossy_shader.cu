@@ -16,6 +16,7 @@
 //#define IMPORTANCE_SAMPLE_BRDF
 #include <merl_common.h>
 #include <material_device.h>
+#include "device_environment_map.h"
 
 using namespace optix;
 

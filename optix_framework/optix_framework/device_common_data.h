@@ -1,6 +1,7 @@
 #ifndef light_common_h__
 #define light_common_h__
 #include "optix_common.h"
+#include "host_device_common.h"
 #include "structs.h"
 #include "structs_device.h"
 
@@ -40,6 +41,7 @@ static __device__ __inline__ void shadow_hit(PerRayData_shadow & shadow_payload,
 }
 
 #define optix_print rtPrintf
+
 
 
 #endif // light_common_h__

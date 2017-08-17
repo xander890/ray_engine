@@ -6,19 +6,13 @@
 #include "../math_helpers.h"
 #include "../color_helpers.h"
 #include "merl_common.h"
-
+#include <device_environment_map.h>
 using namespace optix;
 
-rtDeclareVariable(int, environment_map_tex_id, , ) = 0;
-rtDeclareVariable(Matrix3x3, lightmap_rotation_matrix, , );
 
 // Output buffers
 rtBuffer<float, 2> env_luminance;
 rtBuffer<float> marginal_f;
-rtBuffer<float> marginal_pdf;
-rtBuffer<float, 2> conditional_pdf;
-rtBuffer<float> marginal_cdf;
-rtBuffer<float, 2> conditional_cdf;
 
 RT_PROGRAM void env_luminance_camera()
 {
@@ -29,8 +23,8 @@ RT_PROGRAM void env_luminance_camera()
   sincosf(theta, &sin_theta, &cos_theta);
   sincosf(phi, &sin_phi, &cos_phi);
   float3 dir = make_float3(sin_theta*sin_phi, -cos_theta, -sin_theta*cos_phi);
-  float2 uv2 = direction_to_uv_coord_cubemap(dir, lightmap_rotation_matrix);
-  float3 texel = make_float3(rtTex2D<float4>(environment_map_tex_id, uv2.x, uv2.y));
+  float2 uv2 = direction_to_uv_coord_cubemap(dir, envmap_properties->lightmap_rotation_matrix);
+  float3 texel = make_float3(rtTex2D<float4>(envmap_properties->environment_map_tex_id, uv2.x, uv2.y));
   env_luminance[launch_index] = luminance_NTSC(texel)*sin_theta;
 }
 

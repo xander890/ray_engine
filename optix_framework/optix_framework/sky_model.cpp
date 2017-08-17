@@ -1,44 +1,50 @@
 #include "sky_model.h"
+#include "folders.h"
+#include "host_device_common.h"
 
-
-void SkyModel::init()
+void SkyModel::update_data()
 {
+    if (dot(north, up) != 0.0f)
+        throw exception("North and up are not perpendicular.");
+    day = ParameterParser::get_parameter<int>("sky", "day", 12, "Default day for the sun model.");
+    hour = ParameterParser::get_parameter<int>("sky", "hour", 15, "Default hour of the day for the sun model.");
+    latitude = M_PIf / 180.0f * ParameterParser::get_parameter<float>("sky", "latitude", 45.0f, "Default latitude (deg) for the sun model.");
+    turbidity = ParameterParser::get_parameter<float>("sky", "turbidity", 2.0f, "Default turbidity of the sky.");
 
-	if(dot(north,up) != 0.0f) 
-		throw exception("North and up are not perpendicular.");
-	day = ParameterParser::get_parameter<int>("sky","day", 12, "Default day for the sun model.");
-	hour = ParameterParser::get_parameter<int>("sky", "hour", 15, "Default hour of the day for the sun model.");
-	latitude = M_PIf / 180.0f * ParameterParser::get_parameter<float>("sky", "latitude", 45.0f, "Default latitude (deg) for the sun model.");
-	turbidity = ParameterParser::get_parameter<float>("sky", "turbidity", 2.0f, "Default turbidity of the sky.");
-	
-	perez_data.A = make_float3 (  0.1787f * turbidity - 1.4630f, -0.0193f * turbidity - 0.2592f, -0.0167f * turbidity - 0.2608f );
-	perez_data.B = make_float3 ( -0.3554f * turbidity + 0.4275f, -0.0665f * turbidity + 0.0008f, -0.0950f * turbidity + 0.0092f );
-	perez_data.C = make_float3 ( -0.0227f * turbidity + 5.3251f, -0.0004f * turbidity + 0.2125f, -0.0079f * turbidity + 0.2102f );
-	perez_data.D = make_float3 (  0.1206f * turbidity - 2.5771f, -0.0641f * turbidity - 0.8989f, -0.0441f * turbidity - 1.6537f );
-	perez_data.E = make_float3 ( -0.0670f * turbidity + 0.3703f, -0.0033f * turbidity + 0.0452f, -0.0109f * turbidity + 0.0529f );
-	
-	solar_coords = get_solar_coordinates();
+    perez_data.A = make_float3(0.1787f * turbidity - 1.4630f, -0.0193f * turbidity - 0.2592f, -0.0167f * turbidity - 0.2608f);
+    perez_data.B = make_float3(-0.3554f * turbidity + 0.4275f, -0.0665f * turbidity + 0.0008f, -0.0950f * turbidity + 0.0092f);
+    perez_data.C = make_float3(-0.0227f * turbidity + 5.3251f, -0.0004f * turbidity + 0.2125f, -0.0079f * turbidity + 0.2102f);
+    perez_data.D = make_float3(0.1206f * turbidity - 2.5771f, -0.0641f * turbidity - 0.8989f, -0.0441f * turbidity - 1.6537f);
+    perez_data.E = make_float3(-0.0670f * turbidity + 0.3703f, -0.0033f * turbidity + 0.0452f, -0.0109f * turbidity + 0.0529f);
 
-	sun_position = get_sun_position(solar_coords);
-	float sun_theta = solar_coords.x;
-	float sun_theta_2 = sun_theta * sun_theta;
-	float sun_theta_3 = sun_theta_2 * sun_theta;
+    solar_coords = get_solar_coordinates();
 
-	const float xi = ( 4.0f / 9.0f - turbidity / 120.0f ) * ( M_PIf - 2.0f * sun_theta );
+    sun_position = get_sun_position(solar_coords);
+    float sun_theta = solar_coords.x;
+    float sun_theta_2 = sun_theta * sun_theta;
+    float sun_theta_3 = sun_theta_2 * sun_theta;
 
-	// Zenith luminance in Yxy
-	float3 zenith = make_float3(0.0f);
-	zenith.x= ( ( 4.0453f * turbidity - 4.9710f) * tan(xi) - 0.2155f * turbidity + 2.4192f ) * 1000.0f;
-	zenith.y = turbidity * turbidity * ( 0.00166f*sun_theta_3 - 0.00375f*sun_theta_2 + 0.00209f*sun_theta ) +
-		turbidity * (-0.02903f*sun_theta_3 + 0.06377f*sun_theta_2 - 0.03202f*sun_theta + 0.00394f) +
-		( 0.11693f*sun_theta_3 - 0.21196f*sun_theta_2 + 0.06052f*sun_theta + 0.25886f);
-	zenith.z = turbidity * turbidity * ( 0.00275f*sun_theta_3 - 0.00610f*sun_theta_2 + 0.00317f*sun_theta ) +
-		turbidity * (-0.04214f*sun_theta_3 + 0.08970f*sun_theta_2 - 0.04153f*sun_theta + 0.00516f) +
-		( 0.15346f*sun_theta_3 - 0.26756f*sun_theta_2 + 0.06670f*sun_theta + 0.26688f);
+    const float xi = (4.0f / 9.0f - turbidity / 120.0f) * (M_PIf - 2.0f * sun_theta);
 
-	cos_sun_theta = cos(sun_theta);
-	sky_factor = zenith / perez_model(1.0f, sun_theta, cos_sun_theta,perez_data);
-	sun_color = get_sun_color() * 0.1;
+    // Zenith luminance in Yxy
+    float3 zenith = make_float3(0.0f);
+    zenith.x = ((4.0453f * turbidity - 4.9710f) * tan(xi) - 0.2155f * turbidity + 2.4192f) * 1000.0f;
+    zenith.y = turbidity * turbidity * (0.00166f*sun_theta_3 - 0.00375f*sun_theta_2 + 0.00209f*sun_theta) +
+        turbidity * (-0.02903f*sun_theta_3 + 0.06377f*sun_theta_2 - 0.03202f*sun_theta + 0.00394f) +
+        (0.11693f*sun_theta_3 - 0.21196f*sun_theta_2 + 0.06052f*sun_theta + 0.25886f);
+    zenith.z = turbidity * turbidity * (0.00275f*sun_theta_3 - 0.00610f*sun_theta_2 + 0.00317f*sun_theta) +
+        turbidity * (-0.04214f*sun_theta_3 + 0.08970f*sun_theta_2 - 0.04153f*sun_theta + 0.00516f) +
+        (0.15346f*sun_theta_3 - 0.26756f*sun_theta_2 + 0.06670f*sun_theta + 0.26688f);
+
+    cos_sun_theta = cos(sun_theta);
+    sky_factor = zenith / perez_model(1.0f, sun_theta, cos_sun_theta, perez_data);
+    sun_color = get_sun_color() * 0.1;
+}
+
+void SkyModel::init(optix::Context & ctx)
+{
+    MissProgram::init(ctx);
+    update_data();
 }
 
 SkyModel::~SkyModel(void)
@@ -120,6 +126,13 @@ float3 SkyModel::get_sun_color()
 		color.z += radiance * cie_table[i][3] * 10.0f;
 	}
 	return  XYZ2rgb(683.0f * color) / 1000.0f;
+}
+
+bool SkyModel::get_miss_program(unsigned ray_type, optix::Context& ctx, optix::Program& program)
+{
+    const char * prog = ray_type == RAY_TYPE_SHADOW ? "miss_shadow" : "miss";
+    program = ctx->createProgramFromPTXFile(get_path_ptx("sky_model_background.cu"), prog);
+    return true;
 }
 
 
@@ -225,8 +238,9 @@ const SkyModel::PreethamData SkyModel::data[] =
 	{0.75f, 1825.92f, 0.009f, 0.009f}
 };
 
-void SkyModel::load_data_on_GPU(optix::Context & context)
+void SkyModel::set_into_gpu(optix::Context & context)
 {
+    MissProgram::set_into_gpu(context);
 	context["perez_model_data"]->setUserData(sizeof(PerezData), &perez_data);
 	context["sun_position"]->setFloat(sun_position);
 	context["up_vector"]->setFloat(up);

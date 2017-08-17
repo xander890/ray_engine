@@ -17,6 +17,11 @@ void MaterialHost::set_into_gui(GUI* gui)
      scattering_material->set_into_gui(gui); 
 }
 
+void MaterialHost::remove_from_gui(GUI * gui)
+{
+
+}
+
 MaterialHost::MaterialHost(const char * name, MaterialDataCommon data) : mMaterialName(name), mMaterialData(data)
 {
     bool use_abs = ParameterParser::get_parameter("config", "use_absorption", true, "Use absorption in rendering.");

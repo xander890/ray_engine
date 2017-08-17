@@ -203,6 +203,19 @@ void ScatteringMaterial::set_into_gui(GUI* gui)
     gui->addFloatVariableCallBack("Scale", setScale, getScale, this, scatmat);
 }
 
+void ScatteringMaterial::remove_from_gui(GUI* gui)
+{
+    gui->removeVar("Set Material");
+    gui->removeVar("Absorption - R");
+    gui->removeVar("Absorption - G");
+    gui->removeVar("Absorption - B");
+    gui->removeVar("Scattering - R");
+    gui->removeVar("Scattering - G");
+    gui->removeVar("Scattering - B");
+    gui->removeVar("Asymmetry");
+    gui->removeVar("Scale");
+}
+
 void ScatteringMaterial::setDefault(const void* var, void* data)
 {
     ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);

@@ -4,25 +4,16 @@
 
 #include <device_common_data.h>
 #include <color_helpers.h>
-#include <environment_map.h>
-using namespace optix;
+#include <device_environment_map.h>
 
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 
-rtDeclareVariable(Matrix3x3, lightmap_rotation_matrix, , );
-rtDeclareVariable(float3, lightmap_multiplier, , );
-// Variables for shading
-rtDeclareVariable(float3, bg_color, , );
-
-rtDeclareVariable(int, environment_map_tex_id, , ) = 0;
-
-
 __device__ __forceinline__ void get_environment_map_color(const float3& direction, float3 & color)
 {
-	const float2 uv = direction_to_uv_coord_cubemap(direction, lightmap_rotation_matrix);
-	color = make_float3(rtTex2D<float4>(environment_map_tex_id, uv.x, uv.y)) * lightmap_multiplier;
+    const float2 uv = direction_to_uv_coord_cubemap(direction, optix::Matrix3x3::identity());
+    color = make_float3(rtTex2D<float4>(envmap_properties->environment_map_tex_id, uv.x, uv.y)) *envmap_properties->lightmap_multiplier;
 }
 
 // Miss program returning background color
@@ -34,7 +25,6 @@ RT_PROGRAM void miss()
 	get_environment_map_color(ray.direction, color);
   }
   prd_radiance.result = color;
-  //prd_radiance.result = make_float3(tex2D(environment_map, ((float)launch_index.x) / launch_dim.x, ((float)launch_index.y) / launch_dim.y)) * lightmap_multiplier;
   optix_print("Ray miss, hit envmap. Returning color %f %f %f\n", color.x, color.y, color.z);
 }
 

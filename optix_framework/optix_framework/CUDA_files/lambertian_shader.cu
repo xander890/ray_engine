@@ -13,6 +13,7 @@
 #include <environment_map.h>
 #include <camera.h>
 #include <material_device.h>
+#include "device_environment_map.h"
 
 using namespace optix;
 
