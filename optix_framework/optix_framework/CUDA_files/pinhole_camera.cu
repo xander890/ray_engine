@@ -55,6 +55,7 @@ __forceinline__ __device__ void init_payload(PerRayData_radiance & prd)
 
 RT_PROGRAM void pinhole_camera()
 {
+    optix_print("Pihole!\n");
 	if (check_bounds())
 	{
 		PerRayData_radiance prd;
@@ -75,8 +76,9 @@ RT_PROGRAM void pinhole_camera()
 	}
 	else
 	{
-		output_buffer[launch_index] = make_float4(0);
+		output_buffer[launch_index] = make_float4(1,0,0,0);
 	}
+
 }
 
 
@@ -98,7 +100,7 @@ RT_PROGRAM void pinhole_camera_w_matrix()
 	}
 	else
 	{
-		output_buffer[launch_index] = make_float4(0);
+		output_buffer[launch_index] = make_float4(1);
 	}	
 }
 

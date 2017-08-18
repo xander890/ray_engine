@@ -178,6 +178,12 @@
     <ClCompile Include="environment_map_background.cpp">
       <Filter>Source Files\Background</Filter>
     </ClCompile>
+    <ClCompile Include="PerlinNoise.cpp">
+      <Filter>Source Files\Noise</Filter>
+    </ClCompile>
+    <ClCompile Include="simplex_noise.cpp">
+      <Filter>Source Files\Noise</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -373,6 +379,12 @@
     <ClInclude Include="device_environment_map.h">
       <Filter>Header Files\Lights</Filter>
     </ClInclude>
+    <ClInclude Include="PerlinNoise.h">
+      <Filter>Header Files\Noise</Filter>
+    </ClInclude>
+    <ClInclude Include="simplex_noise.h">
+      <Filter>Header Files\Noise</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">
@@ -470,6 +482,12 @@
     </Filter>
     <Filter Include="Source Files\Background">
       <UniqueIdentifier>{81ead0c4-2cf4-4af4-b294-afdf9420143d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Noise">
+      <UniqueIdentifier>{b0d3829a-04f0-4fbc-ba66-91347e402bec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Noise">
+      <UniqueIdentifier>{4f0e5784-dadf-4084-aacc-fcc8572cf0af}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

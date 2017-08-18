@@ -9,16 +9,13 @@
 #include "ray_trace_helpers.h"
 #include "environment_map.h"
 // Environment importance sampling
-rtBuffer<float> marginal_pdf;
-rtBuffer<float, 2> conditional_pdf;
-rtBuffer<float> marginal_cdf;
-rtBuffer<float, 2> conditional_cdf;
 
 rtDeclareVariable(BufPtr<EnvmapProperties>, envmap_properties, , );
+rtDeclareVariable(BufPtr<EnvmapImportanceSamplingData>, envmap_importance_sampling, , );
 
 __forceinline__ __device__ unsigned int cdf_bsearch_marginal(float xi)
 {
-    uint table_size = marginal_cdf.size();
+    uint table_size = envmap_importance_sampling->marginal_cdf.size();
     uint middle = table_size = table_size >> 1;
     uint odd = 0;
     while (table_size > 0)
@@ -26,16 +23,16 @@ __forceinline__ __device__ unsigned int cdf_bsearch_marginal(float xi)
         odd = table_size & 1;
         table_size = table_size >> 1;
         unsigned int tmp = table_size + odd;
-        middle = xi > marginal_cdf[middle]
+        middle = xi > envmap_importance_sampling->marginal_cdf[middle]
             ? middle + tmp
-            : (xi < marginal_cdf[middle - 1] ? middle - tmp : middle);
+            : (xi < envmap_importance_sampling->marginal_cdf[middle - 1] ? middle - tmp : middle);
     }
     return middle;
 }
 
 __forceinline__ __device__ unsigned int cdf_bsearch_conditional(float xi, uint offset)
 {
-    optix::size_t2 table_size = conditional_cdf.size();
+    optix::size_t2 table_size = envmap_importance_sampling->conditional_cdf.size();
     uint middle = table_size.x = table_size.x >> 1;
     uint odd = 0;
     while (table_size.x > 0)
@@ -43,9 +40,9 @@ __forceinline__ __device__ unsigned int cdf_bsearch_conditional(float xi, uint o
         odd = table_size.x & 1;
         table_size.x = table_size.x >> 1;
         unsigned int tmp = table_size.x + odd;
-        middle = xi > conditional_cdf[make_uint2(middle, offset)]
+        middle = xi > envmap_importance_sampling->conditional_cdf[make_uint2(middle, offset)]
             ? middle + tmp
-            : (xi < conditional_cdf[make_uint2(middle - 1, offset)] ? middle - tmp : middle);
+            : (xi < envmap_importance_sampling->conditional_cdf[make_uint2(middle - 1, offset)] ? middle - tmp : middle);
     }
     return middle;
 }
@@ -54,10 +51,15 @@ __forceinline__ __device__ void sample_environment(optix::float3& wi, optix::flo
 {
     const optix::float3& hit_point = data.hit_point;
     const optix::float3& normal = data.hit_normal;
-    optix::size_t2 count = conditional_cdf.size();
+    optix::size_t2 count = envmap_importance_sampling->conditional_cdf.size();
 
     if (envmap_properties->importance_sample_envmap == 1 && count.x != 1 && count.y != 1)
     {
+        auto marginal_cdf = envmap_importance_sampling->marginal_cdf;
+        auto conditional_cdf = envmap_importance_sampling->conditional_cdf;
+        auto marginal_pdf = envmap_importance_sampling->marginal_pdf;
+        auto conditional_pdf = envmap_importance_sampling->conditional_pdf;
+
         float xi1 = rnd(seed), xi2 = rnd(seed);
 
         uint v_idx = cdf_bsearch_marginal(xi1);

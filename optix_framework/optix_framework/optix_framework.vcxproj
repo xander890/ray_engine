@@ -206,6 +206,7 @@ echo Done.</Command>
     <ClCompile Include="scattering_material.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="shader_factory.cpp" />
+    <ClCompile Include="simplex_noise.cpp" />
     <ClCompile Include="simple_tracing.cpp" />
     <ClCompile Include="presampled_surface_bssrdf.cpp" />
     <ClCompile Include="sky_model.cpp" />
@@ -581,6 +582,7 @@ echo Done.</Command>
     <ClInclude Include="procedural_mesh.h" />
     <ClInclude Include="color_helpers.h" />
     <ClInclude Include="directional_dipole.h" />
+    <ClInclude Include="simplex_noise.h" />
     <ClInclude Include="singular_light.h" />
     <ClInclude Include="distribution1d.h" />
     <ClInclude Include="folders.h" />

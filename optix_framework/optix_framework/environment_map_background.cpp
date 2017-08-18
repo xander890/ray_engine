@@ -29,12 +29,12 @@ void EnvironmentMap::init(optix::Context & ctx)
     texture_width = w;
     texture_height = h;
 
-    ctx["env_luminance"]->set(context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height));
-    ctx["marginal_f"]->set(context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height));
-    ctx["marginal_pdf"]->set(context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height));
-    ctx["conditional_pdf"]->set(context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height));
-    ctx["marginal_cdf"]->set(context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height));
-    ctx["conditional_cdf"]->set(context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height));
+    sampling_properties.env_luminance = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
+    sampling_properties.marginal_f = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
+    sampling_properties.marginal_pdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
+    sampling_properties.conditional_pdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
+    sampling_properties.marginal_cdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
+    sampling_properties.conditional_cdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
     
     Program ray_gen_program_1 = ctx->createProgramFromPTXFile(ptx_path, "env_luminance_camera");
     ctx->setRayGenerationProgram(as_integer(CameraType::ENV_1), ray_gen_program_1);   
@@ -52,6 +52,16 @@ void EnvironmentMap::init(optix::Context & ctx)
 
     BufPtr<EnvmapProperties> b = BufPtr<EnvmapProperties>(property_buffer->getId());
     ctx["envmap_properties"]->setUserData(sizeof(BufPtr<EnvmapProperties>), &b);
+
+    sampling_property_buffer = ctx->createBuffer(RT_BUFFER_INPUT);
+    sampling_property_buffer->setFormat(RT_FORMAT_USER);
+    sampling_property_buffer->setElementSize(sizeof(EnvmapProperties));
+    sampling_property_buffer->setSize(1);
+    memcpy(sampling_property_buffer->map(), &sampling_properties, sizeof(EnvmapProperties));
+    sampling_property_buffer->unmap();
+
+    BufPtr<EnvmapProperties> b2 = BufPtr<EnvmapProperties>(sampling_property_buffer->getId());
+    ctx["envmap_importance_sampling"]->setUserData(sizeof(BufPtr<EnvmapProperties>), &b2);
 }
 
 void EnvironmentMap::set_into_gpu(optix::Context & ctx)
@@ -160,8 +170,11 @@ void EnvironmentMap::presample_environment_map()
     {
         Logger::info << "Presampling envmaps... (size " << to_string(texture_width) << " " << to_string(texture_height) << ")" << endl;
         context->launch(as_integer(CameraType::ENV_1), texture_width, texture_height);
+        Logger::info << "Step 1 complete." << endl;
         context->launch(as_integer(CameraType::ENV_2), texture_width, texture_height);
+        Logger::info << "Step 2 complete." << endl;
         context->launch(as_integer(CameraType::ENV_3), texture_width, texture_height);
+        Logger::info << "Step 3 complete." << endl;
         resample_envmaps = false;
         Logger::info << "Done." << endl;
     }

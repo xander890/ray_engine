@@ -14,11 +14,15 @@ public:
     virtual void remove_from_gui(GUI * gui) override;
 private:
     virtual bool get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program) override;
+    
     EnvmapProperties properties;
+    EnvmapImportanceSamplingData sampling_properties;
+
     optix::float3 envmap_deltas;
     optix::TextureSampler environment_sampler;
     optix::Context context;
     optix::Buffer property_buffer;
+    optix::Buffer sampling_property_buffer;
     std::string envmap_file;
     int texture_width, texture_height;
 

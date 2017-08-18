@@ -73,6 +73,10 @@ public:
 
 	void initUI();
 
+    void create_3d_noise(float frequency);
+    float noise_scale = 1;
+    float noise_frequency = 5;
+
 	virtual void initScene(InitialCameraData& camera_data) override;
 	virtual void trace(const RayGenCameraData& camera_data, bool& display) override;
 

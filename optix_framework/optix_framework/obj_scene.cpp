@@ -33,6 +33,7 @@
 #include "host_material.h"
 #include "environment_map_background.h"
 #include "constant_background.h"
+#include "PerlinNoise.h"
 
 using namespace std;
 using namespace optix;
@@ -177,16 +178,29 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 void ObjScene::initUI()
 {
 	Logger::info << "Initializing UI..." << endl;
-	gui->addIntVariable("Frames", reinterpret_cast<int*>(&m_frame), "Settings");
+    gui->addFloatVariable("Noise scale", &noise_scale, "");
+    gui->addFloatVariableCallBack("Noise freq.", 
+        [](const void* var, void* data)
+    { 
+        ObjScene* s = reinterpret_cast<ObjScene*>(data); 
+        s->noise_frequency = *((float*)var); 
+        s->create_3d_noise(s->noise_frequency);  
+    },
+        [](void* var, void* data)
+    {
+        ObjScene* s = reinterpret_cast<ObjScene*>(data); 
+        *((float*)var) = s->noise_frequency;
+    }, this, "");
+    gui->addIntVariable("Frames", reinterpret_cast<int*>(&m_frame), "Settings");
 	gui->setReadOnly("Frames");
 	gui->addCheckBoxCallBack("Debug Mode", setDebugMode, getDebugMode, this, "Settings");
 	gui->addIntVariableCallBack("Depth", setRTDepth, getRTDepth, this, "Settings", 0, 100000, 1);
 
-	const char * comp_group = "Comparison";
-	gui->addButton("Load result image", loadImage, this, comp_group);
-	gui->addFloatVariable("Weight", &comparison_image_weight, comp_group, 0.0f, 1.0f, 0.01f);
-	gui->addCheckBox("Difference image", &show_difference_image, comp_group);
-	gui->setVisible("Weight", false);
+	//const char * t comp_group = "Comparison";
+	//gui->addButton("Load result image", loadImage, this, comp_group);
+	//gui->addFloatVariable("Weight", &comparison_image_weight, comp_group, 0.0f, 1.0f, 0.01f);
+	//gui->addCheckBox("Difference image", &show_difference_image, comp_group);
+	//gui->setVisible("Weight", false);
 
 	const char* tmg = "Tone mapping";
 	gui->addCheckBox("Tonemap", &use_tonemap, tmg);
@@ -207,7 +221,7 @@ void ObjScene::initUI()
 		GuiDropdownElement e = { count++, kv->name.c_str() };
 		elems.push_back(e);
 	}
-	gui->addDropdownMenuCallback("Medium (glass)", elems, setMedium, getMedium, this, glass_group);
+//	gui->addDropdownMenuCallback("Medium (glass)", elems, setMedium, getMedium, this, glass_group);
 
 	const char* env_map_correction_group = "Environment map corrections";
 
@@ -226,6 +240,36 @@ void ObjScene::initUI()
 
 
     camera->set_into_gui(gui);
+}
+
+void ObjScene::create_3d_noise(float frequency)
+{
+    static TextureSampler sampler = context->createTextureSampler();
+    static optix::Buffer buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, 256u, 256u, 256u);
+    static PerlinNoise p(1337);
+
+    sampler->setWrapMode(0, RT_WRAP_REPEAT);
+    sampler->setWrapMode(1, RT_WRAP_REPEAT);
+    sampler->setWrapMode(2, RT_WRAP_REPEAT);
+    sampler->setIndexingMode(RT_TEXTURE_INDEX_NORMALIZED_COORDINATES);
+    sampler->setReadMode(RT_TEXTURE_READ_ELEMENT_TYPE);
+    sampler->setMaxAnisotropy(1.0f);
+    sampler->setMipLevelCount(1u);
+    sampler->setArraySize(1u);
+    // Create buffer with single texel set to default_color
+    float* buffer_data = static_cast<float*>(buffer->map());
+
+    for (int i = 0; i < 256; i++)
+        for (int j = 0; j < 256; j++)
+            for (int k = 0; k < 256; k++)
+            {
+                int idx = 256 * 256 * i + 256 * j + k;
+                buffer_data[idx] = p.noise(i / (256.0) * noise_scale, j / (256.0) * noise_scale, k / (256.0) * noise_scale);
+            }
+    buffer->unmap();
+
+    sampler->setBuffer(0u, 0u, buffer);
+    context["noise_tex"]->setInt(sampler->getId());
 }
 
 void ObjScene::initScene(InitialCameraData& init_camera_data)
@@ -259,6 +303,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	// Setup context
 	context->setRayTypeCount(3);
 	context->setStackSize(ParameterParser::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
+    context["noise_scale"]->setFloat(noise_scale);
 
 	context["radiance_ray_type"]->setUint(RAY_TYPE_RADIANCE);
 	context["shadow_ray_type"]->setUint(RAY_TYPE_SHADOW);
@@ -277,7 +322,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	// Tone mapping pass
 	context["tonemap_output_buffer"]->set(createPBOOutputBuffer("tonemap_output_buffer", RT_FORMAT_FLOAT4, camera->get_width(), camera->get_height()));
 
-	// Create group for scene objects and add acceleration structure
+	// Create group for scene objects and float acceleration structure
 	scene = context->createGroup();
 	scene->setChildCount(static_cast<unsigned int>(filenames.size()));
 	Acceleration acceleration = context->createAcceleration("Trbvh");
@@ -392,6 +437,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	Logger::info <<"Loading camera parameters..."<<endl;
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	
+    create_3d_noise(noise_frequency);
 
     load_camera_extrinsics(init_camera_data);
 
@@ -459,7 +505,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		reset_renderer();
 		m_camera_changed = false;
 	}
-
+    context["noise_scale"]->setFloat(noise_scale);
 	context["frame"]->setUint(m_frame++);
 
 	double time;
