@@ -15,6 +15,12 @@ void EnvironmentMap::init(optix::Context & ctx)
 {
     MissProgram::init(ctx);
     context = ctx;
+    camera_1 = ctx->getEntryPointCount();
+    ctx->setEntryPointCount(camera_1 + 3);
+    camera_2 = camera_1 + 1;
+    camera_3 = camera_2 + 1;
+    ctx["envmap_enabled"]->setInt(1);
+
     envmap_deltas = ParameterParser::get_parameter<float3>("light", "envmap_deltas", make_float3(0), "Rotation offsetof environment map.");
     properties.lightmap_multiplier = ParameterParser::get_parameter<float3>("light", "lightmap_multiplier", make_float3(1.0f), "Environment map multiplier");
     bool is_env = false;
@@ -37,11 +43,11 @@ void EnvironmentMap::init(optix::Context & ctx)
     sampling_properties.conditional_cdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
     
     Program ray_gen_program_1 = ctx->createProgramFromPTXFile(ptx_path, "env_luminance_camera");
-    ctx->setRayGenerationProgram(as_integer(CameraType::ENV_1), ray_gen_program_1);   
+    ctx->setRayGenerationProgram((camera_1), ray_gen_program_1);   
     Program ray_gen_program_2 = ctx->createProgramFromPTXFile(ptx_path, "env_marginal_camera");
-    ctx->setRayGenerationProgram(as_integer(CameraType::ENV_2), ray_gen_program_2);
+    ctx->setRayGenerationProgram((camera_2), ray_gen_program_2);
     Program ray_gen_program_3 = ctx->createProgramFromPTXFile(ptx_path, "env_pdf_camera");
-    ctx->setRayGenerationProgram(as_integer(CameraType::ENV_3), ray_gen_program_3);    
+    ctx->setRayGenerationProgram((camera_3), ray_gen_program_3);    
 
     property_buffer = ctx->createBuffer(RT_BUFFER_INPUT);
     property_buffer->setFormat(RT_FORMAT_USER);
@@ -169,11 +175,11 @@ void EnvironmentMap::presample_environment_map()
     if (environment_sampler.get() != nullptr)
     {
         Logger::info << "Presampling envmaps... (size " << to_string(texture_width) << " " << to_string(texture_height) << ")" << endl;
-        context->launch(as_integer(CameraType::ENV_1), texture_width, texture_height);
+        context->launch((camera_1), texture_width, texture_height);
         Logger::info << "Step 1 complete." << endl;
-        context->launch(as_integer(CameraType::ENV_2), texture_width, texture_height);
+        context->launch((camera_2), texture_width, texture_height);
         Logger::info << "Step 2 complete." << endl;
-        context->launch(as_integer(CameraType::ENV_3), texture_width, texture_height);
+        context->launch((camera_3), texture_width, texture_height);
         Logger::info << "Step 3 complete." << endl;
         resample_envmaps = false;
         Logger::info << "Done." << endl;

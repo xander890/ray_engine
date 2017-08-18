@@ -25,6 +25,7 @@ private:
     optix::Buffer sampling_property_buffer;
     std::string envmap_file;
     int texture_width, texture_height;
+    int camera_1, camera_2, camera_3;
 
     static void GUI_CALL setDeltaX(const void* var, void* data);
     static void GUI_CALL getDeltaX(void* var, void* data);
