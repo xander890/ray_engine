@@ -24,8 +24,7 @@
 #include <sutil/ImageLoader.h>
 #include "presampled_surface_bssrdf.h"
 #include "GLUTDisplay.h"
-#include <GEL/GL/glut.h>
-#include "CGLA/Mat3x3f.h"
+#include <GL/glut.h>
 #include "aisceneloader.h"
 #include "shader_factory.h"
 #include "Medium.h"
@@ -34,10 +33,10 @@
 #include "environment_map_background.h"
 #include "constant_background.h"
 #include "PerlinNoise.h"
+#include <algorithm>
 
 using namespace std;
 using namespace optix;
-using namespace CGLA;
 
 void ObjScene::add_result_image(const string& image_file)
 {
@@ -276,7 +275,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 {
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(200);
-	setDebugEnabled(true);
+	setDebugEnabled(false);
 	context->setPrintLaunchIndex(0, 0);
 	ParameterParser::init(config_file);
 	Folders::init();
@@ -364,7 +363,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
     execute_on_scene_elements([=](Mesh & m)
     {
-        m.load_shader(m, t);
+        m.load_shader(t);
     });
 
 	// Procedural objects
@@ -474,7 +473,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
     params.diffuse_map = loadTexture(m_context, "", make_float3(1,0,0))->getId();
     params.specular_map = loadTexture(m_context, "", make_float3(0))->getId();
 
-    material_ketchup = std::make_shared<MaterialHost>("ketchup", params);
+    material_ketchup = std::make_shared<MaterialHost>("potato", params);
     execute_on_scene_elements([=](Mesh & m)
     {
         m.add_material(material_ketchup);

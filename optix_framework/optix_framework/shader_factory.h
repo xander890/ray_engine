@@ -5,9 +5,9 @@ class ShaderFactory
 {
 public:
     static void init(optix::Context& context);
-    static Shader* get_shader(int illum, RenderingMethodType::EnumType suffix);
+    static Shader* get_shader(int illum);
     static optix::Program createProgram(std::string file, std::string program_name, RenderingMethodType::EnumType method = RenderingMethodType::RECURSIVE_RAY_TRACING);
-    template<typename T> static void add_shader(int illum);
+    template<typename T> static void add_shader(const ShaderInfo& shader_info);
 private:
     static optix::Context context;
     static map<int, Shader*> mShaderMap;
@@ -15,9 +15,9 @@ private:
 };
 
 template <typename T>
-void ShaderFactory::add_shader(int illum)
+void ShaderFactory::add_shader(const ShaderInfo& shader_info)
 {
     Shader * s = new T();
-    s->initialize_shader(context, illum);
-    get_shader_map()[illum] = s;
+    s->initialize_shader(context, shader_info);
+    get_shader_map()[shader_info.illum] = s;
 }

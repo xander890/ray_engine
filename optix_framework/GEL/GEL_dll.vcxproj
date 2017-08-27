@@ -135,11 +135,7 @@
     <ClInclude Include="GLGraphics\stbi_DDS_aug_c.h" />
     <ClInclude Include="GLGraphics\stb_image.h" />
     <ClInclude Include="GLGraphics\stb_image_write.h" />
-    <ClInclude Include="GL\freeglut.h" />
-    <ClInclude Include="GL\freeglut_ext.h" />
-    <ClInclude Include="GL\freeglut_std.h" />
     <ClInclude Include="GL\glew.h" />
-    <ClInclude Include="GL\glut.h" />
     <ClInclude Include="GL\glxew.h" />
     <ClInclude Include="GL\wglew.h" />
     <ClInclude Include="Util\ArgExtracter.h" />
@@ -175,7 +171,6 @@
     <ClCompile Include="GLGraphics\SOIL.c" />
     <ClCompile Include="GLGraphics\stb_image.c" />
     <ClCompile Include="GLGraphics\stb_image_write.c" />
-    <ClCompile Include="GL\glew.c" />
     <ClCompile Include="Util\HashKey.cpp" />
     <ClCompile Include="Util\Parse.cpp" />
     <ClCompile Include="Util\string_utils.cpp" />

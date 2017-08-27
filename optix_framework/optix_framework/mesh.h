@@ -21,8 +21,8 @@ struct MeshData
 class Mesh
 {
 public:
-    Mesh(optix::Context ctx);
-        
+    explicit Mesh(optix::Context ctx);
+
     void init(MeshData meshdata, std::shared_ptr<MaterialHost> material);
 
     optix::GeometryInstance mGeometryInstance = nullptr;
@@ -31,11 +31,11 @@ public:
     optix::Material mMaterial = nullptr;
 
     MeshData mMeshData;
-    Shader * mShader;
+    std::shared_ptr<Shader> mShader;
 
     void load_material();  
     void load_geometry();
-    void load_shader(Mesh& object, RenderingMethodType::EnumType method);
+    void load_shader(RenderingMethodType::EnumType method);
     void add_material(std::shared_ptr<MaterialHost> material);
 
     std::shared_ptr<MaterialHost> get_main_material() { return mMaterialData[0]; }
@@ -46,4 +46,5 @@ private:
     optix::Program         mIntersectProgram;
     optix::Program         mBoundingboxProgram;
     optix::Buffer          mMaterialBuffer;
+
 };

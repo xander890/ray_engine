@@ -1,13 +1,11 @@
 #include "environment_map_background.h"
-
+#include "optix_helpers.h"
 #include "folders.h"
 #include "host_device_common.h"
 #include "environment_map.h"
 #include <cmath>
 #include "enums.h"
 #include "SampleScene.h"
-#include "CGLA/CGLA.h"
-#include "CGLA/Mat3x3f.h"
 #include "ImageLoader.h"
 
 using namespace optix;
@@ -32,8 +30,8 @@ void EnvironmentMap::init(optix::Context & ctx)
 
     RTsize w, h;
     environment_sampler.get()->getBuffer(0, 0)->getSize(w, h);
-    texture_width = w;
-    texture_height = h;
+    texture_width = static_cast<int>(w);
+    texture_height = static_cast<int>(h);
 
     sampling_properties.env_luminance = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
     sampling_properties.marginal_f = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
@@ -162,10 +160,9 @@ void EnvironmentMap::getLightMultiplier(void* var, void* data)
 
 Matrix3x3 get_offset_lightmap_rotation_matrix(float delta_x, float delta_y, float delta_z, const optix::Matrix3x3& current_matrix)
 {
-    CGLA::Mat3x3f matrix = CGLA::rotation_Mat3x3f(CGLA::ZAXIS, delta_z) * CGLA::rotation_Mat3x3f(CGLA::YAXIS, delta_y) * rotation_Mat3x3f(CGLA::XAXIS, delta_x);
-    Matrix3x3 optix_matrix = *reinterpret_cast<optix::Matrix3x3*>(&matrix);
-    optix_matrix = optix_matrix * current_matrix;
-    return optix_matrix;
+    Matrix3x3 matrix = rotation_matrix3x3(ZAXIS, delta_z) * rotation_matrix3x3(YAXIS, delta_y) * rotation_matrix3x3(XAXIS, delta_x);
+    matrix = matrix * current_matrix;
+    return matrix;
 }
 
 void EnvironmentMap::presample_environment_map()

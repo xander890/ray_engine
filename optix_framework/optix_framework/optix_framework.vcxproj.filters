@@ -295,9 +295,6 @@
     <ClInclude Include="dialogs.h">
       <Filter>Header Files\Dialogs</Filter>
     </ClInclude>
-    <ClInclude Include="cgla_optix_type_converter.h">
-      <Filter>Header Files\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="light.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -2,7 +2,7 @@
 #include <optixu/optixu_vector_functions.h>
 
 #include "anttweak/AntTweakBar.h"
-#include "GL/glut.h"
+#include <GL/glut.h>
 #include <iostream>
 #include <sstream>
 

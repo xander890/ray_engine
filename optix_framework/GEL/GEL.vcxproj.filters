@@ -155,19 +155,7 @@
     <ClInclude Include="CGLA\Vec4uc.h">
       <Filter>CGLA</Filter>
     </ClInclude>
-    <ClInclude Include="GL\freeglut.h">
-      <Filter>GL</Filter>
-    </ClInclude>
-    <ClInclude Include="GL\freeglut_ext.h">
-      <Filter>GL</Filter>
-    </ClInclude>
-    <ClInclude Include="GL\freeglut_std.h">
-      <Filter>GL</Filter>
-    </ClInclude>
     <ClInclude Include="GL\glew.h">
-      <Filter>GL</Filter>
-    </ClInclude>
-    <ClInclude Include="GL\glut.h">
       <Filter>GL</Filter>
     </ClInclude>
     <ClInclude Include="GL\glxew.h">
@@ -285,9 +273,6 @@
     </ClCompile>
     <ClCompile Include="CGLA\Vec3i.cpp">
       <Filter>CGLA</Filter>
-    </ClCompile>
-    <ClCompile Include="GL\glew.c">
-      <Filter>GL</Filter>
     </ClCompile>
     <ClCompile Include="GLGraphics\glsl_shader.cpp">
       <Filter>GLGraphics</Filter>

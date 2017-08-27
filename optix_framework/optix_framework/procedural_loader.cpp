@@ -70,8 +70,7 @@ std::vector<Mesh> ProceduralLoader::load(const optix::Matrix4x4& transform)
 
 	glmDelete(model);
     // FIXME
-    Mesh t(m_context);
-    return {t};
+    return { Mesh(m_context)};
 
 }
 

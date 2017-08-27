@@ -1,26 +1,24 @@
 #include "default_shader.h"
 
-std::map<int, std::string> DefaultShader::default_shaders = 
+std::vector<ShaderInfo> DefaultShader::default_shaders = 
 {
-    {0, "constant_shader.cu" },
-    {1, "lambertian_shader.cu"},
-    {3, "mirror_shader.cu"},
-    {4, "glass_shader.cu"},
-    {5, "dispersion_shader.cu"},
-    {6, "absorbing_glass.cu"},
-    {11, "metal_shader.cu"},
-    {12, "volume_shader.cu"}
+    {"constant_shader.cu" , "Constant" ,0},
+    {"lambertian_shader.cu", "Lambertian" ,1},
+    {"mirror_shader.cu", "Mirror" ,3},
+    {"glass_shader.cu", "Glass" ,4},
+    {"dispersion_shader.cu", "Dispersion" ,5},
+    {"absorbing_glass.cu", "Absorption glass" ,6},
+    {"metal_shader.cu", "Metal" ,11},
+    {"volume_shader.cu", "Full volume PT" ,12}
 };
 
-void DefaultShader::initialize_shader(optix::Context ctx, int illum)
+void DefaultShader::initialize_shader(optix::Context ctx, const ShaderInfo& shader_info)
 {
-    Shader::initialize_shader(ctx, illum);
-    shader = default_shaders[illum];
+    Shader::initialize_shader(ctx, shader_info);
 }
 
 void DefaultShader::initialize_mesh(Mesh& object)
 {
     Shader::initialize_mesh(object);
-    set_hit_programs(object, shader, method);
 }
 

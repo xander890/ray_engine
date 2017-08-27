@@ -61,10 +61,10 @@
     double n0, n1, n2, n3, n4; // Noise contributions from the five corners
     // Skew the (x,y,z,w) space to determine which cell of 24 simplices we're in
     double s = (x + y + z + w) * F4; // Factor for 4D skewing
-    int i = floor(x + s);
-    int j = floor(y + s);
-    int k = floor(z + s);
-    int l = floor(w + s);
+    int i = (int)floor(x + s);
+    int j = (int)floor(y + s);
+    int k = (int)floor(z + s);
+    int l = (int)floor(w + s);
     double t = (i + j + k + l) * G4; // Factor for 4D unskewing
     double X0 = i - t; // Unskew the cell origin back to (x,y,z,w) space
     double Y0 = j - t;

@@ -15,7 +15,7 @@ public:
     virtual ~GlossyShader() = default;
     GlossyShader() : Shader() {}
 
-    void initialize_shader(optix::Context context, int illum) override;
+    void initialize_shader(optix::Context context, const ShaderInfo& shader_info) override;
     
     void initialize_mesh(Mesh & object) override;
     void pre_trace_mesh(Mesh & object) override;

@@ -1,9 +1,9 @@
 #include "presampled_surface_bssrdf.h"
 #include "material_library.h"
 
-void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx, int illum)
+void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx, const ShaderInfo& shader_info)
 {
-    Shader::initialize_shader(ctx, illum);
+    Shader::initialize_shader(ctx, shader_info);
     //in static constructor
 
     std::string ptx_path = get_path_ptx("sample_camera.cu");
@@ -67,7 +67,7 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
     cdf_buffer->unmap();
     delete[] cdf;
 
-    set_hit_programs(object, "subsurface_scattering_shader.cu", method);
+    set_hit_programs(object);
 }
 
 

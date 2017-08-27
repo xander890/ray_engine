@@ -9,8 +9,6 @@ Mesh::Mesh(optix::Context ctx) : mContext(ctx)
 {
 }
 
-
-
 void Mesh::init(MeshData meshdata, std::shared_ptr<MaterialHost> material)
 {
     mMeshData = meshdata;
@@ -73,10 +71,11 @@ void Mesh::load_geometry()
     mGeometry->markDirty();
 }
 
-void Mesh::load_shader(Mesh& object, RenderingMethodType::EnumType method)
+void Mesh::load_shader(RenderingMethodType::EnumType method)
 {
-    mShader = ShaderFactory::get_shader(mMaterialData[0]->get_data().illum, method);
-    mShader->initialize_mesh(object);
+    mShader = std::shared_ptr<Shader>(ShaderFactory::get_shader(mMaterialData[0]->get_data().illum));
+    mShader->set_method(method);
+    mShader->initialize_mesh(*this);
 }
 
 void Mesh::create_and_bind_optix_data()

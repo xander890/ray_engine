@@ -40,9 +40,9 @@ optix::TextureSampler createOneElementSampler(optix::Context context, const opti
 }
 
 
-void GlossyShader::initialize_shader(optix::Context context, int illum)
+void GlossyShader::initialize_shader(optix::Context context, const ShaderInfo& shader_info)
 {
-    Shader::initialize_shader(context, illum);
+    Shader::initialize_shader(context, shader_info);
     blinn_exponent = ParameterParser::get_parameter<float>("glossy", "blinn_exp", 1.0f);
     anisotropic_exp = ParameterParser::get_parameter<optix::float2>("glossy", "anisotropic_exp", optix::make_float2(.5f, 1.0f));
     x_axis_anisotropic = ParameterParser::get_parameter<optix::float3>("glossy", "x_axis_anisotropic", optix::make_float3(1.0f, 0.0f, 0.0f));
@@ -106,7 +106,7 @@ void GlossyShader::initialize_mesh(Mesh& object)
     optix_mat["diffuse_map"]->setTextureSampler(createOneElementSampler(optix_mat->getContext(), reflectance));
     optix_mat["merl_brdf_buffer"]->setBuffer(buff);
 
-    set_hit_programs(object, "glossy_shader.cu", method);
+    //set_hit_programs(object, "glossy_shader.cu", method);
 }
 
 void GlossyShader::pre_trace_mesh(Mesh& object)

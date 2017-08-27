@@ -38,7 +38,7 @@ void SkyModel::update_data()
 
     cos_sun_theta = cos(sun_theta);
     sky_factor = zenith / perez_model(1.0f, sun_theta, cos_sun_theta, perez_data);
-    sun_color = get_sun_color() * 0.1;
+    sun_color = get_sun_color() * 0.1f;
 }
 
 void SkyModel::init(optix::Context & ctx)
@@ -139,7 +139,7 @@ bool SkyModel::get_miss_program(unsigned ray_type, optix::Context& ctx, optix::P
 void SkyModel::get_directional_light(SingularLightData & light)
 {
 	light.direction = -sun_position;
-	light.emission = sun_color * 6.87e-5;
+	light.emission = sun_color * 6.87e-5f;
 	light.casts_shadow = 1;
 }
 

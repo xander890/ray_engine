@@ -19,83 +19,55 @@
  */
 #ifndef OHELP
 #define OHELP
-#include <windows.h>
-#include <iostream>
-#include <string.h>
-#include <sutil.h>  // OptiX utility library
-#include <device_common_data.h>  // Main OptiX header
-#include <optixu/optixu_vector_types.h> // OptiX common vector types
 
-using namespace std;
+namespace optix {
 
-/* assumes that there is no context, just print to stderr */
-#define SWRAPPER_CHECK_ERROR_NO_CONTEXT( func )                    \
-  do {                                                             \
-    RTresult code = func;                                          \
-    if( code != RT_SUCCESS )                                       \
-      f_sutilHandleErrorNoContext(code, __FILE__, __LINE__ );      \
-  } while(0)
-
-#define SWRAPPER_RT_CHECK_ERROR( func )                            \
-  do {                                                             \
-    RTresult code = func;                                          \
-    if( code != RT_SUCCESS )                                       \
-      f_sutilHandleError( context, code, __FILE__, __LINE__ );     \
-  } while(0)
-
-class sUtilWrapper
-{
-public:
-  sUtilWrapper()
-  {
-    // Load OptiX and OptiX sUtil library
-    string optixLib(m_supportDir);
-    optixLib.append("\\optix.1.dll");
-	h_optix_library = LoadLibrary(optixLib.c_str());
-    string optixuLib(m_supportDir);
-    optixuLib.append("\\optixu.1.dll");
-    h_optixu_library = LoadLibrary(optixuLib.c_str());
-    string freeglutLib(m_supportDir);
-    freeglutLib.append("\\freeglut.dll");
-    h_freeglut_library = LoadLibrary(freeglutLib.c_str());
-    string sutilLib(m_supportDir);
-    sutilLib.append("\\sutil.dll");
-    h_sutil_library = LoadLibrary(sutilLib.c_str());
-    if (h_optix_library == NULL || h_optixu_library == NULL || h_freeglut_library == NULL || h_sutil_library == NULL)
+    __forceinline__ RT_HOSTDEVICE void operator/=(float3& a, const float3 s)
     {
-      throw "sUtilWrapper error - could not load sutil.dll";
-      return;
+        a.x /= s.x;
+        a.y /= s.y;
+        a.z /= s.z;
     }
 
-    // Get function addresses
-    f_sutilInitGlut = (RTresult (*)(int*, char**)) GetProcAddress(h_sutil_library, "sutilInitGlut");
-    f_sutilDisplayBufferInGlutWindow = (RTresult (*)(const char*, RTbuffer)) GetProcAddress(h_sutil_library, "sutilDisplayBufferInGlutWindow");
-  }
-  ~sUtilWrapper()
-  {
-    FreeLibrary(h_sutil_library);
-  }
+    enum Axis {XAXIS, YAXIS, ZAXIS};
 
-  void initGlut(int* argc, char** argv)
-  {
-    SWRAPPER_CHECK_ERROR_NO_CONTEXT(f_sutilInitGlut(argc, argv));
-  }
+    __forceinline__ Matrix3x3 rotation_matrix3x3(Axis axis, float angle)
+    {
+        Matrix3x3 m;
+        float c = cos(angle);
+        float s = sin(angle);
 
-  void DisplayBufferInGlutWindow(RTcontext context, const char* window_title, RTbuffer buffer)
-  {
-    SWRAPPER_RT_CHECK_ERROR(f_sutilDisplayBufferInGlutWindow(window_title, buffer));
-  }
-private:
-  static string m_supportDir; // OptiX supporting binaries path
-  HINSTANCE h_optix_library, h_optixu_library, h_freeglut_library, h_sutil_library;  // Handles to OptiX, freeglut and sUtil library binaries that ship with OptiX SDK
+        switch (axis)
+        {
+        case XAXIS:
+            m.setRow(0, make_float3(1,0,0));
+            m.setRow(1, make_float3(0,c,s));
+            m.setRow(2, make_float3(0,-s,c));
+            break;
+        case YAXIS:
+            m.setRow(0, make_float3(c,0,-s));
+            m.setRow(1, make_float3(0,1,0));
+            m.setRow(2, make_float3(s,0,c));
+            break;
+        case ZAXIS:
+            m.setRow(0, make_float3(c,s,0));
+            m.setRow(1, make_float3(-s,c,0));
+            m.setRow(2, make_float3(0,0,1));
+            break;
+        }
 
-  // Function addresses
-  RTresult (*f_sutilInitGlut)(int* argc, char** argv);
-  void (*f_sutilHandleErrorNoContext)(RTresult code, const char* file, int line);
-  void (*f_sutilHandleError)(RTcontext context, RTresult code, const char* file, int line);
-  RTresult (*f_sutilDisplayBufferInGlutWindow)(const char* window_title, RTbuffer buffer);
-};
+        return m;
+    }
 
-// Location of OptiX binaries and supporting dynamic libraries
-string sUtilWrapper::m_supportDir = "C:\\ProgramData\\NVIDIA Corporation\\OptiX SDK 3.7.0\\SDK-precompiled-samples";
+    __forceinline__ Matrix3x3 scaling_matrix3x3(const float3& v)
+    {
+        Matrix3x3 m = Matrix3x3::identity();
+        m.setRow(0, make_float3(v.x, 0, 0));
+        m.setRow(1, make_float3(0, v.y, 0));
+        m.setRow(2, make_float3(0, 0, v.z));
+        return m;
+    }
+
+
+}
 #endif

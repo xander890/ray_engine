@@ -5,30 +5,29 @@
 #include "glossy.h"
 #include "../optprops/Medium.h"
 #include "../optprops/spectrum2rgb.h"
-#include "GEL/CGLA/Vec3f.h"
 #include "logger.h"
 #include "mesh.h"
 #include "presampled_surface_bssrdf.h"
-
+#include "optix_helpers.h"
 using namespace optix;
 
 Context ShaderFactory::context = nullptr;
 
+
+
 void load_normalized_CIE_functions(optix::Context & ctx)
 {
     Color<double> spectrum_cdf(spectrum_rgb_samples);
-    Color<CGLA::Vec3f> normalized_CIE_rgb(spectrum_rgb_samples);
-    CGLA::Vec3f cie_rgb(0.0f);
+    Color<float3> normalized_CIE_rgb(spectrum_rgb_samples);
+    float3 cie_rgb = make_float3(0.0f);
     double cie = 0.0;
     for (unsigned int i = 0; i < spectrum_rgb_samples; ++i)
     {
-        for (unsigned int j = 1; j < 4; ++j)
-        {
-            double rgb = spectrum_rgb[i][j];
-            normalized_CIE_rgb[i][j - 1] = rgb;
-            cie += rgb;
-        }
-        cie_rgb += normalized_CIE_rgb[i];
+        float3 rgb = make_float3(static_cast<float>(spectrum_rgb[i][1]), static_cast<float>(spectrum_rgb[i][2]), static_cast<float>(spectrum_rgb[i][3]));
+        float rgb_sum = dot(rgb, make_float3(1.0f));
+        cie += rgb_sum;
+        normalized_CIE_rgb[i] = rgb;
+        cie_rgb += rgb;
         spectrum_cdf[i] = cie;
     }
     double wavelength = spectrum_rgb[0][0];
@@ -42,18 +41,18 @@ void load_normalized_CIE_functions(optix::Context & ctx)
 
     Buffer ciergb = ctx->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT3, spectrum_rgb_samples);
     float3 * buff = (float3*)ciergb->map();
-    for (unsigned int i = 0; i < spectrum_rgb_samples; ++i) buff[i] = make_float3(normalized_CIE_rgb[i][0], normalized_CIE_rgb[i][1], normalized_CIE_rgb[i][2]);
+    for (unsigned int i = 0; i < spectrum_rgb_samples; ++i) buff[i] = normalized_CIE_rgb[i];
     ciergb->unmap();
 
     Buffer ciergbcdf = ctx->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, spectrum_rgb_samples);
     float * buff2 = (float*)ciergbcdf->map();
-    for (unsigned int i = 0; i < spectrum_rgb_samples; ++i) buff2[i] = spectrum_cdf[i];
+    for (unsigned int i = 0; i < spectrum_rgb_samples; ++i) buff2[i] = static_cast<float>(spectrum_cdf[i]);
     ciergbcdf->unmap();
 
     ctx["normalized_cie_rgb"]->setBuffer(ciergb);
     ctx["normalized_cie_rgb_cdf"]->setBuffer(ciergbcdf);
-    ctx["normalized_cie_rgb_wavelength"]->setFloat(wavelength);
-    ctx["normalized_cie_rgb_step"]->setFloat(step_size);
+    ctx["normalized_cie_rgb_wavelength"]->setFloat(static_cast<float>(wavelength));
+    ctx["normalized_cie_rgb_step"]->setFloat(static_cast<float>(step_size));
 }
 
 
@@ -98,24 +97,25 @@ void ShaderFactory::init(optix::Context& ctx)
 {
     context = ctx;
     load_normalized_CIE_functions(context);
-    add_shader<GlossyShader>(2);
-    add_shader<PresampledSurfaceBssrdf>(17);
 
-    for (auto& n: DefaultShader::default_shaders)
+    ShaderInfo glossy = {"glossy_shader.cu", "Glossy", 2};
+    add_shader<GlossyShader>(glossy);
+    ShaderInfo bssrdf = { "subsurface_scattering_shader.cu", "Point cloud BSSRDF", 17 };
+    add_shader<PresampledSurfaceBssrdf>(bssrdf);
+
+    for (const ShaderInfo& n: DefaultShader::default_shaders)
     {
-        int illum = n.first;
         DefaultShader* s = new DefaultShader();
-        s->initialize_shader(context, illum);
-        mShaderMap[illum] = s;
+        s->initialize_shader(context, n);
+        mShaderMap[n.illum] = s;
     }
 }
 
-Shader* ShaderFactory::get_shader(int illum, RenderingMethodType::EnumType method)
+Shader* ShaderFactory::get_shader(int illum)
 {
     std::string shader;
     if (mShaderMap.count(illum) != 0)
     {
-        mShaderMap[illum]->method = method;
         return mShaderMap[illum];
     }
     Logger::error << "Shader for illum " << illum << " not found" << std::endl;

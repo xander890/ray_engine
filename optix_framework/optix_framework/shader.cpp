@@ -2,9 +2,6 @@
 #include "material_library.h"
 #include "glossy.h"
 #include "../optprops/Medium.h"
-#include "../optprops/spectrum2rgb.h"
-#include "GEL/CGLA/Vec3f.h"
-#include "logger.h"
 #include "host_device_common.h"
 #include "mesh.h"
 #include "default_shader.h"
@@ -14,8 +11,6 @@
 
 using namespace optix;
 using namespace std;
-
-
 
 void get_relative_ior(const MPMLMedium& med_in, const MPMLMedium& med_out, optix::float3& eta, optix::float3& kappa)
 {
@@ -28,8 +23,6 @@ void get_relative_ior(const MPMLMedium& med_in, const MPMLMedium& med_out, optix
     eta = (eta2 * eta1 + kappa2 * kappa1) / ab;
     kappa = (eta1 * kappa2 - eta2 * kappa1) / ab;
 }
-
-
 
 void Shader::initialize_mesh(Mesh & object)
 {
@@ -55,10 +48,11 @@ void Shader::initialize_mesh(Mesh & object)
             for (int i = 0; i < ior.size(); i++) buff[i] = (float)ior[i].real();
             b->unmap();
             object.mMaterial["ior_real_spectrum"]->setBuffer(b);
-            object.mMaterial["ior_real_wavelength"]->setFloat(ior.wavelength);
-            object.mMaterial["ior_real_step"]->setFloat(ior.step_size);
+            object.mMaterial["ior_real_wavelength"]->setFloat((float)ior.wavelength);
+            object.mMaterial["ior_real_step"]->setFloat((float)ior.step_size);
         }
     }
+    set_hit_programs(object);
 }
 
 void Shader::pre_trace_mesh(Mesh & object)
@@ -66,16 +60,18 @@ void Shader::pre_trace_mesh(Mesh & object)
     return;
 }
 
-void Shader::initialize_shader(optix::Context context, int illum)
+void Shader::initialize_shader(optix::Context context, const ShaderInfo& shader_info)
 {
     this->context = context;
-    this->illum = illum;
+    illum = shader_info.illum;
+    shader_path = shader_info.cuda_shader_path;
+    shader_name = shader_info.name;
 }
 
-void Shader::set_hit_programs(Mesh& object, std::string shader, RenderingMethodType::EnumType method)
+void Shader::set_hit_programs(Mesh& object)
 {
-    auto chit = ShaderFactory::createProgram(shader, "shade", method);
-    auto ahit = ShaderFactory::createProgram(shader, "any_hit_shadow");
+    auto chit = ShaderFactory::createProgram(shader_path, "shade", method);
+    auto ahit = ShaderFactory::createProgram(shader_path, "any_hit_shadow");
     object.mMaterial->setClosestHitProgram(RAY_TYPE_RADIANCE, chit);
     object.mMaterial->setClosestHitProgram(RAY_TYPE_DUMMY, chit);
     object.mMaterial->setAnyHitProgram(RAY_TYPE_SHADOW, ahit);
