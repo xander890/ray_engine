@@ -1,9 +1,7 @@
 #ifndef __samples_util_optix_mesh_classes_h__
 #define __samples_util_optix_mesh_classes_h__
 
-#include <optixpp_namespace.h>
-#include <optixu_math_namespace.h>
-
+#include <optixu/optixpp_namespace.h>
 
 namespace OptixMeshClasses {
 

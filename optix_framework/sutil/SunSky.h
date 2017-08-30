@@ -13,7 +13,7 @@
 #pragma once
 
 #include <sutil.h>
-#include <optixpp_namespace.h>
+#include <optixu/optixpp_namespace.h>
 #include <optixu/optixu_math_namespace.h>
 
 

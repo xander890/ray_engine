@@ -35,22 +35,20 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="properties.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="properties.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(SolutionDir);$(Optix_Dir)\include;$(CUDA_INC_PATH);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir);..\optix\include;$(CUDA_INC_PATH);$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>..\build\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(SolutionDir);$(Optix_Dir)\include;$(Optix_Dir)\include\optixu;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir);..\optix\include;$(Optix_Dir)\include\optixu;$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>..\build\</OutDir>
   </PropertyGroup>
@@ -61,13 +59,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;_DEBUG;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..;$(Optix_Dir)\include;..\GL;..\nfd;..\optprops;..\sutil;..\anttweak;$(CudaToolkitIncludeDir);..\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\optix\include;..\GL;..\nfd;..\optprops;..\sutil;..\anttweak;$(CudaToolkitIncludeDir);..\assimp\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>..\lib64\$(Configuration)\nfd.lib;..\lib64\AntTweakBar64.lib;..\lib64\assimp.lib;..\lib64\xerces-c_3.lib;..\lib64\$(Configuration)\gel.lib;..\lib64\$(Configuration)\optprops.lib;$(Optix_Dir)\SDK\support\freeglut\win64\Release\freeglut.lib;$(Optix_Dir)\lib64\optix.1.lib;$(Optix_Dir)\lib64\optixu.1.lib;..\lib64\glew32.lib;..\lib64\$(Configuration)\sutil.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\lib64\$(Configuration)\nfd.lib;..\lib64\AntTweakBar64.lib;..\lib64\assimp.lib;..\lib64\xerces-c_3.lib;..\lib64\$(Configuration)\gel.lib;..\lib64\$(Configuration)\optprops.lib;..\lib64\freeglut.lib;..\lib64\optix.1.lib;..\lib64\optixu.1.lib;..\lib64\glew32.lib;..\lib64\$(Configuration)\sutil.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ShowProgress>LinkVerbose</ShowProgress>
     </Link>
@@ -94,7 +92,7 @@ xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <AdditionalDeps>
       </AdditionalDeps>
-      <Include>"$(Optix_Dir)/include";%(AdditionalDeps)</Include>
+      <Include>..\optix\include;%(AdditionalDeps)</Include>
       <FastMath>true</FastMath>
       <AdditionalOptions>-D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options  /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
       <NvccCompilation>ptx</NvccCompilation>
@@ -105,6 +103,7 @@ xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"
       <Optimization>O3</Optimization>
       <GPUDebugInfo>false</GPUDebugInfo>
       <AdditionalCompilerOptions> /Gm </AdditionalCompilerOptions>
+      <CompileOut>$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
     </CudaCompile>
     <PreBuildEvent>
       <Command>echo Creating directories "PTX_files" if they don't exist yet...
@@ -123,7 +122,7 @@ echo Done.</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NOMINMAX;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..;$(Optix_Dir)\include;..\GL;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\assimp\include;..\anttweak</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\optix\include;..\GL;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\assimp\include;..\anttweak</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalOptions>/Fp %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -132,7 +131,7 @@ echo Done.</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>..\lib64\$(Configuration)\nfd.lib;..\lib64\AntTweakBar64.lib;..\lib64\assimp.lib;..\lib64\xerces-c_3.lib;..\lib64\$(Configuration)\gel.lib;..\lib64\$(Configuration)\optprops.lib;$(Optix_Dir)\SDK\support\freeglut\win64\Release\freeglut.lib;$(Optix_Dir)\lib64\optix.1.lib;$(Optix_Dir)\lib64\optixu.1.lib;..\lib64\glew32.lib;..\lib64\$(Configuration)\sutil.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\lib64\$(Configuration)\nfd.lib;..\lib64\AntTweakBar64.lib;..\lib64\assimp.lib;..\lib64\xerces-c_3.lib;..\lib64\$(Configuration)\gel.lib;..\lib64\$(Configuration)\optprops.lib;..\lib64\freeglut.lib;..\lib64\optix.1.lib;..\lib64\optixu.1.lib;..\lib64\glew32.lib;..\lib64\$(Configuration)\sutil.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>echo Copying OptiX, freeglut and CUDA DLLs to output folder..
@@ -153,13 +152,14 @@ xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <Include>"$(Optix_Dir)/include";%(AdditionalDeps)</Include>
+      <Include>..\optix\include;%(AdditionalDeps)</Include>
       <CudaRuntime>Shared</CudaRuntime>
       <NvccCompilation>ptx</NvccCompilation>
       <CodeGeneration>compute_30,sm_30</CodeGeneration>
       <MaxRegCount />
       <FastMath>true</FastMath>
       <AdditionalOptions>-D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
+      <CompileOut>$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
     </CudaCompile>
     <PreBuildEvent>
       <Command>echo Creating directories "PTX_files" if they don't exist yet...
@@ -314,6 +314,7 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\glass_shader.cu">
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

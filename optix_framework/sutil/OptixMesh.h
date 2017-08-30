@@ -25,7 +25,7 @@
 
 #include "sutilapi.h"
 
-#include <optixpp_namespace.h>
+#include <optixu/optixpp_namespace.h>
 #include <optixu_aabb_namespace.h>
 #include <optixu_matrix_namespace.h>
 
