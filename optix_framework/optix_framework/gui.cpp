@@ -8,10 +8,20 @@
 #include <GL/glut.h>
 #include <iostream>
 #include <sstream>
+#include "logger.h"
 
+std::string get_label(const char * name)
+{
+    std::string str = std::string(name) ;
+    std::size_t found = str.find_last_of("/");
+    if (found != std::string::npos)
+        str = str.substr(found + 1);
+    return std::string("\'") + str + std::string("\'");
+}
 
 GUI::GUI(const char* name, int window_width, int window_height)
-{
+{ 
+    this->barname = name;
 	TwInit(TW_OPENGL_CORE, nullptr);
 	bar = TwNewBar(name);
 	auto define = std::string(name) + " size='400 600' color='96 216 224' ";
@@ -60,7 +70,7 @@ void GUI::addIntVariable(const char* name, int* var, const char* group, int min,
 {
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'" << " min=" << min << " max=" << max << " step=" << step;
+	ss << "label=" << get_label(name) << " group='" << group << "'" << " min=" << min << " max=" << max << " step=" << step;
 	TwAddVarRW(bar, name, TW_TYPE_INT32, var, ss.str().c_str());
 }
 
@@ -68,7 +78,7 @@ void GUI::addFloatVariable(const char* name, float* var, const char* group, floa
 {
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'" << " min=" << min << " max=" << max << " step=" << step;
+	ss << "label=" << get_label(name) << " group='" << group << "'" << " min=" << min << " max=" << max << " step=" << step;
 	TwAddVarRW(bar, name, TW_TYPE_FLOAT, var, ss.str().c_str());
 }
 
@@ -76,7 +86,7 @@ void GUI::addDirVariable(const char* name, optix::float3* var, const char* group
 {
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'";
+	ss << "label=" << get_label(name) << " group='" << group << "'";
 	TwAddVarRW(bar, name, TW_TYPE_DIR3F, var, ss.str().c_str());
 }
 
@@ -84,7 +94,7 @@ void GUI::addColorVariable(const char* name, optix::float3* var, const char* gro
 {
 	group = strcmp(group, "") == 0 ? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "' colormode=rgb";
+	ss << "label=" << get_label(name) << " group='" << group << "' colormode=rgb";
 	TwAddVarRW(bar, name, TW_TYPE_COLOR3F, var, ss.str().c_str());
 }
 
@@ -92,7 +102,7 @@ void GUI::addHDRColorVariable(const char* name, optix::float4* var, const char* 
 {
     group = strcmp(group, "") == 0 ? "main" : group;
     std::stringstream ss;
-    ss << "group='" << group << "' colormode=rgb";
+    ss << "label=" << get_label(name) << " group='" << group << "' colormode=rgb";
     char buf[256];
     _snprintf_s(buf, sizeof buf, "%s%s", name, ", Color");
     addColorVariable(buf, (optix::float3*)var, ss.str().c_str());
@@ -107,7 +117,7 @@ void GUI::addHDRColorVariable(const char* name, optix::float3* var, const char* 
 {
     group = strcmp(group, "") == 0 ? "main" : group;
     std::stringstream ss;
-    ss << "group='" << group;
+    ss << "label=" << get_label(name) << " group='" << group;
     char buf[256];
     _snprintf_s(buf, sizeof buf, "%s%s", name, ", R");
     TwAddVarRW(bar, buf, TW_TYPE_FLOAT, &var[0], ss.str().c_str());
@@ -121,7 +131,7 @@ void GUI::addCheckBox(const char* name, bool* var, const char* group) const
 {
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'";
+	ss << "label=" << get_label(name) << " group='" << group << "'";
 	TwAddVarRW(bar, name, TW_TYPE_BOOL32, var, ss.str().c_str());
 }
 
@@ -129,7 +139,7 @@ void GUI::addDropdownMenu(const char* name, std::vector<GuiDropdownElement>& val
 {
 	group = strcmp(group, "") == 0 ? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'";
+	ss << "label=" << get_label(name) << " group='" << group << "'";
 	TwType en = TwDefineEnum((std::string(name) + "enum").c_str(), reinterpret_cast<TwEnumVal*>(values.data()), (unsigned int)values.size());
 	TwAddVarRW(bar, name, en, value, ss.str().c_str());
 }
@@ -138,7 +148,7 @@ void GUI::addIntVariableCallBack(const char* name, GuiSetVarCallback set_var, Gu
 {
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'" << " min=" << min << " max=" << max << " step=" << step;
+	ss << "label=" << get_label(name) << " group='" << group << "'" << " min=" << min << " max=" << max << " step=" << step;
 	TwAddVarCB(bar, name, TW_TYPE_INT32, set_var, get_var, data, ss.str().c_str());
 }
 
@@ -146,7 +156,8 @@ void GUI::addFloatVariableCallBack(const char* name, GuiSetVarCallback set_var, 
 {
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'" << " min=" << min << " max=" << max << " step=" << step;
+	ss << "label=" << get_label(name) << " group='" << group << "'" << " min=" << min << " max=" << max << " step=" << step;
+    Logger::error << ss.str() <<std::endl;
 	TwAddVarCB(bar, name, TW_TYPE_FLOAT, set_var, get_var, data, ss.str().c_str());
 }
 
@@ -156,7 +167,7 @@ void GUI::addDirVariableCallBack(const char* name, GuiSetVarCallback set_var, Gu
 {	
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'";
+	ss << "label=" << get_label(name) << " group='" << group << "'";
 	TwAddVarCB(bar, name, TW_TYPE_DIR3F, set_var, get_var, data, ss.str().c_str());
 }
 
@@ -164,7 +175,7 @@ void GUI::addCheckBoxCallBack(const char* name, GuiSetVarCallback set_var, GuiGe
 {
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'";
+	ss << "label=" << get_label(name) << " group='" << group << "'";
 	TwAddVarCB(bar, name, TW_TYPE_BOOL32, set_var, get_var, data, ss.str().c_str());
 }
 
@@ -172,7 +183,7 @@ void GUI::addDropdownMenuCallback(const char* name, std::vector<GuiDropdownEleme
 {
 	group = strcmp(group, "") == 0 ? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'";
+	ss << "label=" << get_label(name) << " group='" << group << "'";
 	TwType en = TwDefineEnum((std::string(name) + "enum").c_str(), reinterpret_cast<TwEnumVal*>(values.data()), (unsigned int)values.size());
 	TwAddVarCB(bar, name, en, set_var, get_var, data, ss.str().c_str());
 }
@@ -181,7 +192,7 @@ void GUI::addColorVariableCallback(const char * name, GuiSetVarCallback set_var,
 {
 	group = strcmp(group, "") == 0 ? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "' colormode=rgb";
+	ss << "label=" << get_label(name) << " group='" << group << "' colormode=rgb";
 	TwAddVarCB(bar, name, TW_TYPE_COLOR3F, set_var, get_var, data, ss.str().c_str());
 }
 
@@ -189,7 +200,7 @@ void GUI::addHDRColorVariableCallback(const char* name, GuiSetVarCallback set_va
 {
     group = strcmp(group, "") == 0 ? "main" : group;
     std::stringstream ss;
-    ss << "group='" << group;
+    ss << "label=" << get_label(name) << " group='" << group;
     char buf[256];
     _snprintf_s(buf, sizeof buf, "%s%s", name, ", R");
     TwAddVarCB(bar, buf, TW_TYPE_FLOAT, set_varr, get_varr, data, ss.str().c_str());
@@ -203,13 +214,13 @@ void GUI::addHDRColorVariableCallback(const char* name, GuiSetVarCallback set_co
 {
     group = strcmp(group, "") == 0 ? "main" : group;
     std::stringstream ss;
-    ss << "group='" << group << "' colormode=rgb";
+    ss << "label=" << get_label(name) << " group='" << group << "' colormode=rgb";
     char buf[256];
     _snprintf_s(buf, sizeof buf, "%s%s", name, ", Color");
     TwAddVarCB(bar, buf, TW_TYPE_COLOR3F, set_color, get_color, data, ss.str().c_str());
 
     ss.clear();
-    ss << "group='" << group << "' colormode=rgb";
+    ss << "label=" << get_label(name) << " group='" << group << "' colormode=rgb";
     _snprintf_s(buf, sizeof buf, "%s%s", name, ", Scale");
     TwAddVarCB(bar, buf, TW_TYPE_FLOAT, set_scale, get_scale, data, ss.str().c_str());
 }
@@ -243,13 +254,18 @@ void GUI::addButton(const char* name, GuiButtonCallback callback, void * data, c
 {
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
-	ss << "group='" << group << "'";
+	ss << "label=" << get_label(name) << " group='" << group << "'";
 	TwAddButton(bar, name, callback, data, ss.str().c_str());
 }
 
 void GUI::removeVar(const char* name) const
 {
 	TwRemoveVar(bar, name);
+}
+
+void GUI::linkGroups(const char* parent, const char* child)
+{
+      TwSetParam(bar, child, "group", TW_PARAM_CSTRING, 1, parent);
 }
 
 void GUI::draw() const

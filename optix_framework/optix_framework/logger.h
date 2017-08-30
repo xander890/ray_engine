@@ -6,7 +6,7 @@
 
 class Logger {
 
-//#define USE_COLORS
+#define USE_COLORS
 #ifdef USE_COLORS
 #define COLOR_SELECTOR(x) x
 #else

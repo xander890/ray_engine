@@ -7,6 +7,7 @@
 #include "enums.h"
 #include "SampleScene.h"
 #include "ImageLoader.h"
+#include "optix_utils.h"
 
 using namespace optix;
 void EnvironmentMap::init(optix::Context & ctx)
@@ -47,25 +48,14 @@ void EnvironmentMap::init(optix::Context & ctx)
     Program ray_gen_program_3 = ctx->createProgramFromPTXFile(ptx_path, "env_pdf_camera");
     ctx->setRayGenerationProgram((camera_3), ray_gen_program_3);    
 
-    property_buffer = ctx->createBuffer(RT_BUFFER_INPUT);
-    property_buffer->setFormat(RT_FORMAT_USER);
-    property_buffer->setElementSize(sizeof(EnvmapProperties));
-    property_buffer->setSize(1);
-    memcpy(property_buffer->map(), &properties, sizeof(EnvmapProperties));
-    property_buffer->unmap();
+    property_buffer = create_and_initialize_buffer<EnvmapProperties>(context, properties);
+    sampling_property_buffer = create_and_initialize_buffer<EnvmapImportanceSamplingData>(context, sampling_properties);
 
     BufPtr<EnvmapProperties> b = BufPtr<EnvmapProperties>(property_buffer->getId());
     ctx["envmap_properties"]->setUserData(sizeof(BufPtr<EnvmapProperties>), &b);
 
-    sampling_property_buffer = ctx->createBuffer(RT_BUFFER_INPUT);
-    sampling_property_buffer->setFormat(RT_FORMAT_USER);
-    sampling_property_buffer->setElementSize(sizeof(EnvmapProperties));
-    sampling_property_buffer->setSize(1);
-    memcpy(sampling_property_buffer->map(), &sampling_properties, sizeof(EnvmapProperties));
-    sampling_property_buffer->unmap();
-
-    BufPtr<EnvmapProperties> b2 = BufPtr<EnvmapProperties>(sampling_property_buffer->getId());
-    ctx["envmap_importance_sampling"]->setUserData(sizeof(BufPtr<EnvmapProperties>), &b2);
+    BufPtr<EnvmapImportanceSamplingData> b2 = BufPtr<EnvmapImportanceSamplingData>(sampling_property_buffer->getId());
+    ctx["envmap_importance_sampling"]->setUserData(sizeof(BufPtr<EnvmapImportanceSamplingData>), &b2);
 }
 
 void EnvironmentMap::set_into_gpu(optix::Context & ctx)

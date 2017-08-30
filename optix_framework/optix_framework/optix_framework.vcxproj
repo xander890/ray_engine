@@ -561,6 +561,7 @@ echo Done.</Command>
     <ClInclude Include="constant_background.h" />
     <ClInclude Include="default_shader.h" />
     <ClInclude Include="device_environment_map.h" />
+    <ClInclude Include="device_mesh_data.h" />
     <ClInclude Include="environment_map_background.h" />
     <ClInclude Include="host_device_common.h" />
     <ClInclude Include="host_material.h" />
@@ -579,7 +580,7 @@ echo Done.</Command>
     <ClInclude Include="mesh.h" />
     <ClInclude Include="miss_program.h" />
     <ClInclude Include="optix_common.h" />
-    <ClInclude Include="optix_host_fwd.h" />
+    <ClInclude Include="optix_utils.h" />
     <ClInclude Include="PerlinNoise.h" />
     <ClInclude Include="procedural_mesh.h" />
     <ClInclude Include="color_helpers.h" />

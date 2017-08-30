@@ -24,7 +24,8 @@
 #include <optixu/optixu_math_namespace.h>
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixu_aabb_namespace.h>
-#include "..\structs.h"
+#include "../structs.h"
+#include <device_mesh_data.h>
 
 
 using namespace optix;
@@ -33,14 +34,7 @@ using namespace optix;
 // This is to be plugged into an RTgeometry object to represent
 // a triangle mesh with a vertex buffer of triangle soup (triangle list)
 // with an interleaved position, normal, texturecoordinate layout.
-
-rtBuffer<float3> vertex_buffer;     
-rtBuffer<float3> normal_buffer;
-rtBuffer<float2> texcoord_buffer;
-rtBuffer<int3>   vindex_buffer;    // position indices 
-rtBuffer<int3>   nindex_buffer;    // normal indices
-rtBuffer<int3>   tindex_buffer;    // texcoord indices
-
+  
 rtBuffer<uint>   material_buffer; // per-face material index
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 

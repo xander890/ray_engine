@@ -328,9 +328,6 @@
     <ClInclude Include="camera_host.h">
       <Filter>Header Files\Cameras</Filter>
     </ClInclude>
-    <ClInclude Include="optix_host_fwd.h">
-      <Filter>Header Files\Optix</Filter>
-    </ClInclude>
     <ClInclude Include="light_host.h">
       <Filter>Header Files\Lights</Filter>
     </ClInclude>
@@ -381,6 +378,12 @@
     </ClInclude>
     <ClInclude Include="simplex_noise.h">
       <Filter>Header Files\Noise</Filter>
+    </ClInclude>
+    <ClInclude Include="device_mesh_data.h">
+      <Filter>Header Files\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="optix_utils.h">
+      <Filter>Header Files\Optix</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

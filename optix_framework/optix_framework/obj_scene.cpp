@@ -35,6 +35,7 @@
 #include "constant_background.h"
 #include "PerlinNoise.h"
 #include <algorithm>
+#include "optix_utils.h"
 
 using namespace std;
 using namespace optix;
@@ -178,19 +179,7 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 void ObjScene::initUI()
 {
 	Logger::info << "Initializing UI..." << endl;
-    gui->addFloatVariable("Noise scale", &noise_scale, "");
-    gui->addFloatVariableCallBack("Noise freq.", 
-        [](const void* var, void* data)
-    { 
-        ObjScene* s = reinterpret_cast<ObjScene*>(data); 
-        s->noise_frequency = *((float*)var); 
-        s->create_3d_noise(s->noise_frequency);  
-    },
-        [](void* var, void* data)
-    {
-        ObjScene* s = reinterpret_cast<ObjScene*>(data); 
-        *((float*)var) = s->noise_frequency;
-    }, this, "");
+
     gui->addIntVariable("Frames", reinterpret_cast<int*>(&m_frame), "Settings");
 	gui->setReadOnly("Frames");
 	gui->addCheckBoxCallBack("Debug Mode", setDebugMode, getDebugMode, this, "Settings");
@@ -232,19 +221,27 @@ void ObjScene::initUI()
 
     execute_on_scene_elements([=](Mesh & m)
     {
-        if (m.get_main_material()->get_data().illum == 17 || m.get_main_material()->get_data().illum == 12)
-        {
-            m.get_main_material()->set_into_gui(gui);
-        }
+        m.set_into_gui(gui);
     });
 
+    gui->addFloatVariableCallBack("Noise freq.",
+        [](const void* var, void* data)
+    {
+        ObjScene* s = reinterpret_cast<ObjScene*>(data);
+        s->noise_frequency = *((float*)var);
+        s->create_3d_noise(s->noise_frequency);
+    },
+        [](void* var, void* data)
+    {
+        ObjScene* s = reinterpret_cast<ObjScene*>(data);
+        *((float*)var) = s->noise_frequency;
+    }, this, "Noise");
 
     camera->set_into_gui(gui);
 }
 
 void ObjScene::create_3d_noise(float frequency)
 {
-    context["noise_scale"]->setFloat(noise_scale);
     static TextureSampler sampler = context->createTextureSampler();
     static optix::Buffer buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, 256u, 256u, 256u);
     static PerlinNoise p(1337);
@@ -265,7 +262,7 @@ void ObjScene::create_3d_noise(float frequency)
             for (int k = 0; k < 256; k++)
             {
                 int idx = 256 * 256 * i + 256 * j + k;
-                buffer_data[idx] = (float)p.noise(i / (256.0f) * noise_scale, j / (256.0f) * noise_scale, k / (256.0f) * noise_scale);
+                buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
             }
     buffer->unmap();
 
@@ -459,27 +456,29 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	}
 	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
 
-	initUI();
-	context["show_difference_image"]->setInt(show_difference_image);
-	context["merl_brdf_multiplier"]->setFloat(make_float3(1));
-
     MaterialDataCommon params;
-    
+
     params.absorption = make_float3(0);
     params.emissive = make_float3(0);
-    params.illum = 2;
+    params.illum = 12;
     params.ior = 1.3f;
     params.phong_exp = 0;
     params.reflectivity = make_float3(0);
     params.ambient_map = loadTexture(m_context, "", make_float3(0))->getId();
-    params.diffuse_map = loadTexture(m_context, "", make_float3(1,0,0))->getId();
+    params.diffuse_map = loadTexture(m_context, "", make_float3(1, 0, 0))->getId();
     params.specular_map = loadTexture(m_context, "", make_float3(0))->getId();
 
-    material_ketchup = std::make_shared<MaterialHost>("potato", params);
+    material_ketchup = std::make_shared<MaterialHost>("ketchup", params);
     execute_on_scene_elements([=](Mesh & m)
     {
         m.add_material(material_ketchup);
     });
+
+	initUI();
+	context["show_difference_image"]->setInt(show_difference_image);
+	context["merl_brdf_multiplier"]->setFloat(make_float3(1));
+
+ 
 
 	 Logger::info<<"Scene initialized."<<endl;
 }
@@ -506,7 +505,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		reset_renderer();
 		m_camera_changed = false;
 	}
-    context["noise_scale"]->setFloat(noise_scale);
 	context["frame"]->setUint(m_frame++);
 
 	double time;
@@ -582,15 +580,10 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 	int shadows = ParameterParser::get_parameter<int>("light", "shadows", 1, "Use shadows in rendering.");
 
 	std::string ptx_path_light = get_path_ptx("light_programs.cu");
-    Buffer dir_light_buffer = context->createBuffer(RT_BUFFER_INPUT);
-	dir_light_buffer->setFormat(RT_FORMAT_USER);
-    dir_light_buffer->setElementSize(sizeof(SingularLightData));
-    dir_light_buffer->setSize(1);
 
-    Buffer area_light_buffer = context->createBuffer(RT_BUFFER_INPUT);
-    area_light_buffer->setFormat(RT_FORMAT_USER);
-    area_light_buffer->setElementSize(sizeof(TriangleLight));
-    area_light_buffer->setSize(1);
+    Buffer dir_light_buffer = create_buffer<SingularLightData>(context);
+    Buffer area_light_buffer = create_buffer<TriangleLight>(context);
+
     context["light_type"]->setInt(as_integer(default_light_type));
 	switch (default_light_type)
 	{

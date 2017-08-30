@@ -4,13 +4,15 @@
 #include "scattering_material.h"
 #include <algorithm>
 #include<host_material.h>
+#include "optix_utils.h"
 
 Mesh::Mesh(optix::Context ctx) : mContext(ctx)
 {
 }
 
-void Mesh::init(MeshData meshdata, std::shared_ptr<MaterialHost> material)
+void Mesh::init(const char* name, MeshData meshdata, std::shared_ptr<MaterialHost> material)
 {
+    mMeshName = name;
     mMeshData = meshdata;
     mMaterialData.resize(1);
     mMaterialData[0] = material;
@@ -27,10 +29,12 @@ void Mesh::init(MeshData meshdata, std::shared_ptr<MaterialHost> material)
 
     if (!mMaterialBuffer.get())
     {
-        mMaterialBuffer = mContext->createBuffer(RT_BUFFER_INPUT);
-        mMaterialBuffer->setFormat(RT_FORMAT_USER);
-        mMaterialBuffer->setElementSize(sizeof(MaterialDataCommon));
-        mMaterialBuffer->setSize(1);
+        mMaterialBuffer = create_buffer<MaterialDataCommon>(mContext);
+    }
+
+    if (!mBBoxBuffer.get())
+    {
+        mBBoxBuffer = create_buffer<optix::Aabb>(mContext);
     }
 
     load_geometry();
@@ -68,6 +72,10 @@ void Mesh::load_geometry()
     mGeometry["tindex_buffer"]->setBuffer(mMeshData.mTIbuffer);
     mGeometry["material_buffer"]->setBuffer(mMeshData.mMatBuffer);
     mGeometry["num_triangles"]->setUint(mMeshData.mNumTriangles);
+    mGeometryInstance["num_triangles"]->setUint(mMeshData.mNumTriangles);
+    initialize_buffer<optix::Aabb>(mBBoxBuffer, mMeshData.mBoundingBox);
+    BufPtr<optix::Aabb> bptr = BufPtr<optix::Aabb>(mBBoxBuffer->getId());
+    mGeometryInstance["local_bounding_box"]->setUserData(sizeof(BufPtr<optix::Aabb>), &bptr);
     mGeometry->markDirty();
 }
 
@@ -112,4 +120,12 @@ void Mesh::add_material(std::shared_ptr<MaterialHost> material)
     mMaterialData.push_back(material);
     mMaterialBuffer->setSize(mMaterialData.size());
     load_material();
+}
+
+void Mesh::set_into_gui(GUI* gui, const char* group)
+{
+    for (auto& m : mMaterialData)
+    {
+        m->set_into_gui(gui, mMeshName.c_str());
+    }
 }

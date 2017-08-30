@@ -233,6 +233,8 @@ std::vector<Mesh> ObjLoader::createGeometryInstances(GLMmodel* model)
 	Buffer mbuffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_UNSIGNED_INT, num_triangles );
 	unsigned int* mbuffer_data = static_cast<unsigned int*>( mbuffer->map() );
 
+    optix::Aabb bbox;
+
 	for ( unsigned int i = 0; i < obj_group->numtriangles; ++i, ++triangle_count ) {
 
 	  unsigned int tindex = obj_group->triangles[i];
@@ -245,6 +247,13 @@ std::vector<Mesh> ObjLoader::createGeometryInstances(GLMmodel* model)
 	  assert( vindices.z <= static_cast<int>(model->numvertices) );
 	  
 	  vindex_buffer_data[ i ] = vindices;
+
+      if (vindices.x > 2 && vindices.y > 2 && vindices.z > 2)
+      {
+          float3 vx = *((float3*)&model->vertices[vindices.x * 3]); bbox.include(vx);
+          float3 vy = *((float3*)&model->vertices[vindices.y * 3]); bbox.include(vy);
+          float3 vz = *((float3*)&model->vertices[vindices.z * 3]); bbox.include(vz);
+      }
 
 	  int3 nindices;
 	  nindices.x = model->triangles[ tindex ].nindices[0] - 1; 
@@ -274,9 +283,15 @@ std::vector<Mesh> ObjLoader::createGeometryInstances(GLMmodel* model)
 
 
     std::shared_ptr<MaterialHost> materialData = getMaterial(obj_group->material);
-    MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, mbuffer, num_triangles };
-    Mesh rtMesh(m_context);
-    rtMesh.init(meshdata, materialData);
+    MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, mbuffer, num_triangles, bbox };
+    Mesh rtMesh(m_context); 
+    auto c = m_filename.find_last_of("/");
+    c = (size_t)max((int)c, (int)m_filename.find_last_of("\\"));
+    if (c == std::string::npos)
+        c = 0;
+
+    std::string name = m_filename.substr(c+1);
+    rtMesh.init(name.c_str(), meshdata, materialData);
     
 	instances.push_back( rtMesh );
   }

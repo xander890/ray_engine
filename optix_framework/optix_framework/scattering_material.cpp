@@ -13,6 +13,7 @@ ScatteringMaterial& ScatteringMaterial::operator=(const ScatteringMaterial& cp)
     name = cp.name;
     scale = cp.scale;
     dirty = true;
+    mStandardMaterial = cp.mStandardMaterial;
     return *this;
 }
 
@@ -24,6 +25,7 @@ ScatteringMaterial::ScatteringMaterial(const ScatteringMaterial& cp)
     asymmetry = cp.asymmetry;
     name = cp.name;
     scale = cp.scale;
+    mStandardMaterial = cp.mStandardMaterial;
     dirty = true;
 }
 
@@ -183,24 +185,30 @@ void ScatteringMaterial::set_asymmetry(float asymm)
 	dirty = true;
 }
 
-void ScatteringMaterial::set_into_gui(GUI* gui)
+void ScatteringMaterial::set_into_gui(GUI* gui, const char * group)
 {
     std::vector<GuiDropdownElement> gui_elements;
     for (int i = 0; i < DefaultScatteringMaterial::Count; i++)
     {
         gui_elements.push_back({ i, defaultMaterials[i].name });
     }
+    gui_elements.push_back({ DefaultScatteringMaterial::Count, "Custom" });
 
-    const char* scatmat = "Scattering Material";
-    gui->addDropdownMenuCallback("Set Material", gui_elements, setDefault, getDefault, this, scatmat);
-    gui->addFloatVariableCallBack("Absorption - R", setChannel<0>, getChannel<0>, &absorption, scatmat);
-    gui->addFloatVariableCallBack("Absorption - G", setChannel<1>, getChannel<1>, &absorption, scatmat);
-    gui->addFloatVariableCallBack("Absorption - B", setChannel<2>, getChannel<2>, &absorption, scatmat);
-    gui->addFloatVariableCallBack("Scattering - R", setChannel<0>, getChannel<0>, &scattering, scatmat);
-    gui->addFloatVariableCallBack("Scattering - G", setChannel<1>, getChannel<1>, &scattering, scatmat);
-    gui->addFloatVariableCallBack("Scattering - B", setChannel<2>, getChannel<2>, &scattering, scatmat);
-    gui->addFloatVariableCallBack("Asymmetry", setAsymmetry, getAsymmetry, this, scatmat);
-    gui->addFloatVariableCallBack("Scale", setScale, getScale, this, scatmat);
+    std::string scamat = std::string(group);
+    std::string group_path = std::string(group);
+    size_t last = group_path.find_last_of("/");
+    std::string gg = group_path.substr(last + 1);
+    const char * group_name = group;
+
+    gui->addDropdownMenuCallback((scamat + "/Set Material").c_str(), gui_elements, setDefault, getDefault, this, group_name);
+    gui->addFloatVariableCallBack((scamat + "/Absorption - R").c_str(), setAbsorptionChannel<0>, getAbsorptionChannel<0>, this, group_name);
+    gui->addFloatVariableCallBack((scamat + "/Absorption - G").c_str(), setAbsorptionChannel<1>, getAbsorptionChannel<1>, this, group_name);
+    gui->addFloatVariableCallBack((scamat + "/Absorption - B").c_str(), setAbsorptionChannel<2>, getAbsorptionChannel<2>, this, group_name);
+    gui->addFloatVariableCallBack((scamat + "/Scattering - R").c_str(), setScatteringChannel<0>, getScatteringChannel<0>, this, group_name);
+    gui->addFloatVariableCallBack((scamat + "/Scattering - G").c_str(), setScatteringChannel<1>, getScatteringChannel<1>, this, group_name);
+    gui->addFloatVariableCallBack((scamat + "/Scattering - B").c_str(), setScatteringChannel<2>, getScatteringChannel<2>, this, group_name);
+    gui->addFloatVariableCallBack((scamat + "/Asymmetry").c_str(), setAsymmetry, getAsymmetry, this, group_name);
+    gui->addFloatVariableCallBack((scamat + "/Scale").c_str(), setScale, getScale, this, group_name);
 }
 
 void ScatteringMaterial::remove_from_gui(GUI* gui)
@@ -225,18 +233,42 @@ void ScatteringMaterial::setDefault(const void* var, void* data)
 
 void ScatteringMaterial::getDefault(void* var, void* data)
 {
-    *(int*)var = 0;
+    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
+    *(int*)var = s->mStandardMaterial;
 }
 
-template<int channel> void ScatteringMaterial::setChannel(const void* var, void* data)
+template<int channel> void ScatteringMaterial::setAbsorptionChannel(const void* var, void* data)
 {
-    float * d = reinterpret_cast<float*>((float*)data + channel);
+    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
+    float * d = reinterpret_cast<float*>((float*)&s->absorption + channel);
     *d = *(float*)var;
+    if (*d - *(float*)var < 1e-3)
+        s->mStandardMaterial = Count;
 }
 
-template<int channel> void ScatteringMaterial::getChannel(void* var, void* data)
+template<int channel> void ScatteringMaterial::setScatteringChannel(const void* var, void* data)
 {
-    float * d = reinterpret_cast<float*>((float*)data + channel);
+    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
+    float * d = reinterpret_cast<float*>((float*)&s->scattering + channel);
+    *d = *(float*)var;
+    if (*d - *(float*)var < 1e-3)
+        s->mStandardMaterial = Count;
+}
+
+
+template <int channel>
+void ScatteringMaterial::getScatteringChannel(void* var, void* data)
+{
+    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
+    float * d = reinterpret_cast<float*>((float*)&s->scattering + channel);
+    *(float*)var = *d;
+}
+
+
+template<int channel> void ScatteringMaterial::getAbsorptionChannel(void* var, void* data)
+{
+    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
+    float * d = reinterpret_cast<float*>((float*)&s->absorption + channel);
     *(float*)var = *d;
 }
 
@@ -245,6 +277,8 @@ void ScatteringMaterial::setAsymmetry(const void* var, void* data)
     ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
     s->set_asymmetry(*(float*)var);
     s->dirty = true;
+    if (s->asymmetry.x - *(float*)var < 1e-3)
+        s->mStandardMaterial = Count;
 }
 
 void ScatteringMaterial::getAsymmetry(void* var, void* data)

@@ -16,6 +16,7 @@ struct MeshData
     optix::Buffer mTIbuffer;
     optix::Buffer mMatBuffer;
     int mNumTriangles;
+    optix::Aabb   mBoundingBox;
 };
 
 class Mesh
@@ -23,7 +24,7 @@ class Mesh
 public:
     explicit Mesh(optix::Context ctx);
 
-    void init(MeshData meshdata, std::shared_ptr<MaterialHost> material);
+    void init(const char* name, MeshData meshdata, std::shared_ptr<MaterialHost> material);
 
     optix::GeometryInstance mGeometryInstance = nullptr;
     optix::Geometry mGeometry = nullptr;
@@ -39,6 +40,10 @@ public:
     void add_material(std::shared_ptr<MaterialHost> material);
 
     std::shared_ptr<MaterialHost> get_main_material() { return mMaterialData[0]; }
+    const std::vector<std::shared_ptr<MaterialHost>> & get_materials() { return mMaterialData; }
+
+    void set_into_gui(GUI * gui, const char * group = "");
+    void remove_from_gui(GUI * gui);
 
 private:
     std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
@@ -46,5 +51,6 @@ private:
     optix::Program         mIntersectProgram;
     optix::Program         mBoundingboxProgram;
     optix::Buffer          mMaterialBuffer;
-
+    optix::Buffer          mBBoxBuffer;
+    std::string            mMeshName;
 };

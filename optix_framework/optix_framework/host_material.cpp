@@ -12,9 +12,15 @@ bool findAndReturnMaterial(const std::string &name, ScatteringMaterial & s)
     return ss != ScatteringMaterial::defaultMaterials.end();
 }
 
-void MaterialHost::set_into_gui(GUI* gui)
+void MaterialHost::set_into_gui(GUI* gui, const char * group)
 {
-     scattering_material->set_into_gui(gui); 
+    std::string group_path = std::string(group);
+    size_t last = group_path.find_last_of("/");
+    static int mat = 1;
+    std::string group_name = group_path.substr(last + 1);
+    std::string newgroup = group_path + "/" + "Material (ID " + to_string(mat++) + ")";    
+    scattering_material->set_into_gui(gui, newgroup.c_str()); 
+    gui->linkGroups(group, newgroup.c_str());
 }
 
 void MaterialHost::remove_from_gui(GUI * gui)
@@ -24,6 +30,8 @@ void MaterialHost::remove_from_gui(GUI * gui)
 
 MaterialHost::MaterialHost(const char * name, MaterialDataCommon data) : mMaterialName(name), mMaterialData(data)
 {
+    static int id;
+    mMaterialID = id++;
     bool use_abs = ParameterParser::get_parameter("config", "use_absorption", true, "Use absorption in rendering.");
     if (!use_abs)
         mMaterialData.absorption = optix::make_float3(0.0f);

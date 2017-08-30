@@ -67,9 +67,12 @@ public:
 	void setVisible(const char * name, bool isVisible) const;
 	void removeVar(const char * name) const;
 
+    void linkGroups(const char * parent, const char * child);
+
 private:
 	TwBar * bar;
 	bool visible = true;
+    std::string barname;
 
 };
 
