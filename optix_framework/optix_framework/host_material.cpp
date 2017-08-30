@@ -57,7 +57,7 @@ MaterialHost::MaterialHost(const char * name, MaterialDataCommon data) : mMateri
 
 }
 
-const MaterialDataCommon& MaterialHost::get_data()
+MaterialDataCommon& MaterialHost::get_data()
 {
     mMaterialData.scattering_properties = scattering_material->get_data();
     return mMaterialData;

@@ -2,6 +2,9 @@
 #include <optixu/optixu_vector_functions.h>
 
 #include "anttweak/AntTweakBar.h"
+#ifdef NOMINMAX
+#undef NOMINMAX
+#endif
 #include <GL/glut.h>
 #include <iostream>
 #include <sstream>
@@ -31,20 +34,20 @@ GUI::~GUI()
 
 bool GUI::keyPressed(unsigned char key, int x, int y)
 {
-	return TwEventKeyboardGLUT(key, x, y);
+	return TwEventKeyboardGLUT(key, x, y) > 0;
 }
 
 bool GUI::mousePressed(int button, int state, int x, int y)
 {
     if (isVisible())
-    	return TwEventMouseButtonGLUT(button, state, x, y);
+        return TwEventMouseButtonGLUT(button, state, x, y) > 0;
     return false;
 }
 
 bool GUI::mouseMoving(int x, int y)
 {
     if (isVisible())
-        return TwEventMouseMotionGLUT(x, y);
+        return TwEventMouseMotionGLUT(x, y)  > 0;
     return false;
 }
 
@@ -127,7 +130,7 @@ void GUI::addDropdownMenu(const char* name, std::vector<GuiDropdownElement>& val
 	group = strcmp(group, "") == 0 ? "main" : group;
 	std::stringstream ss;
 	ss << "group='" << group << "'";
-	TwType en = TwDefineEnum((std::string(name) + "enum").c_str(), reinterpret_cast<TwEnumVal*>(values.data()), values.size());
+	TwType en = TwDefineEnum((std::string(name) + "enum").c_str(), reinterpret_cast<TwEnumVal*>(values.data()), (unsigned int)values.size());
 	TwAddVarRW(bar, name, en, value, ss.str().c_str());
 }
 
@@ -170,7 +173,7 @@ void GUI::addDropdownMenuCallback(const char* name, std::vector<GuiDropdownEleme
 	group = strcmp(group, "") == 0 ? "main" : group;
 	std::stringstream ss;
 	ss << "group='" << group << "'";
-	TwType en = TwDefineEnum((std::string(name) + "enum").c_str(), reinterpret_cast<TwEnumVal*>(values.data()), values.size());
+	TwType en = TwDefineEnum((std::string(name) + "enum").c_str(), reinterpret_cast<TwEnumVal*>(values.data()), (unsigned int)values.size());
 	TwAddVarCB(bar, name, en, set_var, get_var, data, ss.str().c_str());
 }
 

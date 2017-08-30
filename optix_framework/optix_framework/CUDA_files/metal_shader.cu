@@ -18,11 +18,6 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 
-
-
-
-
-
 // Recursive ray tracing variables
 rtDeclareVariable(int, max_splits, , );
 
@@ -40,21 +35,20 @@ RT_PROGRAM void shade()
   float3 normal = rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal);
   float3 ffnormal = faceforward(normal, -ray.direction, normal);
 
-  if(prd_radiance.depth < max_depth)
-  {
-    float3 R = fresnel_complex_R(-ray.direction, ffnormal, ior_complex_real_sq, ior_complex_imag_sq);
-    PerRayData_radiance prd_new;
-    prd_new.depth = prd_radiance.depth + 1;
-	prd_new.colorband = prd_radiance.colorband;
-    prd_new.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-    float3 new_dir = reflect(ray.direction, ffnormal);
-    optix::Ray new_ray(hit_pos, new_dir, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
-    rtTrace(top_object, new_ray, prd_new);
-    prd_radiance.result = R * prd_new.result;
-	
-  }
-  else
-  {
-    prd_radiance.result = make_float3(0.0f);
-  }
+    if(prd_radiance.depth < max_depth)
+    {
+        float3 R = fresnel_complex_R(-ray.direction, ffnormal, get_material().ior_complex_real_sq, get_material().ior_complex_imag_sq);
+        PerRayData_radiance prd_new;
+        prd_new.depth = prd_radiance.depth + 1;
+        prd_new.colorband = prd_radiance.colorband;
+        prd_new.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
+        float3 new_dir = reflect(ray.direction, ffnormal);
+        optix::Ray new_ray(hit_pos, new_dir, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
+        rtTrace(top_object, new_ray, prd_new);
+        prd_radiance.result = R * prd_new.result;
+    }
+    else
+    {
+        prd_radiance.result = make_float3(0.0f);
+    }
 }

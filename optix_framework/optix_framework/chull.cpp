@@ -14,7 +14,7 @@ void ConvexHull::init()
 	Buffer plane_buffer = context->createBuffer(RT_BUFFER_INPUT);
 	vector<Plane> planes;
 	make_planes(planes, bbox);
-	int nsides = planes.size();
+	size_t nsides = planes.size();
 
 	plane_buffer->setFormat(RT_FORMAT_FLOAT4);
 	plane_buffer->setSize(nsides);

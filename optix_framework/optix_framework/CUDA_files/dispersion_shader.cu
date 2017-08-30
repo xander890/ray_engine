@@ -160,7 +160,8 @@ RT_PROGRAM void shade_path_tracing(void)
 			w = 1.0f;
 		}
 
-		float index_of_refraction = sqrt(get_band(ior_complex_real_sq, band));
+        float3 ior = get_material().ior_complex_real_sq;
+		float index_of_refraction = sqrt(get_band(ior, band));
 #endif
 		// Setting up payload and glass rays.
 		Ray reflected_ray, refracted_ray;

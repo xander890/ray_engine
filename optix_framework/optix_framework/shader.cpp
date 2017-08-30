@@ -35,8 +35,8 @@ void Shader::initialize_mesh(Mesh & object)
         MPMLMedium air = MaterialLibrary::media["air"];
         float3 eta, kappa;
         get_relative_ior(air, mat, eta, kappa);
-        object.mMaterial["ior_complex_real_sq"]->setFloat(eta*eta);
-        object.mMaterial["ior_complex_imag_sq"]->setFloat(kappa*kappa);
+        object.get_main_material()->get_data().ior_complex_real_sq = eta*eta;
+        object.get_main_material()->get_data().ior_complex_imag_sq = kappa*kappa;
 
         Medium med = MaterialLibrary::full_media[n];
         //med.fill_spectral_data();

@@ -42,7 +42,7 @@ void Mesh::load_material()
     create_and_bind_optix_data();
     std::vector<MaterialDataCommon> data;
     data.resize(mMaterialData.size());
-    int n = mMaterialData.size();
+    size_t n = mMaterialData.size();
     for (int i = 0; i < n; i++)
     {
         data[i] = mMaterialData[i]->get_data_copy();

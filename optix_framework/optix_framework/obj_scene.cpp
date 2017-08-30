@@ -1,8 +1,10 @@
 // 02576 OptiX Rendering Framework
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
-
-#define ECO3D_SCENE
+#ifdef NOMINMAX
+#undef NOMINMAX
+#endif
+#include <GL/glut.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -24,7 +26,6 @@
 #include <sutil/ImageLoader.h>
 #include "presampled_surface_bssrdf.h"
 #include "GLUTDisplay.h"
-#include <GL/glut.h>
 #include "aisceneloader.h"
 #include "shader_factory.h"
 #include "Medium.h"
@@ -243,6 +244,7 @@ void ObjScene::initUI()
 
 void ObjScene::create_3d_noise(float frequency)
 {
+    context["noise_scale"]->setFloat(noise_scale);
     static TextureSampler sampler = context->createTextureSampler();
     static optix::Buffer buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, 256u, 256u, 256u);
     static PerlinNoise p(1337);
@@ -263,7 +265,7 @@ void ObjScene::create_3d_noise(float frequency)
             for (int k = 0; k < 256; k++)
             {
                 int idx = 256 * 256 * i + 256 * j + k;
-                buffer_data[idx] = p.noise(i / (256.0) * noise_scale, j / (256.0) * noise_scale, k / (256.0) * noise_scale);
+                buffer_data[idx] = (float)p.noise(i / (256.0f) * noise_scale, j / (256.0f) * noise_scale, k / (256.0f) * noise_scale);
             }
     buffer->unmap();
 
@@ -302,7 +304,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	// Setup context
 	context->setRayTypeCount(3);
 	context->setStackSize(ParameterParser::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
-    context["noise_scale"]->setFloat(noise_scale);
+    
 
 	context["radiance_ray_type"]->setUint(RAY_TYPE_RADIANCE);
 	context["shadow_ray_type"]->setUint(RAY_TYPE_SHADOW);

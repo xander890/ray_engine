@@ -1,4 +1,5 @@
 #pragma once
+#include <optix_world.h>
 #define LIGHT_TYPE_DIR 0
 #define LIGHT_TYPE_POINT 1
 #define LIGHT_TYPE_SKY 2
@@ -9,6 +10,8 @@
 #define RAY_TYPE_SHADOW 1
 #define RAY_TYPE_DUMMY 2
 #define RAY_TYPE_COUNT 3
+
+typedef int TexPtr;
 
 template<typename T, int Dim=1>
 struct BufPtr

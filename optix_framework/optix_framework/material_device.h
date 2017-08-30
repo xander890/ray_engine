@@ -1,8 +1,6 @@
 #include <device_common_data.h>
 #include<material.h>
 
-rtDeclareVariable(optix::float3, ior_complex_real_sq, , );
-rtDeclareVariable(optix::float3, ior_complex_imag_sq, , );
 rtDeclareVariable(MaterialDataCommon, main_material, , );
 
 rtBuffer<MaterialDataCommon, 1> material_buffer;
