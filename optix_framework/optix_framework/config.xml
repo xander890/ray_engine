@@ -35,7 +35,7 @@
   <property comment="Intensity of the default directional light" key="default_directional_light_intensity" value="10 10 10"/>
   <property comment="Position of the default point light." key="default_point_light_position" value="125.00000 90.00000 -40.0000"/>
   <property comment="Intensity of the default point light." key="default_point_light_intensity" value="20000.000 20000.000 20000.000"/>
-  <property comment="Environment map multiplier" key="lightmap_multiplier" value="1.0000000000 1.0000000000 1.0000000000"/>
+  <property comment="Environment map multiplier" key="lightmap_multiplier" value="3"/>
   <property comment="Environment map file" key="environment_map" value="doge2.hdr"/>
   <property comment="Environment map rotation" key="envmap_deltas" value="0.0000000000 0.0000000000 0.0000000000"/>
   <property comment="Use shadows in rendering." key="shadows" value="1"/>
@@ -61,6 +61,11 @@
     <property comment="Default latitude (deg) for the sun model." key="latitude" value="45.000000"/>
     <property comment="Default turbidity of the sky." key="turbidity" value="2.000000"/>
     </sky>
+
+  <tonemap>
+    <property comment="Tonemap multiplier." key="tonemap_multiplier" value="1.0"/>
+    <property comment="Tonemap exponent." key="tonemap_exponent" value="1.8"/>
+  </tonemap>
     
     <glossy>
       <property comment="Multiplication factor for MERL materials. Premultiplied on sampling the brdf." key="merl_multiplier" value="1.0000000000 0.9945030400 0.9727792400"/>

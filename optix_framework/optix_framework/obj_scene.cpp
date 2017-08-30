@@ -36,6 +36,7 @@
 #include "PerlinNoise.h"
 #include <algorithm>
 #include "optix_utils.h"
+#include "default_shader.h"
 
 using namespace std;
 using namespace optix;
@@ -289,6 +290,9 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
     camera = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
     
     ShaderFactory::init(context);
+    ShaderInfo info = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
+    ShaderFactory::add_shader<DefaultShader>(info);
+
     for (auto& kv : MaterialLibrary::media)
 	{
 		available_media.push_back(&kv.second);
@@ -297,6 +301,8 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
 	default_miss = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
 
+    tonemap_exponent = ParameterParser::get_parameter<float>("tonemap", "tonemap_exponent", 1.8f, "Tonemap exponent");
+    tonemap_multiplier = ParameterParser::get_parameter<float>("tonemap", "tonemap_multiplier", 1.f, "Tonemap multiplier");
 
 	// Setup context
 	context->setRayTypeCount(3);
@@ -305,7 +311,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
 	context["radiance_ray_type"]->setUint(RAY_TYPE_RADIANCE);
 	context["shadow_ray_type"]->setUint(RAY_TYPE_SHADOW);
-	context["dummy_ray_type"]->setUint(RAY_TYPE_DUMMY);
+	context["depth_ray_type"]->setUint(RAY_TYPE_DEPTH);
 
 	context["max_depth"]->setInt(ParameterParser::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
 	context[OUTPUT_BUFFER]->set(createPBOOutputBuffer(OUTPUT_BUFFER, RT_FORMAT_FLOAT4, camera->get_width(), camera->get_height()));
@@ -988,7 +994,7 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	float3 eye = m_scene_bounding_box.center();
-	eye.z += 1.75f * max_dim;
+	eye.z += 3 * max_dim;
 
 	bool use_auto_camera = ParameterParser::get_parameter<bool>("camera", "use_auto_camera", false, "Use a automatic placed camera or use the current data.");
 

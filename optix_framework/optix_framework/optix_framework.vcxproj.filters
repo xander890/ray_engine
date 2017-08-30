@@ -55,9 +55,6 @@
     <CudaCompile Include="sphere.cu">
       <Filter>CUDA_files\Mesh</Filter>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\triangle_mesh_gbuffer.cu">
-      <Filter>CUDA_files\Mesh</Filter>
-    </CudaCompile>
     <CudaCompile Include="CUDA_files\env_cameras.cu">
       <Filter>CUDA_files\Cameras</Filter>
     </CudaCompile>
@@ -68,6 +65,12 @@
       <Filter>CUDA_files</Filter>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\volume_shader.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\depth_ray.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
   </ItemGroup>

@@ -296,6 +296,7 @@ echo Done.</Command>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\depth_ray.cu" />
     <CudaCompile Include="CUDA_files\environment_map_background.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -524,20 +525,12 @@ echo Done.</Command>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\triangle_mesh_gbuffer.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
-      <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-    </CudaCompile>
     <CudaCompile Include="CUDA_files\volume_shader.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu" />
     <CudaCompile Include="sphere.cu">
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>

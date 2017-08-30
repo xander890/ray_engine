@@ -105,9 +105,7 @@ void ShaderFactory::init(optix::Context& ctx)
 
     for (const ShaderInfo& n: DefaultShader::default_shaders)
     {
-        DefaultShader* s = new DefaultShader();
-        s->initialize_shader(context, n);
-        mShaderMap[n.illum] = s;
+        add_shader<DefaultShader>(n);
     }
 }
 

@@ -26,7 +26,7 @@ rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 // Recursive ray tracing variables
 rtDeclareVariable(unsigned int, radiance_ray_type, , );
 rtDeclareVariable(unsigned int, shadow_ray_type, , );
-rtDeclareVariable(unsigned int, dummy_ray_type, , );
+rtDeclareVariable(unsigned int, depth_ray_type, , );
 
 rtDeclareVariable(int, max_depth, , );
 

@@ -20,7 +20,6 @@ using namespace optix;
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
-rtDeclareVariable(PerRayData_cache, prd_cache, rtPayload, );
 
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
@@ -138,7 +137,7 @@ RT_PROGRAM void shade()
 RT_PROGRAM void shade_path_tracing()
 {
     const MaterialDataCommon & material = get_material();
-	PerRayData_radiance& radiance = (ray.ray_type == dummy_ray_type) ? prd_cache.radiance : prd_radiance;
+	PerRayData_radiance& radiance = prd_radiance;
 	optix_print("Lambertian Hit\n");
 	float3 k_d = get_k_d();
    float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));

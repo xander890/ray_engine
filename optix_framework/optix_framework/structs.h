@@ -50,11 +50,9 @@ struct PerRayData_radiance
 };
 
 
-struct PerRayData_cache
+struct PerRayData_depth
 {
-	optix::float3 vertex;
-	optix::float3 normal;
-	PerRayData_radiance radiance;
+    float depth;
 };
 
 // Payload for shadow ray type
