@@ -10,7 +10,8 @@ using namespace std;
 
 inline bool read_brdf(const char *filename, int& n, double*& brdf)
 {
-	FILE *f = fopen(filename, "rb");
+    FILE *f;
+    fopen_s(&f, filename, "rb");
 	if (!f)
 		return false;
 

@@ -41,7 +41,7 @@ std::vector<Mesh> ProceduralLoader::load(const optix::Matrix4x4& transform)
 		"usemtl %s\n"
 		"f 1 2 3\n";
 	char buffer[256];
-	sprintf(buffer, fake_obj, object->get_material_file().c_str(), object->get_material().c_str());
+	sprintf_s(buffer, fake_obj, object->get_material_file().c_str(), object->get_material().c_str());
 	std::ofstream outfile(Folders::data_folder + "./procedural/placeholder.obj");
 	outfile << buffer;
 	outfile.close();

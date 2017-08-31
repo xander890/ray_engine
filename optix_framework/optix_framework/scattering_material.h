@@ -79,7 +79,7 @@ public:
 
 private:
     ScatteringMaterialProperties properties;
-    float scale = 1.0f;
+    float scale = 100.0f;
     optix::float3 scattering = optix::make_float3(0);
     optix::float3 asymmetry = optix::make_float3(0);
     float ior = 1.0f;

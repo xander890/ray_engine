@@ -401,7 +401,7 @@ void ObjLoader::createMaterialParams( GLMmodel* model )
 	params.ambient_map = loadTexture(m_context, ambient_map, Ka)->getId();
     params.diffuse_map = loadTexture(m_context, diffuse_map, Kd)->getId();
     params.specular_map = loadTexture(m_context, specular_map, Ks)->getId();
-    m_material_params[i] = std::shared_ptr<MaterialHost>(new MaterialHost(mat.name, params));
+    m_material_params[i] = std::make_shared<MaterialHost>(mat.name, params);
   }
 }
 

@@ -148,14 +148,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>NOMINMAX;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(Optix_Dir)\include;$(Optix_Dir)\include\optixu;..\GL;$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\optix\include;..\optix\include\optixu;..\GL;$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.7.0\SDK\support\freeglut\win64\Release\freeglut.lib;C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.7.0\lib64\optix.1.lib;C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.7.0\lib64\optixu.1.lib;C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.7.0\lib64\optix_prime.1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\lib64\freeglut.lib;..\lib64\optix.1.lib;..\lib64\optixu.1.lib;..\lib64\optix_prime.1.lib;..\lib64\glew32s.lib;..\lib64\glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
