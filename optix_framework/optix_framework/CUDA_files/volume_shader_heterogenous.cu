@@ -13,17 +13,8 @@ using namespace optix;
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
-
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
-
-// Material properties
-
-rtDeclareVariable(unsigned int, N, , );
-
-
-//#define USE_SIMILARITY
-#define SIMILARITY_STEPS 10
 
 __device__ __forceinline__ float get_volume_step()
 {   
@@ -32,7 +23,6 @@ __device__ __forceinline__ float get_volume_step()
     float step = m / max_voxels;
     return step;
 }
-
 
 __device__ __inline__ float get_extinction(const optix::float3 & pos, int colorband)
 {
@@ -72,36 +62,6 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
     
     ray.tmax = RT_DEFAULT_MAX;
 
-#ifdef USE_SIMILARITY
-
-    bool stop = false;
-    int counter = 0;
-    while (!stop)
-    {
-        update_properties(ray.origin, colorband, albedo, extinction, g, red_extinction);
-        // Sample new distance
-        float dist_exponent = (counter < SIMILARITY_STEPS) ? extinction : red_extinction;
-        ray.tmax = -log(rnd(t)) / dist_exponent;
-        prd_ray.attenuation = 1.0f;
-
-        rtTrace(top_shadower, ray, prd_ray);
-
-        if (prd_ray.attenuation > 0.0f)
-        {
-            // The shadow ray did not hit anything, i.e., still inside the volume
-            // New ray origin
-            ray.origin += ray.direction * ray.tmax;
-            // New ray direction 
-            ray.direction = (counter < SIMILARITY_STEPS) ? sample_HG(ray.direction, g, t) : sample_HG(ray.direction, t);
-        }
-        else break;
-
-        absorbed = rnd(t) > albedo;
-        stop = absorbed || prd_ray.attenuation <= 0.0f;
-
-    }
-    return !absorbed;
-#else
     float albedo = get_albedo(ray.origin, colorband);
     float g = get_asymmetry(ray.origin, colorband);
     float extinction = get_extinction(ray.origin, colorband);
@@ -160,7 +120,6 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
         if (rnd(t) > albedo)
             return false;
     }
-#endif
 }
 
 
