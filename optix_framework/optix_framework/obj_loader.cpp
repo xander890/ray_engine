@@ -283,7 +283,7 @@ std::vector<Mesh> ObjLoader::createGeometryInstances(GLMmodel* model)
 
 
     std::shared_ptr<MaterialHost> materialData = getMaterial(obj_group->material);
-    MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, mbuffer, num_triangles, bbox };
+    MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, mbuffer, (int)num_triangles, bbox };
     Mesh rtMesh(m_context); 
     auto c = m_filename.find_last_of("/");
     c = (size_t)max((int)c, (int)m_filename.find_last_of("\\"));

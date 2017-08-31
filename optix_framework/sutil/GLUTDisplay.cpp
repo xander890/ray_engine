@@ -34,12 +34,10 @@
 
 #include <GLUTDisplay.h>
 #include <Mouse.h>
-#include <DeviceMemoryLogger.h>
 
 #include <optixu/optixu_math_stream_namespace.h>
 
 #include <iostream>
-#include <cstdlib>
 #include <cstdio> //sprintf
 #include <sstream>
 
@@ -294,8 +292,8 @@ void GLUTDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   }
 
   if( m_print_mem_usage ) {
-    DeviceMemoryLogger::logDeviceDescription(m_scene->getContext(), std::cerr);
-    DeviceMemoryLogger::logCurrentMemoryUsage(m_scene->getContext(), std::cerr, "Initial memory available: " );
+    //DeviceMemoryLogger::logDeviceDescription(m_scene->getContext(), std::cerr);
+    //DeviceMemoryLogger::logCurrentMemoryUsage(m_scene->getContext(), std::cerr, "Initial memory available: " );
     std::cerr << std::endl;
   }
 
@@ -974,7 +972,7 @@ void GLUTDisplay::display()
   if( m_print_mem_usage ) {
     // Output memory
     std::ostringstream str;
-    DeviceMemoryLogger::logCurrentMemoryUsage(m_scene->getContext(), str);
+    //DeviceMemoryLogger::logCurrentMemoryUsage(m_scene->getContext(), str);
     drawText( str.str(), 10.0f, 26.0f, GLUT_BITMAP_8_BY_13 );
   }
 

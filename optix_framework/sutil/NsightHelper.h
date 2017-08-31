@@ -31,14 +31,14 @@
 // Emulate stdint.h header.
 #ifndef __stdint_h__
 #define __stdint_h__
-typedef            char    int8_t;
-typedef unsigned   char   uint8_t;
-typedef            short  int16_t;
-typedef unsigned   short uint16_t;
-typedef          __int32  int32_t;
-typedef unsigned __int32 uint32_t;
-typedef          __int64  int64_t;
-typedef unsigned __int64 uint64_t;
+//typedef            char    int8_t;
+//typedef unsigned   char   uint8_t;
+//typedef            short  int16_t;
+//typedef unsigned   short uint16_t;
+//typedef          __int32  int32_t;
+//typedef unsigned __int32 uint32_t;
+//typedef          __int64  int64_t;
+//typedef unsigned __int64 uint64_t;
 #endif // file guard
 // Control inclusion of stdint.h in nvToolsExt.h
 #define NVTX_STDINT_TYPES_ALREADY_DEFINED
