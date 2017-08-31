@@ -20,25 +20,34 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 // Material properties
  
 rtDeclareVariable(unsigned int, N, , );
-rtDeclareVariable(float3, glass_abs, , );
 
 
 //#define USE_SIMILARITY
 #define SIMILARITY_STEPS 10
 
-__device__ __inline__ void update_properties(const optix::float3 & pos, int colorband, float & albedo, float & extinction, float & g, float & red_extinction)
+__device__ __inline__ float get_extinction(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
-    albedo = *(&props.albedo.x + colorband);
-    extinction = *(&props.extinction.x + colorband);
-    g = *(&props.meancosine.x + colorband);
-    red_extinction = *(&props.reducedExtinction.x + colorband);
+    return *(&props.extinction.x + colorband);
+}
+
+__device__ __inline__ float get_albedo(const optix::float3 & pos, int colorband)
+{
+    const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
+    return *(&props.albedo.x + colorband);
+}
+
+__device__ __inline__ float get_asymmetry(const optix::float3 & pos, int colorband)
+{
+    const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
+    return *(&props.meancosine.x + colorband);
 }
 
 __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& t)
 {
-    float albedo, extinction, g, red_extinction;
-    update_properties(ray.origin, colorband, albedo, extinction, g, red_extinction);
+    float albedo = get_albedo(ray.origin, colorband);
+    float g = get_asymmetry(ray.origin, colorband);
+    float extinction = get_extinction(ray.origin, colorband);
 
     // Input: 
     // ray: initial position and direction
@@ -88,7 +97,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
 #else
     for (;;)
     {
-        update_properties(ray.origin, colorband, albedo, extinction, g, red_extinction);
+        extinction = get_extinction(ray.origin, colorband);
         // Sample new distance
         ray.tmax = -log(rnd(t)) / extinction;
 
@@ -100,12 +109,14 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
             // New ray origin
             ray.origin += ray.direction * ray.tmax;
 
+            g = get_asymmetry(ray.origin, colorband);
             // New ray direction 
             ray.direction = sample_HG(ray.direction, g, t);
         }
         else // Intersection hit
             return true;
 
+        albedo = get_albedo(ray.origin, colorband);
         // Break if absorbed
         if (rnd(t) > albedo)
             return false;
@@ -151,7 +162,7 @@ RT_PROGRAM void shade()
     }
     else if (props.relative_ior < 1.0f)
     {
-        beam_T = expf(-t_hit*glass_abs);
+        beam_T = expf(-t_hit*props.absorption);
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
         if (rnd(t) >= prob) return;
         beam_T /= prob;

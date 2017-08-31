@@ -20,7 +20,6 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 // Material properties
 
 rtDeclareVariable(unsigned int, N, , );
-rtDeclareVariable(float3, glass_abs, , );
 
 
 //#define USE_SIMILARITY
@@ -29,32 +28,32 @@ rtDeclareVariable(float3, glass_abs, , );
 __device__ __forceinline__ float get_volume_step()
 {   
     float m = local_bounding_box->maxExtent();
-    float max_voxels = sqrt(3.0f) * rtTexSize(noise_tex).x;
+    float max_voxels = 2.0f * rtTexSize(noise_tex).x;
     float step = m / max_voxels;
-    //optix_print("Max extent: %f, voxels: %d, step: %f", m, rtTexSize(noise_tex).x, step);
     return step;
 }
 
-__device__ __inline__ void update_properties(const optix::float3 & pos, int colorband, float & albedo, float & extinction, float & g, float & red_extinction)
+
+__device__ __inline__ float get_extinction(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
-    albedo = *(&props.albedo.x + colorband);
-    extinction = *(&props.extinction.x + colorband);
-    g = *(&props.meancosine.x + colorband);
-    red_extinction = *(&props.reducedExtinction.x + colorband);
+    return *(&props.extinction.x + colorband);
+}
+
+__device__ __inline__ float get_albedo(const optix::float3 & pos, int colorband)
+{
+    const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
+    return *(&props.albedo.x + colorband);
+}
+
+__device__ __inline__ float get_asymmetry(const optix::float3 & pos, int colorband)
+{
+    const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
+    return *(&props.meancosine.x + colorband);
 }
 
 __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& t)
 {
-    float albedo, extinction, g, red_extinction;
-    update_properties(ray.origin, colorband, albedo, extinction, g, red_extinction);
-
-    float step = get_volume_step();
-    PerRayData_depth p;
-    ray.ray_type = RAY_TYPE_DEPTH;
-    rtTrace(top_object, ray, p);
-    float s = p.depth;
-    rtPrintf("Depth %f \n", s);
     // Input: 
     // ray: initial position and direction
     //
@@ -67,9 +66,11 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
     //  false: absorbed
     //
     ray.tmin = scene_epsilon;
-    ray.ray_type = shadow_ray_type;
-    PerRayData_shadow prd_ray;
-    prd_ray.attenuation = 1.0f;
+    ray.ray_type = depth_ray_type;
+    PerRayData_depth prd_ray;
+    prd_ray.depth = 0.0f;
+    
+    ray.tmax = RT_DEFAULT_MAX;
 
 #ifdef USE_SIMILARITY
 
@@ -101,26 +102,60 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
     }
     return !absorbed;
 #else
+    float albedo = get_albedo(ray.origin, colorband);
+    float g = get_asymmetry(ray.origin, colorband);
+    float extinction = get_extinction(ray.origin, colorband);
+    float delta_t = get_volume_step();
+
     for (;;)
     {
-        update_properties(ray.origin, colorband, albedo, extinction, g, red_extinction);
         // Sample new distance
-        ray.tmax = -log(rnd(t)) / extinction;
+        rtTrace(top_object, ray, prd_ray); // Calculating depth of the ray.
+        extinction = get_extinction(ray.origin, colorband);
+        float s = prd_ray.depth;
+        float log_xi = log(rnd(t));
 
-        rtTrace(top_shadower, ray, prd_ray);
-        if (prd_ray.attenuation > 0.0f)
+#define NEW_HETEROGENOUS
+#ifdef NEW_HETEROGENOUS
+        int N_samples = (int)floor(s / delta_t);
+        float tau = 0.0f;
+        float offset = rnd(t);
+        float ti = offset / N_samples;
+        
+        // Ray marching to find the real optical depth for heterogenous materials.
+        int i = 0;
+        for (i = 1; i < N_samples; i++)
         {
-            // The shadow ray did not hit anything, i.e., still inside the volume
+            ti += i / ((float)N_samples);
+            float3 pos = ray.origin + ti * ray.direction;
+            extinction = get_extinction(pos, colorband);
+            float new_tau = tau + extinction * delta_t; // next optical depth
+            if (new_tau + log_xi > 0)
+                break;
+            tau = new_tau; // We update only here, so if the loop breaks we have tau(t-1, s) stored.
+        }
+       
+        float true_optical_distance = (i - 1)*delta_t - (tau + log_xi) / extinction; // (tau + log_xi) is negative, so subtracting it we get a positive.
+
+        float sampled_distance = true_optical_distance;
+#else
+        float sampled_distance = -log_xi / extinction;
+#endif
+        if (sampled_distance < s)
+        {
+            // we have found a suitable optical distance, i.e., still inside the volume
 
             // New ray origin
-            ray.origin += ray.direction * ray.tmax;
+            ray.origin += ray.direction * sampled_distance;
 
             // New ray direction 
+            g = get_asymmetry(ray.origin, colorband);
             ray.direction = sample_HG(ray.direction, g, t);
         }
         else // Intersection hit
             return true;
 
+        albedo = get_albedo(ray.origin, colorband);
         // Break if absorbed
         if (rnd(t) > albedo)
             return false;
@@ -139,7 +174,6 @@ RT_PROGRAM void any_hit_shadow()
 }
 
 
-// Closest hit program
 RT_PROGRAM void shade()
 {
     prd_radiance.result = make_float3(0.0f);
@@ -166,7 +200,7 @@ RT_PROGRAM void shade()
     }
     else if (props.relative_ior < 1.0f)
     {
-        beam_T = expf(-t_hit*glass_abs);
+        beam_T = expf(-t_hit*props.absorption);
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
         if (rnd(t) >= prob) return;
         beam_T /= prob;
