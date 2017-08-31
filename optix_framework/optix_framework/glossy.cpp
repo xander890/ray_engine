@@ -83,7 +83,7 @@ void GlossyShader::initialize_mesh(Mesh& object)
     }
     else
     {
-        Logger::error << "MERL Material " << n << " not found." << std::endl;
+        Logger::warning << "Equivalent MERL Material " << n << " not found." << std::endl;
     }
     auto optix_mat = object.mMaterial;
 

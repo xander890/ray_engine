@@ -59,7 +59,7 @@ MaterialHost::MaterialHost(const char * name, MaterialDataCommon data) : mMateri
     }
     else
     {
-        Logger::error << "Material not found, defaulting to marble. " << std::endl;
+        Logger::warning << "Scattering properties for material " << name << "  not found, defaulting to marble. " << std::endl;
         scattering_material = std::make_unique<ScatteringMaterial>(def);
     }
 

@@ -23,14 +23,21 @@ public:
     virtual void initialize_mesh(Mesh & object) = 0;
     virtual void pre_trace_mesh(Mesh & object) = 0;  
     virtual void initialize_shader(optix::Context context, const ShaderInfo& shader_info);
-    void set_method(RenderingMethodType::EnumType m){ method = m; }
+    void set_method(RenderingMethodType::EnumType m) { method = m; }
+    int get_illum() const { return illum; }
+    std::string get_name() const { return shader_name; }
+
 protected:
     optix::Context context;
     int illum;
     std::string shader_path;
     std::string shader_name;
-    RenderingMethodType::EnumType method;
-    Shader() { }
+    RenderingMethodType::EnumType method = RenderingMethodType::PATH_TRACING;
+
+    Shader(): illum(0), method()
+    {
+    }
+
     void set_hit_programs(Mesh & object);
 };
 

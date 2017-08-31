@@ -157,8 +157,7 @@ void GUI::addFloatVariableCallBack(const char* name, GuiSetVarCallback set_var, 
 	group =  strcmp(group, "") == 0? "main" : group;
 	std::stringstream ss;
 	ss << "label=" << get_label(name) << " group='" << group << "'" << " min=" << min << " max=" << max << " step=" << step;
-    Logger::error << ss.str() <<std::endl;
-	TwAddVarCB(bar, name, TW_TYPE_FLOAT, set_var, get_var, data, ss.str().c_str());
+    TwAddVarCB(bar, name, TW_TYPE_FLOAT, set_var, get_var, data, ss.str().c_str());
 }
 
 

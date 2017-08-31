@@ -3,6 +3,7 @@
 #include "shader.h"
 #include "enums.h"
 #include <memory>
+#include "rendering_method.h"
 
 class MaterialHost;
 
@@ -36,7 +37,9 @@ public:
 
     void load_material();  
     void load_geometry();
-    void load_shader(RenderingMethodType::EnumType method);
+    void set_method(RenderingMethodType::EnumType method);
+    void set_shader(int illum);
+
     void add_material(std::shared_ptr<MaterialHost> material);
 
     std::shared_ptr<MaterialHost> get_main_material() { return mMaterialData[0]; }
@@ -53,4 +56,7 @@ private:
     optix::Buffer          mMaterialBuffer;
     optix::Buffer          mBBoxBuffer;
     std::string            mMeshName;
+
+    static void GUI_CALL setShader(const void* var, void* data);
+    static void GUI_CALL getShader(void* var, void* data);
 };

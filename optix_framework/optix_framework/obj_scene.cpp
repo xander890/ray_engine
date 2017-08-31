@@ -368,7 +368,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
     execute_on_scene_elements([=](Mesh & m)
     {
-        m.load_shader(t);
+        m.set_method(t);
     });
 
 	// Procedural objects
@@ -664,11 +664,17 @@ optix::Matrix4x4 ObjScene::get_object_transform(string filename)
 bool ObjScene::export_raw(string& raw_path)
 {
 	// export render data
+    if (raw_path.length() == 0)
+    {
+        Logger::error << "Invalid raw file specified" << raw_path << endl;
+        return false;
+    }
+
 	if (raw_path.length() <= 4 || raw_path.substr(raw_path.length() - 4).compare(".raw") != 0)
 	{
-		Logger::error <<  "Invalid raw file specified"<< raw_path  <<endl;
-		return false;
+        raw_path += ".raw";
 	}
+
 	std::string txt_file = raw_path.substr(0, raw_path.length() - 4) + ".txt";
 	ofstream ofs_data(txt_file);
 	if (ofs_data.bad())

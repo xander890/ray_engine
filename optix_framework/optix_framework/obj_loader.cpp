@@ -391,7 +391,6 @@ void ObjLoader::createMaterialParams( GLMmodel* model )
 		mat.absorption[1],
 		mat.absorption[2]);
 	ab /= mat.absorption[3];
-	Logger::info << "Name: " << std::string(model->pathname) << "Diffuse: " << Kd.x << " " << Kd.y << " " << Kd.z << endl;
 	params.absorption = ab;
 
 	// load textures relatively to OBJ main file

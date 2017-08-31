@@ -39,6 +39,7 @@ void Mesh::init(const char* name, MeshData meshdata, std::shared_ptr<MaterialHos
 
     load_geometry();
     load_material();
+    set_shader(mMaterialData[0]->get_data().illum);
 }
 
 void Mesh::load_material()
@@ -79,10 +80,15 @@ void Mesh::load_geometry()
     mGeometry->markDirty();
 }
 
-void Mesh::load_shader(RenderingMethodType::EnumType method)
+void Mesh::set_method(RenderingMethodType::EnumType method)
 {
-    mShader = std::shared_ptr<Shader>(ShaderFactory::get_shader(mMaterialData[0]->get_data().illum));
     mShader->set_method(method);
+    mShader->initialize_mesh(*this);
+}
+
+void Mesh::set_shader(int illum)
+{
+    mShader = ShaderFactory::get_shader(illum);
     mShader->initialize_mesh(*this);
 }
 
@@ -115,6 +121,19 @@ void Mesh::create_and_bind_optix_data()
     }    
 }
 
+void Mesh::setShader(const void* var, void* data)
+{
+    Mesh* mesh = reinterpret_cast<Mesh*>(data);
+    int illum = *(int*)var;
+    mesh->set_shader(illum);
+}
+
+void Mesh::getShader(void* var, void* data)
+{
+    Mesh* mesh = reinterpret_cast<Mesh*>(data);
+    *((int*)var) = mesh->mShader->get_illum();
+}
+
 void Mesh::add_material(std::shared_ptr<MaterialHost> material)
 {
     mMaterialData.push_back(material);
@@ -124,6 +143,9 @@ void Mesh::add_material(std::shared_ptr<MaterialHost> material)
 
 void Mesh::set_into_gui(GUI* gui, const char* group)
 {
+    std::string nm = mMeshName + "/Rendering Method";
+    std::vector<GuiDropdownElement> guiinfo = ShaderFactory::get_gui_info();
+    gui->addDropdownMenuCallback(nm.c_str(), guiinfo, setShader, getShader, this, mMeshName.c_str());
     for (auto& m : mMaterialData)
     {
         m->set_into_gui(gui, mMeshName.c_str());

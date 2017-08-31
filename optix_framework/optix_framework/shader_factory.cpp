@@ -80,7 +80,6 @@ optix::Program ShaderFactory::createProgram(std::string file, std::string progra
     optix::Program result;
     try
     {
-        Logger::warning << get_full_program_name(program_name, method) << std::endl;
         result = context->createProgramFromPTXFile(get_path_ptx(file), get_full_program_name(program_name, method));
     }
     catch (optix::Exception&)
@@ -92,6 +91,17 @@ optix::Program ShaderFactory::createProgram(std::string file, std::string progra
     return result;
 }
 
+std::vector<GuiDropdownElement> ShaderFactory::get_gui_info()
+{
+    std::vector<GuiDropdownElement> ret;
+    for (map<int, std::shared_ptr<Shader>>::value_type p : mShaderMap)
+    {
+        std::string* name = new string(p.second->get_name());
+        GuiDropdownElement el = { p.second->get_illum(), name->c_str() };
+        ret.push_back(el);
+    }
+    return ret;
+}
 
 void ShaderFactory::init(optix::Context& ctx)
 {
@@ -109,7 +119,7 @@ void ShaderFactory::init(optix::Context& ctx)
     }
 }
 
-Shader* ShaderFactory::get_shader(int illum)
+std::shared_ptr<Shader> ShaderFactory::get_shader(int illum)
 {
     std::string shader;
     if (mShaderMap.count(illum) != 0)
@@ -120,4 +130,4 @@ Shader* ShaderFactory::get_shader(int illum)
     return nullptr;
 }
 
-map<int, Shader*> ShaderFactory::mShaderMap = map<int, Shader*>();
+map<int, std::shared_ptr<Shader>> ShaderFactory::mShaderMap = map<int, std::shared_ptr<Shader>>();
