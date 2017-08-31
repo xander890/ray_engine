@@ -31,6 +31,13 @@ __device__ __inline__ float get_extinction(const optix::float3 & pos, int colorb
     return *(&props.extinction.x + colorband);
 }
 
+__device__ __inline__ float get_reduced_extinction(const optix::float3 & pos, int colorband)
+{
+    const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
+    return *(&props.reducedExtinction.x + colorband);
+}
+
+
 __device__ __inline__ float get_albedo(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
@@ -69,9 +76,14 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
 
     bool stop = false;
     int counter = 0;
+    bool absorbed = false;
     while (!stop)
     {
-        update_properties(ray.origin, colorband, albedo, extinction, g, red_extinction);
+        albedo = get_albedo(ray.origin, colorband);
+        g = get_asymmetry(ray.origin, colorband);
+        extinction = get_extinction(ray.origin, colorband);
+        float red_extinction = get_reduced_extinction(ray.origin, colorband);
+
         // Sample new distance
         float dist_exponent = (counter < SIMILARITY_STEPS) ? extinction : red_extinction;
         ray.tmax = -log(rnd(t)) / dist_exponent;
