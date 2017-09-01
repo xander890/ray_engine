@@ -10,6 +10,8 @@
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 
+using optix::rtTex2D;
+
 __device__ __forceinline__ void get_environment_map_color(const float3& direction, float3 & color)
 {
     const float2 uv = direction_to_uv_coord_cubemap(direction, optix::Matrix3x3::identity());

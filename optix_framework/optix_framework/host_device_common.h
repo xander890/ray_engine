@@ -9,7 +9,8 @@
 #define RAY_TYPE_RADIANCE 0
 #define RAY_TYPE_SHADOW 1
 #define RAY_TYPE_DEPTH 2
-#define RAY_TYPE_COUNT 3
+#define RAY_TYPE_ATTRIBUTE 3
+#define RAY_TYPE_COUNT 4
 
 typedef int TexPtr;
 

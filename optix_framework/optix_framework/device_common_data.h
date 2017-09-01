@@ -23,11 +23,6 @@ rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 
 // Shadow variables
 
-// Recursive ray tracing variables
-rtDeclareVariable(unsigned int, radiance_ray_type, , );
-rtDeclareVariable(unsigned int, shadow_ray_type, , );
-rtDeclareVariable(unsigned int, depth_ray_type, , );
-
 rtDeclareVariable(int, max_depth, , );
 
 static __device__ __inline__ void shadow_hit(PerRayData_shadow & shadow_payload, float3 & emission)

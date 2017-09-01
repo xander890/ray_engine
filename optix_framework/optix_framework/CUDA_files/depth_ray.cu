@@ -10,6 +10,8 @@
 
 using namespace optix;
 
+rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+
 // Standard ray variables
 rtDeclareVariable(PerRayData_depth, prd_radiance, rtPayload, );
 
@@ -17,4 +19,15 @@ rtDeclareVariable(PerRayData_depth, prd_radiance, rtPayload, );
 RT_PROGRAM void depth()
 {
     prd_radiance.depth = t_hit;
+}
+
+// Standard ray variables
+rtDeclareVariable(PerRayData_normal_depth, prd_attr, rtPayload, );
+
+// Closest hit program for Lambertian shading using the basic light as a directional source + specular term (blinn phong)
+RT_PROGRAM void attribute_closest_hit()
+{
+	optix_print("Depth! %f\n", t_hit);
+	prd_attr.depth = t_hit;
+	prd_attr.normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 }

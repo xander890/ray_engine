@@ -72,10 +72,12 @@ void Shader::set_hit_programs(Mesh& object)
 {
     auto chit = ShaderFactory::createProgram(shader_path, "shade", method);
     auto chitd = ShaderFactory::createProgram("depth_ray.cu", "depth");
-    auto ahit = ShaderFactory::createProgram(shader_path, "any_hit_shadow");
+	auto chita = ShaderFactory::createProgram("depth_ray.cu", "attribute_closest_hit");
+	auto ahit = ShaderFactory::createProgram(shader_path, "any_hit_shadow");
     object.mMaterial->setClosestHitProgram(RAY_TYPE_RADIANCE, chit);
     object.mMaterial->setClosestHitProgram(RAY_TYPE_DEPTH, chitd);
-    object.mMaterial->setAnyHitProgram(RAY_TYPE_SHADOW, ahit);
+	object.mMaterial->setClosestHitProgram(RAY_TYPE_ATTRIBUTE, chita);
+	object.mMaterial->setAnyHitProgram(RAY_TYPE_SHADOW, ahit);
 }
 
 

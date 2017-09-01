@@ -7,7 +7,9 @@
 rtDeclareVariable(optix::float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(optix::float3, texcoord, attribute texcoord, ); 
 
-
+using optix::rtTex2D;
+using optix::make_float3;
+using optix::float4;
 
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 

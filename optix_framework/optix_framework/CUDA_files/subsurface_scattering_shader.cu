@@ -92,7 +92,7 @@ RT_PROGRAM void shade()
         float3 wt = recip_ior*(cos_theta_o*no - wo) - no*cos_theta_t;
         PerRayData_radiance prd_refracted;
         prd_refracted.depth = prd_radiance.depth + 1;
-        Ray refracted(xo, wt, radiance_ray_type, scene_epsilon);
+        Ray refracted(xo, wt, RAY_TYPE_RADIANCE, scene_epsilon);
         rtTrace(top_object, refracted, prd_refracted);
         prd_radiance.result += prd_refracted.result*beam_T;
 
@@ -151,7 +151,7 @@ RT_PROGRAM void shade()
         float3 wr = 2.0f*cos_theta_o*no - wo;
         PerRayData_radiance prd_reflected;
         prd_reflected.depth = prd_radiance.depth + 1;
-        Ray reflected(xo, wr, radiance_ray_type, scene_epsilon);
+        Ray reflected(xo, wr, RAY_TYPE_RADIANCE, scene_epsilon);
         rtTrace(top_object, reflected, prd_reflected);
         prd_radiance.result += prd_reflected.result;
     }

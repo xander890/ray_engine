@@ -71,7 +71,7 @@ RT_PROGRAM void pinhole_camera()
 		float3 origin = camera_data.eye;
 		float3 direction = normalize(ip_coords.x*camera_data.U + ip_coords.y*camera_data.V + camera_data.W);
 	#endif
-		Ray ray(origin, direction, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
+		Ray ray(origin, direction, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 		trace(ray, prd);
 	}
 	else
@@ -95,7 +95,7 @@ RT_PROGRAM void pinhole_camera_w_matrix()
 		float3 vec = camera_data.inv_calibration_matrix * a_coords;
 		float3 origin = camera_data.eye;
 		float3 direction = normalize(vec);
-		Ray ray(origin, direction, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
+		Ray ray(origin, direction, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 		trace(ray, prd);
 	}
 	else

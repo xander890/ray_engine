@@ -1,7 +1,7 @@
 #pragma once
 
 #include <optix_world.h>
-#include "../structs.h"
+#include "structs.h"
 #include "math_helpers.h"
 #include <scattering_properties.h>
   

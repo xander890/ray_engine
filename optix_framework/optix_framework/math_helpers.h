@@ -82,9 +82,7 @@ static __host__ __device__ __inline__ void create_onb(const optix::float3& n, op
 static
 __host__ __device__ __inline__ void create_onb( const optix::float3& n, optix::float3& U, optix::float3& V, optix::float3& W )
 {
-  using namespace optix;
-
-  W = normalize( n );
+    W = normalize( n );
   U = cross( W, optix::make_float3( 0.0f, 1.0f, 0.0f ) );
 
   if ( fabs( U.x ) < 0.001f && fabs( U.y ) < 0.001f && fabs( U.z ) < 0.001f  )
@@ -98,8 +96,7 @@ __host__ __device__ __inline__ void create_onb( const optix::float3& n, optix::f
 static
 __device__ __inline__ void create_onb( const optix::float3& n, optix::float3& U, optix::float3& V)
 {
-  using namespace optix;
-
+  
   U = cross( n, make_float3( 0.0f, 1.0f, 0.0f ) );
 
   if ( dot( U, U ) < 1e-3f )

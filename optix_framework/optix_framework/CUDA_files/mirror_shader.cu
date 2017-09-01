@@ -15,13 +15,10 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 
-
-
-
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() {
     const MaterialDataCommon & material = get_material();
-    float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
+    float3 emission = make_float3(optix::rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
 	 shadow_hit(prd_shadow,emission);
 }
 
@@ -42,7 +39,7 @@ RT_PROGRAM void shade()
 		prd_new.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
 		float3 new_dir = reflect(ray.direction, normal);
 		prd_new.result = make_float3(0.0f);
-		optix::Ray new_ray(hit_pos, new_dir, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
+		optix::Ray new_ray(hit_pos, new_dir, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 		rtTrace(top_object, new_ray, prd_new);
 		prd_radiance.result = prd_new.result; 
 		prd_radiance.seed = prd_new.seed;

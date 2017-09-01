@@ -247,7 +247,7 @@ RT_PROGRAM void shade_path_tracing()
 			float xi1 = rnd(t);
 			float xi2 = rnd(t);
 			float3 hemi_vec = sample_hemisphere_cosine(make_float2(xi1, xi2), brdf_normal);
-			optix::Ray ray_t = optix::make_Ray(hit_pos, hemi_vec, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
+			optix::Ray ray_t = optix::make_Ray(hit_pos, hemi_vec, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 			rtTrace(top_object, ray_t, prd);
 			float3 f_d = get_brdf(hit_pos, brdf_normal, hemi_vec, wo) * M_PIf;
 			indirect = prd.result * f_d / max(1e-6,prob); //Cosine cancels out

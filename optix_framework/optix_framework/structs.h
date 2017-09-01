@@ -49,6 +49,12 @@ struct PerRayData_radiance
   unsigned int flags;
 };
 
+struct PerRayData_normal_depth
+{
+	optix::float3 normal;
+	float depth;
+};
+
 
 struct PerRayData_depth
 {

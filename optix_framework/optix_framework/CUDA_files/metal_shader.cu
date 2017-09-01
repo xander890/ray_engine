@@ -43,7 +43,7 @@ RT_PROGRAM void shade()
         prd_new.colorband = prd_radiance.colorband;
         prd_new.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
         float3 new_dir = reflect(ray.direction, ffnormal);
-        optix::Ray new_ray(hit_pos, new_dir, radiance_ray_type, scene_epsilon, RT_DEFAULT_MAX);
+        optix::Ray new_ray(hit_pos, new_dir, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
         rtTrace(top_object, new_ray, prd_new);
         prd_radiance.result = R * prd_new.result;
     }

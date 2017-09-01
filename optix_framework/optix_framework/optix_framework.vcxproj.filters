@@ -73,6 +73,9 @@
     <CudaCompile Include="CUDA_files\depth_ray.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
+    <CudaCompile Include="subsurface_scattering_sampled.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="obj_scene.cpp">

@@ -5,7 +5,11 @@
 class EnvironmentMap : public MissProgram
 {
 public:
-    EnvironmentMap(std::string envmap_file) : envmap_file(envmap_file) {}
+    EnvironmentMap(std::string envmap_file) : envmap_file(envmap_file), texture_width(0), texture_height(0),
+                                              camera_1(0), camera_2(0), camera_3(0)
+	{
+	}
+
     virtual ~EnvironmentMap() {}
 
     virtual void init(optix::Context & ctx) override;

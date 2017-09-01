@@ -75,6 +75,7 @@ public:
 
     void create_3d_noise(float frequency);
     float noise_frequency = 25;
+	int use_heterogenous_materials = 0;
 
 	virtual void initScene(InitialCameraData& camera_data) override;
 	virtual void trace(const RayGenCameraData& camera_data, bool& display) override;

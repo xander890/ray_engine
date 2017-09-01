@@ -9,15 +9,15 @@
 static
 	__host__ __device__ __inline__ optix::float3 sample_hemisphere_cosine( const optix::float2 & sample, const optix::float3 & normal )
 {
-
 	float cos_theta = sqrt(fmaxf(0.0f, sample.x));
 	float phi = 2.0f * M_PIf * sample.y;
-  float sin_theta = sqrt(fmaxf(0.0f,1.0f - sample.x));
+	float sin_theta = sqrt(fmaxf(0.0f,1.0f - sample.x));
 
-	float3 v = make_float3(cos(phi)*sin_theta, sin(phi)*sin_theta, cos_theta);
+	optix::float3 v = optix::make_float3(cos(phi)*sin_theta, sin(phi)*sin_theta, cos_theta);
 	rotate_to_normal(normal,v);
 	return v;
 }
+
 
 // Sample Phong lobe relative to U, V, W frame
 static
@@ -62,9 +62,7 @@ static
 	__host__ __device__ __inline__ float get_phong_lobe_pdf( float exponent, const optix::float3 &normal, const optix::float3 &dir_out, 
 	const optix::float3 &dir_in, float &bdf_val)
 {  
-	using namespace optix;
-
-	float3 r = -reflect(dir_out, normal);
+	optix::float3 r = -reflect(dir_out, normal);
 	const float cos_theta = fabs(dot(r, dir_in));
 	const float powered_cos = powf(cos_theta, exponent );
 
@@ -96,8 +94,6 @@ static
 	optix::float3 differential_reflect_direction(optix::float3 dPdx, optix::float3 dDdx, optix::float3 dNdP, 
 	optix::float3 D, optix::float3 N)
 {
-	using namespace optix;
-
 	float3 dNdx = dNdP*dPdx;
 	float dDNdx = dot(dDdx,N) + dot(D,dNdx);
 	return dDdx - 2*(dot(D,N)*dNdx + dDNdx*N);
@@ -108,8 +104,6 @@ static __host__ __device__ __inline__
 	optix::float3 differential_refract_direction(optix::float3 dPdx, optix::float3 dDdx, optix::float3 dNdP, 
 	optix::float3 D, optix::float3 N, float ior, optix::float3 T)
 {
-	using namespace optix;
-
 	float eta;
 	if(dot(D,N) > 0.f) {
 		eta = ior;
@@ -140,7 +134,7 @@ __inline__ __device__ float3 sample_HG(optix::float3& forward, optix::uint& t)
     float cos_theta = 1.0f - 2.0f*xi;
     float phi = 2.0f*M_PIf*rnd(t);
     float sin_theta = sqrtf(1.0f - cos_theta*cos_theta);
-    float3 v = make_float3(sin_theta*cosf(phi), sin_theta*sinf(phi), cos_theta);
+    optix::float3 v = make_float3(sin_theta*cosf(phi), sin_theta*sinf(phi), cos_theta);
 
     // Rotate from z-axis to actual normal and return
     rotate_to_normal(forward, v);
@@ -170,3 +164,46 @@ __inline__ __device__ float3 sample_HG(optix::float3& forward, float g, optix::u
     rotate_to_normal(forward, v);
     return v;
 }
+
+static __inline__ __device__ optix::float2 sample_disk(float radius, optix::uint & t)
+{
+
+}
+
+
+static __inline__ __device__ optix::float3 sample_hemisphere_uniform(const optix::float2 & sample, const optix::float3 & normal)
+{
+	optix::float3 p;
+	p.z = sample.x;
+	const float r = sqrtf(fmaxf(0.0f, 1.0f - p.z * p.z));
+	const float phi = 2.0f * M_PIf * sample.y;
+	p.x = r * cos(phi);
+	p.y = r * sin(phi);
+	return p;
+}
+
+static __inline__ __device__ optix::float2 sample_disk(const optix::float2 & sample, float minR = 0.0f)
+{
+	optix::float2 p;
+	const float r = fmaxf(sqrtf(sample.x), minR);
+	const float phi = 2.0f * M_PIf * sample.y;
+	p.x = r * cos(phi);
+	p.y = r * sin(phi);
+	return p;
+}
+static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::float2 & sample, float sigma, float & r, float & phi)
+{
+	optix::float2 p;
+	r = -log(sample.x) / sigma;
+	phi = 2.0f * M_PIf * sample.y;
+	p.x = r * cos(phi);
+	p.y = r * sin(phi);
+	return p;
+}
+
+static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::float2 & sample, float sigma)
+{
+	float r, phi;
+	return sample_disk_exponential(sample, sigma, r, phi);
+}
+

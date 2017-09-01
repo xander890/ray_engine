@@ -6,7 +6,7 @@ class MissProgram
 {
 public:
     MissProgram() = default;
-    ~MissProgram() = default;
+	virtual ~MissProgram() = default;
     virtual void init(optix::Context & ctx);
     virtual void set_into_gpu(optix::Context & ctx);
     virtual void set_into_gui(GUI * gui) = 0;

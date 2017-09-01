@@ -220,6 +220,8 @@ void ObjScene::initUI()
 
     miss_program->set_into_gui(gui);
 
+	gui->addCheckBox("Use heterogenous materials", (bool*)&use_heterogenous_materials, "Settings");
+
     execute_on_scene_elements([=](Mesh & m)
     {
         m.set_into_gui(gui);
@@ -258,13 +260,13 @@ void ObjScene::create_3d_noise(float frequency)
     // Create buffer with single texel set to default_color
     float* buffer_data = static_cast<float*>(buffer->map());
 
-    for (int i = 0; i < 256; i++)
-        for (int j = 0; j < 256; j++)
-            for (int k = 0; k < 256; k++)
-            {
-                int idx = 256 * 256 * i + 256 * j + k;
-                buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
-            }
+    //for (int i = 0; i < 256; i++)
+    //    for (int j = 0; j < 256; j++)
+    //        for (int k = 0; k < 256; k++)
+    //        {
+    //            int idx = 256 * 256 * i + 256 * j + k;
+    //            buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
+    //        }
     buffer->unmap();
 
     sampler->setBuffer(0u, 0u, buffer);
@@ -293,6 +295,9 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
     ShaderInfo info = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
     ShaderFactory::add_shader<DefaultShader>(info);
 
+	ShaderInfo info2 = { "subsurface_scattering_sampled.cu", "Sampled BSSRDF", 14 };
+	ShaderFactory::add_shader<DefaultShader>(info2);
+
     for (auto& kv : MaterialLibrary::media)
 	{
 		available_media.push_back(&kv.second);
@@ -305,13 +310,9 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
     tonemap_multiplier = ParameterParser::get_parameter<float>("tonemap", "tonemap_multiplier", 1.f, "Tonemap multiplier");
 
 	// Setup context
-	context->setRayTypeCount(3);
+	context->setRayTypeCount(RAY_TYPE_COUNT);
 	context->setStackSize(ParameterParser::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
-    
-
-	context["radiance_ray_type"]->setUint(RAY_TYPE_RADIANCE);
-	context["shadow_ray_type"]->setUint(RAY_TYPE_SHADOW);
-	context["depth_ray_type"]->setUint(RAY_TYPE_DEPTH);
+	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
 
 	context["max_depth"]->setInt(ParameterParser::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
 	context[OUTPUT_BUFFER]->set(createPBOOutputBuffer(OUTPUT_BUFFER, RT_FORMAT_FLOAT4, camera->get_width(), camera->get_height()));
@@ -496,6 +497,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	context["comparison_image_weight"]->setFloat(comparison_image_weight);
 	context["show_difference_image"]->setInt(show_difference_image);
 	context["comparison_texture"]->setInt(comparison_image->getId());
+	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
 
 	//Logger::debug({ "Merl correction factor: ", to_string(merl_correction.x), " ", to_string(merl_correction.y), " ", to_string(merl_correction.z) });
 
@@ -541,7 +543,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	// Apply tone mapping
 	if (use_tonemap)
 		context->launch(as_integer(CameraType::TONE_MAPPING), width, height);
-
 
 	collect_image(m_frame);
 }

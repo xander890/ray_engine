@@ -13,9 +13,7 @@ XERCES_CPP_NAMESPACE_USE
 
 class ParameterParser
 {
-public:
-	
-	
+public:	
 	static void init(const std::string & document_f);
 	static void free();
 
