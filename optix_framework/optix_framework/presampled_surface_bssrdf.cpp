@@ -28,7 +28,7 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx, const Shader
     context["sampling_output_buffer"]->setBuffer(m_samples);
 }
 
-void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
+void PresampledSurfaceBssrdf::load_into_mesh(Mesh& object)
 {
     Geometry g = object.mGeometry;    
     // precompute triangle area cdf
@@ -66,8 +66,6 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
         object.mGeometryInstance["area_cdf"]->setBuffer(cdf_buffer);
     cdf_buffer->unmap();
     delete[] cdf;
-
-    set_hit_programs(object);
 }
 
 

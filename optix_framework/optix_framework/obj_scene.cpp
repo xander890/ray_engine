@@ -51,9 +51,9 @@ void ObjScene::add_result_image(const string& image_file)
 
 void ObjScene::execute_on_scene_elements(function<void(Mesh&)> operation) 
 {
-    for (Mesh & m : mMeshes)
+    for (std::unique_ptr<Mesh> & m : mMeshes)
     {
-        operation(m);
+        operation(*m);
     }
 }
 
@@ -364,12 +364,15 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 		Logger::info <<"Loading obj " << filenames[i]  << "..." <<endl;
 		GeometryGroup geometry_group = context->createGeometryGroup();
 		ObjLoader* loader = new ObjLoader((Folders::data_folder + filenames[i]).c_str(), context, geometry_group);
-        vector<Mesh> v = loader->load(get_object_transform(filenames[i]));
-		mMeshes.insert(mMeshes.end(), v.begin(), v.end());
+        vector<std::unique_ptr<Mesh>> v = loader->load(get_object_transform(filenames[i]));
+		for (auto& c : v)
+		{
+			mMeshes.push_back(std::move(c));
+		}
+
 	    m_scene_bounding_box.include(loader->getSceneBBox());
 		loader->getAreaLights(lights);
-        
-
+ 
 		delete loader;
 		// Set material shaders
 

@@ -44,15 +44,17 @@ public:
     const std::vector<std::shared_ptr<MaterialHost>> & get_materials() { return mMaterialData; }
 
     void set_into_gui(GUI * gui, const char * group = "");
-    void remove_from_gui(GUI * gui);
+    void remove_from_gui(GUI * gui, const char * group = "");
 	void pre_trace();
 
 private:
 	MeshData mMeshData;
-	std::shared_ptr<Shader> mShader;
+	std::unique_ptr<Shader> mShader;
 
 	void load_materials();
 	void load_geometry();
+	void load_shader();
+
 	std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
     void create_and_bind_optix_data();
     optix::Program         mIntersectProgram;

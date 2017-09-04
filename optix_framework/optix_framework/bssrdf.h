@@ -3,8 +3,11 @@
 #include <scattering_properties.h>
 #include <directional_dipole.h>
 #include <standard_dipole.h>
+#include <bssrdf_sampling_properties.h>
 
 using optix::float3;
+
+rtDeclareVariable(BufPtr<BSSRDFSamplingProperties>, bssrdf_sampling_properties, , );
 
 __forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, const float3& _w12,
 	const float3& _xo, const float3& _no,

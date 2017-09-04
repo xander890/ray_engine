@@ -20,8 +20,8 @@ public:
 
 	virtual void setIntersectProgram(optix::Program program) override;
 	virtual void setBboxProgram(optix::Program program) override;
-	virtual std::vector<Mesh> load() override;
-	virtual std::vector<Mesh> load(const optix::Matrix4x4& transform) override;
+	virtual std::vector<std::unique_ptr<Mesh>> load() override;
+	virtual std::vector<std::unique_ptr<Mesh>> load(const optix::Matrix4x4& transform) override;
 	virtual optix::Aabb getSceneBBox() const override;
 	virtual void getAreaLights(std::vector<TriangleLight> & lights) override;
 

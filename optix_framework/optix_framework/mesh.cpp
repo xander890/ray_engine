@@ -37,9 +37,8 @@ void Mesh::init(const char* name, MeshData meshdata, std::shared_ptr<MaterialHos
         mBBoxBuffer = create_buffer<optix::Aabb>(mContext);
     }
 
-    load_geometry();
-    load_materials();
     set_shader(mMaterialData[0]->get_data().illum);
+	load();
 }
 
 void Mesh::load_materials()
@@ -92,27 +91,36 @@ void Mesh::load_geometry()
 	mReloadGeometry = false;
 }
 
+void Mesh::load_shader()
+{
+	if (mReloadShader || mShader->has_changed())
+	{
+		mShader->load_into_mesh(*this);
+	}
+	mReloadShader = false;
+}
+
 void Mesh::reload_shader()
 {
-	mShader->reload(*this);
+	mReloadShader = true;
 }
 
 void Mesh::load()
 {
+	load_geometry();
 	load_materials();
+	load_shader();
 }
 
 void Mesh::set_method(RenderingMethodType::EnumType method)
 {
     mShader->set_method(method);
-    mShader->initialize_mesh(*this);
 	mReloadShader = true;
 }
 
 void Mesh::set_shader(int illum)
 {
     mShader = ShaderFactory::get_shader(illum);
-    mShader->initialize_mesh(*this);
 	mReloadShader = true;
 }
 
@@ -170,10 +178,22 @@ void Mesh::set_into_gui(GUI* gui, const char* group)
     std::string nm = mMeshName + "/Rendering Method";
     std::vector<GuiDropdownElement> guiinfo = ShaderFactory::get_gui_info();
     gui->addDropdownMenuCallback(nm.c_str(), guiinfo, setShader, getShader, this, mMeshName.c_str());
+	mShader->set_into_gui(gui, group);
     for (auto& m : mMaterialData)
     {
         m->set_into_gui(gui, mMeshName.c_str());
     }
+}
+
+void Mesh::remove_from_gui(GUI * gui, const char * group)
+{
+	std::string nm = mMeshName + "/Rendering Method";
+	gui->removeVar(nm.c_str());
+	mShader->remove_from_gui(gui, group);
+	for (auto& m : mMaterialData)
+	{
+		m->remove_from_gui(gui, mMeshName.c_str());
+	}
 }
 
 void Mesh::pre_trace()

@@ -114,7 +114,7 @@ ObjLoader::ObjLoader( const char* filename,
   m_pathname = m_filename.substr(0,m_filename.find_last_of("/\\")+1);
 }
 
-std::vector<Mesh> ObjLoader::load()
+std::vector<std::unique_ptr<Mesh>> ObjLoader::load()
 {
    return load( optix::Matrix4x4::identity() );
 }
@@ -129,7 +129,7 @@ void ObjLoader::setBboxProgram( Program bbox_program )
  // m_bbox_program = bbox_program;
 }
 
-std::vector<Mesh> ObjLoader::load(const optix::Matrix4x4& transform)
+std::vector<std::unique_ptr<Mesh>> ObjLoader::load(const optix::Matrix4x4& transform)
 {
   // parse the OBJ file
 	std::string s = m_filename;
@@ -206,9 +206,9 @@ void ObjLoader::loadVertexData( GLMmodel* model, const optix::Matrix4x4& transfo
 }
 
 
-std::vector<Mesh> ObjLoader::createGeometryInstances(GLMmodel* model)
+std::vector<std::unique_ptr<Mesh>> ObjLoader::createGeometryInstances(GLMmodel* model)
 {
-  std::vector<Mesh> instances;
+  std::vector<std::unique_ptr<Mesh>> instances;
 
   // Loop over all groups -- grab the triangles and material props from each group
   unsigned int triangle_count = 0u;
@@ -284,16 +284,16 @@ std::vector<Mesh> ObjLoader::createGeometryInstances(GLMmodel* model)
 
     std::shared_ptr<MaterialHost> materialData = getMaterial(obj_group->material);
     MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, mbuffer, (int)num_triangles, bbox };
-    Mesh rtMesh(m_context); 
+    std::unique_ptr<Mesh> rtMesh = std::make_unique<Mesh>(m_context); 
     auto c = m_filename.find_last_of("/");
     c = (size_t)max((int)c, (int)m_filename.find_last_of("\\"));
     if (c == std::string::npos)
         c = 0;
 
     std::string name = m_filename.substr(c+1);
-    rtMesh.init(name.c_str(), meshdata, materialData);
+    rtMesh->init(name.c_str(), meshdata, materialData);
     
-	instances.push_back( rtMesh );
+	instances.push_back( std::move(rtMesh) );
   }
 
   assert( triangle_count == model->numtriangles );
@@ -314,7 +314,7 @@ std::vector<Mesh> ObjLoader::createGeometryInstances(GLMmodel* model)
   acceleration->markDirty();
 
   for ( unsigned int i = 0; i < instances.size(); ++i )
-	m_geometrygroup->setChild( current_child_count + i, instances[i].mGeometryInstance );
+	m_geometrygroup->setChild( current_child_count + i, instances[i]->mGeometryInstance );
 
   if (m_large_geom) {
 	rtBufferDestroy( m_vbuffer->get() );

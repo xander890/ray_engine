@@ -119,12 +119,12 @@ void ShaderFactory::init(optix::Context& ctx)
     }
 }
 
-std::shared_ptr<Shader> ShaderFactory::get_shader(int illum)
+std::unique_ptr<Shader> ShaderFactory::get_shader(int illum)
 {
     std::string shader;
     if (mShaderMap.count(illum) != 0)
     {
-        return mShaderMap[illum];
+        return std::unique_ptr<Shader>(mShaderMap[illum]->clone());
     }
     Logger::error << "Shader for illum " << illum << " not found" << std::endl;
     return nullptr;

@@ -20,13 +20,21 @@ class Shader
 public:    
     friend class ShaderFactory;
     virtual ~Shader() = default;  
-    virtual void initialize_mesh(Mesh & object) = 0;
+
+	virtual Shader* clone() = 0;
+    virtual void load_into_mesh(Mesh & object) = 0;
     virtual void pre_trace_mesh(Mesh & object) = 0;  
+
     virtual void initialize_shader(optix::Context context, const ShaderInfo& shader_info);
     void set_method(RenderingMethodType::EnumType m) { method = m; }
+
+	virtual void set_into_gui(GUI * gui, const char * group = "");
+	virtual void remove_from_gui(GUI * gui, const char * group = "");
+
+	bool has_changed() { return mHasChanged; }
+
     int get_illum() const { return illum; }
     std::string get_name() const { return shader_name; }
-	void reload(Mesh & object);
 
 protected:
     optix::Context context;
@@ -40,5 +48,7 @@ protected:
     }
 
     void set_hit_programs(Mesh & object);
+
+	bool mHasChanged = true;
 };
 

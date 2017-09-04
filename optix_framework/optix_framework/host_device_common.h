@@ -12,6 +12,12 @@
 #define RAY_TYPE_ATTRIBUTE 3
 #define RAY_TYPE_COUNT 4
 
+#ifdef __CUDACC__
+#define DEFAULT(x)
+#else
+#define DEFAULT(x) = x
+#endif
+
 typedef int TexPtr;
 
 template<typename T, int Dim=1>

@@ -61,9 +61,9 @@ void GlossyShader::set_data(Mesh& object)
     object.mMaterial["merl_brdf_multiplier"]->setFloat(merl_correction);
 }
 
-void GlossyShader::initialize_mesh(Mesh& object)
+void GlossyShader::load_into_mesh(Mesh& object)
 {
-    Shader::initialize_mesh(object);
+    Shader::load_into_mesh(object);
     set_data(object);
     string n = object.get_main_material()->get_name();
 

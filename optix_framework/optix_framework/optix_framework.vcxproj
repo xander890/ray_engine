@@ -205,6 +205,7 @@ echo Done.</Command>
     <ClCompile Include="plint.cpp" />
     <ClCompile Include="procedural_loader.cpp" />
     <ClCompile Include="rendering_method.cpp" />
+    <ClCompile Include="sampled_bssrdf.cpp" />
     <ClCompile Include="scattering_material.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="shader_factory.cpp" />
@@ -512,6 +513,7 @@ echo Done.</Command>
     <ClInclude Include="area_light.h" />
     <ClInclude Include="box.h" />
     <ClInclude Include="bssrdf.h" />
+    <ClInclude Include="bssrdf_sampling_properties.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="camera_host.h" />
     <ClInclude Include="constant_background.h" />
@@ -541,6 +543,7 @@ echo Done.</Command>
     <ClInclude Include="procedural_mesh.h" />
     <ClInclude Include="color_helpers.h" />
     <ClInclude Include="directional_dipole.h" />
+    <ClInclude Include="sampled_bssrdf.h" />
     <ClInclude Include="simplex_noise.h" />
     <ClInclude Include="singular_light.h" />
     <ClInclude Include="distribution1d.h" />

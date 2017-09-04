@@ -14,21 +14,25 @@ class GlossyShader : public Shader
 public:
     virtual ~GlossyShader() = default;
     GlossyShader() : Shader() {}
+	GlossyShader(const GlossyShader &) = default;
 
     void initialize_shader(optix::Context context, const ShaderInfo& shader_info) override;
     
-    void initialize_mesh(Mesh & object) override;
+    void load_into_mesh(Mesh & object) override;
     void pre_trace_mesh(Mesh & object) override;
+	virtual Shader* clone() override { return new GlossyShader(*this); }
 
 private:
     void set_data(Mesh& object);
-    float blinn_exponent;
+	// FIXME proper struct & copy constructor
+	float blinn_exponent;
     float2 anisotropic_exp;
     float3 x_axis_anisotropic;
-    std::vector<std::string> brdf_names;
-    std::string merl_folder;
 
-    std::map<std::string, MERLBrdf> merl_database;
+	// FIXME move me somewhere elses
+	std::vector<std::string> brdf_names;
+	std::string merl_folder;
+	std::map<std::string, MERLBrdf> merl_database;
     float3 merl_correction;
     bool use_merl_brdf;
 };

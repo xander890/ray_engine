@@ -25,12 +25,12 @@ void ProceduralLoader::setBboxProgram(optix::Program program)
 	object->set_intersect_program(program);
 }
 
-std::vector<Mesh> ProceduralLoader::load()
+std::vector<std::unique_ptr<Mesh>> ProceduralLoader::load()
 {
 	return load(optix::Matrix4x4::identity());
 }
 
-std::vector<Mesh> ProceduralLoader::load(const optix::Matrix4x4& transform)
+std::vector<std::unique_ptr<Mesh>> ProceduralLoader::load(const optix::Matrix4x4& transform)
 {
 	// We fake an obj file and save it in order to use the same pipeline for obj material files.
 	char* fake_obj = "mtllib %s\n"
@@ -70,7 +70,9 @@ std::vector<Mesh> ProceduralLoader::load(const optix::Matrix4x4& transform)
 
 	glmDelete(model);
     // FIXME
-    return { Mesh(m_context)};
+	std::vector<std::unique_ptr<Mesh>> r;
+	r.push_back(std::make_unique<Mesh>(m_context));
+    return r;
 
 }
 

@@ -216,17 +216,20 @@ void ScatteringMaterial::set_into_gui(GUI* gui, const char * group)
     gui->addFloatVariableCallBack((scamat + "/Scale").c_str(), setScale, getScale, this, group_name);
 }
 
-void ScatteringMaterial::remove_from_gui(GUI* gui)
+void ScatteringMaterial::remove_from_gui(GUI* gui, const char * group)
 {
-    gui->removeVar("Set Material");
-    gui->removeVar("Absorption - R");
-    gui->removeVar("Absorption - G");
-    gui->removeVar("Absorption - B");
-    gui->removeVar("Scattering - R");
-    gui->removeVar("Scattering - G");
-    gui->removeVar("Scattering - B");
-    gui->removeVar("Asymmetry");
-    gui->removeVar("Scale");
+	std::string scamat = std::string(group);
+
+	gui->removeVar((scamat + "/Set Dipole").c_str());
+	gui->removeVar((scamat + "/Set Material").c_str());
+	gui->removeVar((scamat + "/Absorption - R").c_str());
+	gui->removeVar((scamat + "/Absorption - G").c_str());
+	gui->removeVar((scamat + "/Absorption - B").c_str());
+	gui->removeVar((scamat + "/Scattering - R").c_str());
+	gui->removeVar((scamat + "/Scattering - G").c_str());
+	gui->removeVar((scamat + "/Scattering - B").c_str());
+	gui->removeVar((scamat + "/Asymmetry").c_str());
+	gui->removeVar((scamat + "/Scale").c_str());
 }
 
 
