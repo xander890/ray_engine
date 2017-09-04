@@ -1,8 +1,5 @@
 #pragma once
-
-#include <optix_world.h>
-#include "structs.h"
-#include "math_helpers.h"
+#include <device_common_data.h>
 #include <scattering_properties.h>
   
 __forceinline__  __device__ float3 S_infinite(const float3& _r_sqr, const float x_dot_w12, const float no_dot_w12, const float x_dot_no,
@@ -34,7 +31,7 @@ __forceinline__ __device__ float3 S_infinite_vec(const float3& _r_sqr, const flo
 }
 
 
-__forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, const float3& _w12,
+__forceinline__ __device__ float3 directional_dipole_bssrdf(const float3& _xi, const float3& _ni, const float3& _w12,
                          const float3& _xo, const float3& _no,
                          const ScatteringMaterialProperties& properties)
 {
@@ -69,5 +66,5 @@ __forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, c
   float3 _Sr = S_infinite(_dr_sqr, dot_x_w12, -mu0, dot(_x, _no), properties);
   float3 _Sv = S_infinite_vec(_dv_sqr, _x_dot_wv, dot(_no, _wv), _x_dot_no, properties);
   float3 _Sd = _Sr - _Sv;
-  return max(_Sd, make_float3(0.0f)); 
+  return max(_Sd, make_float3(0.0f)) * properties.global_coeff;
 }

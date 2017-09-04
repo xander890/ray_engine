@@ -38,12 +38,20 @@ void Mesh::init(const char* name, MeshData meshdata, std::shared_ptr<MaterialHos
     }
 
     load_geometry();
-    load_material();
+    load_materials();
     set_shader(mMaterialData[0]->get_data().illum);
 }
 
-void Mesh::load_material()
+void Mesh::load_materials()
 {
+	bool one_material_changed = std::any_of(mMaterialData.begin(), mMaterialData.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->hasChanged();  });
+	mReloadMaterials |= one_material_changed;
+
+	if(!mReloadMaterials)
+	{
+		return;
+	}
+
     create_and_bind_optix_data();
     std::vector<MaterialDataCommon> data;
     data.resize(mMaterialData.size());
@@ -56,10 +64,13 @@ void Mesh::load_material()
     mMaterialBuffer->unmap();
     mMaterial["material_buffer"]->setBuffer(mMaterialBuffer);    
     mMaterial["main_material"]->setUserData(sizeof(MaterialDataCommon), &data[0]);
+	mReloadMaterials = false;
 }
 
 void Mesh::load_geometry()
 {
+	if (!mReloadGeometry)
+		return;
     create_and_bind_optix_data();
 
     mGeometry->setPrimitiveCount(mMeshData.mNumTriangles);
@@ -78,18 +89,31 @@ void Mesh::load_geometry()
     BufPtr<optix::Aabb> bptr = BufPtr<optix::Aabb>(mBBoxBuffer->getId());
     mGeometryInstance["local_bounding_box"]->setUserData(sizeof(BufPtr<optix::Aabb>), &bptr);
     mGeometry->markDirty();
+	mReloadGeometry = false;
+}
+
+void Mesh::reload_shader()
+{
+	mShader->reload(*this);
+}
+
+void Mesh::load()
+{
+	load_materials();
 }
 
 void Mesh::set_method(RenderingMethodType::EnumType method)
 {
     mShader->set_method(method);
     mShader->initialize_mesh(*this);
+	mReloadShader = true;
 }
 
 void Mesh::set_shader(int illum)
 {
     mShader = ShaderFactory::get_shader(illum);
     mShader->initialize_mesh(*this);
+	mReloadShader = true;
 }
 
 void Mesh::create_and_bind_optix_data()
@@ -138,7 +162,7 @@ void Mesh::add_material(std::shared_ptr<MaterialHost> material)
 {
     mMaterialData.push_back(material);
     mMaterialBuffer->setSize(mMaterialData.size());
-    load_material();
+    load_materials();
 }
 
 void Mesh::set_into_gui(GUI* gui, const char* group)
@@ -150,4 +174,9 @@ void Mesh::set_into_gui(GUI* gui, const char* group)
     {
         m->set_into_gui(gui, mMeshName.c_str());
     }
+}
+
+void Mesh::pre_trace()
+{
+	mShader->pre_trace_mesh(*this);
 }

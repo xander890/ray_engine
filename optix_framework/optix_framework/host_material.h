@@ -16,6 +16,7 @@ public:
     MaterialDataCommon& get_data(); 
     MaterialDataCommon get_data_copy();
     std::string get_name() { return mMaterialName; }
+	bool hasChanged();
 
 private:
     int mMaterialID;

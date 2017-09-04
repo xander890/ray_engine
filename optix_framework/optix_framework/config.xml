@@ -5,7 +5,7 @@
   <property comment="configure the ray tracer to try to use the MERL brdf database whenever possible." key="use_merl_brdf" value="true"/>
   <property comment="Default miss program." key="default_miss_type" value="CONSTANT_BACKGROUND"/>
   <property key="background_types" value=" CONSTANT_BACKGROUND ENVIRONMENT_MAP SKY_MODEL"/>
-  <property comment="Allocated stack size for context" key="stack_size" value="200000"/>
+  <property comment="Allocated stack size for context" key="stack_size" value="30000"/>
   <property comment="Maximum recursion depth of the raytracer" key="max_depth" value="300"/>
   <property comment="Rendering method" key="rendering_type" value="PATH_TRACING"/>
   <property key="rendering_types" value=" RECURSIVE_RAY_TRACING AMBIENT_OCCLUSION PATH_TRACING"/>

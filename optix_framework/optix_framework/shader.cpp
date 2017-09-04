@@ -55,6 +55,8 @@ void Shader::initialize_mesh(Mesh & object)
     set_hit_programs(object);
 }
 
+
+
 void Shader::pre_trace_mesh(Mesh & object)
 {
     return;
@@ -66,6 +68,11 @@ void Shader::initialize_shader(optix::Context context, const ShaderInfo& shader_
     illum = shader_info.illum;
     shader_path = shader_info.cuda_shader_path;
     shader_name = shader_info.name;
+}
+
+void Shader::reload(Mesh & object)
+{
+	set_hit_programs(object);
 }
 
 void Shader::set_hit_programs(Mesh& object)

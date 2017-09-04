@@ -76,3 +76,8 @@ MaterialDataCommon MaterialHost::get_data_copy()
     mMaterialData.scattering_properties = scattering_material->get_data();
     return mMaterialData;
 }
+
+bool MaterialHost::hasChanged()
+{
+	return scattering_material->hasChanged();
+}

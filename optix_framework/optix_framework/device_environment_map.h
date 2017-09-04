@@ -10,6 +10,8 @@
 #include "environment_map.h"
 // Environment importance sampling
 
+using optix::float3;
+
 rtDeclareVariable(int, envmap_enabled, , ) = 0;
 rtDeclareVariable(BufPtr<EnvmapProperties>, envmap_properties, , );
 rtDeclareVariable(BufPtr<EnvmapImportanceSamplingData>, envmap_importance_sampling, , );

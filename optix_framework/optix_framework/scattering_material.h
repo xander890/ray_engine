@@ -45,6 +45,7 @@ public:
         this->asymmetry = meancosine;
         computeCoefficients();
         mStandardMaterial = DefaultScatteringMaterial::Count; // Custom
+		properties.selected_bssrdf = DIRECTIONAL_DIPOLE_BSSRDF;
     }
 
     ScatteringMaterial(DefaultScatteringMaterial material, float prop_scale = 100.0f)
@@ -52,6 +53,7 @@ public:
         scale = prop_scale;
         mStandardMaterial = static_cast<int>(material);
         getDefaultMaterial(material);
+		properties.selected_bssrdf = DIRECTIONAL_DIPOLE_BSSRDF;
     }
 
     ScatteringMaterial& operator=(const ScatteringMaterial& cp);
@@ -73,6 +75,7 @@ public:
     void set_into_gui(GUI* gui, const char * group = "Scattering Material");
     void remove_from_gui(GUI * gui);
     const char* get_name() { return name; }
+	bool hasChanged();
     ScatteringMaterialProperties get_data();
 
     static std::vector<ScatteringMaterial> defaultMaterials;
@@ -87,6 +90,9 @@ private:
 
     const char* name;
     bool dirty = true;
+
+	static void GUI_CALL setBSSRDF(const void* var, void* data);
+	static void GUI_CALL getBSSRDF(void* var, void* data);
 
     static void GUI_CALL setDefault(const void* var, void* data);
     static void GUI_CALL getDefault(void* var, void* data);

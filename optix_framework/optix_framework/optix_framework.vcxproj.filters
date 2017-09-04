@@ -391,6 +391,12 @@
     <ClInclude Include="optix_utils.h">
       <Filter>Header Files\Optix</Filter>
     </ClInclude>
+    <ClInclude Include="bssrdf.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="standard_dipole.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

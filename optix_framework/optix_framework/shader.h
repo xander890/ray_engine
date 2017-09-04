@@ -26,6 +26,7 @@ public:
     void set_method(RenderingMethodType::EnumType m) { method = m; }
     int get_illum() const { return illum; }
     std::string get_name() const { return shader_name; }
+	void reload(Mesh & object);
 
 protected:
     optix::Context context;

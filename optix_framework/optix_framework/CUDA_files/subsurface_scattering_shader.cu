@@ -2,16 +2,15 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
-#define DIRPOLE
 #define TRANSMIT
 #define REFLECT 
 
 #include <device_common_data.h>
-#include "../math_helpers.h"
-#include "../random.h"
-#include "../directional_dipole.h"
-#include "../optical_helper.h"
-#include "../structs.h"
+#include <math_helpers.h>
+#include <random.h>
+#include <bssrdf.h>
+#include <optical_helper.h>
+#include <structs.h>
 #include <ray_trace_helpers.h>
 #include <scattering_properties.h>
 #include <material_device.h>
@@ -68,11 +67,7 @@ RT_PROGRAM void shade()
     bool inside = cos_theta_o < 0.0f;
     if (inside)
     {
-#ifdef DIRPOLE
-        beam_T = expf(-t_hit*props.deltaEddExtinction);
-#else
-        beam_T = expf(-t_hit*props.extinction);
-#endif
+		beam_T = get_beam_transmittance(t_hit, props);
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
         if (rnd(t) >= prob) return;
         beam_T /= prob;
@@ -128,21 +123,17 @@ RT_PROGRAM void shade()
             float exp_term = exp(-dist * chosen_transport_rr);
             if (rnd(t) < exp_term)
             {
-#ifdef DIRPOLE
                 accumulate += T12*sample.L*bssrdf(sample.pos, sample.normal, w12, xo, no, props) / exp_term;
-#else
-                accumulate += T12*sample.L*bssrdf(dist, props) / exp_term;
-#endif
             }
         }
     }
 #ifdef TRANSMIT
-    prd_radiance.result += accumulate*props.global_coeff / (float)N;
+    prd_radiance.result += accumulate / (float)N;
         }
     }
 #else
     float T21 = 1.0f - R;
-    prd_radiance.result += T21*accumulate*props.global_coeff / (float)N;
+    prd_radiance.result += T21*accumulate / (float)N;
 #endif
 #ifdef REFLECT
     // Trace reflected ray

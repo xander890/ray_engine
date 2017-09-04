@@ -32,11 +32,9 @@ public:
     optix::Context  mContext;
     optix::Material mMaterial = nullptr;
 
-    MeshData mMeshData;
-    std::shared_ptr<Shader> mShader;
+	void reload_shader();
+	void load();
 
-    void load_material();  
-    void load_geometry();
     void set_method(RenderingMethodType::EnumType method);
     void set_shader(int illum);
 
@@ -47,15 +45,25 @@ public:
 
     void set_into_gui(GUI * gui, const char * group = "");
     void remove_from_gui(GUI * gui);
+	void pre_trace();
 
 private:
-    std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
+	MeshData mMeshData;
+	std::shared_ptr<Shader> mShader;
+
+	void load_materials();
+	void load_geometry();
+	std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
     void create_and_bind_optix_data();
     optix::Program         mIntersectProgram;
     optix::Program         mBoundingboxProgram;
     optix::Buffer          mMaterialBuffer;
     optix::Buffer          mBBoxBuffer;
     std::string            mMeshName;
+
+	bool mReloadShader = true;
+	bool mReloadGeometry = true;
+	bool mReloadMaterials = true;
 
     static void GUI_CALL setShader(const void* var, void* data);
     static void GUI_CALL getShader(void* var, void* data);

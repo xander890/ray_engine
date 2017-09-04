@@ -172,8 +172,18 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 			return true;
 		}
 		break;
+	case 'r':
+	{
+		Logger::info << "Realoading all shaders..." << std::endl;
+		execute_on_scene_elements([=](Mesh & m)
+		{
+			m.reload_shader();
+		});
+	}
+	break;
 	default: return false;
 	}
+	return false;
 }
 
 
@@ -508,6 +518,11 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
     context["tonemap_multiplier"]->setFloat(tonemap_multiplier);
 	context["tonemap_exponent"]->setFloat(tonemap_exponent);
 	
+	execute_on_scene_elements([=](Mesh & m)
+	{
+		m.load();
+	});
+
 	if (m_camera_changed)
 	{
 		reset_renderer();
@@ -525,7 +540,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
     method->pre_trace();
     execute_on_scene_elements([=](Mesh & m)
     {
-        m.mShader->pre_trace_mesh(m);
+        m.pre_trace();
     });
 
 	// Launch the ray tracer

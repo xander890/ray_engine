@@ -73,7 +73,6 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
 
 void PresampledSurfaceBssrdf::pre_trace_mesh(Mesh& obj)
 {
-    obj.load_material();
     Geometry g = obj.mGeometry;
     GeometryInstance object = obj.mGeometryInstance;
     context["sampling_vertex_buffer"]->setBuffer(g["vertex_buffer"]->getBuffer());

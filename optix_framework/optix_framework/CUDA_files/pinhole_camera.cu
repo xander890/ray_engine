@@ -55,7 +55,7 @@ __forceinline__ __device__ void init_payload(PerRayData_radiance & prd)
 
 RT_PROGRAM void pinhole_camera()
 {
-    optix_print("Pihole!\n");
+    optix_print("Frame %d!\n", frame);
 	if (check_bounds())
 	{
 		PerRayData_radiance prd;

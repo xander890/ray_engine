@@ -106,7 +106,6 @@ void GlossyShader::initialize_mesh(Mesh& object)
     optix_mat["diffuse_map"]->setTextureSampler(createOneElementSampler(optix_mat->getContext(), reflectance));
     optix_mat["merl_brdf_buffer"]->setBuffer(buff);
 
-    //set_hit_programs(object, "glossy_shader.cu", method);
 }
 
 void GlossyShader::pre_trace_mesh(Mesh& object)

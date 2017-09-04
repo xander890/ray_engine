@@ -14,6 +14,7 @@ ScatteringMaterial& ScatteringMaterial::operator=(const ScatteringMaterial& cp)
     scale = cp.scale;
     dirty = true;
     mStandardMaterial = cp.mStandardMaterial;
+	properties.selected_bssrdf = cp.properties.selected_bssrdf;
     return *this;
 }
 
@@ -26,7 +27,8 @@ ScatteringMaterial::ScatteringMaterial(const ScatteringMaterial& cp)
     name = cp.name;
     scale = cp.scale;
     mStandardMaterial = cp.mStandardMaterial;
-    dirty = true;
+	properties.selected_bssrdf = cp.properties.selected_bssrdf;
+	dirty = true;
 }
 
 std::vector<ScatteringMaterial> ScatteringMaterial::initializeDefaultMaterials()
@@ -200,7 +202,10 @@ void ScatteringMaterial::set_into_gui(GUI* gui, const char * group)
     std::string gg = group_path.substr(last + 1);
     const char * group_name = group;
 
-    gui->addDropdownMenuCallback((scamat + "/Set Material").c_str(), gui_elements, setDefault, getDefault, this, group_name);
+	std::vector<GuiDropdownElement> gui_elements_dipole = { {0, "Standard dipole"},{1 , "Directional dipole"} };
+
+	gui->addDropdownMenuCallback((scamat + "/Set Dipole").c_str(), gui_elements_dipole, setBSSRDF, getBSSRDF, this, group_name);
+	gui->addDropdownMenuCallback((scamat + "/Set Material").c_str(), gui_elements, setDefault, getDefault, this, group_name);
     gui->addFloatVariableCallBack((scamat + "/Absorption - R").c_str(), setAbsorptionChannel<0>, getAbsorptionChannel<0>, this, group_name);
     gui->addFloatVariableCallBack((scamat + "/Absorption - G").c_str(), setAbsorptionChannel<1>, getAbsorptionChannel<1>, this, group_name);
     gui->addFloatVariableCallBack((scamat + "/Absorption - B").c_str(), setAbsorptionChannel<2>, getAbsorptionChannel<2>, this, group_name);
@@ -222,6 +227,20 @@ void ScatteringMaterial::remove_from_gui(GUI* gui)
     gui->removeVar("Scattering - B");
     gui->removeVar("Asymmetry");
     gui->removeVar("Scale");
+}
+
+
+void GUI_CALL ScatteringMaterial::setBSSRDF(const void* var, void* data)
+{
+	ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
+	s->properties.selected_bssrdf = (*(int*)var);
+}
+
+void GUI_CALL ScatteringMaterial::getBSSRDF(void* var, void* data)
+{
+	ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
+	*(int*)var = s->properties.selected_bssrdf;
+	s->dirty = true;
 }
 
 void ScatteringMaterial::setDefault(const void* var, void* data)
@@ -302,35 +321,40 @@ void ScatteringMaterial::getScale(void* var, void* data)
 
 void ScatteringMaterial::computeCoefficients()
 {
-  properties.absorption = max(absorption, make_float3(1.0e-8f)) * scale;
-  properties.scattering = scattering * scale;
-  properties.meancosine = asymmetry;
-  properties.relative_ior = ior;
-  properties.deltaEddExtinction = properties.scattering*(1.0f - properties.meancosine*properties.meancosine) + properties.absorption;
+	properties.absorption = max(absorption, make_float3(1.0e-8f)) * scale;
+	properties.scattering = scattering * scale;
+	properties.meancosine = asymmetry;
+	properties.relative_ior = ior;
+	properties.deltaEddExtinction = properties.scattering*(1.0f - properties.meancosine*properties.meancosine) + properties.absorption;
 
-  auto reducedScattering = properties.scattering * (make_float3(1.0f) - properties.meancosine);
-  properties.reducedExtinction = reducedScattering + properties.absorption;
-  properties.D = make_float3(1.0f) / (3.f * properties.reducedExtinction);
-  properties.transport = sqrt(3*properties.absorption*properties.reducedExtinction);
-  properties.C_phi = C_phi(properties.relative_ior);
-  properties.C_phi_inv = C_phi(1.0f/properties.relative_ior);
-  properties.C_E = C_E(properties.relative_ior);
-  properties.reducedAlbedo = reducedScattering / properties.reducedExtinction;
-  properties.de = 2.131f * properties.D / sqrt(properties.reducedAlbedo);
-  properties.A = (1.0f - properties.C_E) / (2.0f * properties.C_phi);
-  properties.extinction = properties.scattering + properties.absorption;
-  properties.three_D = 3 * properties.D;
-  properties.rev_D = (3.f * properties.reducedExtinction);
-  properties.two_a_de = 2.0f * properties.A * properties.de;
-  properties.global_coeff = 1.0f/(4.0f * properties.C_phi_inv) * 1.0f/(4.0f * M_PIf * M_PIf);
-  properties.one_over_three_ext = make_float3(1.0) / (3.0f * properties.extinction);
-  properties.albedo = properties.scattering / properties.extinction;
-  //properties.two_de = 2.0f * properties.de;
-  //properties.de_sqr = properties.de * properties.de;
-  //properties.iorsq = properties.relative_ior * properties.relative_ior;
-  properties.min_transport = fminf(fminf(properties.transport.x, properties.transport.y), properties.transport.z);
-  properties.mean_transport = (properties.transport.x + properties.transport.y + properties.transport.z) / 3.0f;
-    dirty = false;
+	auto reducedScattering = properties.scattering * (make_float3(1.0f) - properties.meancosine);
+	properties.reducedExtinction = reducedScattering + properties.absorption;
+	properties.D = make_float3(1.0f) / (3.f * properties.reducedExtinction);
+	properties.transport = sqrt(3*properties.absorption*properties.reducedExtinction);
+	properties.C_phi = C_phi(properties.relative_ior);
+	properties.C_phi_inv = C_phi(1.0f/properties.relative_ior);
+	properties.C_E = C_E(properties.relative_ior);
+	properties.reducedAlbedo = reducedScattering / properties.reducedExtinction;
+	properties.de = 2.131f * properties.D / sqrt(properties.reducedAlbedo);
+	properties.A = (1.0f - properties.C_E) / (2.0f * properties.C_phi);
+	properties.extinction = properties.scattering + properties.absorption;
+	properties.three_D = 3 * properties.D;
+	properties.rev_D = (3.f * properties.reducedExtinction);
+	properties.two_a_de = 2.0f * properties.A * properties.de;
+	properties.global_coeff = 1.0f/(4.0f * properties.C_phi_inv) * 1.0f/(4.0f * M_PIf * M_PIf);
+	properties.one_over_three_ext = make_float3(1.0) / (3.0f * properties.extinction);
+	properties.albedo = properties.scattering / properties.extinction;
+	//properties.two_de = 2.0f * properties.de;
+	//properties.de_sqr = properties.de * properties.de;
+	//properties.iorsq = properties.relative_ior * properties.relative_ior;
+	properties.min_transport = fminf(fminf(properties.transport.x, properties.transport.y), properties.transport.z);
+	properties.mean_transport = (properties.transport.x + properties.transport.y + properties.transport.z) / 3.0f;
+	dirty = false;
+}
+
+bool ScatteringMaterial::hasChanged()
+{
+	return dirty;
 }
 
 ScatteringMaterialProperties ScatteringMaterial::get_data()

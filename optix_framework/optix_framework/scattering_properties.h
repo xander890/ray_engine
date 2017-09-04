@@ -1,6 +1,10 @@
 #pragma once
 #include<optix_world.h>
 
+#define STANDARD_DIPOLE_BSSRDF 0
+#define DIRECTIONAL_DIPOLE_BSSRDF 1
+#define BSSRDF_COUNT 2
+
 struct ScatteringMaterialProperties
 {
     optix::float3 absorption;
@@ -29,4 +33,5 @@ struct ScatteringMaterialProperties
     optix::float3 one_over_three_ext;
     float min_transport;
     optix::float3 deltaEddExtinction;
+	int selected_bssrdf;
 };

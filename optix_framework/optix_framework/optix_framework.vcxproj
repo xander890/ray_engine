@@ -511,6 +511,7 @@ echo Done.</Command>
     <ClInclude Include="apple_juice.h" />
     <ClInclude Include="area_light.h" />
     <ClInclude Include="box.h" />
+    <ClInclude Include="bssrdf.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="camera_host.h" />
     <ClInclude Include="constant_background.h" />
@@ -571,6 +572,7 @@ echo Done.</Command>
     <ClInclude Include="sky_model.h" />
     <ClInclude Include="sphere.h" />
     <ClInclude Include="parserstringhelpers.h" />
+    <ClInclude Include="standard_dipole.h" />
     <ClInclude Include="structs.h" />
     <ClInclude Include="structs_device.h" />
   </ItemGroup>
