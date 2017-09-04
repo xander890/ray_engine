@@ -60,6 +60,16 @@ void Shader::remove_from_gui(GUI * gui, const char * group)
 {
 }
 
+Shader::Shader(const Shader & cp)
+{
+	context = cp.context;
+	illum = cp.illum;
+	shader_path = cp.shader_path;
+	shader_name = cp.shader_name;
+	method = cp.method;
+	mHasChanged = cp.mHasChanged;
+}
+
 void Shader::set_hit_programs(Mesh& object)
 {
     auto chit = ShaderFactory::createProgram(shader_path, "shade", method);

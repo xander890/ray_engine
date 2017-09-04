@@ -37,18 +37,20 @@ public:
     std::string get_name() const { return shader_name; }
 
 protected:
-    optix::Context context;
-    int illum;
-    std::string shader_path;
-    std::string shader_name;
-    RenderingMethodType::EnumType method = RenderingMethodType::PATH_TRACING;
+
 
     Shader(): illum(0), method()
     {
     }
+	Shader(const Shader & cp);
 
     void set_hit_programs(Mesh & object);
 
+	optix::Context context;
+	int illum;
+	std::string shader_path;
+	std::string shader_name;
+	RenderingMethodType::EnumType method = RenderingMethodType::PATH_TRACING;
 	bool mHasChanged = true;
 };
 

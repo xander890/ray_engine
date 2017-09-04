@@ -45,6 +45,114 @@ RT_PROGRAM void any_hit_shadow()
 	rtTerminateRay();
 }
 
+__device__ __forceinline__ bool importance_sample_position(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
+	float3 & xi, float3 & ni, float & integration_factor)
+{
+	float cos_theta_o = abs(dot(wo, no));
+	float chosen_transport_rr = props.min_transport;
+	PerRayData_normal_depth attribute_fetch_ray_payload = { make_float3(0.0f), RT_DEFAULT_MAX };
+	optix::Ray attribute_fetch_ray;
+	attribute_fetch_ray.ray_type = RAY_TYPE_ATTRIBUTE;
+	attribute_fetch_ray.tmin = scene_epsilon;
+	
+	attribute_fetch_ray.origin = camera_data.eye;
+
+	optix::float2 sample = make_float2(rnd(t), rnd(t));
+	float r, phi;
+	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_transport_rr, r, phi);
+	float3 sample_ray_dir;
+	float3 sample_ray_origin;
+	float t_max;
+	optix::float3 to, bo;
+	create_onb(no, to, bo);
+	integration_factor = 1.0f;
+
+	switch (bssrdf_sampling_properties->sampling_method)
+	{
+	case BSSRDF_SAMPLING_CAMERA_BASED_MERTENS:
+	{
+		float3 sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
+		sample_ray_dir = normalize(sample_on_tangent_plane - camera_data.eye);
+		sample_ray_origin = camera_data.eye;
+		t_max = RT_DEFAULT_MAX;
+
+		// Correction for camera based sampling. (see http://onlinelibrary.wiley.com/doi/10.1111/j.1467-8659.2005.00827.x/full)
+		float3 d = camera_data.eye - xi;
+		float3 d_prime = camera_data.eye - sample_on_tangent_plane;
+		float cos_alpha_prime = dot(-sample_ray_dir, no);
+		float cos_alpha = dot(-sample_ray_dir, ni);
+		float jacobian = cos_alpha / cos_alpha_prime * dot(d_prime, d_prime) / dot(d, d);
+		//integration_factor = abs(jacobian);
+	}
+		break;
+	case BSSRDF_SAMPLING_NORMAL_BASED_HERY:
+	{
+		float3 sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
+		sample_ray_dir = -no;
+		sample_ray_origin = sample_on_tangent_plane + no * bssrdf_sampling_properties->R_max;
+		t_max = bssrdf_sampling_properties->R_max * 2.0f;
+	}
+	break;
+	case BSSRDF_SAMPLING_MIS_KING:
+	{
+		optix::float3 axes[3] = { no, bo, to };
+		float var = rnd(t);
+		int main_axis = 0;
+		float* mis_weights = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
+
+		if (var > mis_weights[0])
+		{
+			if (var > mis_weights[0]+ mis_weights[1])
+			{
+				// to on top
+				main_axis = 2;
+			}
+			else
+			{
+				// bo on top
+				main_axis = 1;
+			}
+		}
+
+		optix_print("Axis: %d\n", main_axis);
+		float3 top = axes[main_axis];
+		float3 t1 = axes[(main_axis + 1) % 3];
+		float3 t2 = axes[(main_axis + 2) % 3];
+		float3 sample_on_tangent_plane = xo + t1*disc_sample.x + t2*disc_sample.y;
+		sample_ray_origin = sample_on_tangent_plane + top * bssrdf_sampling_properties->R_max;
+		sample_ray_dir = -top;
+		t_max = 2.0f * bssrdf_sampling_properties->R_max;
+		integration_factor /= mis_weights[main_axis];
+	}
+	break;
+	}
+
+	attribute_fetch_ray_payload.depth = t_max;
+	attribute_fetch_ray.tmax = t_max;
+	attribute_fetch_ray.direction = sample_ray_dir;
+	attribute_fetch_ray.origin = sample_ray_origin; // sample_on_tangent_plane + no * 1.0f;
+
+	rtTrace(top_object, attribute_fetch_ray, attribute_fetch_ray_payload);
+	optix_print("Depth ray: %s\n", abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3 ? "Miss" : "Hit");
+
+	if (abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3) // Miss
+		return false;
+
+	xi = attribute_fetch_ray.origin + attribute_fetch_ray_payload.depth * attribute_fetch_ray.direction;
+	ni = attribute_fetch_ray_payload.normal;
+
+	float dist = length(xo - xi);
+	float pdf_disk = chosen_transport_rr * exp(-dist * chosen_transport_rr) / (2.0f* M_PIf);
+	integration_factor *= r / pdf_disk;
+
+	if (bssrdf_sampling_properties->sampling_method == BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
+	{
+		
+
+	}
+	return true;
+}
+
 // Closest hit program for Lambertian shading using the basic light as a directional source
 RT_PROGRAM void shade()
 {
@@ -80,6 +188,7 @@ RT_PROGRAM void shade()
 		recip_ior = props.relative_ior;
 		cos_theta_o = -cos_theta_o;
 	}
+
 	float sin_theta_t_sqr = recip_ior*recip_ior*(1.0f - cos_theta_o*cos_theta_o);
 	float cos_theta_t = 1.0f;
 	float R = 1.0f;
@@ -104,36 +213,19 @@ RT_PROGRAM void shade()
 	float R = fresnel_R(cos_theta_o, recip_ior);
 #endif
 
-	float chosen_transport_rr = props.min_transport;
+	
 	float3 L_d = make_float3(0.0f);
 	uint N = 1;// sampling_output_buffer.size();
 
-	PerRayData_normal_depth attribute_fetch_ray_payload = { make_float3(0.0f), RT_DEFAULT_MAX };
-	optix::Ray attribute_fetch_ray;
-	attribute_fetch_ray.ray_type = RAY_TYPE_ATTRIBUTE;
-	attribute_fetch_ray.tmin = scene_epsilon;
-	attribute_fetch_ray.tmax = RT_DEFAULT_MAX;
-	attribute_fetch_ray.origin = camera_data.eye;
 	int count = 0;
 
 	for (uint i = 0; i < N; i++)
 	{
-		optix::float2 sample = make_float2(rnd(t), rnd(t));
-		float r, phi;
-		optix::float2 disc_sample = sample_disk_exponential(sample, chosen_transport_rr, r, phi);
-		optix::float3 to, bo;
-		create_onb(no, to, bo);
-		optix::float3 sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
-		attribute_fetch_ray.direction = normalize(sample_on_tangent_plane - camera_data.eye);
-		attribute_fetch_ray.origin = camera_data.eye; // sample_on_tangent_plane + no * 1.0f;
-
-		rtTrace(top_object, attribute_fetch_ray, attribute_fetch_ray_payload);
-
-		if (attribute_fetch_ray_payload.depth == RT_DEFAULT_MAX) // Miss
-			continue;
+		float integration_factor;
+		float3 xi, ni;
+		importance_sample_position(xo, no, wo, props, t, xi, ni, integration_factor);
 		// Real hit point
-		optix::float3 xi = attribute_fetch_ray.origin + attribute_fetch_ray_payload.depth * attribute_fetch_ray.direction;
-		optix::float3 ni = attribute_fetch_ray_payload.normal;
+		
 		optix::float3 wi = make_float3(0);
 		optix::float3 L_i;
 		sample_environment(wi, L_i, HitInfo(xi, ni), t); // This returns pre-sampled w_i and L_i
@@ -149,15 +241,9 @@ RT_PROGRAM void shade()
 		// compute contribution if sample is non-zero
 		if (dot(L_i, L_i) > 0.0f)
 		{
-			float3 d = camera_data.eye - xi;
-			float3 d_prime = camera_data.eye - sample_on_tangent_plane;
-			float jacobian = cos_theta_o / cos_theta_i * dot(d_prime, d_prime) / dot(d, d);
 			float3 S_d = bssrdf(xi, ni, w12, xo, no, props);
-			float dist = length(xo - xi);
-			float pdf_disk = chosen_transport_rr * exp(-dist * chosen_transport_rr) / (2.0f* M_PIf);
-			L_d += L_i * S_d * T12 * jacobian * r / pdf_disk;
+			L_d += L_i * S_d * T12 * integration_factor;
 			count++;
-			optix_print("sampled distance %f bssrdf %f %f %f jacobian %f Ld %f %f %f Li %f %f %f pdf\n", dist, S_d.x, S_d.y, S_d.z, jacobian, L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, pdf_disk );
 		}
 	}
 	count = max(1, count);

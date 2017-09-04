@@ -37,6 +37,7 @@
 #include <algorithm>
 #include "optix_utils.h"
 #include "default_shader.h"
+#include <sampled_bssrdf.h>
 
 using namespace std;
 using namespace optix;
@@ -306,7 +307,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
     ShaderFactory::add_shader<DefaultShader>(info);
 
 	ShaderInfo info2 = { "subsurface_scattering_sampled.cu", "Sampled BSSRDF", 14 };
-	ShaderFactory::add_shader<DefaultShader>(info2);
+	ShaderFactory::add_shader<SampledBSSRDF>(info2);
 
     for (auto& kv : MaterialLibrary::media)
 	{

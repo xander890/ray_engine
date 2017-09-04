@@ -19,6 +19,6 @@ public:
 	virtual void remove_from_gui(GUI * gui, const char * group = "") override;
 	virtual Shader* clone() override { return new SampledBSSRDF(*this); }
 
-	std::unique_ptr<BSSRDFSamplingProperties> properties;
+	std::unique_ptr<BSSRDFSamplingProperties> properties = nullptr;
 	optix::Buffer mPropertyBuffer;
 };

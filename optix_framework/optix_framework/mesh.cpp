@@ -178,7 +178,7 @@ void Mesh::set_into_gui(GUI* gui, const char* group)
     std::string nm = mMeshName + "/Rendering Method";
     std::vector<GuiDropdownElement> guiinfo = ShaderFactory::get_gui_info();
     gui->addDropdownMenuCallback(nm.c_str(), guiinfo, setShader, getShader, this, mMeshName.c_str());
-	mShader->set_into_gui(gui, group);
+	mShader->set_into_gui(gui, mMeshName.c_str());
     for (auto& m : mMaterialData)
     {
         m->set_into_gui(gui, mMeshName.c_str());
