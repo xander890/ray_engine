@@ -2,14 +2,13 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
-
-#include "..\structs.h"
-#include "..\sky_model.h"
+#include <device_common_data.h>
+#include <structs.h>
+#include <sky_model.h>
 
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
 // Variables for shading
 rtDeclareVariable(PerezData, perez_model_data, , );

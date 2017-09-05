@@ -69,4 +69,5 @@ private:
 
     static void GUI_CALL setShader(const void* var, void* data);
     static void GUI_CALL getShader(void* var, void* data);
+	GUI * mGui = nullptr;
 };

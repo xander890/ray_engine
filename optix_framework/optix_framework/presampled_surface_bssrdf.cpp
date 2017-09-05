@@ -66,6 +66,8 @@ void PresampledSurfaceBssrdf::load_into_mesh(Mesh& object)
         object.mGeometryInstance["area_cdf"]->setBuffer(cdf_buffer);
     cdf_buffer->unmap();
     delete[] cdf;
+
+	Shader::load_into_mesh(object);
 }
 
 

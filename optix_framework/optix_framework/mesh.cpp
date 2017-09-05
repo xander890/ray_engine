@@ -120,7 +120,13 @@ void Mesh::set_method(RenderingMethodType::EnumType method)
 
 void Mesh::set_shader(int illum)
 {
+	if(mShader != nullptr)
+	{
+		mShader->remove_from_gui(mGui, mMeshName.c_str());
+	}
     mShader = ShaderFactory::get_shader(illum);
+	if(mGui != nullptr)
+		mShader->set_into_gui(mGui, mMeshName.c_str());
 	mReloadShader = true;
 }
 
@@ -175,6 +181,7 @@ void Mesh::add_material(std::shared_ptr<MaterialHost> material)
 
 void Mesh::set_into_gui(GUI* gui, const char* group)
 {
+	mGui = gui;
     std::string nm = mMeshName + "/Rendering Method";
     std::vector<GuiDropdownElement> guiinfo = ShaderFactory::get_gui_info();
     gui->addDropdownMenuCallback(nm.c_str(), guiinfo, setShader, getShader, this, mMeshName.c_str());
