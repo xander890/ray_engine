@@ -89,28 +89,10 @@ RT_PROGRAM void sample_camera()
     uint lights = light_size();
     uint light_idx = (lights + 1)*rnd(t);
 
-    if (light_idx == lights)
-    {
-        for (int j = 0; j < N; j++)
-        {
-            sample_environment(light_vector, light_radiance, HitInfo(sample.pos, sample.normal), t);
-            float cos_theta = dot(light_vector, sample.normal);
-            if (cos_theta <= 0.0) continue;
-            Le += light_radiance;
-        }
-        Le /= static_cast<float>(N);
-    }
-    else
-    {
-        for (int j = 0; j < N; j++)
-        {
-            evaluate_direct_light(sample.pos, sample.normal, light_vector, light_radiance, cast_shadows, t, light_idx);
-            Le += light_radiance;
-        }
 
-        Le /= static_cast<float>(N);
-    }
-        
+    sample_environment(light_vector, light_radiance, HitInfo(sample.pos, sample.normal), t);
+    float cos_theta = dot(light_vector, sample.normal);
+    Le += light_radiance;        
     sample.dir = light_vector;
 
     // Compute transmitted radiance
