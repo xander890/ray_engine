@@ -75,8 +75,8 @@ __inline__ __device__ float3 sample_procedural_tex(float3 & position_local)
 
 __inline__ __device__ float3 get_k_d()
 {
-    const MaterialDataCommon & material = get_material();
-    float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
+    MaterialDataCommon material = get_material();
+	float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
 	return k_d;
 }
 
@@ -137,8 +137,8 @@ RT_PROGRAM void shade()
 RT_PROGRAM void shade_path_tracing()
 {
 	const MaterialDataCommon & material = get_material();
-	optix_print("Lambertian Hit\n");
 	float3 k_d = get_k_d();
+	optix_print("Lambertian Hit Kd = %f %f %f\n", k_d.x, k_d.y, k_d.z);
 	float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	//float3 ffnormal = faceforward(normal, -ray.direction, normal);
 	float3 hit_pos = ray.origin + t_hit * ray.direction;
@@ -193,7 +193,6 @@ RT_PROGRAM void shade_path_tracing()
 			float xi2 = rnd(t);
 			float3 hemi_vec = sample_hemisphere_cosine(make_float2(xi1, xi2), normal);
 			PerRayData_radiance prd = prepare_new_pt_payload(prd_radiance);
-			prd.flags = prd_radiance.flags;
 			prd.seed = t;
 			prd.colorband = prd_radiance.colorband;
 			
@@ -207,6 +206,7 @@ RT_PROGRAM void shade_path_tracing()
 	
 		optix_print("Lambertian (Bounce: %d) Env: %f %f %f, Dir: %f %f %f, Ind: %f %f %f\n", prd_radiance.depth, env.x, env.y, env.z, direct.x, direct.y, direct.z, indirect.x, indirect.y, indirect.z);
 		prd_radiance.result = emission + k_d * M_1_PIf * (env + indirect + direct);
+		optix_print("Res: %f %f %f \n", prd_radiance.result.x, prd_radiance.result.y, prd_radiance.result.z);
 	}
 	else
 	{

@@ -215,7 +215,6 @@ RT_PROGRAM void shade_path_tracing()
 		for (int j = 0; j < N; j++)
 		{
 			float3 wi, L; //int sh;
-			//evaluate_environment_light(wi, L, sh, data, t);
 			sample_environment(wi, L, data, t);
 			float cos_theta = dot(wi, brdf_normal);
 			if (cos_theta <= 0.0) continue;

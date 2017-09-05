@@ -81,7 +81,6 @@ void Mesh::load_geometry()
     mGeometry["nindex_buffer"]->setBuffer(mMeshData.mNIbuffer);
     mGeometry["texcoord_buffer"]->setBuffer(mMeshData.mTBuffer);
     mGeometry["tindex_buffer"]->setBuffer(mMeshData.mTIbuffer);
-    mGeometry["material_buffer"]->setBuffer(mMeshData.mMatBuffer);
     mGeometry["num_triangles"]->setUint(mMeshData.mNumTriangles);
     mGeometryInstance["num_triangles"]->setUint(mMeshData.mNumTriangles);
     initialize_buffer<optix::Aabb>(mBBoxBuffer, mMeshData.mBoundingBox);

@@ -151,6 +151,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	return true;
 }
 
+
 // Closest hit program for Lambertian shading using the basic light as a directional source
 RT_PROGRAM void shade()
 {
@@ -227,7 +228,7 @@ RT_PROGRAM void shade()
 		
 		optix::float3 wi = make_float3(0);
 		optix::float3 L_i;
-		sample_environment(wi, L_i, HitInfo(xi, ni), t); // This returns pre-sampled w_i and L_i
+		sample_light(xi, ni, 0, t, wi, L_i); // This returns pre-sampled w_i and L_i
 
 		// compute direction of the transmitted light
 		float cos_theta_i = max(dot(wi, ni), 0.0f);

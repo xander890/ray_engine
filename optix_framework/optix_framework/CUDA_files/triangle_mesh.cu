@@ -32,7 +32,6 @@ using namespace optix;
 // with an interleaved position, normal, texturecoordinate layout.
 
 
-rtBuffer<uint>   material_buffer; // per-face material index
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); 
@@ -78,7 +77,7 @@ RT_PROGRAM void mesh_intersect( int primIdx )
 	
       }
 
-      rtReportIntersection(material_buffer[primIdx]);
+      rtReportIntersection(0);
     }
   }
 }

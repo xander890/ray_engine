@@ -5,7 +5,7 @@
 #include <mesh.h>
 using namespace optix;
 
-const unsigned int SAMPLES_FRAME = 100;
+const unsigned int SAMPLES_FRAME = 1000;
 
 
 class PresampledSurfaceBssrdf : public Shader 

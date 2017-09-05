@@ -90,7 +90,8 @@ RT_PROGRAM void sample_camera()
     uint light_idx = (lights + 1)*rnd(t);
 
 
-    sample_environment(light_vector, light_radiance, HitInfo(sample.pos, sample.normal), t);
+	sample_light(sample.pos, sample.normal, 0, t, light_vector, light_radiance);
+
     float cos_theta = dot(light_vector, sample.normal);
     Le += light_radiance;        
     sample.dir = light_vector;

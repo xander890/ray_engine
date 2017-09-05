@@ -43,13 +43,13 @@
       </light>
 
     <camera>
-  <property comment="Use a automatic placed camera or use the current data." key="use_auto_camera" value="true"/>
+  <property comment="Use a automatic placed camera or use the current data." key="use_auto_camera" value="false"/>
   <property comment="The camera FOVs (h|v)" key="camera_fov" value="42.2001004137 34.3290716095"/>
-  <property comment="The camera initial position" key="camera_position" value="0.061138 2.59121 -3.63106"/>
+  <property comment="The camera initial position" key="camera_position" value="5 0 0"/>
   <property comment="Type of the camera." key="camera_definition_type" value="EYE_LOOKAT_UP_VECTORS"/>
   <property key="light_types" value=" INVERSE_CAMERA_MATRIX EYE_LOOKAT_UP_VECTORS"/>
   <property comment="The camera inverse calibration matrix K^-1 * R^-1" key="inv_camera_matrix" value="0.3761038637 0.0570914410 0.1258195312 0.0578536310 -0.2958081234 0.2457522696 -0.0639815863 0.0681248745 0.9611322977"/>
-  <property comment="The camera lookat point" key="camera_lookat_point" value="-2.89084 0.949608 1.44402 "/>
+  <property comment="The camera lookat point" key="camera_lookat_point" value="0 0 0 "/>
   <property comment="The camera initial up" key="camera_up" value="0 1 0"/>
   <property comment="The width of the window" key="window_width" value="1024"/>
   <property comment="The height of the window" key="window_height" value="1024"/>

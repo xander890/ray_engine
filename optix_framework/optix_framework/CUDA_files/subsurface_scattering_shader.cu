@@ -74,6 +74,7 @@ RT_PROGRAM void shade()
         recip_ior = props.relative_ior;
         cos_theta_o = -cos_theta_o;
     }
+
     float sin_theta_t_sqr = recip_ior*recip_ior*(1.0f - cos_theta_o*cos_theta_o);
     float cos_theta_t = 1.0f;
     float R = 1.0f;
