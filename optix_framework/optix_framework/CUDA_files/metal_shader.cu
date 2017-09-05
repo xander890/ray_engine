@@ -7,6 +7,7 @@
 #include <optical_helper.h>
 #include <material_device.h>
 #include <environment_map.h>
+#include <ray_trace_helpers.h>
 
 using namespace optix;
 
@@ -38,12 +39,10 @@ RT_PROGRAM void shade()
     if(prd_radiance.depth < max_depth)
     {
         float3 R = fresnel_complex_R(-ray.direction, ffnormal, get_material().ior_complex_real_sq, get_material().ior_complex_imag_sq);
-        PerRayData_radiance prd_new;
-        prd_new.depth = prd_radiance.depth + 1;
-        prd_new.colorband = prd_radiance.colorband;
-        prd_new.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-        float3 new_dir = reflect(ray.direction, ffnormal);
-        optix::Ray new_ray(hit_pos, new_dir, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+        PerRayData_radiance prd_new = prepare_new_pt_payload(prd_radiance);
+		float3 new_dir = reflect(ray.direction, ffnormal);
+
+		optix::Ray new_ray(hit_pos, new_dir, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
         rtTrace(top_object, new_ray, prd_new);
         prd_radiance.result = R * prd_new.result;
     }

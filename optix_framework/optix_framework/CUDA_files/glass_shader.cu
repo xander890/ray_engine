@@ -48,76 +48,24 @@ RT_PROGRAM void shade()
 		float3 hit_pos = ray.origin + t_hit * ray.direction;
 
 
-		PerRayData_radiance prd_refract;
-		prd_refract.depth = prd_radiance.depth + 1;
-		prd_refract.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-		prd_refract.colorband = prd_radiance.colorband;
+		PerRayData_radiance prd_refract = prepare_new_pt_payload(prd_radiance);
 
-		PerRayData_radiance prd_refl;
-		prd_refl.depth = prd_radiance.depth + 1;
-		prd_refl.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-		prd_refl.colorband = prd_radiance.colorband;
+		PerRayData_radiance prd_refl = prepare_new_pt_payload(prd_radiance);
 
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
 		get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		rtTrace(top_object, reflected_ray, prd_refl);
+		prd_refract.seed = prd_refl.seed;
+
 		color += R * prd_refl.result;
 		rtTrace(top_object, refracted_ray, prd_refract);
 		color += (1-R) * prd_refract.result;
+		prd_radiance.seed = prd_refract.seed;
 		
 	}
 	prd_radiance.result = color; 
-}
-
-RT_PROGRAM void shade_rr(void)
-{
-	float3 hit_pos = ray.origin + t_hit * ray.direction;
-	float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
-	float3 ffnormal = faceforward(normal, -ray.direction, normal);
-	float3 color = make_float3(0.0f);
-    const MaterialDataCommon & material = get_material();
-
-	if (prd_radiance.depth < max_depth)
-	{
-	    PerRayData_radiance prd_refract;
-		PerRayData_radiance prd_refl;
-
-		Ray reflected_ray, refracted_ray;
-		float R, cos_theta;
-		get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
-
-		uint t = prd_radiance.seed;
-		float random = rnd(t);
-		bool split = prd_radiance.depth < max_splits;
-		if (split || random <= R)
-		{
-			prd_refl.depth = prd_radiance.depth + 1;
-			prd_refl.colorband = prd_radiance.colorband;
-			prd_refl.seed = t;
-			prd_refl.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-			rtTrace(top_object, reflected_ray, prd_refl);
-			R = split ? R : 1;
-			color += R * prd_refl.result;
-			prd_radiance.seed = prd_refl.seed;
-		}
-		
-		if (split || random > R)
-		{
-			prd_refract.seed = t;
-			prd_refract.depth = prd_radiance.depth + 1;
-			prd_refract.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-			prd_refract.colorband = prd_radiance.colorband;
-			rtTrace(top_object, refracted_ray, prd_refract);
-			R = split ? R : 0;
-			color += (1-R) * prd_refract.result;
-			prd_radiance.seed = prd_refract.seed;
-		}
-	}
-
-	prd_radiance.result = color;
-	
 }
 
 RT_PROGRAM void shade_path_tracing(void)
@@ -130,17 +78,11 @@ RT_PROGRAM void shade_path_tracing(void)
     float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
     float3 hit_pos = ray.origin + t_hit*ray.direction;
     hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
-    uint t = prd_radiance.seed;
 
-    PerRayData_radiance prd_new_ray;
-    prd_new_ray.depth = prd_radiance.depth + 1;
-    prd_new_ray.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-	prd_new_ray.colorband = prd_radiance.colorband;
-
+	PerRayData_radiance prd_new_ray = prepare_new_pt_payload(prd_radiance);
     Ray reflected_ray, refracted_ray;
     float R, cos_theta;
     get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
-
 
 	// Russian roulette with absorption if inside
 	float3 beam_T = make_float3(1.0f);
@@ -148,7 +90,7 @@ RT_PROGRAM void shade_path_tracing(void)
 	{
 		beam_T = expf(-t_hit*material.absorption);
 		float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
-		if (rnd(t) >= prob)
+		if (rnd(prd_new_ray.seed) >= prob)
 		{
 			prd_radiance.result = make_float3(0);
 			return;
@@ -156,27 +98,10 @@ RT_PROGRAM void shade_path_tracing(void)
 		beam_T /= max(10e-6,prob);
 	}
 
-    if(prd_radiance.depth < max_splits)
-    {
-      prd_new_ray.seed = t;
-      rtTrace(top_object, reflected_ray, prd_new_ray);
-      color = R*prd_new_ray.result;
-      prd_new_ray.depth = prd_radiance.depth + 1;
-	  prd_new_ray.colorband = prd_radiance.colorband;
-      prd_new_ray.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-      rtTrace(top_object, refracted_ray, prd_new_ray);
-      color += (1.0f - R)*prd_new_ray.result;
-    }
-    else
-    {
-      float xi = rnd(t);
-      prd_new_ray.seed = t;
-	  optix::Ray & ray = (xi < R) ? reflected_ray : refracted_ray;
-	  rtTrace(top_object, ray, prd_new_ray);
-	  color = prd_new_ray.result;
-
-	}
-    
+    float xi = rnd(prd_new_ray.seed);
+	optix::Ray & ray = (xi < R) ? reflected_ray : refracted_ray;
+	rtTrace(top_object, ray, prd_new_ray);
+	color = prd_new_ray.result;    
 	color *= beam_T;
     prd_radiance.seed = prd_new_ray.seed;
 

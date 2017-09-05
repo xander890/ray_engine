@@ -3,6 +3,40 @@
 #include "random.h"
 #include "sampling_helpers.h"
 #include "optical_helper.h"
+#include "structs.h"
+
+__inline__ __device__ PerRayData_radiance get_empty()
+{
+	PerRayData_radiance r;
+	r.colorband = -1;
+	r.result = make_float3(0.0f);
+	r.flags = 0;
+	r.seed = 0;
+	r.depth = 0;
+	return r;
+}
+
+__inline__ __device__ PerRayData_radiance init_copy(PerRayData_radiance & to_copy)
+{
+	PerRayData_radiance r;
+	r.colorband = to_copy.colorband;
+	r.result = to_copy.result;
+	r.flags = to_copy.flags;
+	r.seed = to_copy.seed;
+	r.depth = to_copy.depth;
+	return r;
+}
+
+__inline__ __device__ PerRayData_radiance prepare_new_pt_payload(PerRayData_radiance & to_copy)
+{
+	PerRayData_radiance r;
+	r.colorband = to_copy.colorband;
+	r.result = make_float3(0);
+	r.flags = to_copy.flags | RayFlags::USE_EMISSION;
+	r.seed = to_copy.seed;
+	r.depth = to_copy.depth + 1;
+	return r;
+}
 
 
 __inline__ __device__ float trace_shadow_ray(const optix::float3 & hit_pos, const optix::float3 & direction, float tmin, float tmax, optix::float3 & emission)

@@ -198,10 +198,12 @@ RT_PROGRAM void shade()
 	if (reflect_xi >= R)
 	{
 		float3 wt = recip_ior*(cos_theta_o*no - wo) - no*cos_theta_t;
-		PerRayData_radiance prd_refracted;
-		prd_refracted.depth = prd_radiance.depth + 1;
+		PerRayData_radiance prd_refracted = prepare_new_pt_payload(prd_radiance);
+
 		Ray refracted(xo, wt, RAY_TYPE_RADIANCE, scene_epsilon);
 		rtTrace(top_object, refracted, prd_refracted);
+
+		prd_radiance.seed = prd_refracted.seed;
 		prd_radiance.result += prd_refracted.result*beam_T;
 
 		if (!inside)
@@ -211,7 +213,6 @@ RT_PROGRAM void shade()
 	float R = fresnel_R(cos_theta_o, recip_ior);
 #endif
 
-	
 	float3 L_d = make_float3(0.0f);
 	uint N = 1;// sampling_output_buffer.size();
 
@@ -241,12 +242,10 @@ RT_PROGRAM void shade()
 		{
 			float3 S_d = bssrdf(xi, ni, w12, xo, no, props);
 			L_d += L_i * S_d * T12 * integration_factor;
-			count++;
 		}
 	}
-	count = max(1, count);
 #ifdef TRANSMIT
-	prd_radiance.result += L_d / (float)count;
+		prd_radiance.result += L_d / (float)N;
 		}
 	}
 #else
@@ -258,10 +257,11 @@ RT_PROGRAM void shade()
 	if (reflect_xi < R)
 	{
 		float3 wr = 2.0f*cos_theta_o*no - wo;
-		PerRayData_radiance prd_reflected;
-		prd_reflected.depth = prd_radiance.depth + 1;
+		PerRayData_radiance prd_reflected = prepare_new_pt_payload(prd_radiance);
 		Ray reflected(xo, wr, RAY_TYPE_RADIANCE, scene_epsilon);
 		rtTrace(top_object, reflected, prd_reflected);
+
+		prd_radiance.seed = prd_reflected.seed;
 		prd_radiance.result += prd_reflected.result;
 	}
 #endif

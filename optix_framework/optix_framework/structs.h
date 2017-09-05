@@ -42,7 +42,6 @@ namespace RayFlags
 struct PerRayData_radiance
 {
   optix::float3 result;
-  float importance;
   unsigned int depth;
   int colorband;
   unsigned int seed;

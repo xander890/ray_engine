@@ -190,9 +190,10 @@ RT_PROGRAM void shade_path_tracing()
 	hit_pos = ray.origin + t_hit * ray.direction;
 	hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
 
+	uint& t = prd_radiance.seed;
+
 	if (prd_radiance.depth < max_depth)
 	{
-		uint t = prd_radiance.seed;
 		HitInfo data(hit_pos, brdf_normal);
 
 		// Direct illumination
@@ -242,7 +243,6 @@ RT_PROGRAM void shade_path_tracing()
 		{
 			PerRayData_radiance prd = prd_radiance;
 			prd.depth = prd_radiance.depth + 1;
-			prd.flags = prd_radiance.flags;
 			prd.seed = t;
 			float xi1 = rnd(t);
 			float xi2 = rnd(t);
@@ -253,8 +253,6 @@ RT_PROGRAM void shade_path_tracing()
 			indirect = prd.result * f_d / max(1e-6,prob); //Cosine cancels out
 			prd_radiance.seed = prd.seed;
 		}
-		else
-			prd_radiance.seed = t;
 
 		prd_radiance.result = emission + direct + env + indirect;
 		optix_print("Glossy (Bounce: %d) Env: %f %f %f, Dir: %f %f %f, Ind: %f %f %f\n", prd_radiance.depth, env.x, env.y, env.z, direct.x, direct.y, direct.z, indirect.x, indirect.y, indirect.z);

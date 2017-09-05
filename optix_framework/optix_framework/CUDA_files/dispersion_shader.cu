@@ -72,16 +72,8 @@ RT_PROGRAM void shade()
 		float3 hit_pos = ray.origin + t_hit * ray.direction;
 
 
-		PerRayData_radiance prd_refract;
-		prd_refract.depth = prd_radiance.depth + 1;
-		prd_refract.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-		prd_refract.colorband = prd_radiance.colorband;
-
-		PerRayData_radiance prd_refl;
-		prd_refl.depth = prd_radiance.depth + 1;
-		prd_refl.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-
-		prd_refl.colorband = prd_radiance.colorband;
+		PerRayData_radiance prd_refract = prepare_new_pt_payload(prd_radiance);
+		PerRayData_radiance prd_refl = prepare_new_pt_payload(prd_radiance);
 
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
@@ -89,9 +81,10 @@ RT_PROGRAM void shade()
 
 		rtTrace(top_object, reflected_ray, prd_refl);
 		color += R * prd_refl.result;
+		prd_refract.seed = prd_refl.seed;
 		rtTrace(top_object, refracted_ray, prd_refract);
 		color += (1 - R) * prd_refract.result;
-
+		prd_radiance.seed = prd_refract.seed;
 	}
 	prd_radiance.result = color;
 }
@@ -113,9 +106,7 @@ RT_PROGRAM void shade_path_tracing(void)
 		hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
 		uint t = prd_radiance.seed;
 
-		PerRayData_radiance prd_new_ray;
-		prd_new_ray.depth = prd_radiance.depth + 1;
-		prd_new_ray.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
+		PerRayData_radiance prd_new_ray = prepare_new_pt_payload(prd_radiance);
 
 		float3 spectral_color = make_float3(0.0f);
 		float w = 0.0f;

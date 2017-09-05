@@ -41,9 +41,9 @@ __forceinline__ __device__ void trace(const Ray& ray, PerRayData_radiance & prd)
 	}
 }
 
-__forceinline__ __device__ void init_payload(PerRayData_radiance & prd)
+__forceinline__ __device__ PerRayData_radiance get_starting_payload()
 {
-	prd.importance = 1.0f;
+	PerRayData_radiance prd;
 	prd.depth = 0;
 	prd.seed = tea<16>(launch_dim.x*launch_index.y + launch_index.x, frame);
 	prd.flags = 0;
@@ -51,6 +51,7 @@ __forceinline__ __device__ void init_payload(PerRayData_radiance & prd)
 	prd.flags |= RayFlags::USE_EMISSION;
 	prd.colorband = -1;
 	prd.result = make_float3(0);
+	return prd;
 }
 
 RT_PROGRAM void pinhole_camera()
@@ -58,8 +59,7 @@ RT_PROGRAM void pinhole_camera()
     optix_print("Frame %d!\n", frame);
 	if (check_bounds())
 	{
-		PerRayData_radiance prd;
-		init_payload(prd);
+		PerRayData_radiance prd = get_starting_payload();
 		float2 jitter = make_float2(rnd(prd.seed), rnd(prd.seed)) * camera_data.downsampling;
 		uint2 real_pixel = launch_index * camera_data.downsampling + make_uint2(camera_data.rendering_rectangle.x, camera_data.rendering_rectangle.y);
 		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(camera_data.camera_size) * 2.0f - 1.0f;
@@ -86,8 +86,7 @@ RT_PROGRAM void pinhole_camera_w_matrix()
 {
 	if (check_bounds())
 	{
-		PerRayData_radiance prd;
-		init_payload(prd);
+		PerRayData_radiance prd = get_starting_payload();
 		float2 jitter = make_float2(rnd(prd.seed), rnd(prd.seed))* camera_data.downsampling;
 		uint2 real_pixel = launch_index * camera_data.downsampling + make_uint2(camera_data.rendering_rectangle.x, camera_data.rendering_rectangle.y);
 		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(camera_data.camera_size) * 2.0f - 1.0f;

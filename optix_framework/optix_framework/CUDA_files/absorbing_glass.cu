@@ -47,11 +47,10 @@ __forceinline__ __device__ void absorbing_glass()
 		
 		if (xi < R)
 		{
-			PerRayData_radiance prd_new;
-			prd_new.depth = prd_radiance.depth + 1;
-			prd_new.colorband = prd_radiance.colorband;
-			prd_new.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
-			prd_new.seed = prd_radiance.seed;
+			PerRayData_radiance prd_new = init_copy(prd_radiance);
+			prd_new.depth += 1;
+			prd_new.flags |= RayFlags::USE_EMISSION;
+			prd_new.result = make_float3(0);
 			rtTrace(top_object, reflected_ray, prd_new);
 			prd_radiance.seed = prd_new.seed;
 			prd_radiance.result = prd_new.result;

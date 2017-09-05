@@ -136,17 +136,16 @@ RT_PROGRAM void shade()
 
 RT_PROGRAM void shade_path_tracing()
 {
-    const MaterialDataCommon & material = get_material();
-	PerRayData_radiance& radiance = prd_radiance;
+	const MaterialDataCommon & material = get_material();
 	optix_print("Lambertian Hit\n");
 	float3 k_d = get_k_d();
-   float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
-   //float3 ffnormal = faceforward(normal, -ray.direction, normal);
-   float3 hit_pos = ray.origin + t_hit * ray.direction;
+	float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
+	//float3 ffnormal = faceforward(normal, -ray.direction, normal);
+	float3 hit_pos = ray.origin + t_hit * ray.direction;
+	uint& t = prd_radiance.seed;
 
-	if (radiance.depth < max_depth)
+	if (prd_radiance.depth < max_depth)
 	{
-		uint t = radiance.seed;
 		const HitInfo data(hit_pos, normal);
 		// Direct illumination
 		float3 direct = make_float3(0.0f); 
@@ -174,18 +173,18 @@ RT_PROGRAM void shade_path_tracing()
 		env /= static_cast<float>(N);
 
 		float3 emission = make_float3(0.0f);
-		if (radiance.flags & RayFlags::USE_EMISSION)
+		if (prd_radiance.flags & RayFlags::USE_EMISSION)
 		{
 			// Only the first hit uses emission
-			radiance.flags &= ~(RayFlags::USE_EMISSION); //Unset use emission
-            emission += make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
+			prd_radiance.flags &= ~(RayFlags::USE_EMISSION); //Unset use emission
+            emission += make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
 			//if (radiance.depth > 0 && emission.x > 0)
 			//	optix_print("Emission requested. Path depth %d. Emission %f %f %f", radiance.depth, emission.x, emission.y, emission.z);
 		}
 
 		// Indirect illumination
 		float prob = dot(k_d, make_float3(0.33333f));
-		radiance.flags |= RayFlags::HIT_DIFFUSE_SURFACE;
+		prd_radiance.flags |= RayFlags::HIT_DIFFUSE_SURFACE;
 		float3 indirect = make_float3(0.0f);
 		float random = rnd(t);
 	    if(random < prob)
@@ -193,29 +192,25 @@ RT_PROGRAM void shade_path_tracing()
 			float xi1 = rnd(t);
 			float xi2 = rnd(t);
 			float3 hemi_vec = sample_hemisphere_cosine(make_float2(xi1, xi2), normal);
-			PerRayData_radiance prd;
-			prd.depth = radiance.depth + 1;
-			prd.flags = radiance.flags;
+			PerRayData_radiance prd = prepare_new_pt_payload(prd_radiance);
+			prd.flags = prd_radiance.flags;
 			prd.seed = t;
-			prd.colorband = radiance.colorband;
-
+			prd.colorband = prd_radiance.colorband;
+			
 			optix::Ray ray = optix::make_Ray(hit_pos, hemi_vec, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 
 			rtTrace(top_object, ray, prd);
 			indirect = prd.result / prob * M_PIf; // Cosine cancels out
-			radiance.seed = prd.seed;
-			radiance.colorband = prd.colorband;
-
-    }
-    else
-      radiance.seed = t;
+			prd_radiance.seed = prd.seed;
+			prd_radiance.colorband = prd.colorband;
+		}
 	
-		optix_print("Lambertian (Bounce: %d) Env: %f %f %f, Dir: %f %f %f, Ind: %f %f %f\n", radiance.depth, env.x, env.y, env.z, direct.x, direct.y, direct.z, indirect.x, indirect.y, indirect.z);
-	radiance.result = emission + k_d * M_1_PIf * (env + indirect + direct);
+		optix_print("Lambertian (Bounce: %d) Env: %f %f %f, Dir: %f %f %f, Ind: %f %f %f\n", prd_radiance.depth, env.x, env.y, env.z, direct.x, direct.y, direct.z, indirect.x, indirect.y, indirect.z);
+		prd_radiance.result = emission + k_d * M_1_PIf * (env + indirect + direct);
 	}
 	else
 	{
-	  radiance.result = make_float3(0.0f);
+	  prd_radiance.result = make_float3(0.0f);
 	}
 
 }

@@ -57,7 +57,7 @@ RT_PROGRAM void shade()
     const MaterialDataCommon & material = get_material(xo);
     const ScatteringMaterialProperties& props = material.scattering_properties;
     float recip_ior = 1.0f / props.relative_ior;
-    uint& t = prd_radiance.seed;
+    uint t = prd_radiance.seed;
     float reflect_xi = rnd(t);
     prd_radiance.result = make_float3(0.0f);
 
@@ -82,14 +82,18 @@ RT_PROGRAM void shade()
         cos_theta_t = sqrtf(1.0f - sin_theta_t_sqr);
         R = fresnel_R(cos_theta_o, cos_theta_t, recip_ior);
     }
+
     if (reflect_xi >= R)
     {
-        float3 wt = recip_ior*(cos_theta_o*no - wo) - no*cos_theta_t;
-        PerRayData_radiance prd_refracted;
-        prd_refracted.depth = prd_radiance.depth + 1;
-        Ray refracted(xo, wt, RAY_TYPE_RADIANCE, scene_epsilon);
-        rtTrace(top_object, refracted, prd_refracted);
-        prd_radiance.result += prd_refracted.result*beam_T;
+		float3 wt = recip_ior*(cos_theta_o*no - wo) - no*cos_theta_t;
+		PerRayData_radiance prd_refracted = prepare_new_pt_payload(prd_radiance);
+		prd_refracted.seed = t;
+
+		Ray refracted(xo, wt, RAY_TYPE_RADIANCE, scene_epsilon);
+		rtTrace(top_object, refracted, prd_refracted);
+
+		t = prd_refracted.seed;
+		prd_radiance.result += prd_refracted.result*beam_T;
 
         if (!inside)
         {
@@ -140,11 +144,15 @@ RT_PROGRAM void shade()
     if (reflect_xi < R)
     {
         float3 wr = 2.0f*cos_theta_o*no - wo;
-        PerRayData_radiance prd_reflected;
-        prd_reflected.depth = prd_radiance.depth + 1;
-        Ray reflected(xo, wr, RAY_TYPE_RADIANCE, scene_epsilon);
+        PerRayData_radiance prd_reflected = prepare_new_pt_payload(prd_radiance);
+		prd_reflected.seed = t;
+		Ray reflected(xo, wr, RAY_TYPE_RADIANCE, scene_epsilon);
         rtTrace(top_object, reflected, prd_reflected);
+
+		
+		t = prd_reflected.seed;
         prd_radiance.result += prd_reflected.result;
     }
+	prd_radiance.seed = t;
 #endif
 }
