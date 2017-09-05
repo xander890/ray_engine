@@ -6,6 +6,8 @@
 #include <color_helpers.h>
 #include <environment_map.h>
 
+using optix::float3;
+
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );

@@ -66,31 +66,24 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	optix::float3 to, bo;
 	create_onb(no, to, bo);
 	integration_factor = 1.0f;
+	float3 sample_on_tangent_plane;
 
 	switch (bssrdf_sampling_properties->sampling_method)
 	{
 	case BSSRDF_SAMPLING_CAMERA_BASED_MERTENS:
 	{
-		float3 sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
+		sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
 		sample_ray_dir = normalize(sample_on_tangent_plane - camera_data.eye);
 		sample_ray_origin = camera_data.eye;
 		t_max = RT_DEFAULT_MAX;
-
-		// Correction for camera based sampling. (see http://onlinelibrary.wiley.com/doi/10.1111/j.1467-8659.2005.00827.x/full)
-		float3 d = camera_data.eye - xi;
-		float3 d_prime = camera_data.eye - sample_on_tangent_plane;
-		float cos_alpha_prime = dot(-sample_ray_dir, no);
-		float cos_alpha = dot(-sample_ray_dir, ni);
-		float jacobian = cos_alpha / cos_alpha_prime * dot(d_prime, d_prime) / dot(d, d);
-		//integration_factor = abs(jacobian);
 	}
 		break;
 	case BSSRDF_SAMPLING_NORMAL_BASED_HERY:
 	{
-		float3 sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
+		sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
 		sample_ray_dir = -no;
 		sample_ray_origin = sample_on_tangent_plane + no * bssrdf_sampling_properties->R_max;
-		t_max = bssrdf_sampling_properties->R_max * 2.0f;
+		t_max = RT_DEFAULT_MAX; //bssrdf_sampling_properties->R_max * 2.0f;
 	}
 	break;
 	case BSSRDF_SAMPLING_MIS_KING:
@@ -118,10 +111,10 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 		float3 top = axes[main_axis];
 		float3 t1 = axes[(main_axis + 1) % 3];
 		float3 t2 = axes[(main_axis + 2) % 3];
-		float3 sample_on_tangent_plane = xo + t1*disc_sample.x + t2*disc_sample.y;
+		sample_on_tangent_plane = xo + t1*disc_sample.x + t2*disc_sample.y;
 		sample_ray_origin = sample_on_tangent_plane + top * bssrdf_sampling_properties->R_max;
 		sample_ray_dir = -top;
-		t_max = 2.0f * bssrdf_sampling_properties->R_max;
+		t_max = RT_DEFAULT_MAX; //2.0f * bssrdf_sampling_properties->R_max;
 		integration_factor /= mis_weights[main_axis];
 	}
 	break;
@@ -145,10 +138,15 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	float pdf_disk = chosen_transport_rr * exp(-dist * chosen_transport_rr) / (2.0f* M_PIf);
 	integration_factor *= r / pdf_disk;
 
-	if (bssrdf_sampling_properties->sampling_method == BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
+	if (bssrdf_sampling_properties->sampling_method == BSSRDF_SAMPLING_CAMERA_BASED_MERTENS
+		&& bssrdf_sampling_properties->correct_camera == 1)
 	{
-		
-
+		float3 d = camera_data.eye - xi;
+		float3 d_prime = camera_data.eye - sample_on_tangent_plane;
+		float cos_alpha_prime = dot(-sample_ray_dir, no);
+		float cos_alpha = dot(-sample_ray_dir, ni);
+		float jacobian = cos_alpha / cos_alpha_prime * dot(d_prime, d_prime) / dot(d, d);
+		integration_factor *= jacobian;
 	}
 	return true;
 }
