@@ -943,6 +943,7 @@ void GLUTDisplay::display()
     sutilReportError( e.getErrorString().c_str() );
     exit(2);
   }
+  m_scene->postDrawCallBack();
 
   // Do not draw text on 1st frame -- issue on linux causes problems with 
   // glDrawPixels call if drawText glutBitmapCharacter is called on first frame.
@@ -1027,7 +1028,6 @@ void GLUTDisplay::display()
     }
   }
 
-  m_scene->postDrawCallBack();
   if ( display_requested && m_display_frames ) {
     nvtx::ScopedRange r( "glutSwapBuffers" );
     // Swap buffers

@@ -193,6 +193,21 @@
     <ClCompile Include="sampled_bssrdf.cpp">
       <Filter>Source Files\Shaders</Filter>
     </ClCompile>
+    <ClCompile Include="immediate_gui.cpp">
+      <Filter>Source Files\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui.cpp">
+      <Filter>Source Files\GUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_demo.cpp">
+      <Filter>Source Files\GUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_draw.cpp">
+      <Filter>Source Files\GUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_glut.cpp">
+      <Filter>Source Files\GUI\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -406,6 +421,30 @@
     <ClInclude Include="bssrdf_sampling_properties.h">
       <Filter>Header Files\HostDeviceStructs</Filter>
     </ClInclude>
+    <ClInclude Include="immediate_gui.h">
+      <Filter>Header Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imconfig.h">
+      <Filter>Header Files\GUI\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_glut.h">
+      <Filter>Header Files\GUI\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui.h">
+      <Filter>Header Files\GUI\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_internal.h">
+      <Filter>Header Files\GUI\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\stb_rect_pack.h">
+      <Filter>Header Files\GUI\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\stb_textedit.h">
+      <Filter>Header Files\GUI\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\stb_truetype.h">
+      <Filter>Header Files\GUI\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">
@@ -509,6 +548,18 @@
     </Filter>
     <Filter Include="Source Files\Noise">
       <UniqueIdentifier>{4f0e5784-dadf-4084-aacc-fcc8572cf0af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GUI">
+      <UniqueIdentifier>{a5266ddb-16f8-4945-adbd-fd5ad47d0d0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GUI">
+      <UniqueIdentifier>{cc6fb9b0-29b8-4346-a62f-8ed6b4560b16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GUI\imgui">
+      <UniqueIdentifier>{3a370804-9a03-4c49-87ae-d9a7fef6332c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GUI\imgui">
+      <UniqueIdentifier>{660f06d2-4ec3-41ca-be30-24ecd9ce6105}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

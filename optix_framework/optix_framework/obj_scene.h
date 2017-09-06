@@ -16,6 +16,7 @@
 #include "area_light.h"
 #include "mesh.h"
 #include "enums.h"
+#include "immediate_gui.h"
 
 //#define IOR_EST
 
@@ -86,9 +87,6 @@ public:
 		trace(camera_data, display);
 	}
 
-	void start_simulation();
-	void end_simulation();
-
 	void collect_image(unsigned int frame);
 	virtual bool keyPressed(unsigned char key, int x, int y) override;
 	virtual optix::Buffer getOutputBuffer() override;
@@ -156,6 +154,7 @@ private:
    
 
 	GUI* gui = nullptr;
+	ImmediateGUI* new_gui = nullptr;
 	void add_result_image(const string& image_file);
     std::vector<std::unique_ptr<Mesh>> mMeshes;
     std::shared_ptr<MaterialHost> material_ketchup;
@@ -186,8 +185,6 @@ private:
 	static void GUI_CALL loadImage(void* data);
 	static void GUI_CALL resetCameraCallback(void* data);
 	static void GUI_CALL saveRawCallback(void* data);
-	static void GUI_CALL startSimulationCallback(void* data);
-	static void GUI_CALL endSimulationCallback(void* data);
 
 	float tonemap_multiplier = 1.0f;
 	float tonemap_exponent = 1.0f;
@@ -207,23 +204,6 @@ private:
 	float comparison_image_weight = 0.0;
 
 	void load_camera_extrinsics(InitialCameraData & data);
-
-	struct SimulationParameters
-	{
-		float step = 0.01f;
-		float start = 1.5f;
-		float * additional_parameters;
-		float end = 1.7f;
-		int samples = 1000;
-		enum SimulationElement { IOR, ABSORPTION_R, ABSORPTION_G, ABSORPTION_B, ABSORPTION_M } parameter_to_simulate = IOR;
-		enum SimulationStatus {RUNNING, FINISHED} status = RUNNING;
-
-	} m_simulation_parameters;
-
-
-	void update_simulation(SimulationParameters & m_simulation_parameters);
-	void init_simulation(::ObjScene::SimulationParameters& m_simulation_parameters);
-	std::string get_name();
 
 	const std::string config_file = "config.xml";
 	int4 custom_rr;

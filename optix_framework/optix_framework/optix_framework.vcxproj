@@ -189,6 +189,11 @@ echo Done.</Command>
     <ClCompile Include="folders.cpp" />
     <ClCompile Include="gui.cpp" />
     <ClCompile Include="host_material.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_impl_glut.cpp" />
+    <ClCompile Include="immediate_gui.cpp" />
     <ClCompile Include="light_host.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="mesh.cpp" />
@@ -523,6 +528,14 @@ echo Done.</Command>
     <ClInclude Include="environment_map_background.h" />
     <ClInclude Include="host_device_common.h" />
     <ClInclude Include="host_material.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_impl_glut.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\stb_rect_pack.h" />
+    <ClInclude Include="imgui\stb_textedit.h" />
+    <ClInclude Include="imgui\stb_truetype.h" />
+    <ClInclude Include="immediate_gui.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="light_host.h" />
     <ClInclude Include="material.h" />

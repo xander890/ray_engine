@@ -42,6 +42,8 @@
 using namespace std;
 using namespace optix;
 
+#define GUI_TO_USE gui
+
 void ObjScene::add_result_image(const string& image_file)
 {
 	comparison_image = loadTexture(context->getContext(), image_file, optix::make_float3(0, 1, 0));
@@ -56,28 +58,6 @@ void ObjScene::execute_on_scene_elements(function<void(Mesh&)> operation)
     {
         operation(*m);
     }
-}
-
-void ObjScene::start_simulation()
-{
-	collect_images = true;
-	init_simulation(m_simulation_parameters);
-	reset_renderer();
-	gui->setReadOnly("Start Simulation");
-	gui->setReadOnly("Starting");
-	gui->setReadOnly("Ending");
-	gui->setReadOnly("Step");
-	gui->setReadOnly("Samples");
-}
-
-void ObjScene::end_simulation()
-{
-	collect_images = false;
-	gui->setReadWrite("Start Simulation");
-	gui->setReadWrite("Starting");
-	gui->setReadWrite("Ending");
-	gui->setReadWrite("Step");
-	gui->setReadWrite("Samples");
 }
 
 void ObjScene::collect_image(unsigned int frame)
@@ -98,18 +78,8 @@ void ObjScene::collect_image(unsigned int frame)
 
 	if (!collect_images) return;
 
-	if (frame == m_simulation_parameters.samples)
-	{
-		std::string name = std::string("rendering_") + get_name() + ".raw";
-		export_raw(name);
-
-		update_simulation(m_simulation_parameters);
-		reset_renderer();
-		if (m_simulation_parameters.status == SimulationParameters::FINISHED)
-		{
-			end_simulation();
-		}
-	}
+	std::string name = std::string("rendering_") + to_string(frame) + ".raw";
+	export_raw(name);
 }
 
 void ObjScene::reset_renderer()
@@ -136,7 +106,7 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 {
 	if (mAutoMode)
 		return false;
-	if (gui->keyPressed(key, x, y) || key >= 48 && key <= 57) // numbers avoided
+	if (GUI_TO_USE->keyPressed(key, x, y) || key >= 48 && key <= 57) // numbers avoided
 	{
 		reset_renderer();
 		return true;
@@ -161,15 +131,9 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 			  context[OUTPUT_BUFFER]->setBuffer(createPBOOutputBuffer(RT_FORMAT_FLOAT4, window_width, window_height));
 			  cout << ((use_optix) ? "Ray tracing" : "Rasterization") << endl;*/
 		return true;
-	case 'n':
-		{
-			start_simulation();
-			return true;
-		}
-		break;
 	case 'g':
 		{
-			gui->toggleVisibility();
+			GUI_TO_USE->toggleVisibility();
 			return true;
 		}
 		break;
@@ -469,6 +433,10 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
 	if (gui == nullptr)
 		gui = new GUI("GUI", camera->get_width(), camera->get_height());
+	if (new_gui == nullptr)
+	{
+		new_gui = new ImmediateGUI("GUI", camera->get_width(), camera->get_height());
+	}
 
 	if (mAutoMode)
 	{
@@ -508,6 +476,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
 void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 {
+	display = true;
 	context["comparison_image_weight"]->setFloat(comparison_image_weight);
 	context["show_difference_image"]->setInt(show_difference_image);
 	context["comparison_texture"]->setInt(comparison_image->getId());
@@ -760,17 +729,17 @@ bool ObjScene::mousePressed(int button, int state, int x, int y)
 		setDebugPixel(x, y);
 		return true;
 	}
-	return gui->mousePressed(button, state, x, y);
+	return GUI_TO_USE->mousePressed(button, state, x, y);
 }
 
 bool ObjScene::mouseMoving(int x, int y)
 {
-	return gui->mouseMoving(x, y);
+	return GUI_TO_USE->mouseMoving(x, y);
 }
 
 void ObjScene::postDrawCallBack()
 {
-	gui->draw();
+	GUI_TO_USE->draw();
 }
 
 void ObjScene::setDebugPixel(int i, int y)
@@ -989,18 +958,6 @@ void ObjScene::saveRawCallback(void* data)
 	}
 }
 
-void ObjScene::startSimulationCallback(void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	scene->start_simulation();
-}
-
-void ObjScene::endSimulationCallback(void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	scene->end_simulation();
-}
-
 void ObjScene::updateGlassObjects()
 {
 	Logger::info<<"Updating glass objects"<<endl;
@@ -1049,61 +1006,4 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 	}
 
 	reset_renderer();
-}
-
-void ObjScene::init_simulation(SimulationParameters & m_simulation_parameters)
-{
-	switch (m_simulation_parameters.parameter_to_simulate)
-	{
-	case SimulationParameters::IOR: setIor(&m_simulation_parameters.start, this); break;
-	case SimulationParameters::ABSORPTION_R:  global_absorption_override.x = m_simulation_parameters.start; updateGlassObjects();  break;
-	case SimulationParameters::ABSORPTION_G:  global_absorption_override.y = m_simulation_parameters.start; updateGlassObjects(); break;
-	case SimulationParameters::ABSORPTION_B:  global_absorption_override.z = m_simulation_parameters.start; updateGlassObjects(); break;
-	case SimulationParameters::ABSORPTION_M:  global_absorption_inv_multiplier = m_simulation_parameters.start; updateGlassObjects(); break;
-		break;
-	default: break;
-	}
-}
-
-void ObjScene::update_simulation(SimulationParameters & m_simulation_parameters)
-{
-	float step = m_simulation_parameters.step;
-	switch (m_simulation_parameters.parameter_to_simulate)
-	{
-	case SimulationParameters::ABSORPTION_R:
-	case SimulationParameters::ABSORPTION_G:
-	case SimulationParameters::ABSORPTION_B:
-	case SimulationParameters::ABSORPTION_M:
-	{
-		float* var;
-		auto param = m_simulation_parameters.parameter_to_simulate;
-		var = (param == SimulationParameters::ABSORPTION_R) ? &global_absorption_override.x : 
-			  (param == SimulationParameters::ABSORPTION_G) ? &global_absorption_override.y : 
-			  (param == SimulationParameters::ABSORPTION_B) ? &global_absorption_override.z : 
-			  (param == SimulationParameters::ABSORPTION_M) ? &global_absorption_inv_multiplier : nullptr;
-
-		if (var != nullptr)
-		{
-			*var = *var + step;
-			m_simulation_parameters.status = (*var > m_simulation_parameters.end) ? SimulationParameters::FINISHED : SimulationParameters::RUNNING;
-			updateGlassObjects();
-		}
-	}
-		break;
-	default:
-	case SimulationParameters::IOR: 	{
-		float var;
-		getIor(&var, this);
-		var += step;
-		setIor(&var, this);
-		m_simulation_parameters.status = (var > m_simulation_parameters.end) ? SimulationParameters::FINISHED : SimulationParameters::RUNNING;
-	}
-	break;
-	}
-}
-
-
-std::string ObjScene::get_name()
-{
-    return "objscene";
 }
