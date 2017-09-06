@@ -30,7 +30,8 @@ private:
     std::string envmap_file;
     int texture_width, texture_height;
     int camera_1, camera_2, camera_3;
-	
+	std::string envmap_path;
+
     void presample_environment_map();
     bool resample_envmaps = true;
 

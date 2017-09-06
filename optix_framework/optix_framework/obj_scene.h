@@ -37,7 +37,7 @@ public:
 
 	ObjScene(const std::vector<std::string>& obj_filenames, const std::string& shader_name, const std::string& config_file, optix::int4 rendering_r = make_int4(-1))
         : context(m_context),
-          current_scene_type(Scene::OPTIX_ONLY), default_miss(), filenames(obj_filenames), method(nullptr),        m_frame(0u),
+          current_scene_type(Scene::OPTIX_ONLY), current_miss_program(), filenames(obj_filenames), method(nullptr),        m_frame(0u),
           deforming(false),
           use_tonemap(true), 
           config_file(config_file)
@@ -119,7 +119,7 @@ private:
 
 	Scene::EnumType current_scene_type;
 
-	BackgroundType::EnumType default_miss;
+	BackgroundType::EnumType current_miss_program;
 	bool collect_images = false;
 	bool show_difference_image = false;
 	Aabb m_scene_bounding_box;
@@ -131,7 +131,7 @@ private:
 	void add_lights(vector<TriangleLight>& area_lights);
 	void set_miss_program();
 	optix::TextureSampler environment_sampler;
-    std::unique_ptr<MissProgram> miss_program;
+    std::unique_ptr<MissProgram> miss_program = nullptr;
 
 	optix::float2 fov;
 

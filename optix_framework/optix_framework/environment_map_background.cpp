@@ -8,6 +8,7 @@
 #include "SampleScene.h"
 #include "ImageLoader.h"
 #include "optix_utils.h"
+#include "dialogs.h"
 
 using namespace optix;
 void EnvironmentMap::init(optix::Context & ctx)
@@ -25,7 +26,8 @@ void EnvironmentMap::init(optix::Context & ctx)
     bool is_env = false;
     is_env = true;
     std::string ptx_path = get_path_ptx("env_cameras.cu");
-    environment_sampler = loadTexture(context->getContext(), Folders::texture_folder + envmap_file, make_float3(1.0f));
+	envmap_path = Folders::texture_folder + envmap_file;
+    environment_sampler = loadTexture(context->getContext(), envmap_path, make_float3(1.0f));
     properties.environment_map_tex_id = environment_sampler->getId();
     properties.importance_sample_envmap = 1;
 
@@ -75,6 +77,26 @@ bool EnvironmentMap::on_draw()
 	const char* env_map_correction_group = "Environment map";
 	if (ImmediateGUIDraw::TreeNode("Environment map"))
 	{
+		char txt[512];
+		envmap_path.copy(txt, envmap_path.length());
+		ImmediateGUIDraw::InputText("Path", txt, 512, ImGuiInputTextFlags_ReadOnly);
+
+		std::string filePath;
+		if (ImmediateGUIDraw::Button("Load new envmap..."))
+		{
+			std::string filePath;
+			if (Dialogs::openFileDialog(filePath))
+			{
+				environment_sampler->destroy();
+				environment_sampler = loadTexture(context->getContext(), filePath, make_float3(1.0f));
+				int id = environment_sampler->getId();
+				properties.environment_map_tex_id = id;
+				envmap_path = filePath;
+				resample_envmaps = true;
+				changed = true;
+			}
+		}
+
 		changed |= ImmediateGUIDraw::InputFloat3("Multiplier##Envmapmultiplier", (float*)&properties.lightmap_multiplier);
 		changed |= ImmediateGUIDraw::Checkbox("Importance Sample##Importancesampleenvmap", (bool*)&properties.importance_sample_envmap);
 

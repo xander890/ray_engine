@@ -204,6 +204,12 @@ bool ObjScene::drawGUI()
 	
 	if (ImmediateGUIDraw::CollapsingHeader("Background"))
 	{
+		const char * miss_programs[3] = { "Constant Background", "Environment map", "Sky model"  };
+		if (ImmediateGUIDraw::Combo("Background", (int*)&current_miss_program, miss_programs, 3, 3))
+		{
+			changed = true;
+			set_miss_program();
+		}
 		changed |= miss_program->on_draw();
 	}
 
@@ -293,7 +299,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	}
 
 
-	default_miss = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
+	current_miss_program = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
 
     tonemap_exponent = ParameterParser::get_parameter<float>("tonemap", "tonemap_exponent", 1.8f, "Tonemap exponent");
     tonemap_multiplier = ParameterParser::get_parameter<float>("tonemap", "tonemap_multiplier", 1.f, "Tonemap multiplier");
@@ -769,8 +775,9 @@ void ObjScene::setDebugPixel(int i, int y)
 
 void ObjScene::set_miss_program()
 {
-   
-	switch (default_miss)
+	if (miss_program != nullptr)
+		miss_program.reset();
+	switch (current_miss_program)
 	{
 	case BackgroundType::ENVIRONMENT_MAP:
 	{
