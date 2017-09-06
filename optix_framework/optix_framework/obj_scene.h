@@ -24,7 +24,7 @@
 #ifdef IOR_EST
 #include "indexofrefractionmatcher.h"
 #endif
-#include "gui.h"
+
 #include "structs.h"
 #include <functional>
 #include "camera.h"
@@ -72,7 +72,7 @@ public:
 		m_context = 0;
 	}
 
-	void initUI();
+	void drawGUI();
 
     void create_3d_noise(float frequency);
     float noise_frequency = 25;
@@ -152,8 +152,6 @@ private:
 	bool use_tonemap;
 	std::unique_ptr<Camera> camera = nullptr;
    
-
-	GUI* gui = nullptr;
 	ImmediateGUI* new_gui = nullptr;
 	void add_result_image(const string& image_file);
     std::vector<std::unique_ptr<Mesh>> mMeshes;
@@ -162,30 +160,6 @@ private:
     void execute_on_scene_elements(function<void(Mesh&)> operation);
 
 	void setDebugEnabled(bool var);
-
-	static void GUI_CALL setDebugMode(const void* var, void* data);
-	static void GUI_CALL getDebugMode(void* var, void* data);
-
-	static void GUI_CALL setRTDepth(const void* var, void* data);
-	static void GUI_CALL getRTDepth(void* var, void* data);
-
-	static void GUI_CALL setIor(const void* var, void* data);
-	static void GUI_CALL getIor(void* var, void* data);
-	static void GUI_CALL setAbsorptionColorR(const void* var, void* data);
-	static void GUI_CALL setAbsorptionColorG(const void* var, void* data);
-	static void GUI_CALL setAbsorptionColorB(const void* var, void* data);
-	static void GUI_CALL getAbsorptionColorR(void* var, void* data);
-	static void GUI_CALL getAbsorptionColorG(void* var, void* data);
-	static void GUI_CALL getAbsorptionColorB(void* var, void* data);
-	static void GUI_CALL setAbsorptionInverseMultiplier(const void* var, void* data);
-	static void GUI_CALL getAbsorptionInverseMultiplier(void* var, void* data);
-	static void GUI_CALL setMedium(const void* var, void* data);
-	static void GUI_CALL getMedium(void* var, void* data);
-
-	static void GUI_CALL loadImage(void* data);
-	static void GUI_CALL resetCameraCallback(void* data);
-	static void GUI_CALL saveRawCallback(void* data);
-
 	float tonemap_multiplier = 1.0f;
 	float tonemap_exponent = 1.0f;
 

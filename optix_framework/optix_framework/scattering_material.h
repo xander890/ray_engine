@@ -4,7 +4,7 @@
 
 #include <optix_world.h>
 #include "structs.h"
-#include "GUI.h"
+
 #include "scattering_properties.h"
 
 enum DefaultScatteringMaterial
@@ -46,6 +46,7 @@ public:
         computeCoefficients();
         mStandardMaterial = DefaultScatteringMaterial::Count; // Custom
 		properties.selected_bssrdf = DIRECTIONAL_DIPOLE_BSSRDF;
+		dirty = true;
     }
 
     ScatteringMaterial(DefaultScatteringMaterial material, float prop_scale = 100.0f)
@@ -54,6 +55,7 @@ public:
         mStandardMaterial = static_cast<int>(material);
         getDefaultMaterial(material);
 		properties.selected_bssrdf = DIRECTIONAL_DIPOLE_BSSRDF;
+		dirty = true;
     }
 
     ScatteringMaterial& operator=(const ScatteringMaterial& cp);
@@ -72,8 +74,8 @@ public:
     void set_absorption(optix::float3 abs);
     void set_scattering(optix::float3 sc);
     void set_asymmetry(float asymm);
-    void set_into_gui(GUI* gui, const char * group = "Scattering Material");
-    void remove_from_gui(GUI * gui, const char * group = "Scattering Material");
+	void on_draw(std::string id);
+
     const char* get_name() { return name; }
 	bool hasChanged();
     ScatteringMaterialProperties get_data();
@@ -91,23 +93,6 @@ private:
     const char* name;
     bool dirty = true;
 
-	static void GUI_CALL setBSSRDF(const void* var, void* data);
-	static void GUI_CALL getBSSRDF(void* var, void* data);
-
-    static void GUI_CALL setDefault(const void* var, void* data);
-    static void GUI_CALL getDefault(void* var, void* data);
-    template <int channel>
-    static void GUI_CALL setScatteringChannel(const void* var, void* data);
-    template <int channel>
-    static void GUI_CALL setAbsorptionChannel(const void* var, void* data);
-    template <int channel>
-    static void GUI_CALL getScatteringChannel(void* var, void* data);
-    template <int channel>
-    static void GUI_CALL getAbsorptionChannel(void* var, void* data);
-    static void GUI_CALL setAsymmetry(const void* var, void* data);
-    static void GUI_CALL getAsymmetry(void* var, void* data);
-    static void GUI_CALL setScale(const void* var, void* data);
-    static void GUI_CALL getScale(void* var, void* data);
     static std::vector<ScatteringMaterial> initializeDefaultMaterials();
     int mStandardMaterial;
 };

@@ -1,6 +1,7 @@
 #include "scattering_material.h"
 #include "optical_helper.h"
 #include <functional>
+#include "immediate_gui.h"
 
 using namespace optix;
 
@@ -187,139 +188,57 @@ void ScatteringMaterial::set_asymmetry(float asymm)
 	dirty = true;
 }
 
-void ScatteringMaterial::set_into_gui(GUI* gui, const char * group)
+
+void ScatteringMaterial::on_draw(std::string id)
 {
-    std::vector<GuiDropdownElement> gui_elements;
-    for (int i = 0; i < DefaultScatteringMaterial::Count; i++)
-    {
-        gui_elements.push_back({ i, defaultMaterials[i].name });
-    }
-    gui_elements.push_back({ DefaultScatteringMaterial::Count, "Custom" });
+	const char * dips[2] = { "Standard dipole" ,"Directional dipole" };
+	#define ID_STRING(x,id) (std::string(x) + "##" + id + x).c_str()
+	if (ImmediateGUIDraw::Combo(ID_STRING("Dipole", id), &properties.selected_bssrdf, dips, 2, 2))
+	{
+		dirty = true;
+	}
 
-    std::string scamat = std::string(group);
-    std::string group_path = std::string(group);
-    size_t last = group_path.find_last_of("/");
-    std::string gg = group_path.substr(last + 1);
-    const char * group_name = group;
+	std::vector<std::string> vv;
+	for (int i = 0; i < DefaultScatteringMaterial::Count; i++)
+	{
+		vv.push_back(defaultMaterials[i].name);
+	}
+	vv.push_back("Custom");
+	std::vector<const char*> v;
+	for (auto& c : vv) v.push_back(c.c_str());
 
-	std::vector<GuiDropdownElement> gui_elements_dipole = { {0, "Standard dipole"},{1 , "Directional dipole"} };
+	static int mat = mStandardMaterial;
+	if (ImmediateGUIDraw::Combo(ID_STRING("Change material", id), &mat, v.data(), (int)v.size(), (int)v.size()))
+	{
+		if (mat < DefaultScatteringMaterial::Count)
+		{
+			mStandardMaterial = static_cast<int>(mat);
+			getDefaultMaterial(static_cast<DefaultScatteringMaterial>(mat));
+		}
+	}
 
-	gui->addDropdownMenuCallback((scamat + "/Set Dipole").c_str(), gui_elements_dipole, setBSSRDF, getBSSRDF, this, group_name);
-	gui->addDropdownMenuCallback((scamat + "/Set Material").c_str(), gui_elements, setDefault, getDefault, this, group_name);
-    gui->addFloatVariableCallBack((scamat + "/Absorption - R").c_str(), setAbsorptionChannel<0>, getAbsorptionChannel<0>, this, group_name);
-    gui->addFloatVariableCallBack((scamat + "/Absorption - G").c_str(), setAbsorptionChannel<1>, getAbsorptionChannel<1>, this, group_name);
-    gui->addFloatVariableCallBack((scamat + "/Absorption - B").c_str(), setAbsorptionChannel<2>, getAbsorptionChannel<2>, this, group_name);
-    gui->addFloatVariableCallBack((scamat + "/Scattering - R").c_str(), setScatteringChannel<0>, getScatteringChannel<0>, this, group_name);
-    gui->addFloatVariableCallBack((scamat + "/Scattering - G").c_str(), setScatteringChannel<1>, getScatteringChannel<1>, this, group_name);
-    gui->addFloatVariableCallBack((scamat + "/Scattering - B").c_str(), setScatteringChannel<2>, getScatteringChannel<2>, this, group_name);
-    gui->addFloatVariableCallBack((scamat + "/Asymmetry").c_str(), setAsymmetry, getAsymmetry, this, group_name);
-    gui->addFloatVariableCallBack((scamat + "/Scale").c_str(), setScale, getScale, this, group_name);
-}
+	if (ImmediateGUIDraw::InputFloat3(ID_STRING("Absorption", id), (float*)&absorption))
+	{
+		dirty = true;
+		mat = DefaultScatteringMaterial::Count;
+	}
+	if (ImmediateGUIDraw::InputFloat3(ID_STRING("Scattering", id), (float*)&scattering))
+	{
+		dirty = true;
+		mat = DefaultScatteringMaterial::Count;
+	}
 
-void ScatteringMaterial::remove_from_gui(GUI* gui, const char * group)
-{
-	std::string scamat = std::string(group);
+	if (ImmediateGUIDraw::InputFloat3(ID_STRING("Asymmetry", id), (float*)&asymmetry))
+	{
+		dirty = true;
+		mat = DefaultScatteringMaterial::Count;
+	}
 
-	gui->removeVar((scamat + "/Set Dipole").c_str());
-	gui->removeVar((scamat + "/Set Material").c_str());
-	gui->removeVar((scamat + "/Absorption - R").c_str());
-	gui->removeVar((scamat + "/Absorption - G").c_str());
-	gui->removeVar((scamat + "/Absorption - B").c_str());
-	gui->removeVar((scamat + "/Scattering - R").c_str());
-	gui->removeVar((scamat + "/Scattering - G").c_str());
-	gui->removeVar((scamat + "/Scattering - B").c_str());
-	gui->removeVar((scamat + "/Asymmetry").c_str());
-	gui->removeVar((scamat + "/Scale").c_str());
-}
-
-
-void GUI_CALL ScatteringMaterial::setBSSRDF(const void* var, void* data)
-{
-	ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-	s->properties.selected_bssrdf = (*(int*)var);
-}
-
-void GUI_CALL ScatteringMaterial::getBSSRDF(void* var, void* data)
-{
-	ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-	*(int*)var = s->properties.selected_bssrdf;
-	s->dirty = true;
-}
-
-void ScatteringMaterial::setDefault(const void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    ScatteringMaterial newmat = ScatteringMaterial(static_cast<DefaultScatteringMaterial>(*(int*)var), s->scale);
-    *s = newmat;
-}
-
-void ScatteringMaterial::getDefault(void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    *(int*)var = s->mStandardMaterial;
-}
-
-template<int channel> void ScatteringMaterial::setAbsorptionChannel(const void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    float * d = reinterpret_cast<float*>((float*)&s->absorption + channel);
-    *d = *(float*)var;
-    if (*d - *(float*)var < 1e-3)
-        s->mStandardMaterial = Count;
-}
-
-template<int channel> void ScatteringMaterial::setScatteringChannel(const void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    float * d = reinterpret_cast<float*>((float*)&s->scattering + channel);
-    *d = *(float*)var;
-    if (*d - *(float*)var < 1e-3)
-        s->mStandardMaterial = Count;
-}
-
-
-template <int channel>
-void ScatteringMaterial::getScatteringChannel(void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    float * d = reinterpret_cast<float*>((float*)&s->scattering + channel);
-    *(float*)var = *d;
-}
-
-
-template<int channel> void ScatteringMaterial::getAbsorptionChannel(void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    float * d = reinterpret_cast<float*>((float*)&s->absorption + channel);
-    *(float*)var = *d;
-}
-
-void ScatteringMaterial::setAsymmetry(const void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    s->set_asymmetry(*(float*)var);
-    s->dirty = true;
-    if (s->asymmetry.x - *(float*)var < 1e-3)
-        s->mStandardMaterial = Count;
-}
-
-void ScatteringMaterial::getAsymmetry(void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    *(float*)var = s->get_asymmetry();
-}
-
-void ScatteringMaterial::setScale(const void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    s->scale = *(float*)var;
-    s->dirty = true;
-}
-
-void ScatteringMaterial::getScale(void* var, void* data)
-{
-    ScatteringMaterial * s = reinterpret_cast<ScatteringMaterial*>(data);
-    *(float*)var = s->scale;
+	if (ImmediateGUIDraw::InputFloat(ID_STRING("Scale", id), (float*)&scale))
+	{
+		dirty = true;
+	}
+#undef ID_STRING
 }
 
 void ScatteringMaterial::computeCoefficients()

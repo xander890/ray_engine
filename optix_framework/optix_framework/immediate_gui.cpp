@@ -1,5 +1,5 @@
 #include "immediate_gui.h"
-
+#define IMGUI_DISABLE_TEST_WINDOWS
 #include "imgui/imgui_impl_glut.h"
 
 #include "GL\glew.h"
@@ -8,7 +8,7 @@
 #endif
 #include "GL\freeglut.h"
 
-ImmediateGUI::ImmediateGUI(const char * name, int window_width, int window_height) : window_width(window_width), window_height(window_height)
+ImmediateGUI::ImmediateGUI(const char * name, int window_width, int window_height) : name(name), window_width(window_width), window_height(window_height)
 {
 	ImGui_ImplGLUT_Init();
 }
@@ -57,38 +57,46 @@ void ImmediateGUI::setWindowSize(int x, int y)
 	window_height = y;
 }
 
-void ImmediateGUI::draw() const
+void ImmediateGUI::start_draw() const
 {
 	static bool show_test_window = false;
 	static bool show_another_window = false;
 	ImGui_ImplGLUT_NewFrame(window_width, window_height);
 
-	// 1. Show a simple window
-	// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
-	{
-		static float f = 0.0f;
-		ImGui::Text("Hello, world!");
-		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-		if (ImGui::Button("Test Window")) show_test_window ^= 1;
-		if (ImGui::Button("Another Window")) show_another_window ^= 1;
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	}
+	//// 1. Show a simple window
+	//// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
+	//{
+	//	static float f = 0.0f;
+	//	ImGui::Text("Hello, world!");
+	//	ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+	//	if (ImGui::Button("Test Window")) show_test_window ^= 1;
+	//	if (ImGui::Button("Another Window")) show_another_window ^= 1;
+	//	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	//}
 
-	// 2. Show another simple window, this time using an explicit Begin/End pair
-	if (show_another_window)
-	{
-		ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-		ImGui::Begin("Another Window", &show_another_window);
-		ImGui::Text("Hello");
-		ImGui::End();
-	}
+	//// 2. Show another simple window, this time using an explicit Begin/End pair
+	//if (show_another_window)
+	//{
+	//	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+	//	ImGui::Begin("Another Window", &show_another_window);
+	//	ImGui::Text("Hello");
+	//	ImGui::End();
+	//}
 
-	// 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
-	if (show_test_window)
-	{
-		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-		ImGui::ShowTestWindow(&show_test_window);
-	}
+	//// 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
+	//if (show_test_window)
+	//{
+	//	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+	//	ImGui::ShowTestWindow(&show_test_window);
+	//}
+	
+	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(400, 600), ImGuiSetCond_Always);
+	ImGui::Begin(name.c_str(), (bool*)&visible);
+}
 
+void ImmediateGUI::end_draw() const
+{
+	ImGui::End();
 	ImGui::Render();
 }

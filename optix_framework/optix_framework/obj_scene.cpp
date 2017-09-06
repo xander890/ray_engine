@@ -42,12 +42,9 @@
 using namespace std;
 using namespace optix;
 
-#define GUI_TO_USE gui
-
 void ObjScene::add_result_image(const string& image_file)
 {
 	comparison_image = loadTexture(context->getContext(), image_file, optix::make_float3(0, 1, 0));
-	gui->setVisible("Weight", true);
 	context["comparison_texture"]->setInt(comparison_image->getId());
 }
 
@@ -106,7 +103,7 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 {
 	if (mAutoMode)
 		return false;
-	if (GUI_TO_USE->keyPressed(key, x, y) || key >= 48 && key <= 57) // numbers avoided
+	if (new_gui->keyPressed(key, x, y) || key >= 48 && key <= 57) // numbers avoided
 	{
 		reset_renderer();
 		return true;
@@ -133,7 +130,7 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 		return true;
 	case 'g':
 		{
-			GUI_TO_USE->toggleVisibility();
+			new_gui->toggleVisibility();
 			return true;
 		}
 		break;
@@ -152,71 +149,83 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 }
 
 
-void ObjScene::initUI()
+void ObjScene::drawGUI()
 {
-	Logger::info << "Initializing UI..." << endl;
-
-    gui->addIntVariable("Frames", reinterpret_cast<int*>(&m_frame), "Settings");
-	gui->setReadOnly("Frames");
-	gui->addCheckBoxCallBack("Debug Mode", setDebugMode, getDebugMode, this, "Settings");
-	gui->addIntVariableCallBack("Depth", setRTDepth, getRTDepth, this, "Settings", 0, 100000, 1);
-
-	//const char * t comp_group = "Comparison";
-	//gui->addButton("Load result image", loadImage, this, comp_group);
-	//gui->addFloatVariable("Weight", &comparison_image_weight, comp_group, 0.0f, 1.0f, 0.01f);
-	//gui->addCheckBox("Difference image", &show_difference_image, comp_group);
-	//gui->setVisible("Weight", false);
-
-	const char* tmg = "Tone mapping";
-	gui->addCheckBox("Tonemap", &use_tonemap, tmg);
-	gui->addFloatVariable("Multiplier", &tonemap_multiplier, tmg, 0.0f, 1.0f, 0.05f);
-	gui->addFloatVariable("Exponent", &tonemap_exponent, tmg, 0.5f, 3.5f, 0.05f);
-
-	//const char* glass_group = "Glass";
-	//gui->addFloatVariableCallBack("Index of refraction", setIor, getIor, this, glass_group);
-	//gui->addFloatVariableCallBack("Absorption - R", setAbsorptionColorR, getAbsorptionColorR, this, glass_group);
-	//gui->addFloatVariableCallBack("Absorption - G", setAbsorptionColorG, getAbsorptionColorG, this, glass_group);
-	//gui->addFloatVariableCallBack("Absorption - B", setAbsorptionColorB, getAbsorptionColorB, this, glass_group);
-	//gui->addFloatVariableCallBack("Absorption inv. multiplier", setAbsorptionInverseMultiplier, getAbsorptionInverseMultiplier, this, glass_group);
-
-	vector<GuiDropdownElement> elems;
-	int count = 0;
-	for (const auto& kv : available_media)
+	ImmediateGUIDraw::TextColored({255,0,0,1}, "Rendering info ");
+	std::stringstream ss; 
+	ss << "Current frame: " << to_string(m_frame);
+	ImmediateGUIDraw::Text(ss.str().c_str());
+	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		GuiDropdownElement e = { count++, kv->name.c_str() };
-		elems.push_back(e);
+		static bool debug;
+		if (ImmediateGUIDraw::Checkbox("Debug mode", &debug))
+		{
+			setDebugEnabled(debug);
+		}
+
+		static int depth = context["max_depth"]->getInt();
+		if (ImmediateGUIDraw::InputInt("Maximum ray depth", &depth, 1, 10))
+		{
+			context["max_depth"]->setInt(depth);
+		}
+
+		if (ImmediateGUIDraw::Button("Reset Camera"))
+		{
+			InitialCameraData i;
+			load_camera_extrinsics(i);
+			GLUTDisplay::setCamera(i);
+		}
+
+		if (ImmediateGUIDraw::Button("Save RAW image"))
+		{
+			std::string filePath;
+			if (Dialogs::saveFileDialog(filePath))
+			{
+				export_raw(filePath);
+			}
+		}
+
 	}
-//	gui->addDropdownMenuCallback("Medium (glass)", elems, setMedium, getMedium, this, glass_group);
+	if (ImmediateGUIDraw::CollapsingHeader("Tone mapping"))
+	{
+		ImmediateGUIDraw::SliderFloat("Multiplier##TonemapMultiplier", &tonemap_multiplier, 0.0f, 2.0f, "%.3f", 1.0f);
+		ImmediateGUIDraw::SliderFloat("Exponent##TonemapExponent", &tonemap_exponent, 0.5f, 3.5f, "%.3f", 1.0f);
+		if (ImmediateGUIDraw::Button("Reset##TonemapExponentMultiplierReset"))
+		{
+			tonemap_exponent = 1.8f;
+			tonemap_multiplier = 1.0f;
+			reset_renderer();
+		}
+	}
+	
+	if (ImmediateGUIDraw::CollapsingHeader("Background"))
+	{
+		miss_program->on_draw();
+	}
 
-	const char* env_map_correction_group = "Environment map corrections";
+	if (ImmediateGUIDraw::CollapsingHeader("Meshes"))
+	{
+		execute_on_scene_elements([=](Mesh & m)
+		{
+			m.on_draw();
+		});
+	}
 
-	gui->addButton("Reset Camera", resetCameraCallback, this, "Settings");
-	gui->addButton("Save RAW File", saveRawCallback, this, "Settings");
 
-    miss_program->set_into_gui(gui);
+	camera->on_draw();
 
-	gui->addCheckBox("Use heterogenous materials", (bool*)&use_heterogenous_materials, "Settings");
+	if (ImmediateGUIDraw::CollapsingHeader("Heterogenous materials"))
+	{
+		ImmediateGUIDraw::Checkbox("Enable##EnableHeterogenousMaterials", (bool*)&use_heterogenous_materials);
+		if (ImmediateGUIDraw::InputFloat("Noise frequency##HeterogenousNoseFreq", &noise_frequency, 0.1f, 1.0f))
+		{
+			create_3d_noise(noise_frequency);
+		}
+	}
 
-    execute_on_scene_elements([=](Mesh & m)
-    {
-        m.set_into_gui(gui);
-    });
 
-    gui->addFloatVariableCallBack("Noise freq.",
-        [](const void* var, void* data)
-    {
-        ObjScene* s = reinterpret_cast<ObjScene*>(data);
-        s->noise_frequency = *((float*)var);
-        s->create_3d_noise(s->noise_frequency);
-    },
-        [](void* var, void* data)
-    {
-        ObjScene* s = reinterpret_cast<ObjScene*>(data);
-        *((float*)var) = s->noise_frequency;
-    }, this, "Noise");
-
-    camera->set_into_gui(gui);
 }
+
 
 void ObjScene::create_3d_noise(float frequency)
 {
@@ -235,13 +244,13 @@ void ObjScene::create_3d_noise(float frequency)
     // Create buffer with single texel set to default_color
     float* buffer_data = static_cast<float*>(buffer->map());
 
-    //for (int i = 0; i < 256; i++)
-    //    for (int j = 0; j < 256; j++)
-    //        for (int k = 0; k < 256; k++)
-    //        {
-    //            int idx = 256 * 256 * i + 256 * j + k;
-    //            buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
-    //        }
+    for (int i = 0; i < 256; i++)
+        for (int j = 0; j < 256; j++)
+            for (int k = 0; k < 256; k++)
+            {
+                int idx = 256 * 256 * i + 256 * j + k;
+                buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
+            }
     buffer->unmap();
 
     sampler->setBuffer(0u, 0u, buffer);
@@ -431,8 +440,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	context->validate();
 	context->compile();
 
-	if (gui == nullptr)
-		gui = new GUI("GUI", camera->get_width(), camera->get_height());
 	if (new_gui == nullptr)
 	{
 		new_gui = new ImmediateGUI("GUI", camera->get_width(), camera->get_height());
@@ -440,7 +447,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
 	if (mAutoMode)
 	{
-		gui->toggleVisibility();
+		new_gui->toggleVisibility();
 		GLUTDisplay::setContinuousMode(GLUTDisplay::CDBenchmark);
 	}
 	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
@@ -463,7 +470,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
         m.add_material(material_ketchup);
     });
 
-	initUI();
 	context["show_difference_image"]->setInt(show_difference_image);
 	context["merl_brdf_multiplier"]->setFloat(make_float3(1));
 
@@ -729,17 +735,19 @@ bool ObjScene::mousePressed(int button, int state, int x, int y)
 		setDebugPixel(x, y);
 		return true;
 	}
-	return GUI_TO_USE->mousePressed(button, state, x, y);
+	return new_gui->mousePressed(button, state, x, y);
 }
 
 bool ObjScene::mouseMoving(int x, int y)
 {
-	return GUI_TO_USE->mouseMoving(x, y);
+	return new_gui->mouseMoving(x, y);
 }
 
 void ObjScene::postDrawCallBack()
 {
-	GUI_TO_USE->draw();
+	new_gui->start_draw();
+	drawGUI();
+	new_gui->end_draw();
 }
 
 void ObjScene::setDebugPixel(int i, int y)
@@ -809,152 +817,6 @@ void ObjScene::setDebugEnabled(bool var)
 	{
 		context->setPrintEnabled(false);
 	//	context->setExceptionEnabled(RT_EXCEPTION_ALL, false);
-	}
-}
-
-void ObjScene::setDebugMode(const void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-
-	scene->setDebugEnabled(*(bool*)var);
-}
-
-void ObjScene::setIor(const void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	scene->global_ior_override = (*(float*)var);
-	scene->updateGlassObjects();
-}
-
-void ObjScene::getIor(void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	*(float*)var = scene->global_ior_override;
-}
-
-void ObjScene::setAbsorptionColorR(const void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	scene->global_absorption_override.x = (*(float*)var);
-	scene->updateGlassObjects();
-}
-
-void ObjScene::setAbsorptionColorG(const void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	scene->global_absorption_override.y = (*(float*)var);
-	scene->updateGlassObjects();
-}
-
-void ObjScene::setAbsorptionColorB(const void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	scene->global_absorption_override.z = (*(float*)var);
-	scene->updateGlassObjects();
-}
-
-
-void ObjScene::getAbsorptionColorR(void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	*(float*)var = scene->global_absorption_override.x;
-}
-
-void ObjScene::getAbsorptionColorG(void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	*(float*)var = scene->global_absorption_override.y;
-}
-
-void ObjScene::getAbsorptionColorB(void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	*(float*)var = scene->global_absorption_override.z;
-}
-
-
-void ObjScene::setAbsorptionInverseMultiplier(const void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	scene->global_absorption_inv_multiplier = (*(float*)var);
-	scene->updateGlassObjects();
-}
-
-
-void ObjScene::setMedium(const void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	int c = (*(int*)var);
-	MPMLMedium * m = scene->available_media[c];
-	float ior = dot(m->ior_real, make_float3(0.33333f));
-	float3 ab = m->absorption;
-	// HDR colors...
-
-	scene->global_ior_override = ior;
-	scene->global_absorption_override = ab;
-	scene->updateGlassObjects();
-}
-
-
-void ObjScene::getMedium(void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	*(int*)var = scene->current_medium;
-}
-
-void ObjScene::getAbsorptionInverseMultiplier(void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	*(float*)var = scene->global_absorption_inv_multiplier;
-}
-
-void ObjScene::getDebugMode(void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	*(bool*)var = scene->debug_mode_enabled;
-}
-
-void ObjScene::setRTDepth(const void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	int depth = *(int*)var;
-	scene->context["max_depth"]->setInt(depth);
-}
-
-void ObjScene::getRTDepth(void* var, void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	*(int*)var = scene->context["max_depth"]->getInt();
-}
-
-
-
-void ObjScene::loadImage(void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	std::string filePath;
-	if (Dialogs::openFileDialog(filePath))
-	{
-		std::cout << "Loading result image... " << filePath << std::endl;
-		scene->add_result_image(filePath);
-	}
-}
-
-void ObjScene::resetCameraCallback(void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	InitialCameraData i;
-	scene->load_camera_extrinsics(i);
-	GLUTDisplay::setCamera(i);
-}
-
-void ObjScene::saveRawCallback(void* data)
-{
-	ObjScene* scene = reinterpret_cast<ObjScene*>(data);
-	std::string filePath;
-	if (Dialogs::saveFileDialog(filePath))
-	{
-		scene->export_raw(filePath);
 	}
 }
 

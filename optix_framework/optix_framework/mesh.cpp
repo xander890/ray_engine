@@ -5,7 +5,8 @@
 #include <algorithm>
 #include<host_material.h>
 #include "optix_utils.h"
-
+#include "immediate_gui.h"
+#include <array>
 Mesh::Mesh(optix::Context ctx) : mContext(ctx)
 {
 }
@@ -92,11 +93,12 @@ void Mesh::load_geometry()
 
 void Mesh::load_shader()
 {
-	if (mReloadShader || mShader->has_changed())
+	if (mReloadShader)
 	{
-		mShader->load_into_mesh(*this);
+		mShader->initialize_mesh(*this);
+		mReloadShader = false;
 	}
-	mReloadShader = false;
+	mShader->load_data();
 }
 
 void Mesh::reload_shader()
@@ -119,13 +121,7 @@ void Mesh::set_method(RenderingMethodType::EnumType method)
 
 void Mesh::set_shader(int illum)
 {
-	if(mShader != nullptr)
-	{
-		mShader->remove_from_gui(mGui, mMeshName.c_str());
-	}
     mShader = ShaderFactory::get_shader(illum);
-	if(mGui != nullptr)
-		mShader->set_into_gui(mGui, mMeshName.c_str());
 	mReloadShader = true;
 }
 
@@ -158,19 +154,6 @@ void Mesh::create_and_bind_optix_data()
     }    
 }
 
-void Mesh::setShader(const void* var, void* data)
-{
-    Mesh* mesh = reinterpret_cast<Mesh*>(data);
-    int illum = *(int*)var;
-    mesh->set_shader(illum);
-}
-
-void Mesh::getShader(void* var, void* data)
-{
-    Mesh* mesh = reinterpret_cast<Mesh*>(data);
-    *((int*)var) = mesh->mShader->get_illum();
-}
-
 void Mesh::add_material(std::shared_ptr<MaterialHost> material)
 {
     mMaterialData.push_back(material);
@@ -178,27 +161,48 @@ void Mesh::add_material(std::shared_ptr<MaterialHost> material)
     load_materials();
 }
 
-void Mesh::set_into_gui(GUI* gui, const char* group)
+void Mesh::on_draw()
 {
-	mGui = gui;
-    std::string nm = mMeshName + "/Rendering Method";
-    std::vector<GuiDropdownElement> guiinfo = ShaderFactory::get_gui_info();
-    gui->addDropdownMenuCallback(nm.c_str(), guiinfo, setShader, getShader, this, mMeshName.c_str());
-	mShader->set_into_gui(gui, mMeshName.c_str());
-    for (auto& m : mMaterialData)
-    {
-        m->set_into_gui(gui, mMeshName.c_str());
-    }
-}
-
-void Mesh::remove_from_gui(GUI * gui, const char * group)
-{
-	std::string nm = mMeshName + "/Rendering Method";
-	gui->removeVar(nm.c_str());
-	mShader->remove_from_gui(gui, group);
-	for (auto& m : mMaterialData)
+	if (ImmediateGUIDraw::TreeNode(mMeshName.c_str()))
 	{
-		m->remove_from_gui(gui, mMeshName.c_str());
+		auto map = ShaderFactory::get_map();
+		std::vector<std::string> vv;
+		std::vector<int> illummap;
+		int initial = mMaterialData[0]->get_data().illum;
+		int starting = 0;
+		for (auto& p : map)
+		{
+			vv.push_back(p.second->get_name());
+			illummap.push_back(p.first);
+			if (p.first == initial)
+				starting = (int)illummap.size()-1;
+		}
+		std::vector<const char *> v;
+		for (auto& c : vv) v.push_back(c.c_str());
+
+		static int selected = starting;
+		if (ImmediateGUIDraw::TreeNode("Shader"))
+		{
+			if (ImGui::Combo((std::string("Set Shader##RenderingMethod") + mMeshName).c_str(), &selected, v.data(), (int)v.size(), 4))
+			{
+				set_shader(illummap[selected]);
+			}
+
+			mShader->on_draw();
+			ImmediateGUIDraw::TreePop();
+		}
+
+		
+		if (ImmediateGUIDraw::TreeNode("Materials"))
+		{
+			for (auto& m : mMaterialData)
+			{
+				m->on_draw(mMeshName);
+			}
+			ImmediateGUIDraw::TreePop();
+		}
+
+		ImmediateGUIDraw::TreePop();
 	}
 }
 

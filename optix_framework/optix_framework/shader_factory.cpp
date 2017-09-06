@@ -91,18 +91,6 @@ optix::Program ShaderFactory::createProgram(std::string file, std::string progra
     return result;
 }
 
-std::vector<GuiDropdownElement> ShaderFactory::get_gui_info()
-{
-    std::vector<GuiDropdownElement> ret;
-    for (map<int, std::shared_ptr<Shader>>::value_type p : mShaderMap)
-    {
-        std::string* name = new string(p.second->get_name());
-        GuiDropdownElement el = { p.second->get_illum(), name->c_str() };
-        ret.push_back(el);
-    }
-    return ret;
-}
-
 void ShaderFactory::init(optix::Context& ctx)
 {
     context = ctx;

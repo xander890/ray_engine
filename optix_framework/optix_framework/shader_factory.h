@@ -9,7 +9,8 @@ public:
     static std::unique_ptr<Shader> get_shader(int illum);
     static optix::Program createProgram(std::string file, std::string program_name, RenderingMethodType::EnumType method = RenderingMethodType::RECURSIVE_RAY_TRACING);
     template<typename T> static void add_shader(const ShaderInfo& shader_info);
-    static std::vector<GuiDropdownElement> get_gui_info();
+	static const map<int, std::shared_ptr<Shader>>& get_map() { return mShaderMap; }
+
 private:
     static optix::Context context;
     static map<int, std::shared_ptr<Shader>> mShaderMap;

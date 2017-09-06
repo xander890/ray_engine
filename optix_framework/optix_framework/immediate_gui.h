@@ -1,6 +1,6 @@
 #pragma once
 #include "imgui\imgui.h"
-
+#include <string>
 namespace ImmediateGUIDraw = ImGui;
 
 class ImmediateGUI
@@ -19,7 +19,8 @@ public:
 	bool mouseMoving(int x, int y);
 	void setWindowSize(int x, int y);
 
-	void draw() const;
+	void start_draw() const;
+	void end_draw() const;
 
 	void toggleVisibility() { visible = !visible; }
 	bool isVisible() const
@@ -30,5 +31,6 @@ public:
 private:
 	bool visible = true;
 	int window_width, window_height;
+	std::string name;
 
 };

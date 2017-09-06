@@ -3,7 +3,7 @@
 #include "material_library.h"
 #include "scattering_material.h"
 #include <algorithm>
-
+#include "immediate_gui.h"
 using optix::float3;
 
 bool findAndReturnMaterial(const std::string &name, ScatteringMaterial & s)
@@ -14,23 +14,15 @@ bool findAndReturnMaterial(const std::string &name, ScatteringMaterial & s)
     return ss != ScatteringMaterial::defaultMaterials.end();
 }
 
-void MaterialHost::set_into_gui(GUI* gui, const char * group)
+void MaterialHost::on_draw(std::string id = "")
 {
-    std::string group_path = std::string(group);
-    size_t last = group_path.find_last_of("/");
-    std::string group_name = group_path.substr(last + 1);
-    std::string newgroup = group_path + "/" + "Material (ID " + to_string(mMaterialID) + ")";    
-    scattering_material->set_into_gui(gui, newgroup.c_str()); 
-    gui->linkGroups(group, newgroup.c_str());
-}
-
-void MaterialHost::remove_from_gui(GUI * gui, const char * group)
-{
-	std::string group_path = std::string(group);
-	size_t last = group_path.find_last_of("/");
-	std::string group_name = group_path.substr(last + 1);
-	std::string newgroup = group_path + "/" + "Material (ID " + to_string(mMaterialID) + ")";
-	scattering_material->remove_from_gui(gui, newgroup.c_str());
+	std::string myid = id + "Material" + to_string(mMaterialID);
+	std::string newgroup = "Material " + to_string(mMaterialID) + "##" + myid;
+	if (ImmediateGUIDraw::TreeNode(newgroup.c_str()))
+	{
+		scattering_material->on_draw(myid);
+		ImmediateGUIDraw::TreePop();
+	}
 }
 
 void get_relative_ior(const MPMLMedium& med_in, const MPMLMedium& med_out, optix::float3& eta, optix::float3& kappa)

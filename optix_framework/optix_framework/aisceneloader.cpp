@@ -329,7 +329,6 @@ void AISceneLoader::createGeometryInstance(void* mes, const optix::Matrix4x4& tr
     mesh["texcoord_buffer"]->setBuffer(tbuffer);
     mesh["tindex_buffer"]->setBuffer(tindex_buffer);
     mesh["nindex_buffer"]->setBuffer(nindex_buffer);
-    mesh["material_buffer"]->setBuffer(mbuffer);
     mesh["num_triangles"]->setUint(num_triangles);
         
 

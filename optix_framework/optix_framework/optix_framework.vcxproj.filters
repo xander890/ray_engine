@@ -163,9 +163,6 @@
     <ClCompile Include="default_shader.cpp">
       <Filter>Source Files\Shaders</Filter>
     </ClCompile>
-    <ClCompile Include="gui.cpp">
-      <Filter>Source Files\Dialogs</Filter>
-    </ClCompile>
     <ClCompile Include="camera_host.cpp">
       <Filter>Source Files\Cameras</Filter>
     </ClCompile>
@@ -207,6 +204,9 @@
     </ClCompile>
     <ClCompile Include="imgui\imgui_impl_glut.cpp">
       <Filter>Source Files\GUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.cpp">
+      <Filter>Source Files\Legacy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -346,9 +346,6 @@
     <ClInclude Include="shader_factory.h">
       <Filter>Header Files\Shaders</Filter>
     </ClInclude>
-    <ClInclude Include="gui.h">
-      <Filter>Header Files\Dialogs</Filter>
-    </ClInclude>
     <ClInclude Include="camera_host.h">
       <Filter>Header Files\Cameras</Filter>
     </ClInclude>
@@ -444,6 +441,9 @@
     </ClInclude>
     <ClInclude Include="imgui\stb_truetype.h">
       <Filter>Header Files\GUI\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>Legacy</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -560,6 +560,12 @@
     </Filter>
     <Filter Include="Source Files\GUI\imgui">
       <UniqueIdentifier>{660f06d2-4ec3-41ca-be30-24ecd9ce6105}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Legacy">
+      <UniqueIdentifier>{032eb5e6-a668-42c4-a1cf-4d224c6a35e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Legacy">
+      <UniqueIdentifier>{a0c731e9-6497-4524-bc5e-268efba27f6f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

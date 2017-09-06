@@ -69,83 +69,31 @@ void EnvironmentMap::set_into_gpu(optix::Context & ctx)
         presample_environment_map();
 }
 
-void EnvironmentMap::set_into_gui(GUI * gui)
+void EnvironmentMap::on_draw()
 {
-    const char* env_map_correction_group = "Environment map";
-    gui->addFloatVariableCallBack("Lightmap multiplier", setLightMultiplier ,getLightMultiplier, this, env_map_correction_group);
-    gui->addCheckBox("Importance sample", (bool*)&properties.importance_sample_envmap, env_map_correction_group);
-    gui->addFloatVariableCallBack("Delta X", setDeltaX, getDeltaX, this, env_map_correction_group, -180.0, 180.0f, .010f);
-    gui->addFloatVariableCallBack("Delta Y", setDeltaY, getDeltaY, this, env_map_correction_group, -180.0, 180.0f, .010f);
-    gui->addFloatVariableCallBack("Delta Z", setDeltaZ, getDeltaZ, this, env_map_correction_group, -180.0, 180.0f, .010f);
+	const char* env_map_correction_group = "Environment map";
+	if (ImmediateGUIDraw::TreeNode("Environment map"))
+	{
+		ImmediateGUIDraw::DragFloat3("Multiplier##Envmapmultiplier", (float*)&properties.lightmap_multiplier, 0.1f, 0.0f, 3.0f);
+		ImmediateGUIDraw::Checkbox("Importance Sample##Importancesampleenvmap", (bool*)&properties.importance_sample_envmap);
+
+		static optix::float3 deltas;
+		if (ImmediateGUIDraw::DragFloat3("Deltas##EnvmapDeltas", (float*)&deltas, 5.0f, -180.0f, 180.0f))
+		{
+			envmap_deltas = deltas / 180.0f * M_PIf;
+			resample_envmaps = true;
+		}
+		ImGui::TreePop();
+	}
+
 }
 
-void EnvironmentMap::remove_from_gui(GUI* gui)
-{
-}
 
 bool EnvironmentMap::get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program)
 {
     const char * prog = ray_type == RAY_TYPE_SHADOW ? "miss_shadow" : "miss";
     program = ctx->createProgramFromPTXFile(get_path_ptx("environment_map_background.cu"), prog);
     return true;
-}
-
-
-void EnvironmentMap::setDeltaX(const void* var, void* data)
-{
-    EnvironmentMap* scene = reinterpret_cast<EnvironmentMap*>(data);
-    scene->envmap_deltas.x = *(float*)var / 180.0f * M_PIf;
-    scene->resample_envmaps = true;
-  // FIXME  scene->reset_renderer();
-}
-
-void EnvironmentMap::setDeltaY(const void* var, void* data)
-{
-    EnvironmentMap* scene = reinterpret_cast<EnvironmentMap*>(data);
-    scene->envmap_deltas.y = *(float*)var / 180.0f * M_PIf;
-    scene->resample_envmaps = true;
-    // FIXME    scene->reset_renderer();
-}
-
-
-void EnvironmentMap::getDeltaX(void* var, void* data)
-{
-    EnvironmentMap* scene = reinterpret_cast<EnvironmentMap*>(data);
-    *(float*)var = scene->envmap_deltas.x * 180.0f / M_PIf;
-}
-
-void EnvironmentMap::getDeltaY(void* var, void* data)
-{
-    EnvironmentMap* scene = reinterpret_cast<EnvironmentMap*>(data);
-    *(float*)var = scene->envmap_deltas.y * 180.0f / M_PIf;
-}
-
-void EnvironmentMap::setDeltaZ(const void* var, void* data)
-{
-    EnvironmentMap* scene = reinterpret_cast<EnvironmentMap*>(data);
-    scene->envmap_deltas.z = *(float*)var / 180.0f * M_PIf;
-    scene->resample_envmaps = true;
-
-    // FIXME    scene->reset_renderer();
-}
-
-void EnvironmentMap::getDeltaZ(void* var, void* data)
-{
-    EnvironmentMap* scene = reinterpret_cast<EnvironmentMap*>(data);
-    *(float*)var = scene->envmap_deltas.z * 180.0f / M_PIf;
-}
-
-void EnvironmentMap::setLightMultiplier(const void* var, void* data)
-{
-    EnvironmentMap* scene = reinterpret_cast<EnvironmentMap*>(data);
-    float v = *((float*)var);
-    scene->properties.lightmap_multiplier = make_float3(v);
-}
-
-void EnvironmentMap::getLightMultiplier(void* var, void* data)
-{
-    EnvironmentMap* scene = reinterpret_cast<EnvironmentMap*>(data);
-    *(float*)var = scene->properties.lightmap_multiplier.x;
 }
 
 Matrix3x3 get_offset_lightmap_rotation_matrix(float delta_x, float delta_y, float delta_z, const optix::Matrix3x3& current_matrix)

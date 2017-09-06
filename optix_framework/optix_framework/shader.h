@@ -22,16 +22,14 @@ public:
     virtual ~Shader() = default;  
 
 	virtual Shader* clone() = 0;
-    virtual void load_into_mesh(Mesh & object) = 0;
+    virtual void initialize_mesh(Mesh & object) = 0;
     virtual void pre_trace_mesh(Mesh & object) = 0;  
+	virtual void load_data() {}
 
     virtual void initialize_shader(optix::Context context, const ShaderInfo& shader_info);
     void set_method(RenderingMethodType::EnumType m) { method = m; }
 
-	virtual void set_into_gui(GUI * gui, const char * group = "");
-	virtual void remove_from_gui(GUI * gui, const char * group = "");
-
-	bool has_changed() { return mHasChanged; }
+	virtual void on_draw();
 
     int get_illum() const { return illum; }
     std::string get_name() const { return shader_name; }
@@ -51,6 +49,6 @@ protected:
 	std::string shader_path;
 	std::string shader_name;
 	RenderingMethodType::EnumType method = RenderingMethodType::PATH_TRACING;
-	bool mHasChanged = true;
+
 };
 

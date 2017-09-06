@@ -1,6 +1,7 @@
 #include "constant_background.h"
 #include "folders.h"
 #include "host_device_common.h"
+#include "immediate_gui.h"
 
 void ConstantBackground::init(optix::Context & ctx)  
 {
@@ -14,14 +15,14 @@ void ConstantBackground::set_into_gpu(optix::Context & ctx)
     ctx["bg_color"]->setFloat(background_color);
 }
 
-void ConstantBackground::set_into_gui(GUI * gui)  
+void ConstantBackground::on_draw()
 {
-    gui->addColorVariable("Background Color", &background_color, "Miss program");
-}
-
-void ConstantBackground::remove_from_gui(GUI* gui)
-{
-    gui->removeVar("Background Color");
+	if (ImmediateGUIDraw::TreeNode("Constant Color"))
+	{
+		ImmediateGUIDraw::ColorEdit3("Color", (float*)&background_color, ImGuiColorEditFlags_NoAlpha);
+		ImGui::TreePop();
+	}
+	
 }
 
 bool ConstantBackground::get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program)

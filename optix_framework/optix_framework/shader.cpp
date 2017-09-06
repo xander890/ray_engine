@@ -13,26 +13,26 @@ using namespace optix;
 using namespace std;
 
 
-void Shader::load_into_mesh(Mesh & object)
+void Shader::initialize_mesh(Mesh & object)
 {
     // Setting MPML data
-    string n = object.get_main_material()->get_name();
-    if (object.get_main_material()->get_data().illum == 5 && MaterialLibrary::media.count(n) != 0)
-    {
-        Medium med = MaterialLibrary::full_media[n];
-        //med.fill_spectral_data();
-        Color<complex<double>> ior = med.get_ior(spectrum);
-        if (ior.size() > 0)
-        {
-            Buffer b = object.mContext->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, ior.size());
-            float * buff = (float *)b->map();
-            for (int i = 0; i < ior.size(); i++) buff[i] = (float)ior[i].real();
-            b->unmap();
-            object.mMaterial["ior_real_spectrum"]->setBuffer(b);
-            object.mMaterial["ior_real_wavelength"]->setFloat((float)ior.wavelength);
-            object.mMaterial["ior_real_step"]->setFloat((float)ior.step_size);
-        }
-    }
+    //string n = object.get_main_material()->get_name();
+    //if (object.get_main_material()->get_data().illum == 5 && MaterialLibrary::media.count(n) != 0)
+    //{
+    //    Medium med = MaterialLibrary::full_media[n];
+    //    med.fill_spectral_data();
+    //    Color<complex<double>> ior = med.get_ior(spectrum);
+    //    if (ior.size() > 0)
+    //    {
+    //        Buffer b = object.mContext->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, ior.size());
+    //        float * buff = (float *)b->map();
+    //        for (int i = 0; i < ior.size(); i++) buff[i] = (float)ior[i].real();
+    //        b->unmap();
+    //        object.mMaterial["ior_real_spectrum"]->setBuffer(b);
+    //        object.mMaterial["ior_real_wavelength"]->setFloat((float)ior.wavelength);
+    //        object.mMaterial["ior_real_step"]->setFloat((float)ior.step_size);
+    //    }
+    //}
     set_hit_programs(object);
 }
 
@@ -49,14 +49,9 @@ void Shader::initialize_shader(optix::Context context, const ShaderInfo& shader_
     illum = shader_info.illum;
     shader_path = shader_info.cuda_shader_path;
     shader_name = shader_info.name;
-	mHasChanged = false;
 }
 
-void Shader::set_into_gui(GUI * gui, const char * group)
-{
-}
-
-void Shader::remove_from_gui(GUI * gui, const char * group)
+void Shader::on_draw()
 {
 }
 
@@ -67,7 +62,6 @@ Shader::Shader(const Shader & cp)
 	shader_path = cp.shader_path;
 	shader_name = cp.shader_name;
 	method = cp.method;
-	mHasChanged = cp.mHasChanged;
 }
 
 void Shader::set_hit_programs(Mesh& object)

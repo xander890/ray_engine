@@ -14,7 +14,7 @@ public:
     PresampledSurfaceBssrdf() : Shader(), entry_point(0) { }
 
     void initialize_shader(optix::Context, const ShaderInfo& shader_info) override;
-    void load_into_mesh(Mesh& object) override;
+    void initialize_mesh(Mesh& object) override;
     void pre_trace_mesh(Mesh& object) override;
 	virtual Shader* clone() override { return new PresampledSurfaceBssrdf(*this); }
 

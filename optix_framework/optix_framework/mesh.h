@@ -43,8 +43,7 @@ public:
     std::shared_ptr<MaterialHost> get_main_material() { return mMaterialData[0]; }
     const std::vector<std::shared_ptr<MaterialHost>> & get_materials() { return mMaterialData; }
 
-    void set_into_gui(GUI * gui, const char * group = "");
-    void remove_from_gui(GUI * gui, const char * group = "");
+	void on_draw();
 	void pre_trace();
 
 private:
@@ -66,8 +65,4 @@ private:
 	bool mReloadShader = true;
 	bool mReloadGeometry = true;
 	bool mReloadMaterials = true;
-
-    static void GUI_CALL setShader(const void* var, void* data);
-    static void GUI_CALL getShader(void* var, void* data);
-	GUI * mGui = nullptr;
 };

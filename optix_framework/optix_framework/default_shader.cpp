@@ -18,8 +18,8 @@ void DefaultShader::initialize_shader(optix::Context ctx, const ShaderInfo& shad
     Shader::initialize_shader(ctx, shader_info);
 }
 
-void DefaultShader::load_into_mesh(Mesh& object)
+void DefaultShader::initialize_mesh(Mesh& object)
 {
-    Shader::load_into_mesh(object);
+    Shader::initialize_mesh(object);
 }
 

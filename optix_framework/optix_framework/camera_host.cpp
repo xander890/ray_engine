@@ -4,6 +4,7 @@
 #include <camera.h>
 #include "folders.h"
 #include "shader_factory.h"
+#include "immediate_gui.h"
 
 using namespace optix;
 using namespace std;
@@ -50,21 +51,16 @@ void Camera::set_into_gpu(optix::Context & context) {
     context["camera_data"]->setUserData(sizeof(CameraData), data.get()); 
 }
 
-void Camera::set_into_gui(GUI * gui) {
-    const char* camera_g = "Camera";
-    gui->addDirVariable("Camera eye", &data->eye, camera_g);
-    gui->setReadOnly("Camera eye");
-    gui->addDirVariable("Camera U", &data->U, camera_g);
-    gui->setReadOnly("Camera U");
-    gui->addDirVariable("Camera V", &data->V, camera_g);
-    gui->setReadOnly("Camera V");
-    gui->addDirVariable("Camera W", &data->W, camera_g);
-    gui->setReadOnly("Camera W");
-    gui->addIntVariable("X", (int*)&data->render_bounds.x, camera_g, 0, data->camera_size.x);
-    gui->addIntVariable("Y", (int*)&data->render_bounds.y, camera_g, 0, data->camera_size.y);
-    gui->addIntVariable("W", (int*)&data->render_bounds.z, camera_g, 0, data->camera_size.x);
-    gui->addIntVariable("H", (int*)&data->render_bounds.w, camera_g, 0, data->camera_size.y);
-
+void Camera::on_draw()
+{
+	if (ImmediateGUIDraw::CollapsingHeader("Camera"))
+	{
+		ImmediateGUIDraw::InputFloat3("Camera eye", (float*)&data->eye, -1, ImGuiInputTextFlags_ReadOnly);
+		ImmediateGUIDraw::InputFloat3("Camera U", (float*)&data->U, -1, ImGuiInputTextFlags_ReadOnly);
+		ImmediateGUIDraw::InputFloat3("Camera V", (float*)&data->V, -1, ImGuiInputTextFlags_ReadOnly);
+		ImmediateGUIDraw::InputFloat3("Camera W", (float*)&data->W, -1, ImGuiInputTextFlags_ReadOnly);
+		ImmediateGUIDraw::InputInt4("Render Bounds", (int*)&data->render_bounds);
+	}
 }
 
 int Camera::get_width() const { return data->render_bounds.z; }
