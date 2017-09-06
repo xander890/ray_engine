@@ -43,7 +43,7 @@ public:
     std::shared_ptr<MaterialHost> get_main_material() { return mMaterialData[0]; }
     const std::vector<std::shared_ptr<MaterialHost>> & get_materials() { return mMaterialData; }
 
-	void on_draw();
+	bool on_draw();
 	void pre_trace();
 
 private:

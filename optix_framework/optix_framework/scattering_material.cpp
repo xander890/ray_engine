@@ -189,7 +189,7 @@ void ScatteringMaterial::set_asymmetry(float asymm)
 }
 
 
-void ScatteringMaterial::on_draw(std::string id)
+bool ScatteringMaterial::on_draw(std::string id)
 {
 	const char * dips[2] = { "Standard dipole" ,"Directional dipole" };
 	#define ID_STRING(x,id) (std::string(x) + "##" + id + x).c_str()
@@ -209,9 +209,10 @@ void ScatteringMaterial::on_draw(std::string id)
 
 	static int mat = mStandardMaterial;
 	if (ImmediateGUIDraw::Combo(ID_STRING("Change material", id), &mat, v.data(), (int)v.size(), (int)v.size()))
-	{
+	{		
 		if (mat < DefaultScatteringMaterial::Count)
 		{
+			dirty = true;
 			mStandardMaterial = static_cast<int>(mat);
 			getDefaultMaterial(static_cast<DefaultScatteringMaterial>(mat));
 		}
@@ -238,6 +239,7 @@ void ScatteringMaterial::on_draw(std::string id)
 	{
 		dirty = true;
 	}
+	return dirty;
 #undef ID_STRING
 }
 

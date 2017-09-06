@@ -51,16 +51,18 @@ void Camera::set_into_gpu(optix::Context & context) {
     context["camera_data"]->setUserData(sizeof(CameraData), data.get()); 
 }
 
-void Camera::on_draw()
+bool Camera::on_draw()
 {
+	bool changed = false;
 	if (ImmediateGUIDraw::CollapsingHeader("Camera"))
 	{
 		ImmediateGUIDraw::InputFloat3("Camera eye", (float*)&data->eye, -1, ImGuiInputTextFlags_ReadOnly);
 		ImmediateGUIDraw::InputFloat3("Camera U", (float*)&data->U, -1, ImGuiInputTextFlags_ReadOnly);
 		ImmediateGUIDraw::InputFloat3("Camera V", (float*)&data->V, -1, ImGuiInputTextFlags_ReadOnly);
 		ImmediateGUIDraw::InputFloat3("Camera W", (float*)&data->W, -1, ImGuiInputTextFlags_ReadOnly);
-		ImmediateGUIDraw::InputInt4("Render Bounds", (int*)&data->render_bounds);
+		changed |= ImmediateGUIDraw::InputInt4("Render Bounds", (int*)&data->render_bounds);
 	}
+	return changed;
 }
 
 int Camera::get_width() const { return data->render_bounds.z; }

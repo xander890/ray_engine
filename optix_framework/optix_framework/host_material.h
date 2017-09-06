@@ -11,7 +11,7 @@ public:
     MaterialHost(const char * name, MaterialDataCommon data);
     ~MaterialHost() = default;
 
-	void on_draw(std::string id);
+	bool on_draw(std::string id);
     MaterialDataCommon& get_data(); 
     MaterialDataCommon get_data_copy();
     std::string get_name() { return mMaterialName; }

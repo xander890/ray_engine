@@ -74,7 +74,7 @@ public:
     void set_absorption(optix::float3 abs);
     void set_scattering(optix::float3 sc);
     void set_asymmetry(float asymm);
-	void on_draw(std::string id);
+	bool on_draw(std::string id);
 
     const char* get_name() { return name; }
 	bool hasChanged();

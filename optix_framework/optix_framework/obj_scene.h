@@ -72,7 +72,7 @@ public:
 		m_context = 0;
 	}
 
-	void drawGUI();
+	bool drawGUI();
 
     void create_3d_noise(float frequency);
     float noise_frequency = 25;

@@ -15,7 +15,7 @@ public:
 	void initialize_mesh(Mesh & object) override;
 	void pre_trace_mesh(Mesh & object) override {}
 	
-	virtual void on_draw() override;
+	virtual bool on_draw() override;
 	virtual void load_data() override;
 	virtual Shader* clone() override { return new SampledBSSRDF(*this); }
 

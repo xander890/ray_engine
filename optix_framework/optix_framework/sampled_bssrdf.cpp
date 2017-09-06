@@ -37,7 +37,7 @@ void SampledBSSRDF::load_data()
 	mHasChanged = false;
 }
 
-void SampledBSSRDF::on_draw()
+bool SampledBSSRDF::on_draw()
 {
 	std::vector<const char*> elems{ "Mertens et. al", "Hery et al." , "King et al." };
 	
@@ -46,5 +46,6 @@ void SampledBSSRDF::on_draw()
 		mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->correct_camera);
 	if (properties->sampling_method != BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
 		mHasChanged |= ImmediateGUIDraw::DragFloat("Radius max", &properties->R_max, 0.1f, 0.0f, 1.0f);
+	return mHasChanged;
 }
 

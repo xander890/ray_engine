@@ -161,8 +161,9 @@ void Mesh::add_material(std::shared_ptr<MaterialHost> material)
     load_materials();
 }
 
-void Mesh::on_draw()
+bool Mesh::on_draw()
 {
+	bool changed = false;
 	if (ImmediateGUIDraw::TreeNode(mMeshName.c_str()))
 	{
 		auto map = ShaderFactory::get_map();
@@ -185,10 +186,11 @@ void Mesh::on_draw()
 		{
 			if (ImGui::Combo((std::string("Set Shader##RenderingMethod") + mMeshName).c_str(), &selected, v.data(), (int)v.size(), 4))
 			{
+				changed = true;
 				set_shader(illummap[selected]);
 			}
 
-			mShader->on_draw();
+			changed |= mShader->on_draw();
 			ImmediateGUIDraw::TreePop();
 		}
 
@@ -197,13 +199,14 @@ void Mesh::on_draw()
 		{
 			for (auto& m : mMaterialData)
 			{
-				m->on_draw(mMeshName);
+				changed |= m->on_draw(mMeshName);
 			}
 			ImmediateGUIDraw::TreePop();
 		}
 
 		ImmediateGUIDraw::TreePop();
 	}
+	return changed;
 }
 
 void Mesh::pre_trace()

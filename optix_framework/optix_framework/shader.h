@@ -29,7 +29,7 @@ public:
     virtual void initialize_shader(optix::Context context, const ShaderInfo& shader_info);
     void set_method(RenderingMethodType::EnumType m) { method = m; }
 
-	virtual void on_draw();
+	virtual bool on_draw();
 
     int get_illum() const { return illum; }
     std::string get_name() const { return shader_name; }

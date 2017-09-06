@@ -15,14 +15,15 @@ void ConstantBackground::set_into_gpu(optix::Context & ctx)
     ctx["bg_color"]->setFloat(background_color);
 }
 
-void ConstantBackground::on_draw()
+bool ConstantBackground::on_draw()
 {
+	bool changed = false;
 	if (ImmediateGUIDraw::TreeNode("Constant Color"))
 	{
-		ImmediateGUIDraw::ColorEdit3("Color", (float*)&background_color, ImGuiColorEditFlags_NoAlpha);
+		changed |= ImmediateGUIDraw::ColorEdit3("Color", (float*)&background_color, ImGuiColorEditFlags_NoAlpha);
 		ImGui::TreePop();
 	}
-	
+	return changed;
 }
 
 bool ConstantBackground::get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program)

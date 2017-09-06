@@ -33,7 +33,6 @@ __forceinline__ __device__ void trace(const Ray& ray, PerRayData_radiance & prd)
 		output_buffer[launch_index] = (make_float4(prd.result, 0.0f) + curr_sum) / ((float)(frame + 1));
 		optix_print("Final color: %f %f %f, sum = %f %f %f\n", prd.result.x, prd.result.y, prd.result.z, output_buffer[launch_index].x, output_buffer[launch_index].y, output_buffer[launch_index].z);
 
-		float deblen = length(make_float2(debug_index - launch_index));
 		if (debug_index.x == launch_index.x && debug_index.y == launch_index.y)
 		{
 			output_buffer[launch_index] = make_float4(1, 0, 0, 1);
@@ -76,7 +75,7 @@ RT_PROGRAM void pinhole_camera()
 	}
 	else
 	{
-		output_buffer[launch_index] = make_float4(1,0,0,0);
+		output_buffer[launch_index] = make_float4(0);
 	}
 
 }
@@ -99,7 +98,7 @@ RT_PROGRAM void pinhole_camera_w_matrix()
 	}
 	else
 	{
-		output_buffer[launch_index] = make_float4(1);
+		output_buffer[launch_index] = make_float4(0);
 	}	
 }
 

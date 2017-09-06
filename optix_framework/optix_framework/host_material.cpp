@@ -14,15 +14,17 @@ bool findAndReturnMaterial(const std::string &name, ScatteringMaterial & s)
     return ss != ScatteringMaterial::defaultMaterials.end();
 }
 
-void MaterialHost::on_draw(std::string id = "")
+bool MaterialHost::on_draw(std::string id = "")
 {
+	bool changed = false;
 	std::string myid = id + "Material" + to_string(mMaterialID);
 	std::string newgroup = "Material " + to_string(mMaterialID) + "##" + myid;
 	if (ImmediateGUIDraw::TreeNode(newgroup.c_str()))
 	{
-		scattering_material->on_draw(myid);
+		changed |= scattering_material->on_draw(myid);
 		ImmediateGUIDraw::TreePop();
 	}
+	return changed;
 }
 
 void get_relative_ior(const MPMLMedium& med_in, const MPMLMedium& med_out, optix::float3& eta, optix::float3& kappa)

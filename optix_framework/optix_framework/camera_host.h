@@ -17,7 +17,7 @@ public:
 	virtual void update_camera(const SampleScene::RayGenCameraData & camera_data);
     virtual void set_into_gpu(optix::Context & context);
 
-	virtual void on_draw();
+	virtual bool on_draw();
 
 	int get_width() const;
   	int get_height() const;

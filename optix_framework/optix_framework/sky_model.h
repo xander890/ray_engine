@@ -53,7 +53,7 @@ public:
 
     virtual void init(optix::Context & ctx) override;
     virtual void set_into_gpu(optix::Context & ctx) override;
-	virtual void on_draw() override {}
+	virtual bool on_draw() override { return false; }
 
 private:
 

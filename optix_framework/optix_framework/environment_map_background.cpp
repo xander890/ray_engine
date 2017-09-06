@@ -69,23 +69,25 @@ void EnvironmentMap::set_into_gpu(optix::Context & ctx)
         presample_environment_map();
 }
 
-void EnvironmentMap::on_draw()
+bool EnvironmentMap::on_draw()
 {
+	bool changed = false;
 	const char* env_map_correction_group = "Environment map";
 	if (ImmediateGUIDraw::TreeNode("Environment map"))
 	{
-		ImmediateGUIDraw::DragFloat3("Multiplier##Envmapmultiplier", (float*)&properties.lightmap_multiplier, 0.1f, 0.0f, 3.0f);
-		ImmediateGUIDraw::Checkbox("Importance Sample##Importancesampleenvmap", (bool*)&properties.importance_sample_envmap);
+		changed |= ImmediateGUIDraw::InputFloat3("Multiplier##Envmapmultiplier", (float*)&properties.lightmap_multiplier);
+		changed |= ImmediateGUIDraw::Checkbox("Importance Sample##Importancesampleenvmap", (bool*)&properties.importance_sample_envmap);
 
 		static optix::float3 deltas;
-		if (ImmediateGUIDraw::DragFloat3("Deltas##EnvmapDeltas", (float*)&deltas, 5.0f, -180.0f, 180.0f))
+		if (ImmediateGUIDraw::DragFloat3("Deltas##EnvmapDeltas", (float*)&deltas, 1.0f, -180.0f, 180.0f))
 		{
+			changed = true;
 			envmap_deltas = deltas / 180.0f * M_PIf;
 			resample_envmaps = true;
 		}
 		ImGui::TreePop();
 	}
-
+	return changed; 
 }
 
 

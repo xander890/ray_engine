@@ -149,8 +149,9 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 }
 
 
-void ObjScene::drawGUI()
+bool ObjScene::drawGUI()
 {
+	bool changed = false;
 	ImmediateGUIDraw::TextColored({255,0,0,1}, "Rendering info ");
 	std::stringstream ss; 
 	ss << "Current frame: " << to_string(m_frame);
@@ -160,17 +161,20 @@ void ObjScene::drawGUI()
 		static bool debug;
 		if (ImmediateGUIDraw::Checkbox("Debug mode", &debug))
 		{
+			changed = true;
 			setDebugEnabled(debug);
 		}
 
 		static int depth = context["max_depth"]->getInt();
 		if (ImmediateGUIDraw::InputInt("Maximum ray depth", &depth, 1, 10))
 		{
+			changed = true;
 			context["max_depth"]->setInt(depth);
 		}
 
 		if (ImmediateGUIDraw::Button("Reset Camera"))
 		{
+			changed = true;
 			InitialCameraData i;
 			load_camera_extrinsics(i);
 			GLUTDisplay::setCamera(i);
@@ -188,42 +192,43 @@ void ObjScene::drawGUI()
 	}
 	if (ImmediateGUIDraw::CollapsingHeader("Tone mapping"))
 	{
-		ImmediateGUIDraw::SliderFloat("Multiplier##TonemapMultiplier", &tonemap_multiplier, 0.0f, 2.0f, "%.3f", 1.0f);
-		ImmediateGUIDraw::SliderFloat("Exponent##TonemapExponent", &tonemap_exponent, 0.5f, 3.5f, "%.3f", 1.0f);
+		changed |= ImmediateGUIDraw::SliderFloat("Multiplier##TonemapMultiplier", &tonemap_multiplier, 0.0f, 2.0f, "%.3f", 1.0f);
+		changed |= ImmediateGUIDraw::SliderFloat("Exponent##TonemapExponent", &tonemap_exponent, 0.5f, 3.5f, "%.3f", 1.0f);
 		if (ImmediateGUIDraw::Button("Reset##TonemapExponentMultiplierReset"))
 		{
+			changed = true;
 			tonemap_exponent = 1.8f;
 			tonemap_multiplier = 1.0f;
-			reset_renderer();
 		}
 	}
 	
 	if (ImmediateGUIDraw::CollapsingHeader("Background"))
 	{
-		miss_program->on_draw();
+		changed |= miss_program->on_draw();
 	}
 
 	if (ImmediateGUIDraw::CollapsingHeader("Meshes"))
 	{
-		execute_on_scene_elements([=](Mesh & m)
+		execute_on_scene_elements([&](Mesh & m)
 		{
-			m.on_draw();
+			changed |= m.on_draw();
 		});
 	}
 
 
-	camera->on_draw();
+	changed |= camera->on_draw();
 
 	if (ImmediateGUIDraw::CollapsingHeader("Heterogenous materials"))
 	{
 		ImmediateGUIDraw::Checkbox("Enable##EnableHeterogenousMaterials", (bool*)&use_heterogenous_materials);
 		if (ImmediateGUIDraw::InputFloat("Noise frequency##HeterogenousNoseFreq", &noise_frequency, 0.1f, 1.0f))
 		{
+			changed = true;
 			create_3d_noise(noise_frequency);
 		}
 	}
 
-
+	return changed;
 }
 
 
@@ -746,7 +751,10 @@ bool ObjScene::mouseMoving(int x, int y)
 void ObjScene::postDrawCallBack()
 {
 	new_gui->start_draw();
-	drawGUI();
+	if (drawGUI())
+	{
+		reset_renderer();
+	}
 	new_gui->end_draw();
 }
 

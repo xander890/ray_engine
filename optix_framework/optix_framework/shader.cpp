@@ -51,8 +51,9 @@ void Shader::initialize_shader(optix::Context context, const ShaderInfo& shader_
     shader_name = shader_info.name;
 }
 
-void Shader::on_draw()
+bool Shader::on_draw()
 {
+	return false;
 }
 
 Shader::Shader(const Shader & cp)
