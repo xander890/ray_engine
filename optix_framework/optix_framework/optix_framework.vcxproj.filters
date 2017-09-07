@@ -76,6 +76,9 @@
     <CudaCompile Include="subsurface_scattering_sampled.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
+    <CudaCompile Include="debug_camera.cu">
+      <Filter>CUDA_files\Cameras</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="obj_scene.cpp">

@@ -500,6 +500,9 @@ echo Done.</Command>
       </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu" />
+    <CudaCompile Include="debug_camera.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </CudaCompile>
     <CudaCompile Include="sphere.cu">
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>

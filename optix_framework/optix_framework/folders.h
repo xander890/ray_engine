@@ -25,8 +25,6 @@ static const char* const get_path_ptx(const std::string& base)
 	return path.c_str();
 }
 
-#define OUTPUT_BUFFER "output_buffer"
-
 #define DEFAULT_TEXTURE_FOLDER std::string("./images/")
 
 

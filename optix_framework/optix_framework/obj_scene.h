@@ -39,7 +39,6 @@ public:
         : context(m_context),
           current_scene_type(Scene::OPTIX_ONLY), current_miss_program(), filenames(obj_filenames), method(nullptr),        m_frame(0u),
           deforming(false),
-          use_tonemap(true), 
           config_file(config_file)
     {
         calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
@@ -52,7 +51,6 @@ public:
 		current_scene_type(Scene::OPTIX_ONLY), filenames(1, "test.obj"), 
 		  m_frame(0u),
 		  deforming(true),
-		  use_tonemap(true),
 		  config_file("config.xml")
 	{
 		calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
@@ -126,7 +124,7 @@ private:
 	bool mAutoMode = false;
 	string mOutputFile = "rendering.raw";
 	int mFrames = -1;
-	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, unsigned width, unsigned height);
+	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height);
 
 	void add_lights(vector<TriangleLight>& area_lights);
 	void set_miss_program();
@@ -149,8 +147,9 @@ private:
 
 	unsigned int m_frame;
 	bool deforming;
-	bool use_tonemap;
 	std::unique_ptr<Camera> camera = nullptr;
+	optix::Buffer output_buffer;
+	
    
 	ImmediateGUI* new_gui = nullptr;
 	void add_result_image(const string& image_file);
@@ -171,6 +170,10 @@ private:
 	std::vector<MPMLMedium*> available_media;
 	int current_medium = 0;
 
+	optix::Buffer rendering_output_buffer;
+	optix::Buffer tonemap_output_buffer;
+	optix::Buffer debug_output_buffer;
+	optix::Buffer returned_buffer;
 
 	int mtx_method = 1;
 	
@@ -181,6 +184,9 @@ private:
 
 	const std::string config_file = "config.xml";
 	int4 custom_rr;
+
+	uint4 zoom_debug_window = make_uint4(20,20,300,300);
+	uint4 zoomed_area = make_uint4(0);
 };
 
 #endif // OBJSCENE_H

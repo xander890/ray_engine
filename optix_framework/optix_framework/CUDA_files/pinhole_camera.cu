@@ -32,11 +32,6 @@ __forceinline__ __device__ void trace(const Ray& ray, PerRayData_radiance & prd)
 		float4 curr_sum = (frame != 0) ? output_buffer[launch_index] * ((float)frame) : make_float4(0.0f);
 		output_buffer[launch_index] = (make_float4(prd.result, 0.0f) + curr_sum) / ((float)(frame + 1));
 		optix_print("Final color: %f %f %f, sum = %f %f %f\n", prd.result.x, prd.result.y, prd.result.z, output_buffer[launch_index].x, output_buffer[launch_index].y, output_buffer[launch_index].z);
-
-		if (debug_index.x == launch_index.x && debug_index.y == launch_index.y)
-		{
-			output_buffer[launch_index] = make_float4(1, 0, 0, 1);
-		}
 	}
 }
 

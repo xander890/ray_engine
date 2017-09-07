@@ -110,9 +110,6 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 	}
 	switch (key)
 	{
-	case 't':
-		use_tonemap = !use_tonemap;
-		return true;
 	case 'e':
 		{
 			std::string res = std::string("result_optix.raw");
@@ -123,9 +120,9 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 		if (current_scene_type == Scene::NotValidEnumItem)
 			current_scene_type = Scene::OPTIX_ONLY;
 		reset_renderer();
-		/*	  Buffer out = context[OUTPUT_BUFFER]->getBuffer();
+		/*	  Buffer out = context["output_buffer"]->getBuffer();
 			  out->destroy();
-			  context[OUTPUT_BUFFER]->setBuffer(createPBOOutputBuffer(RT_FORMAT_FLOAT4, window_width, window_height));
+			  context["output_buffer"]->setBuffer(createPBOOutputBuffer(RT_FORMAT_FLOAT4, window_width, window_height));
 			  cout << ((use_optix) ? "Ray tracing" : "Rasterization") << endl;*/
 		return true;
 	case 'g':
@@ -136,7 +133,7 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 		break;
 	case 'r':
 	{
-		Logger::info << "Realoading all shaders..." << std::endl;
+		Logger::info << "Reloading all shaders..." << std::endl;
 		execute_on_scene_elements([=](Mesh & m)
 		{
 			m.reload_shader();
@@ -163,6 +160,23 @@ bool ObjScene::drawGUI()
 		{
 			changed = true;
 			setDebugEnabled(debug);
+			if (debug)
+			{
+				returned_buffer = debug_output_buffer;
+			}
+			else
+			{
+				returned_buffer = tonemap_output_buffer;
+			}
+		}
+
+		if (ImmediateGUIDraw::InputInt4("Zoom window", (int*)&zoom_debug_window))
+		{
+			context["zoom_window"]->setUint(zoom_debug_window);
+		}
+		if (ImmediateGUIDraw::InputInt4("Zoom area", (int*)&zoomed_area))
+		{
+			context["image_part_to_zoom"]->setUint(zoomed_area);
 		}
 
 		static int depth = context["max_depth"]->getInt();
@@ -178,6 +192,15 @@ bool ObjScene::drawGUI()
 			InitialCameraData i;
 			load_camera_extrinsics(i);
 			GLUTDisplay::setCamera(i);
+		}
+
+		ImmediateGUIDraw::SameLine();
+		if (ImmediateGUIDraw::Button("Reset Shaders"))
+		{
+			execute_on_scene_elements([=](Mesh & m)
+			{
+				m.reload_shader();
+			});
 		}
 
 		if (ImmediateGUIDraw::Button("Save RAW image"))
@@ -286,6 +309,8 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
     int downsampling = ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, "");
     camera = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
     
+
+
     ShaderFactory::init(context);
     ShaderInfo info = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
     ShaderFactory::add_shader<DefaultShader>(info);
@@ -310,7 +335,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
 
 	context["max_depth"]->setInt(ParameterParser::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
-	context[OUTPUT_BUFFER]->set(createPBOOutputBuffer(OUTPUT_BUFFER, RT_FORMAT_FLOAT4, camera->get_width(), camera->get_height()));
 
 	// Constant colors
 	context["bad_color"]->setFloat(0.0f, 1.0f, 0.0f);
@@ -320,7 +344,10 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	Logger::debug << "Absorption is " << (use_abs ? "ON" : "OFF") << endl;
 
 	// Tone mapping pass
-	context["tonemap_output_buffer"]->set(createPBOOutputBuffer("tonemap_output_buffer", RT_FORMAT_FLOAT4, camera->get_width(), camera->get_height()));
+	rendering_output_buffer = createPBOOutputBuffer("output_buffer", RT_FORMAT_FLOAT4, RT_BUFFER_INPUT_OUTPUT, camera->get_width(), camera->get_height());
+	tonemap_output_buffer = createPBOOutputBuffer("tonemap_output_buffer", RT_FORMAT_UNSIGNED_BYTE4, RT_BUFFER_INPUT_OUTPUT, camera->get_width(), camera->get_height());
+	debug_output_buffer = createPBOOutputBuffer("debug_output_buffer", RT_FORMAT_UNSIGNED_BYTE4, RT_BUFFER_OUTPUT, camera->get_width(), camera->get_height());
+	returned_buffer = tonemap_output_buffer;
 
 	// Create group for scene objects and float acceleration structure
 	scene = context->createGroup();
@@ -429,10 +456,14 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	// Set up camera
 	
     
-	std::string ptx_path_t = get_path_ptx("tonemap_camera.cu");
-	Program ray_gen_program_t = context->createProgramFromPTXFile(ptx_path_t, "tonemap_camera");
+	Program ray_gen_program_t = context->createProgramFromPTXFile(get_path_ptx("tonemap_camera.cu"), "tonemap_camera");
+	Program ray_gen_program_d = context->createProgramFromPTXFile(get_path_ptx("debug_camera.cu"), "debug_camera");
 
 	context->setRayGenerationProgram(as_integer(CameraType::TONE_MAPPING), ray_gen_program_t);
+	context->setRayGenerationProgram(as_integer(CameraType::DEBUG), ray_gen_program_d);
+	zoomed_area = make_uint4(camera_width / 2 - 5, camera_height / 2 - 5, 10, 10);
+	context["zoom_window"]->setUint(zoom_debug_window);
+	context["image_part_to_zoom"]->setUint(zoomed_area);
 
 	// Environment cameras
 	
@@ -494,9 +525,9 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 {
 	display = true;
-	context["comparison_image_weight"]->setFloat(comparison_image_weight);
-	context["show_difference_image"]->setInt(show_difference_image);
-	context["comparison_texture"]->setInt(comparison_image->getId());
+	//context["comparison_image_weight"]->setFloat(comparison_image_weight);
+	//context["show_difference_image"]->setInt(show_difference_image);
+	//context["comparison_texture"]->setInt(comparison_image->getId());
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
 
 	//Logger::debug({ "Merl correction factor: ", to_string(merl_correction.x), " ", to_string(merl_correction.y), " ", to_string(merl_correction.z) });
@@ -533,11 +564,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
         m.pre_trace();
     });
 
-	// Launch the ray tracer
-	Buffer buffer = context[OUTPUT_BUFFER]->getBuffer();
-	RTsize buffer_width, buffer_height;
-	buffer->getSize(buffer_width, buffer_height);
-
 	unsigned int width = camera->get_width();
 	unsigned int height = camera->get_height();
 	context->launch(as_integer(CameraType::STANDARD_RT), width, height);
@@ -546,20 +572,22 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	sutilCurrentTime(&time1);
 	// cout << "Elapsed (ray tracing): " << (time1 - time) * 1000 << endl;
 	// Apply tone mapping
-	if (use_tonemap)
-		context->launch(as_integer(CameraType::TONE_MAPPING), width, height);
+	context->launch(as_integer(CameraType::TONE_MAPPING), width, height);
+
+	if (debug_mode_enabled == true)
+	{
+		context->launch(as_integer(CameraType::DEBUG), width, height);
+	}
 
 	collect_image(m_frame);
 }
 
 Buffer ObjScene::getOutputBuffer()
 {
-	if (use_tonemap)
-		return context["tonemap_output_buffer"]->getBuffer();
-	return context[OUTPUT_BUFFER]->getBuffer();
+	return returned_buffer;
 }
 
-optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format, unsigned width, unsigned height)
+optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height)
 {
 	// Set number of devices to be used
 	// Default, 0, means not to specify them here, but let OptiX use its default behavior.
@@ -572,7 +600,7 @@ optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format,
 		context->setDevices(devs.begin(), devs.end());
 	}
 
-    Buffer buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
+    Buffer buffer = context->createBuffer(type);
 	buffer->setFormat(format);
     buffer->setSize(width, height);
     context[name]->setBuffer(buffer);
