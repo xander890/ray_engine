@@ -113,10 +113,20 @@ __device__ __inline__ optix::float3 project_on_plane(const optix::float3& n, con
 	return optix::normalize(v - n * optix::dot(n, v));
 }
 
+static __host__ __device__ __inline__ optix::float4 max(const optix::float4 &value1, const optix::float4 &value2)
+{
+	return optix::make_float4(optix::fmaxf(value1.x, value2.x), optix::fmaxf(value1.y, value2.y), optix::fmaxf(value1.z, value2.z), optix::fmaxf(value1.w, value2.w));
+}
 
 static __host__ __device__ __inline__ optix::float3 max(const optix::float3 &value1, const optix::float3 &value2)
 {
 	  return optix::make_float3(optix::fmaxf(value1.x,value2.x),optix::fmaxf(value1.y,value2.y),optix::fmaxf(value1.z,value2.z));
+}
+
+
+static __host__ __device__ __inline__ optix::float4 min(const optix::float4 &value1, const optix::float4 &value2)
+{
+	return optix::make_float4(optix::fminf(value1.x, value2.x), optix::fminf(value1.y, value2.y), optix::fminf(value1.z, value2.z), optix::fminf(value1.w, value2.w));
 }
 
 static __host__ __device__ __inline__ optix::float3 min(const optix::float3 &value1, const optix::float3 &value2)
@@ -138,6 +148,12 @@ static __host__ __device__ __inline__ optix::float3 abs(const optix::float3 &val
 {
 	  return optix::make_float3(abs(value1.x),abs(value1.y),abs(value1.z));
 }
+
+static __host__ __device__ __inline__ optix::float3 pow(const optix::float3 &value1, const optix::float3 &exp)
+{
+	return optix::make_float3(powf(value1.x, exp.x), powf(value1.y, exp.y), powf(value1.z, exp.z));
+}
+
 
 static __host__ __device__ __inline__ float step(const float &edge, const float &x)
 {

@@ -35,8 +35,6 @@ rtDeclareVariable(CameraData, camera_data, , );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
-//rtDeclareVariable(unsigned int, bssrdf_enabled, , );
-
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow()
 {
@@ -107,7 +105,6 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 			}
 		}
 
-		optix_print("Axis: %d\n", main_axis);
 		float3 top = axes[main_axis];
 		float3 t1 = axes[(main_axis + 1) % 3];
 		float3 t2 = axes[(main_axis + 2) % 3];
@@ -123,7 +120,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	attribute_fetch_ray_payload.depth = t_max;
 	attribute_fetch_ray.tmax = t_max;
 	attribute_fetch_ray.direction = sample_ray_dir;
-	attribute_fetch_ray.origin = sample_ray_origin; // sample_on_tangent_plane + no * 1.0f;
+	attribute_fetch_ray.origin = sample_ray_origin; 
 
 	rtTrace(top_object, attribute_fetch_ray, attribute_fetch_ray_payload);
 	optix_print("Depth ray: %s\n", abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3 ? "Miss" : "Hit");
@@ -134,18 +131,20 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	xi = attribute_fetch_ray.origin + attribute_fetch_ray_payload.depth * attribute_fetch_ray.direction;
 	ni = attribute_fetch_ray_payload.normal;
 
-	float dist = length(xo - xi);
-	float pdf_disk = chosen_transport_rr * exp(-dist * chosen_transport_rr) / (2.0f* M_PIf);
+	float pdf_disk = chosen_transport_rr * exp(-r * chosen_transport_rr) / (2.0f* M_PIf);
 	integration_factor *= r / pdf_disk;
+	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
 
 	if (bssrdf_sampling_properties->sampling_method == BSSRDF_SAMPLING_CAMERA_BASED_MERTENS
 		&& bssrdf_sampling_properties->correct_camera == 1)
 	{
 		float3 d = camera_data.eye - xi;
-		float3 d_prime = camera_data.eye - sample_on_tangent_plane;
-		float cos_alpha_prime = dot(-sample_ray_dir, no);
 		float cos_alpha = dot(-sample_ray_dir, ni);
-		float jacobian = cos_alpha / cos_alpha_prime * dot(d_prime, d_prime) / dot(d, d);
+
+		float3 d_tan = camera_data.eye - sample_on_tangent_plane;
+		float cos_alpha_tan = dot(-sample_ray_dir, no);
+
+		float jacobian = cos_alpha_tan / cos_alpha * dot(d, d) / dot(d_tan, d_tan);
 		integration_factor *= jacobian;
 	}
 	return true;
@@ -196,6 +195,10 @@ RT_PROGRAM void shade()
 		cos_theta_t = sqrtf(1.0f - sin_theta_t_sqr);
 		R = fresnel_R(cos_theta_o, cos_theta_t, recip_ior);
 	}
+
+	R = bssrdf_sampling_properties->show_mode == BSSRDF_SHADERS_SHOW_REFLECTION ? 1.0f : R;
+	R = bssrdf_sampling_properties->show_mode == BSSRDF_SHADERS_SHOW_REFRACTION ? 0.0f : R;
+
 	if (reflect_xi >= R)
 	{
 		float3 wt = recip_ior*(cos_theta_o*no - wo) - no*cos_theta_t;
@@ -238,11 +241,14 @@ RT_PROGRAM void shade()
 		float3 w12 = recip_ior*(cos_theta_i*ni - wi) - ni*cos_theta_t;
 		float T12 = 1.0f - fresnel_R(cos_theta_i, cos_theta_t, recip_ior);
 
+		float3 w21 = no * cos_theta_t - recip_ior * (cos_theta_o * no - wo);
+
 		// compute contribution if sample is non-zero
 		if (dot(L_i, L_i) > 0.0f)
 		{
-			float3 S_d = bssrdf(xi, ni, w12, xo, no, props);
+			float3 S_d = bssrdf(xi, ni, w12, xo, no, w21, props);
 			L_d += L_i * S_d * T12 * integration_factor;
+			optix_print("Ld %f %f %f T12 %f int %f\n", L_d.x, L_d.y, L_d.z, T12, integration_factor);
 		}
 	}
 #ifdef TRANSMIT

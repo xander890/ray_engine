@@ -6,6 +6,7 @@ using optix::float3;
 
 __device__ float3 standard_dipole_bssrdf(float dist, const ScatteringMaterialProperties& properties)
 {
+	optix_print("BSSRDF: standard\n");
 	float3 real_source = properties.three_D*properties.three_D;
 	float3 extrapolation = 4.0f*properties.A*properties.D;
 	float3 virtual_source = extrapolation*extrapolation;

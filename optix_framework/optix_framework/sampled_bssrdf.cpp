@@ -46,6 +46,10 @@ bool SampledBSSRDF::on_draw()
 		mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->correct_camera);
 	if (properties->sampling_method != BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
 		mHasChanged |= ImmediateGUIDraw::DragFloat("Radius max", &properties->R_max, 0.1f, 0.0f, 1.0f);
+	
+	mHasChanged |= ImGui::RadioButton("Show all", &properties->show_mode, BSSRDF_SHADERS_SHOW_ALL); ImGui::SameLine();
+	mHasChanged |= ImGui::RadioButton("Refraction", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFRACTION); ImGui::SameLine();
+	mHasChanged |= ImGui::RadioButton("Reflection", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFLECTION);
 	return mHasChanged;
 }
 

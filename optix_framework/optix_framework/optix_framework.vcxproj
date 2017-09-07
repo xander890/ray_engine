@@ -515,6 +515,7 @@ echo Done.</Command>
     </ClInclude>
     <ClInclude Include="ambient_occlusion.h" />
     <ClInclude Include="apple_juice.h" />
+    <ClInclude Include="approximate_standard_dipole.h" />
     <ClInclude Include="area_light.h" />
     <ClInclude Include="box.h" />
     <ClInclude Include="bssrdf.h" />
@@ -558,6 +559,7 @@ echo Done.</Command>
     <ClInclude Include="directional_dipole.h" />
     <ClInclude Include="sampled_bssrdf.h" />
     <ClInclude Include="simplex_noise.h" />
+    <ClInclude Include="approximate_directional_dipole.h" />
     <ClInclude Include="singular_light.h" />
     <ClInclude Include="distribution1d.h" />
     <ClInclude Include="folders.h" />

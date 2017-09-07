@@ -216,9 +216,6 @@
     <ClInclude Include="scattering_material.h">
       <Filter>Header Files\Materials</Filter>
     </ClInclude>
-    <ClInclude Include="directional_dipole.h">
-      <Filter>Header Files\Materials</Filter>
-    </ClInclude>
     <ClInclude Include="optix_helpers.h">
       <Filter>Header Files\Optix</Filter>
     </ClInclude>
@@ -409,9 +406,6 @@
     <ClInclude Include="bssrdf.h">
       <Filter>Header Files\Materials</Filter>
     </ClInclude>
-    <ClInclude Include="standard_dipole.h">
-      <Filter>Header Files\Materials</Filter>
-    </ClInclude>
     <ClInclude Include="sampled_bssrdf.h">
       <Filter>Header Files\Shaders</Filter>
     </ClInclude>
@@ -444,6 +438,18 @@
     </ClInclude>
     <ClInclude Include="gui.h">
       <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="directional_dipole.h">
+      <Filter>Header Files\Materials\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="standard_dipole.h">
+      <Filter>Header Files\Materials\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="approximate_standard_dipole.h">
+      <Filter>Header Files\Materials\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="approximate_directional_dipole.h">
+      <Filter>Header Files\Materials\Dipoles</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -566,6 +572,9 @@
     </Filter>
     <Filter Include="Legacy">
       <UniqueIdentifier>{a0c731e9-6497-4524-bc5e-268efba27f6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Materials\Dipoles">
+      <UniqueIdentifier>{14016807-5211-43cb-927a-10f8652e8b6d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

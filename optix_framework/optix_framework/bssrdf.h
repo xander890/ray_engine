@@ -3,6 +3,8 @@
 #include <scattering_properties.h>
 #include <directional_dipole.h>
 #include <standard_dipole.h>
+#include <approximate_directional_dipole.h>
+#include <approximate_standard_dipole.h>
 #include <bssrdf_sampling_properties.h>
 
 using optix::float3;
@@ -10,13 +12,17 @@ using optix::float3;
 rtDeclareVariable(BufPtr<BSSRDFSamplingProperties>, bssrdf_sampling_properties, , );
 
 __forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, const float3& _w12,
-	const float3& _xo, const float3& _no,
+	const float3& _xo, const float3& _no, const float3 & _w21,
 	const ScatteringMaterialProperties& properties)
 {
 	switch (properties.selected_bssrdf)
 	{
+	case APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
+		return approximate_directional_dipole_bssrdf(_xi, _ni, _w12, _xo, _no, _w21, properties);
 	case DIRECTIONAL_DIPOLE_BSSRDF:
 		return directional_dipole_bssrdf(_xi, _ni, _w12, _xo, _no, properties);
+	case APPROX_STANDARD_DIPOLE_BSSRDF:
+		return approximate_standard_dipole_bssrdf(length(_xo - _xi), properties);
 	case STANDARD_DIPOLE_BSSRDF:
 	default:
 		return standard_dipole_bssrdf(length(_xo - _xi), properties);

@@ -120,6 +120,8 @@ RT_PROGRAM void shade()
         float3 w12 = recip_ior*(cos_theta_i*sample.normal - wi) - sample.normal*cos_theta_t;
         float T12 = 1.0f - fresnel_R(cos_theta_i, cos_theta_t, recip_ior);
 
+		float3 w21 = no * cos_theta_t - recip_ior * (cos_theta_o * no - wo);
+
         // compute contribution if sample is non-zero
         if (dot(sample.L, sample.L) > 0.0f)
         {
@@ -128,7 +130,7 @@ RT_PROGRAM void shade()
             float exp_term = exp(-dist * chosen_transport_rr);
             if (rnd(t) < exp_term)
             {
-                accumulate += T12*sample.L*bssrdf(sample.pos, sample.normal, w12, xo, no, props) / exp_term;
+                accumulate += T12*sample.L*bssrdf(sample.pos, sample.normal, w12, xo, no, w21, props) / exp_term;
             }
         }
     }
