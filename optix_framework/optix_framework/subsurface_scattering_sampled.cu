@@ -160,8 +160,6 @@ RT_PROGRAM void shade()
 		return;
 	}
 
-	optix_print("Depth %d/%d\n", prd_radiance.depth, max_depth);
-
 	float3 n = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	float3 xo = ray.origin + t_hit*ray.direction;
 	float3 wo = -ray.direction;

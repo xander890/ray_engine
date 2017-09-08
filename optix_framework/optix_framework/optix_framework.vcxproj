@@ -95,7 +95,7 @@ xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"
       </AdditionalDeps>
       <Include>$(SolutionDir)optix\include;$(SolutionDir)GL;$(SolutionDir)nfd;$(SolutionDir)optprops;$(SolutionDir)sutil;$(CudaToolkitIncludeDir);$(SolutionDir)\assimp\include;%(AdditionalDeps)</Include>
       <FastMath>true</FastMath>
-      <AdditionalOptions>-D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options  /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-gencode=arch=compute_35,code=\"sm_35,compute_35\" -D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options  /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
       <NvccCompilation>ptx</NvccCompilation>
       <CudaRuntime>Shared</CudaRuntime>
       <CodeGeneration>compute_35,sm_35</CodeGeneration>
@@ -157,10 +157,11 @@ xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"
       <Include>$(SolutionDir)optix\include;$(SolutionDir)GL;$(SolutionDir)nfd;$(SolutionDir)optprops;$(SolutionDir)sutil;$(SolutionDir)\assimp\include;%(AdditionalDeps)</Include>
       <CudaRuntime>Shared</CudaRuntime>
       <NvccCompilation>ptx</NvccCompilation>
-      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <CodeGeneration>
+      </CodeGeneration>
       <MaxRegCount />
       <FastMath>true</FastMath>
-      <AdditionalOptions>-D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-gencode=arch=compute_35,code=\"sm_35,compute_35\" -D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
       <CompileOut>$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
     </CudaCompile>
     <PreBuildEvent>
@@ -226,11 +227,15 @@ echo Done.</Command>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\chull.cu">
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\constant_shader.cu">
@@ -244,6 +249,8 @@ echo Done.</Command>
       <GenerateLineInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateLineInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\box.cu">
@@ -268,6 +275,8 @@ echo Done.</Command>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\constant_background.cu">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v6.5/bin/nvcc.exe" "CUDA_files/constantbg.cu" -ptx -o "PTX_files/constantbg.cu.ptx" -ccbin "C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin" -m64 -D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --use_fast_math --compiler-options /D_USE_MATH_DEFINES -DNVCC -I"C:/ProgramData/NVIDIA Corporation/OptiX SDK 3.7.0/include"</Command>
@@ -291,9 +300,15 @@ echo Done.</Command>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\depth_ray.cu">
       <UseHostInclude Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</UseHostInclude>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\environment_map_background.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -306,13 +321,16 @@ echo Done.</Command>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\env_cameras.cu">
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compute_35,sm_35;</CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\glass_shader.cu">
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -323,11 +341,15 @@ echo Done.</Command>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\glossy_shader.cu">
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\dispersion_shader.cu">
@@ -343,6 +365,8 @@ echo Done.</Command>
       </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\metal_shader.cu">
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -353,6 +377,8 @@ echo Done.</Command>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\mirror_shader.cu">
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -362,6 +388,8 @@ echo Done.</Command>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\normal_shader.cu">
@@ -376,6 +404,8 @@ echo Done.</Command>
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\lambertian_shader.cu">
@@ -402,6 +432,8 @@ echo Done.</Command>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\pinhole_camera.cu">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling pinhole_camera.cu into pinhole_camera.cu.ptx...</Message>
@@ -425,6 +457,8 @@ echo Done.</Command>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\sample_camera.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -439,6 +473,8 @@ echo Done.</Command>
       </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\sky_model_background.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -450,6 +486,8 @@ echo Done.</Command>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\subsurface_scattering_shader.cu">
@@ -465,6 +503,8 @@ echo Done.</Command>
       </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\tonemap_camera.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -478,6 +518,8 @@ echo Done.</Command>
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\triangle_mesh.cu">
@@ -493,23 +535,43 @@ echo Done.</Command>
       </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\volume_shader.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu" />
+    <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
+    </CudaCompile>
     <CudaCompile Include="debug_camera.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="sphere.cu">
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
     </CudaCompile>
-    <CudaCompile Include="subsurface_scattering_sampled.cu" />
+    <CudaCompile Include="subsurface_scattering_sampled.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </CodeGeneration>
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </CodeGeneration>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aisceneloader.h">

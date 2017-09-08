@@ -111,10 +111,10 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case 'e':
-		{
-			std::string res = std::string("result_optix.raw");
-			return export_raw(res);
-		}
+	{
+		std::string res = std::string("result_optix.raw");
+		return export_raw(res);
+	}
 	case 'p':
 		//current_scene_type = Scene::NextEnumItem(current_scene_type);
 		if (current_scene_type == Scene::NotValidEnumItem)
@@ -126,11 +126,11 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 			  cout << ((use_optix) ? "Ray tracing" : "Rasterization") << endl;*/
 		return true;
 	case 'g':
-		{
-			new_gui->toggleVisibility();
-			return true;
-		}
-		break;
+	{
+		new_gui->toggleVisibility();
+		return true;
+	}
+	break;
 	case 'r':
 	{
 		Logger::info << "Reloading all shaders..." << std::endl;
@@ -149,13 +149,13 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 bool ObjScene::drawGUI()
 {
 	bool changed = false;
-	ImmediateGUIDraw::TextColored({255,0,0,1}, "Rendering info ");
-	std::stringstream ss; 
+	ImmediateGUIDraw::TextColored({ 255,0,0,1 }, "Rendering info ");
+	std::stringstream ss;
 	ss << "Current frame: " << to_string(m_frame);
 	ImmediateGUIDraw::Text(ss.str().c_str());
+	static bool debug = false;
 	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		static bool debug;
 		if (ImmediateGUIDraw::Checkbox("Debug mode", &debug))
 		{
 			changed = true;
@@ -168,15 +168,6 @@ bool ObjScene::drawGUI()
 			{
 				returned_buffer = tonemap_output_buffer;
 			}
-		}
-
-		if (ImmediateGUIDraw::InputInt4("Zoom window", (int*)&zoom_debug_window))
-		{
-			context["zoom_window"]->setUint(zoom_debug_window);
-		}
-		if (ImmediateGUIDraw::InputInt4("Zoom area", (int*)&zoomed_area))
-		{
-			context["image_part_to_zoom"]->setUint(zoomed_area);
 		}
 
 		static int depth = context["max_depth"]->getInt();
@@ -213,6 +204,29 @@ bool ObjScene::drawGUI()
 		}
 
 	}
+
+
+	if (debug && ImmediateGUIDraw::CollapsingHeader("Debug"))
+	{
+		auto c = context["debug_index"]->getType();
+		uint2 debug_pixel = context["debug_index"]->getUint2();
+		if (ImmediateGUIDraw::InputInt2("Debug pixel", (int*)&debug_pixel))
+		{
+			context["debug_index"]->setUint(debug_pixel);
+		}
+
+		if (ImmediateGUIDraw::SliderInt4("Zoom window", (int*)&zoom_debug_window, 0, min(camera->get_width(), camera->get_height())))
+		{
+			context["zoom_window"]->setUint(zoom_debug_window);
+		}
+		if (ImmediateGUIDraw::SliderInt4("Zoom area", (int*)&zoomed_area, 0, min(camera->get_width(), camera->get_height())))
+		{
+			context["image_part_to_zoom"]->setUint(zoomed_area);
+		}
+		ImmediateGUIDraw::Checkbox("Colored logs", &Logger::is_color_enabled);
+	}
+
+
 	if (ImmediateGUIDraw::CollapsingHeader("Tone mapping"))
 	{
 		changed |= ImmediateGUIDraw::SliderFloat("Multiplier##TonemapMultiplier", &tonemap_multiplier, 0.0f, 2.0f, "%.3f", 1.0f);
@@ -283,7 +297,7 @@ void ObjScene::create_3d_noise(float frequency)
             for (int k = 0; k < 256; k++)
             {
                 int idx = 256 * 256 * i + 256 * j + k;
-                buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
+                //buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
             }
     buffer->unmap();
 
@@ -464,7 +478,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	zoomed_area = make_uint4(camera_width / 2 - 5, camera_height / 2 - 5, 10, 10);
 	context["zoom_window"]->setUint(zoom_debug_window);
 	context["image_part_to_zoom"]->setUint(zoomed_area);
-
+	context["debug_index"]->setUint(make_uint2(0, 0));
 	// Environment cameras
 	
 
@@ -795,7 +809,6 @@ void ObjScene::postDrawCallBack()
 void ObjScene::setDebugPixel(int i, int y)
 {
 	y = camera->get_height() - y;
-
 	Logger::info <<"Setting debug pixel to " << to_string(i) << " << " << to_string(y) <<endl;
 	context->setPrintLaunchIndex(i, y);
 	context["debug_index"]->setUint(i, y);
@@ -888,21 +901,21 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 
 	Matrix3x3 camera_matrix = Matrix3x3::identity();
 
-	fov = ParameterParser::get_parameter<float2>("camera", "camera_fov", make_float2(53.1301f, 53.1301f), "The camera FOVs (h|v)");
+	float fov = ParameterParser::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
 
     if (use_auto_camera)
 	{
 		camera_data = InitialCameraData(eye, // eye
 			m_scene_bounding_box.center(), // lookat
 			make_float3(0.0f, 1.0f, 0.0f), // up
-			fov.x, fov.y);
+			fov, fov);
 	}
 	else
 	{
 		eye = ParameterParser::get_parameter<float3>("camera", "camera_position", make_float3(1, 0, 0), "The camera initial position");
 		float3 lookat = ParameterParser::get_parameter<float3>("camera", "camera_lookat_point", make_float3(0, 0, 0), "The camera initial lookat point");
 		float3 up = ParameterParser::get_parameter<float3>("camera", "camera_up", make_float3(0, 1, 0), "The camera initial up");
-		camera_data = InitialCameraData(eye, lookat, up, fov.x, fov.y);
+		camera_data = InitialCameraData(eye, lookat, up, fov, fov);
 	}
 
 	if (camera_type == PinholeCameraDefinitionType::INVERSE_CAMERA_MATRIX)

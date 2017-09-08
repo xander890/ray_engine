@@ -6,6 +6,7 @@ const char * Logger::YELLOW = "\x1b[33m";
 const char * Logger::GREEN = "\x1b[32m";
 const char * Logger::RED = "\x1b[31m";
 const char * Logger::RESET = "\x1b[0m";
+bool Logger::is_color_enabled = true;
 
 Logger Logger::info = Logger(std::cout, BLUE, "info");
 Logger Logger::error = Logger(std::cout, RED, "error");

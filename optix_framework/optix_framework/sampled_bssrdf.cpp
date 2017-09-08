@@ -24,7 +24,7 @@ void SampledBSSRDF::initialize_mesh(Mesh& object)
 {
 	Shader::initialize_mesh(object);
 	BufPtr<BSSRDFSamplingProperties> bufptr(mPropertyBuffer->getId());
-	object.mMaterial["bssrdf_sampling_properties"]->setUserData(sizeof(BufPtr<BSSRDFSamplingProperties>), &bufptr);
+ 	object.mMaterial["bssrdf_sampling_properties"]->setUserData(sizeof(BufPtr<BSSRDFSamplingProperties>), &bufptr);
 }
 
 void SampledBSSRDF::load_data()

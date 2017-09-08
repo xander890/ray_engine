@@ -131,8 +131,6 @@ private:
 	optix::TextureSampler environment_sampler;
     std::unique_ptr<MissProgram> miss_program = nullptr;
 
-	optix::float2 fov;
-
 	// Geometry and transformation getters
 	optix::GeometryGroup get_geometry_group(unsigned int idx);
 	optix::Matrix4x4 get_object_transform(std::string filename);
