@@ -53,6 +53,7 @@ int main( int argc, char** argv )
   int frames = 0;
   std::unique_ptr<RenderTask> task = make_unique<RenderTask>();
   task->close_program_on_exit = true;
+  std::string material_override_mtl = "";
 
   for ( int i = 1; i < argc; ++i ) 
   {
@@ -83,6 +84,13 @@ int main( int argc, char** argv )
       shadername = argv[++i];
       lower_case_string(shadername);
     }
+	else if (arg == "--material_override")
+	{
+		if (i == argc - 1)
+			printUsageAndExit(argv[0]);
+		material_override_mtl = argv[++i];
+		lower_case_string(material_override_mtl);
+	}
 	else if (arg == "-f" || arg == "--frames")
 	{
 		auto_mode = true;
@@ -129,6 +137,8 @@ int main( int argc, char** argv )
   try 
   {
     ObjScene * scene = new ObjScene( filenames, shadername, config_file, rendering_rect );
+	if(material_override_mtl.size() > 0)
+		scene->add_override_material_file(material_override_mtl);
 	scene->set_render_task(task);
 	if (auto_mode)
 		scene->start_render_task();

@@ -89,6 +89,9 @@ public:
 	void set_render_task(std::unique_ptr<RenderTask>& task);
 	void start_render_task();
 
+	std::string override_mat = "";
+	void add_override_material_file(std::string mat);
+
 private:
 	Context context;
 	bool debug_mode_enabled = true;
@@ -123,7 +126,7 @@ private:
 	optix::Buffer output_buffer;
 	
    
-	ImmediateGUI* gui = nullptr;
+	std::unique_ptr<ImmediateGUI> gui = nullptr;
 	void add_result_image(const string& image_file);
     std::vector<std::unique_ptr<Mesh>> mMeshes;
     std::shared_ptr<MaterialHost> material_ketchup;

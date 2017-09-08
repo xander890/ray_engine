@@ -274,9 +274,10 @@ bool ObjScene::drawGUI()
 		}
 	}
 
-	if (ImmediateGUIDraw::CollapsingHeader("Render tasks"))
+	bool is_active = current_render_task->is_active();
+	int flag = is_active ? ImGuiTreeNodeFlags_DefaultOpen : 0;
+	if (ImmediateGUIDraw::CollapsingHeader("Render tasks", flag))
 	{
-		bool is_active = current_render_task->is_active();
 		char InputBuf[256];
 		sprintf(InputBuf, "%s", current_render_task->destination_file.c_str());
 		if(!is_active && ImmediateGUIDraw::InputText("Destination file", InputBuf, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -349,15 +350,17 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
 
+	if (override_mat.size() > 0)
+	{
+		auto v = ObjLoader::parse_mtl_file(override_mat, context);
+		MaterialHost::set_default_material(v[0]);
+	}
+
     auto camera_type = PinholeCameraDefinitionType::String2Enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraDefinitionType::Enum2String(PinholeCameraDefinitionType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));
-
-
     int camera_width = ParameterParser::get_parameter<int>("camera", "window_width", 512, "The width of the window");
     int camera_height = ParameterParser::get_parameter<int>("camera", "window_height", 512, "The height of the window");
     int downsampling = ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, "");
     camera = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
-    
-
 
     ShaderFactory::init(context);
     ShaderInfo info = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
@@ -371,7 +374,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 		available_media.push_back(&kv.second);
 	}
 
-
 	current_miss_program = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
 
     tonemap_exponent = ParameterParser::get_parameter<float>("tonemap", "tonemap_exponent", 1.8f, "Tonemap exponent");
@@ -381,7 +383,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	context->setRayTypeCount(RAY_TYPE_COUNT);
 	context->setStackSize(ParameterParser::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
-
 	context["max_depth"]->setInt(ParameterParser::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
 
 	// Constant colors
@@ -530,10 +531,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	context->validate();
 	context->compile();
 
-	if (gui == nullptr)
-	{
-		gui = new ImmediateGUI("Ray tracing demo", camera->get_width(), camera->get_height());
-	}
+	gui = std::make_unique<ImmediateGUI>("Ray tracing demo", camera->get_width(), camera->get_height());
 
 	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
 
@@ -649,6 +647,11 @@ void ObjScene::start_render_task()
 	reset_renderer();
 	GLUTDisplay::setContinuousMode(GLUTDisplay::CDBenchmark);
 	current_render_task->start();
+}
+
+void ObjScene::add_override_material_file(std::string mat)
+{
+	override_mat = mat;
 }
 
 optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height)

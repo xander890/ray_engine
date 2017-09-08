@@ -34,18 +34,18 @@ class MaterialHost;
 
 struct ObjMaterial
 {
-	std::string name;        /* name of material */
-	int diffuse_tex;       // Kd diffuse component
-	int ambient_tex;       // Ka ambient component
-	int specular_tex;      // Ks specular component
-	optix::float4 emissive;      // emissive component
-	optix::float4 absorption;   // Added: absorption.
-	float shininess;        // Ns specular exponent
-	float refraction;       // Tr
-	float ior;
-	float alpha;            // d
-	float reflectivity;     // reflection
-	int   illum;           // illum
+	std::string name = "empty";        /* name of material */
+	int diffuse_tex = -1;       // Kd diffuse component
+	int ambient_tex = -1;       // Ka ambient component
+	int specular_tex = -1;      // Ks specular component
+	optix::float4 emissive = optix::make_float4(0);      // emissive component
+	optix::float4 absorption = optix::make_float4(0);;   // Added: absorption.
+	float shininess = 1;        // Ns specular exponent
+	float refraction = 0;       // Tr
+	float ior = 1;
+	float alpha = 1;            // d
+	float reflectivity = 1;     // reflection
+	int   illum = 0;           // illum
 };
 
 //-----------------------------------------------------------------------------
@@ -92,6 +92,9 @@ public:
 	  return m_material_params;
   }
 
+  static std::vector<ObjMaterial> parse_mtl_file(std::string mtl, optix::Context & ctx);
+  static ObjMaterial convert_mat(GLMmaterial& mat, optix::Context ctx);
+
 protected:
 
   std::vector<std::unique_ptr<Mesh>> createGeometryInstances(GLMmodel* model);
@@ -121,7 +124,7 @@ protected:
   bool                   m_large_geom;
   optix::Aabb            m_aabb;
   std::vector<std::shared_ptr<MaterialHost>> m_material_params;
-};
 
+};
 
 

@@ -48,18 +48,33 @@ void get_relative_ior(const MPMLMedium& med_in, const MPMLMedium& med_out, optix
 	kappa = (eta1 * kappa2 - eta2 * kappa1) / ab;
 }
 
-MaterialHost::MaterialHost(ObjMaterial& data) : mMaterialName(), mMaterialData()
+MaterialHost::MaterialHost(ObjMaterial& mat) : mMaterialName(), mMaterialData()
 {
-	mMaterialName = data.name;
-	const char * name = data.name.c_str();
+	
+	ObjMaterial * data = &mat;
+	if (mat.illum == -1)
+	{
+		if (user_defined_material != nullptr)
+		{
+			data = user_defined_material.get();
+		}
+		else
+		{
+			Logger::error << "Need to define a user material if using illum -1" << endl;
+		}
+	}
+
+
+	mMaterialName = data->name;
+	const char * name = data->name.c_str();
     static int id;
     mMaterialID = id++;
 
-	mMaterialData.ambient_map = data.ambient_tex;
-	mMaterialData.diffuse_map = data.diffuse_tex;
-	mMaterialData.illum = data.illum;
-	mMaterialData.shininess = data.shininess;
-	mMaterialData.specular_map = data.specular_tex;
+	mMaterialData.ambient_map = data->ambient_tex;
+	mMaterialData.diffuse_map = data->diffuse_tex;
+	mMaterialData.illum = data->illum;
+	mMaterialData.shininess = data->shininess;
+	mMaterialData.specular_map = data->specular_tex;
 
     Logger::info << "Looking for material properties for material " << name << "..." << std::endl;
     ScatteringMaterial def = ScatteringMaterial(DefaultScatteringMaterial::Marble);
@@ -90,7 +105,7 @@ MaterialHost::MaterialHost(ObjMaterial& data) : mMaterialName(), mMaterialData()
     {
         Logger::info << "Material found in default materials. " << std::endl;
         scattering_material = std::make_unique<ScatteringMaterial>(def);
-		mMaterialData.relative_ior = data.ior == 0.0f ? 1.3f : data.ior;
+		mMaterialData.relative_ior = data->ior == 0.0f ? 1.3f : data->ior;
 		mMaterialData.ior_complex_imag_sq = optix::make_float3(mMaterialData.relative_ior*mMaterialData.relative_ior);
 		mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
     }
@@ -118,7 +133,7 @@ MaterialDataCommon& MaterialHost::get_data()
 
 MaterialDataCommon MaterialHost::get_data_copy()
 {
-	//if (mHasChanged || scattering_material->hasChanged())
+	if (mHasChanged || scattering_material->hasChanged())
 	{
 		scattering_material->computeCoefficients(mMaterialData.relative_ior);
 		mHasChanged = false;
@@ -130,4 +145,11 @@ MaterialDataCommon MaterialHost::get_data_copy()
 bool MaterialHost::hasChanged()
 {
 	return mHasChanged || scattering_material->hasChanged();
+}
+
+std::unique_ptr<ObjMaterial> MaterialHost::user_defined_material = nullptr;
+
+void MaterialHost::set_default_material(ObjMaterial mat)
+{
+	user_defined_material = make_unique<ObjMaterial>(mat);
 }
