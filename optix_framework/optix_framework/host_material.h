@@ -2,13 +2,13 @@
 #include "material.h"
 #include <memory>
 
-
+struct ObjMaterial;
 class ScatteringMaterial;
 
 class MaterialHost
 {
 public:
-    MaterialHost(const char * name, MaterialDataCommon data);
+    MaterialHost(ObjMaterial& data);
     ~MaterialHost() = default;
 
 	bool on_draw(std::string id);
@@ -18,6 +18,7 @@ public:
 	bool hasChanged();
 
 private:
+	bool mHasChanged = true;
     int mMaterialID;
     std::string mMaterialName;
     MaterialDataCommon mMaterialData;

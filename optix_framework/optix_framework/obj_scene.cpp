@@ -537,19 +537,15 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 
 	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
 
-    MaterialDataCommon params;
+    ObjMaterial params;
 
-    params.absorption = make_float3(0);
-    params.emissive = make_float3(0);
     params.illum = 12;
-    params.ior = 1.3f;
-    params.phong_exp = 0;
-    params.reflectivity = make_float3(0);
-    params.ambient_map = loadTexture(m_context, "", make_float3(0))->getId();
-    params.diffuse_map = loadTexture(m_context, "", make_float3(1, 0, 0))->getId();
-    params.specular_map = loadTexture(m_context, "", make_float3(0))->getId();
+    params.ambient_tex = loadTexture(m_context, "", make_float3(0))->getId();
+    params.diffuse_tex = loadTexture(m_context, "", make_float3(1, 0, 0))->getId();
+    params.specular_tex = loadTexture(m_context, "", make_float3(0))->getId();
+	params.name = "ketchup";
 
-    material_ketchup = std::make_shared<MaterialHost>("ketchup", params);
+    material_ketchup = std::make_shared<MaterialHost>(params);
     execute_on_scene_elements([=](Mesh & m)
     {
         m.add_material(material_ketchup);

@@ -41,7 +41,7 @@ __forceinline__ __device__ void absorbing_glass()
   {
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+		get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		float xi = rnd(prd_radiance.seed);
 		

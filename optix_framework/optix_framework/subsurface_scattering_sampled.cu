@@ -166,7 +166,7 @@ RT_PROGRAM void shade()
 	float3 no = faceforward(n, wo, n);
 	const MaterialDataCommon & material = get_material(xo);
 	const ScatteringMaterialProperties& props = material.scattering_properties;
-	float recip_ior = 1.0f / props.relative_ior;
+	float recip_ior = 1.0f / material.relative_ior;
 	uint& t = prd_radiance.seed;
 	float reflect_xi = rnd(t);
 	prd_radiance.result = make_float3(0.0f);
@@ -181,7 +181,7 @@ RT_PROGRAM void shade()
 		float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
 		if (rnd(t) >= prob) return;
 		beam_T /= prob;
-		recip_ior = props.relative_ior;
+		recip_ior = material.relative_ior;
 		cos_theta_o = -cos_theta_o;
 	}
 

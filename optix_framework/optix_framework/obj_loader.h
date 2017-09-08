@@ -32,6 +32,22 @@
 
 class MaterialHost;
 
+struct ObjMaterial
+{
+	std::string name;        /* name of material */
+	int diffuse_tex;       // Kd diffuse component
+	int ambient_tex;       // Ka ambient component
+	int specular_tex;      // Ks specular component
+	optix::float4 emissive;      // emissive component
+	optix::float4 absorption;   // Added: absorption.
+	float shininess;        // Ns specular exponent
+	float refraction;       // Tr
+	float ior;
+	float alpha;            // d
+	float reflectivity;     // reflection
+	int   illum;           // illum
+};
+
 //-----------------------------------------------------------------------------
 // 
 //  ObjLoader class declaration 

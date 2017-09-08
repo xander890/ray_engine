@@ -77,7 +77,7 @@ RT_PROGRAM void shade()
 
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+		get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		rtTrace(top_object, reflected_ray, prd_refl);
 		color += R * prd_refl.result;

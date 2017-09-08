@@ -54,7 +54,7 @@ RT_PROGRAM void shade()
 
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+		get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		rtTrace(top_object, reflected_ray, prd_refl);
 		prd_refract.seed = prd_refl.seed;
@@ -82,13 +82,13 @@ RT_PROGRAM void shade_path_tracing(void)
 	PerRayData_radiance prd_new_ray = prepare_new_pt_payload(prd_radiance);
     Ray reflected_ray, refracted_ray;
     float R, cos_theta;
-    get_glass_rays(ray, material.ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+    get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 	// Russian roulette with absorption if inside
 	float3 beam_T = make_float3(1.0f);
 	if (cos_theta < 0.0f)
 	{
-		beam_T = expf(-t_hit*material.absorption);
+		beam_T = expf(-t_hit*material.scattering_properties.absorption);
 		float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
 		if (rnd(prd_new_ray.seed) >= prob)
 		{

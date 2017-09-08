@@ -1,11 +1,13 @@
 #pragma once
 #ifndef scattering_material_h__
 #define scattering_material_h__
-
+#include <memory>
 #include <optix_world.h>
 #include "structs.h"
 
 #include "scattering_properties.h"
+
+class MaterialHost;
 
 enum DefaultScatteringMaterial
 {
@@ -33,17 +35,14 @@ class ScatteringMaterial
 {
 public:
 
-    ScatteringMaterial(float indexOfRefraction,
-                       optix::float3 absorption,
+    ScatteringMaterial(optix::float3 absorption,
                        optix::float3 scattering,
                        optix::float3 meancosine)
         : scale(1.0f), name("")
     {
-        this->ior = indexOfRefraction;
         this->absorption = absorption;
         this->scattering = scattering;
         this->asymmetry = meancosine;
-        computeCoefficients();
         mStandardMaterial = DefaultScatteringMaterial::Count; // Custom
 		properties.selected_bssrdf = DIRECTIONAL_DIPOLE_BSSRDF;
 		dirty = true;
@@ -62,16 +61,14 @@ public:
     ScatteringMaterial(const ScatteringMaterial& cp);
 
     void getDefaultMaterial(DefaultScatteringMaterial material);
-    void computeCoefficients();
+    void computeCoefficients(float relative_ior);
 
     float get_scale() const { return scale; }
     optix::float3 get_scattering() const { return scattering; }
     optix::float3 get_absorption() const { return absorption; }
     float get_asymmetry() const { return asymmetry.x; }
-    float get_ior() const { return ior; };
 
-    void set_ior(float ior);
-    void set_absorption(optix::float3 abs);
+	void set_absorption(optix::float3 abs);
     void set_scattering(optix::float3 sc);
     void set_asymmetry(float asymm);
 	bool on_draw(std::string id);
@@ -87,7 +84,6 @@ private:
     float scale = 100.0f;
     optix::float3 scattering = optix::make_float3(0);
     optix::float3 asymmetry = optix::make_float3(0);
-    float ior = 1.0f;
     optix::float3 absorption = optix::make_float3(1);
 
     const char* name;

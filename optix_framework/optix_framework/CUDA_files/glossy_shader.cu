@@ -67,7 +67,7 @@ float blinn_microfacet_distribution(const optix::float3& n, const optix::float3&
 {
     const MaterialDataCommon & material = get_material();
 	float cos_theta = fabsf(dot(n, brdf_normal));
-	float D = 0.5f * M_1_PIf * (material.phong_exp + 2.0f) * pow(cos_theta, material.phong_exp);
+	float D = 0.5f * M_1_PIf * (material.shininess + 2.0f) * pow(cos_theta, material.shininess);
 	return D;
 }
 
@@ -114,7 +114,7 @@ __inline__ __device__ float3 get_importance_sampled_brdf(const float3& hit_pos, 
 	float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
     float3 k_s = make_float3(rtTex2D<float4>(material.specular_map, texcoord.x, texcoord.y));
 	float3 f_d = k_d * M_1_PIf;
-	return f_d + torrance_sparrow_brdf_sampled(normal, normalize(wi), normalize(out_v), new_normal, material.ior) * k_s;
+	return f_d + torrance_sparrow_brdf_sampled(normal, normalize(wi), normalize(out_v), new_normal, material.relative_ior) * k_s;
 }
 
 __inline__ __device__ float3 get_brdf(const float3& hit_pos, float3 & normal, const float3 & wi, const float3 & out_v)
@@ -131,7 +131,7 @@ __inline__ __device__ float3 get_brdf(const float3& hit_pos, float3 & normal, co
         float3 k_d = make_float3(rtTex2D<float4>(mat.diffuse_map, texcoord.x, texcoord.y));
         float3 k_s = make_float3(rtTex2D<float4>(mat.specular_map, texcoord.x, texcoord.y));
         float3 f_d = k_d * M_1_PIf;
-        f = f_d + torrance_sparrow_brdf(normal, normalize(wi), normalize(out_v), mat.ior) * k_s;
+        f = f_d + torrance_sparrow_brdf(normal, normalize(wi), normalize(out_v), mat.relative_ior) * k_s;
 	}
 	return f;
 }

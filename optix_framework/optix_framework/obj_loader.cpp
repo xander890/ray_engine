@@ -331,35 +331,11 @@ bool ObjLoader::isMyFile( const char* filename )
 
 std::shared_ptr<MaterialHost> ObjLoader::getMaterial(unsigned int index)
 {
-  // We dont need any material params if we have default material
-    MaterialDataCommon def;
-
-    def.emissive = make_float3(0.0f, 0.0f, 0.0f);
-    def.phong_exp = 32.0f;
-    def.ior = 1.0f;
-    def.reflectivity = make_float3(0.3f, 0.3f, 0.3f);
-    def.illum = 2;
-
-    def.ambient_map = loadTexture(m_context, "", make_float3(0.2f, 0.2f, 0.2f))->getId();
-    def.diffuse_map = loadTexture(m_context, "", make_float3(0.8f, 0.8f, 0.8f))->getId();
-    def.specular_map = loadTexture(m_context, "", make_float3(0.0f, 0.0f, 0.0f))->getId();
-    def.absorption = make_float3(0.0f, 0.0f, 0.0f);
-    std::shared_ptr<MaterialHost> ptr = std::shared_ptr<MaterialHost>(new MaterialHost("empty", def));
-
-    if (m_have_default_material && !m_force_load_material_params) {
-        return ptr;
-    }
-
-  // If no materials were given in model use reasonable defaults
-  if ( m_material_params.empty() ) {
-      return ptr;
-  }
-
   // Load params from this material into the GI 
   if ( index < m_material_params.size() ) {
     return m_material_params[index];
   }
-  return ptr;
+  return nullptr;
 }
 
 
@@ -369,14 +345,18 @@ void ObjLoader::createMaterialParams( GLMmodel* model )
   for ( unsigned int i = 0; i < model->nummaterials; ++i ) {
 
 	GLMmaterial& mat = model->materials[i];
-    MaterialDataCommon params;
+	ObjMaterial params;
 
-	params.emissive     = make_float3( mat.ambient[0], mat.ambient[1], mat.ambient[2] );
-	params.reflectivity = make_float3( mat.specular[0], mat.specular[1], mat.specular[2] );
-	params.phong_exp    = mat.shininess; 
-	params.ior          = mat.ior;
+	params.shininess = mat.shininess;
 	params.illum        = mat.shader;
-	
+	params.alpha = mat.alpha;
+	params.ior = mat.ior;
+	params.name = std::string(mat.name);
+	params.reflectivity = mat.reflectivity;
+	params.refraction = mat.refraction;
+	params.emissive = make_float4(mat.emissive[0], mat.emissive[1], mat.emissive[2], mat.emissive[3]);
+	params.absorption = make_float4(mat.absorption[0], mat.absorption[1], mat.absorption[2], mat.absorption[3]);
+
 	float3 Kd = make_float3( mat.diffuse[0],
 							 mat.diffuse[1],
 							 mat.diffuse[2] );
@@ -387,21 +367,15 @@ void ObjLoader::createMaterialParams( GLMmodel* model )
 							 mat.specular[1],
 							 mat.specular[2] );
 
-	float3 ab = make_float3(mat.absorption[0],
-		mat.absorption[1],
-		mat.absorption[2]);
-	ab /= mat.absorption[3];
-	params.absorption = ab;
-
 	// load textures relatively to OBJ main file
 	std::string ambient_map  = strlen(mat.ambient_map)  ? Folders::texture_folder + mat.ambient_map  : "";
 	std::string diffuse_map = strlen(mat.diffuse_map) ? Folders::texture_folder + mat.diffuse_map : "";
 	std::string specular_map = strlen(mat.specular_map) ? Folders::texture_folder + mat.specular_map : "";
 
-	params.ambient_map = loadTexture(m_context, ambient_map, Ka)->getId();
-    params.diffuse_map = loadTexture(m_context, diffuse_map, Kd)->getId();
-    params.specular_map = loadTexture(m_context, specular_map, Ks)->getId();
-    m_material_params[i] = std::make_shared<MaterialHost>(mat.name, params);
+	params.ambient_tex = loadTexture(m_context, ambient_map, Ka)->getId();
+    params.diffuse_tex = loadTexture(m_context, diffuse_map, Kd)->getId();
+    params.specular_tex = loadTexture(m_context, specular_map, Ks)->getId();
+    m_material_params[i] = std::make_shared<MaterialHost>(params);
   }
 }
 
