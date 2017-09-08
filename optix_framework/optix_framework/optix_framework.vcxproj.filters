@@ -211,6 +211,9 @@
     <ClCompile Include="gui.cpp">
       <Filter>Source Files\Legacy</Filter>
     </ClCompile>
+    <ClCompile Include="render_task.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -453,6 +456,9 @@
     </ClInclude>
     <ClInclude Include="approximate_directional_dipole.h">
       <Filter>Header Files\Materials\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="render_task.h">
+      <Filter>Header Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

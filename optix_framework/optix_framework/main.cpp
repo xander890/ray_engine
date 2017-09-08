@@ -8,6 +8,7 @@
 #include <cctype>
 #include <GLUTDisplay.h>
 #include "obj_scene.h"
+#include "render_task.h"
 
 using namespace std;
 using namespace optix;
@@ -50,6 +51,9 @@ int main( int argc, char** argv )
   //std::map<std::string, std::string> parameters;
   bool auto_mode = false;
   int frames = 0;
+  std::unique_ptr<RenderTask> task = make_unique<RenderTask>();
+  task->close_program_on_exit = true;
+
   for ( int i = 1; i < argc; ++i ) 
   {
     string arg( argv[i] );
@@ -68,8 +72,9 @@ int main( int argc, char** argv )
 	{
 		if (i == argc - 1)
 			printUsageAndExit(argv[0]);
-		output_file = argv[++i];
-		lower_case_string(output_file);
+		auto_mode = true;
+		task->destination_file = argv[++i];
+		lower_case_string(task->destination_file);
 	}
 	else if (arg == "-sh" || arg == "--shader")
     {
@@ -81,7 +86,7 @@ int main( int argc, char** argv )
 	else if (arg == "-f" || arg == "--frames")
 	{
 		auto_mode = true;
-		frames = stoi(argv[++i]);
+		task->destination_samples = stoi(argv[++i]);
 	}
 	else if (arg == "--rectangle")
 	{
@@ -109,33 +114,26 @@ int main( int argc, char** argv )
         lower_case_string(file_extension);
       }
 
-      //if(file_extension == ".obj")
+      if(file_extension == ".obj")
       {
         filenames.push_back(filename);
         lower_case_string(filenames.back());
       }
-      //else
-      //{
-      //  cerr << "Unknown option or not an obj file: '" << arg << "'" << endl;
-      //  printUsageAndExit( argv[0] );
-      //}
     }
   }
   //if ( filenames.size() == 0 ) 
   //  filenames.push_back(string("./meshes/") + "closed_bunny_vn.obj");
 
   GLUTDisplay::init( argc, argv );
-  GLUTDisplay::printUsage();
+
   try 
   {
     ObjScene * scene = new ObjScene( filenames, shadername, config_file, rendering_rect );
+	scene->set_render_task(task);
 	if (auto_mode)
-	{
-		scene->setAutoMode();
-	}
-	scene->setOutputFile(output_file);
-	scene->setFrames(frames);
-    GLUTDisplay::run( "Optix Renderer", scene );
+		scene->start_render_task();
+	GLUTDisplay::run( "Optix Renderer", scene );
+
   } 
   catch( Exception & e )
   {
