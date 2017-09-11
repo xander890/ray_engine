@@ -3,7 +3,7 @@
 
   <config>
   <property comment="configure the ray tracer to try to use the MERL brdf database whenever possible." key="use_merl_brdf" value="true"/>
-  <property comment="Default miss program." key="default_miss_type" value="CONSTANT_BACKGROUND"/>
+  <property comment="Default miss program." key="default_miss_type" value="ENVIRONMENT_MAP"/>
   <property key="background_types" value=" CONSTANT_BACKGROUND ENVIRONMENT_MAP SKY_MODEL"/>
   <property comment="Allocated stack size for context" key="stack_size" value="30000"/>
   <property comment="Maximum recursion depth of the raytracer" key="max_depth" value="300"/>
@@ -43,7 +43,7 @@
       </light>
 
     <camera>
-  <property comment="Use a automatic placed camera or use the current data." key="use_auto_camera" value="false"/>
+  <property comment="Use a automatic placed camera or use the current data." key="use_auto_camera" value="true"/>
   <property comment="The camera FOVs (h|v)" key="camera_fov" value="42.2001004137 34.3290716095"/>
   <property comment="The camera initial position" key="camera_position" value="5 0 0"/>
   <property comment="Type of the camera." key="camera_definition_type" value="EYE_LOOKAT_UP_VECTORS"/>
@@ -57,7 +57,7 @@
   </camera>
   
    <sky>
-      <property comment="Default day for the sun model." key="day" value="12"/>
+    <property comment="Default day for the sun model." key="day" value="12"/>
     <property comment="Default hour of the day for the sun model." key="hour" value="20"/>
     <property comment="Default latitude (deg) for the sun model." key="latitude" value="45.000000"/>
     <property comment="Default turbidity of the sky." key="turbidity" value="2.000000"/>

@@ -3,7 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+apply-gitignore = !git ls-files -ci --exclude-standard -z | xargs -0 git rm --cached
+
 # User-specific files
+*.raw
+*.txt
 *.suo
 *.user
 *.userosscache
@@ -28,8 +32,8 @@ bld/
 
 optix_framework/PTX_files/
 optix_framework/out.ppm
-optix_framework/result_optix.txt
-optix_framework/result_optix.raw
+optix_framework/imgui.ini
+
 
 # Visual Studio 2015 cache/options directory
 .vs/
