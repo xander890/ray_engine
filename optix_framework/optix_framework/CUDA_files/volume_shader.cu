@@ -20,7 +20,7 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 // Material properties
  
 rtDeclareVariable(unsigned int, N, , );
-
+rtDeclareVariable(unsigned int, maximum_volume_steps, , );
 
 //#define USE_SIMILARITY
 #define SIMILARITY_STEPS 10
@@ -107,7 +107,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
     }
     return !absorbed;
 #else
-    for (;;)
+    for (int i = 0; i < maximum_volume_steps; i++)
     {
         extinction = get_extinction(ray.origin, colorband);
         // Sample new distance

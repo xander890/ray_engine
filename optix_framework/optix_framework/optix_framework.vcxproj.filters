@@ -460,6 +460,9 @@
     <ClInclude Include="render_task.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="volume_path_tracer.h">
+      <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

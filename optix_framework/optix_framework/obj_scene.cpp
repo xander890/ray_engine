@@ -39,6 +39,7 @@
 #include "default_shader.h"
 #include <sampled_bssrdf.h>
 #include "render_task.h"
+#include "volume_path_tracer.h"
 
 using namespace std;
 using namespace optix;
@@ -363,9 +364,13 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
     camera = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
 
     ShaderFactory::init(context);
-    ShaderInfo info = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
-    ShaderFactory::add_shader<DefaultShader>(info);
+	ShaderInfo info = { "volume_shader.cu", "Volume path tracer", 12 };
+	ShaderFactory::add_shader<VolumePathTracer>(info);
 
+	ShaderInfo info3 = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
+    ShaderFactory::add_shader<VolumePathTracer>(info3);
+
+	
 	ShaderInfo info2 = { "subsurface_scattering_sampled.cu", "Sampled BSSRDF", 14 };
 	ShaderFactory::add_shader<SampledBSSRDF>(info2);
 

@@ -660,6 +660,7 @@ echo Done.</Command>
     <ClInclude Include="standard_dipole.h" />
     <ClInclude Include="structs.h" />
     <ClInclude Include="structs_device.h" />
+    <ClInclude Include="volume_path_tracer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="models\bunny_vn.mtl" />

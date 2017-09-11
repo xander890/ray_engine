@@ -9,8 +9,7 @@ std::vector<ShaderInfo> DefaultShader::default_shaders =
 	{ "normal_shader.cu", "Normals" ,5 },
 	// {"dispersion_shader.cu", "Dispersion" ,6},
    // {"absorbing_glass.cu", "Absorption glass" ,7},
-    {"metal_shader.cu", "Metal" ,11},
-    {"volume_shader.cu", "Full volume PT" ,12}
+    {"metal_shader.cu", "Metal" ,11}
 };
 
 void DefaultShader::initialize_shader(optix::Context ctx, const ShaderInfo& shader_info)

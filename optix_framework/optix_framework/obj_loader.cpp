@@ -317,12 +317,7 @@ std::vector<std::unique_ptr<Mesh>> ObjLoader::createGeometryInstances(GLMmodel* 
     std::shared_ptr<MaterialHost> materialData = getMaterial(obj_group->material);
     MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, mbuffer, (int)num_triangles, bbox };
     std::unique_ptr<Mesh> rtMesh = std::make_unique<Mesh>(m_context); 
-    auto c = m_filename.find_last_of("/");
-    c = (size_t)max((int)c, (int)m_filename.find_last_of("\\"));
-    if (c == std::string::npos)
-        c = 0;
-
-    std::string name = m_filename.substr(c+1);
+    std::string name = obj_group->name;
     rtMesh->init(name.c_str(), meshdata, materialData);
     
 	instances.push_back( std::move(rtMesh) );

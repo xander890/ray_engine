@@ -22,8 +22,8 @@ public:
     virtual ~Shader() = default;  
 
 	virtual Shader* clone() = 0;
-    virtual void initialize_mesh(Mesh & object) = 0;
-    virtual void pre_trace_mesh(Mesh & object) = 0;  
+    virtual void initialize_mesh(Mesh & object);
+    virtual void pre_trace_mesh(Mesh & object);  
 	virtual void load_data() {}
 
     virtual void initialize_shader(optix::Context context, const ShaderInfo& shader_info);

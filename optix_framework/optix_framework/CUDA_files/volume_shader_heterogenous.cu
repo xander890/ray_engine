@@ -15,6 +15,8 @@ rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+rtDeclareVariable(unsigned int , maximum_volume_steps, , );
+
 
 __device__ __forceinline__ float get_volume_step()
 {   
@@ -67,7 +69,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
     float extinction = get_extinction(ray.origin, colorband);
     float delta_t = get_volume_step();
 
-    for (;;)
+	for (int k = 0; k < maximum_volume_steps; k++)
     {
         // Sample new distance
         rtTrace(top_object, ray, prd_ray); // Calculating depth of the ray.

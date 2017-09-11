@@ -124,6 +124,7 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
     sigma_a = make_float3(0.007f, 0.03f, 0.1f);
     sigma_s = make_float3(7.352f, 9.142f, 10.588f);
     g = make_float3(0.862f, 0.838f, 0.806f);
+	scale = 10.f;
     name = "chocolate_milk";
   break;
     case ReducedMilk:
@@ -136,6 +137,7 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
     sigma_s = make_float3(16.447f,18.536f,6.457f);
     sigma_a = make_float3(0.057f,0.061f,0.451f);
     g = make_float3(0.155f, 0.173f, 0.351f);
+	scale = 1;
     name = "mustard";
     break;
     case Shampoo:

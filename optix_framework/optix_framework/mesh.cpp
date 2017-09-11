@@ -46,7 +46,7 @@ void Mesh::load_materials()
 {
 	bool one_material_changed = std::any_of(mMaterialData.begin(), mMaterialData.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->hasChanged();  });
 	mReloadMaterials |= one_material_changed;
-
+	
 	if(!mReloadMaterials)
 	{
 		return;
@@ -117,12 +117,14 @@ void Mesh::set_method(RenderingMethodType::EnumType method)
 {
     mShader->set_method(method);
 	mReloadShader = true;
+	mReloadMaterials = true;
 }
 
 void Mesh::set_shader(int illum)
 {
     mShader = ShaderFactory::get_shader(illum);
 	mReloadShader = true;
+	mReloadMaterials = true;
 }
 
 void Mesh::create_and_bind_optix_data()
@@ -169,7 +171,7 @@ bool Mesh::on_draw()
 		auto map = ShaderFactory::get_map();
 		std::vector<std::string> vv;
 		std::vector<int> illummap;
-		int initial = mMaterialData[0]->get_data().illum;
+		int initial = mShader->get_illum();
 		int starting = 0;
 		for (auto& p : map)
 		{
@@ -181,10 +183,10 @@ bool Mesh::on_draw()
 		std::vector<const char *> v;
 		for (auto& c : vv) v.push_back(c.c_str());
 
-		static int selected = starting;
-		if (ImmediateGUIDraw::TreeNode("Shader"))
+		int selected = starting;
+		if (ImmediateGUIDraw::TreeNode((std::string("Shader##Shader") + mMeshName).c_str()))
 		{
-			if (ImGui::Combo((std::string("Set Shader##RenderingMethod") + mMeshName).c_str(), &selected, v.data(), (int)v.size(), 4))
+			if (ImGui::Combo((std::string("Set Shader##RenderingMethod") + mMeshName).c_str(), &selected, v.data(), (int)v.size(), (int)v.size()))
 			{
 				changed = true;
 				set_shader(illummap[selected]);
@@ -195,7 +197,7 @@ bool Mesh::on_draw()
 		}
 
 		
-		if (ImmediateGUIDraw::TreeNode("Materials"))
+		if (ImmediateGUIDraw::TreeNode((std::string("Materials##Materials") + mMeshName).c_str()))
 		{
 			for (auto& m : mMaterialData)
 			{

@@ -35,6 +35,7 @@ using namespace optix;
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); 
+rtDeclareVariable(float2, barys, attribute barys, );
 
 RT_PROGRAM void mesh_intersect( int primIdx )
 {
@@ -48,7 +49,7 @@ RT_PROGRAM void mesh_intersect( int primIdx )
   // Intersect ray with triangle
   float3 n;
   float  t, beta, gamma;
-  if( intersect_triangle_earlyexit( ray, p0, p1, p2, n, t, beta, gamma ) ) {
+  if( intersect_triangle_branchless( ray, p0, p1, p2, n, t, beta, gamma ) ) {
 
     if(  rtPotentialIntersection( t ) ) {
 
@@ -58,9 +59,9 @@ RT_PROGRAM void mesh_intersect( int primIdx )
         shading_normal = normalize( n );
       } else {
         float3 n0 = normal_buffer[ n_idx.x ];
-        float3 n1 = normal_buffer[ n_idx.y ];
-        float3 n2 = normal_buffer[ n_idx.z ];
-        shading_normal = normalize( n1*beta + n2*gamma + n0*(1.0f-beta-gamma) );
+		float3 n1 = normal_buffer[ n_idx.y ];
+		float3 n2 = normal_buffer[ n_idx.z ];
+		shading_normal = normalize( n1*beta + n2*gamma + n0*(1.0f-beta-gamma) );
       }
       geometric_normal = normalize( n );
 
@@ -74,8 +75,10 @@ RT_PROGRAM void mesh_intersect( int primIdx )
         float2 t2 = texcoord_buffer[ t_idx.z ];
 		
         texcoord = make_float3( t1*beta + t2*gamma + t0*(1.0f-beta-gamma) );
-	
+		
       }
+
+	  barys = make_float2(beta, gamma);
 
       rtReportIntersection(0);
     }

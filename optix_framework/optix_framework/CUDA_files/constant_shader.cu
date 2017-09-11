@@ -10,6 +10,7 @@ rtDeclareVariable(optix::float3, texcoord, attribute texcoord, );
 using optix::rtTex2D;
 using optix::make_float3;
 using optix::float4;
+using optix::float3;
 
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 
@@ -23,5 +24,6 @@ RT_PROGRAM void shade()
     int material_idx = (hit_pos.z > 0) ? 0 : 1;
     MaterialDataCommon& mat = material_buffer[material_idx];
     float3 k_d = make_float3(rtTex2D<float4>(mat.diffuse_map, texcoord.x, texcoord.y));
-  prd_radiance.result = k_d; 
+	
+	prd_radiance.result = k_d;
 }
