@@ -20,6 +20,7 @@ public:
 	static void free();
 
 	static void dump_used_parameters(const std::string & document_f);
+	static void override_parameters(std::vector<std::string> & parameters);
 
 	template <typename T>
 	static T get_parameter(const char * tag, const char * n, T default_value, const char * comment = "")

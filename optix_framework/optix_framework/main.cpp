@@ -39,6 +39,7 @@ void printUsageAndExit( const string& argv0 )
   exit(0);
 }
 
+
 int main( int argc, char** argv ) 
 {
   vector<string> filenames;
@@ -55,6 +56,7 @@ int main( int argc, char** argv )
   task->close_program_on_exit = true;
   std::string material_override_mtl = "";
 
+  std::vector<std::string> additional_parameters;
   for ( int i = 1; i < argc; ++i ) 
   {
     string arg( argv[i] );
@@ -91,6 +93,16 @@ int main( int argc, char** argv )
 		material_override_mtl = argv[++i];
 		lower_case_string(material_override_mtl);
 	}
+	else if (arg == "--parameter_override")
+	{
+		do
+		{
+			i++;
+			additional_parameters.push_back(std::string(argv[i]));
+		}
+		while (i < argc && std::string(argv[i+1])[0] != '-');
+	}
+
 	else if (arg == "-f" || arg == "--frames")
 	{
 		auto_mode = true;
@@ -131,7 +143,6 @@ int main( int argc, char** argv )
   }
   //if ( filenames.size() == 0 ) 
   //  filenames.push_back(string("./meshes/") + "closed_bunny_vn.obj");
-
   GLUTDisplay::init( argc, argv );
 
   try 
@@ -139,6 +150,7 @@ int main( int argc, char** argv )
     ObjScene * scene = new ObjScene( filenames, shadername, config_file, rendering_rect );
 	if(material_override_mtl.size() > 0)
 		scene->add_override_material_file(material_override_mtl);
+	scene->add_override_parameters(additional_parameters);
 	scene->set_render_task(task);
 	if (auto_mode)
 		scene->start_render_task();

@@ -57,7 +57,6 @@ DOMDocument* read_from_file(const char * FullFilePath)
 	configParser->setDoNamespaces(false);
 	configParser->setDoSchema(false);
 	configParser->setLoadExternalDTD(false);
-	Logger::error << FullFilePath;
 	DOMDocument * doc = nullptr;
 	try
 	{
@@ -81,13 +80,11 @@ DOMDocument* read_from_file(const char * FullFilePath)
 
 void ParameterParser::parse_doc()
 {
-	Logger::info << "DOCUMENT" << std::endl;
 	DOMElement* elementRoot = document->getDocumentElement();
 	if (elementRoot == nullptr || !elementRoot->hasChildNodes()) return;
 	DOMNodeList*      children = elementRoot->getChildNodes();
 	const  XMLSize_t nodeCount = children->getLength();
 
-	Logger::info << "DOCUMENT" << std::endl;
 	for (XMLSize_t xx = 0; xx < nodeCount; ++xx)
 	{
 		DOMNode* currentNode = children->item(xx);
@@ -98,8 +95,6 @@ void ParameterParser::parse_doc()
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >(currentNode);
 			const XMLCh * key = currentElement->getTagName();
 			auto group = std::string(XMLString::transcode(key));
-			Logger::info << "Node " << group << " found." << endl;
-
 			DOMNodeList* children2 = currentElement->getChildNodes();
 			const XMLSize_t nodes = children2->getLength();
 			for (XMLSize_t yy = 0; yy < nodes; ++yy)
@@ -113,7 +108,6 @@ void ParameterParser::parse_doc()
 					const char * k = XMLString::transcode(currentElementNephew->getAttribute(XMLString::transcode("key")));
 					const char * c = XMLString::transcode(currentElementNephew->getAttribute(XMLString::transcode("comment")));
 					parameters[group][k] = { std::string(v), std::string(c) };
-					Logger::error << k << " " << v << endl;
 				}
 			}
 		}
@@ -226,3 +220,28 @@ void ParameterParser::dump_used_parameters(const std::string& document_f)
 }
 
 
+void ParameterParser::override_parameters(std::vector<std::string>& override_argv)
+{
+	for (int i = 0; i < override_argv.size(); i++)
+	{
+		std::string a = override_argv[i];
+		const size_t sep = a.find_first_of("/");
+		if (sep != std::string::npos)
+		{
+			const std::string tag = a.substr(0, sep);
+			const std::string elem = a.substr(sep + 1, a.size());
+			i++;
+			a = override_argv[i];
+			if (parameters.count(tag) != 0 && parameters[tag].count(elem) != 0)
+			{
+				std::string old = parameters[tag][elem].value;
+				parameters[tag][elem].value = a;
+				Logger::debug << "Overriding parameter " << tag << "/" << elem << " from " << old << " to " << a << std::endl;
+			}
+			else
+			{
+				Logger::warning << "Trying to override non existing parameter: " << elem << " (tag " << tag << ")" << std::endl;
+			}
+		}
+	}
+}

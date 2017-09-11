@@ -91,7 +91,7 @@ public:
 
 	std::string override_mat = "";
 	void add_override_material_file(std::string mat);
-
+	void add_override_parameters(std::vector<std::string> & params);
 private:
 	Context context;
 	bool debug_mode_enabled = true;
@@ -162,6 +162,9 @@ private:
 
 	uint4 zoom_debug_window = make_uint4(20,20,300,300);
 	uint4 zoomed_area = make_uint4(0);
+
+	std::vector<std::string> parameters_override;
+
 
 };
 

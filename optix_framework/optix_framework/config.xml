@@ -27,7 +27,7 @@
         <property key="data_folder" value="../data/" comment="Folder with all the data necessary for rendering excluding configuration files. All model/file paths will be relative to this folder."/>
         <property key="merl_database" value="database.txt" comment="Text file that contains a list of the MERL data to load."/>
         <property key="merl_folder" value="materials/" comment="Folder where to look for MERL database BRDFs."/>
-        <property key="mpml_file" value="/materials/media.mpml" comment="MPML File for material properties."/>
+        <property key="mpml_file" value="/mpml/media.mpml" comment="MPML File for material properties."/>
         <property key="ptx_path" value="PTX_files" comment="Compiled cuda files folder. Visual studio needs to be also set in case to output the files to the right folder!"/>
         <property key="texture_folder" value="images/" comment="Image folder for MTL files."/>
     </folders>

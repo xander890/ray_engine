@@ -357,6 +357,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	setDebugEnabled(false);
 	context->setPrintLaunchIndex(0, 0);
 	ParameterParser::init(config_file);
+	ParameterParser::override_parameters(parameters_override);
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
 
@@ -993,4 +994,9 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 	}
 
 	reset_renderer();
+}
+
+void ObjScene::add_override_parameters(std::vector<std::string>& params)
+{
+	parameters_override.insert(parameters_override.begin(), params.begin(), params.end());
 }
