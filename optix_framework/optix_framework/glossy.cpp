@@ -49,7 +49,7 @@ void GlossyShader::initialize_shader(optix::Context context, const ShaderInfo& s
     get_merl_brdf_list(Folders::merl_database_file.c_str(), brdf_names);
     merl_folder = Folders::merl_folder;
     merl_correction = ParameterParser::get_parameter<float3>("glossy", "merl_multiplier", make_float3(1.0f), "Multiplication factor for MERL materials. Premultiplied on sampling the brdf.");
-    Logger::debug << "Merl correction factor: " << to_string(merl_correction.x) << " " << to_string(merl_correction.y) << " " << to_string(merl_correction.z) << endl;
+    Logger::debug << "Merl correction factor: " << std::to_string(merl_correction.x) << " " << std::to_string(merl_correction.y) << " " << std::to_string(merl_correction.z) << std::endl;
     use_merl_brdf = ParameterParser::get_parameter<bool>("config", "use_merl_brdf", false, "configure the ray tracer to try to use the MERL brdf database whenever possible.");
 }
 
@@ -65,9 +65,9 @@ void GlossyShader::initialize_mesh(Mesh& object)
 {
     Shader::initialize_mesh(object);
     set_data(object);
-    string n = object.get_main_material()->get_name();
+	std::string n = object.get_main_material()->get_name();
 
-    string n_ext = n + ".binary";
+	std::string n_ext = n + ".binary";
     MERLBrdf * mat = nullptr;
     if (merl_database.count(n) != 0)
     {

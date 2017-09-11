@@ -31,7 +31,7 @@ void SampledBSSRDF::load_data()
 {
 	if (mHasChanged)
 	{
-		Logger::info << "Reloading shader" << endl;
+		Logger::info << "Reloading shader" << std::endl;
 		initialize_buffer<BSSRDFSamplingProperties>(mPropertyBuffer, *properties);
 	}
 	mHasChanged = false;

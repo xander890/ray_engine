@@ -104,7 +104,7 @@ private:
 	Aabb m_scene_bounding_box;
 	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height);
 
-	void add_lights(vector<TriangleLight>& area_lights);
+	void add_lights(std::vector<TriangleLight>& area_lights);
 	void set_miss_program();
     std::unique_ptr<MissProgram> miss_program = nullptr;
 
@@ -127,11 +127,11 @@ private:
 	
    
 	std::unique_ptr<ImmediateGUI> gui = nullptr;
-	void add_result_image(const string& image_file);
+	void add_result_image(const std::string& image_file);
     std::vector<std::unique_ptr<Mesh>> mMeshes;
     std::shared_ptr<MaterialHost> material_ketchup;
 
-    void execute_on_scene_elements(function<void(Mesh&)> operation);
+    void execute_on_scene_elements(std::function<void(Mesh&)> operation);
 
 	void setDebugEnabled(bool var);
 	float tonemap_multiplier = 1.0f;

@@ -14,7 +14,6 @@ public:
 	static std::string merl_folder;
 	static std::string merl_database_file;
 	static std::string texture_folder;
-	static std::string shader_folder;
 	static std::string ptx_path;
 };
 

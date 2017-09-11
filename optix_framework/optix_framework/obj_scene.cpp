@@ -206,6 +206,15 @@ bool ObjScene::drawGUI()
 				export_raw(filePath, rendering_output_buffer, m_frame);
 			}
 		}
+		ImmediateGUIDraw::SameLine();
+		if (ImmediateGUIDraw::Button("Save current configuration file"))
+		{
+			std::string filePath;
+			if (Dialogs::saveFileDialog(filePath))
+			{
+				ParameterParser::dump_used_parameters(filePath);
+			}
+		}
 
 	}
 
@@ -560,6 +569,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
  
 
 	 Logger::info<<"Scene initialized."<<endl;
+	 ParameterParser::dump_used_parameters("text.xml");
 }
 
 

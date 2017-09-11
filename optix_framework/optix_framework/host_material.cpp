@@ -23,8 +23,8 @@ bool findAndReturnMaterial(const std::string name, ScatteringMaterial & s)
 bool MaterialHost::on_draw(std::string id = "")
 {
 	bool changed = false;
-	std::string myid = id + "Material" + to_string(mMaterialID);
-	std::string newgroup = "Material " + to_string(mMaterialID) + "##" + myid;
+	std::string myid = id + "Material" + std::to_string(mMaterialID);
+	std::string newgroup = "Material " + std::to_string(mMaterialID) + "##" + myid;
 	if (ImmediateGUIDraw::TreeNode(newgroup.c_str()))
 	{
 		changed |= scattering_material->on_draw(myid);
@@ -62,7 +62,7 @@ MaterialHost::MaterialHost(ObjMaterial& mat) : mMaterialName(), mMaterialData()
 		}
 		else
 		{
-			Logger::error << "Need to define a user material if using illum -1" << endl;
+			Logger::error << "Need to define a user material if using illum -1" << std::endl;
 		}
 	}
 
@@ -87,7 +87,7 @@ MaterialHost::MaterialHost(ObjMaterial& mat) : mMaterialName(), mMaterialData()
 		mMaterialData.relative_ior = data->ior == 0.0f ? 1.3f : data->ior;
 		mMaterialData.ior_complex_imag_sq = optix::make_float3(mMaterialData.relative_ior*mMaterialData.relative_ior);
 		mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
-		Logger::debug << to_string(scattering_material->get_scale()) << endl;
+		Logger::debug << std::to_string(scattering_material->get_scale()) << std::endl;
 	}
 	else if (MaterialLibrary::media.count(mMaterialName) != 0)
     {
@@ -154,5 +154,5 @@ std::unique_ptr<ObjMaterial> MaterialHost::user_defined_material = nullptr;
 
 void MaterialHost::set_default_material(ObjMaterial mat)
 {
-	user_defined_material = make_unique<ObjMaterial>(mat);
+	user_defined_material = std::make_unique<ObjMaterial>(mat);
 }

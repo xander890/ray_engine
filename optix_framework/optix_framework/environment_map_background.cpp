@@ -134,15 +134,15 @@ void EnvironmentMap::presample_environment_map()
     // Environment importance sampling pre-pass
     if (environment_sampler.get() != nullptr)
     {
-        Logger::info << "Presampling envmaps... (size " << to_string(texture_width) << " " << to_string(texture_height) << ")" << endl;
+        Logger::info << "Presampling envmaps... (size " << std::to_string(texture_width) << " " << std::to_string(texture_height) << ")" << std::endl;
         context->launch((camera_1), texture_width, texture_height);
-        Logger::info << "Step 1 complete." << endl;
+        Logger::info << "Step 1 complete." << std::endl;
         context->launch((camera_2), texture_width, texture_height);
-        Logger::info << "Step 2 complete." << endl;
+        Logger::info << "Step 2 complete." << std::endl;
         context->launch((camera_3), texture_width, texture_height);
-        Logger::info << "Step 3 complete." << endl;
+        Logger::info << "Step 3 complete." << std::endl;
         resample_envmaps = false;
-        Logger::info << "Done." << endl;
+        Logger::info << "Done." << std::endl;
     }
 
 }

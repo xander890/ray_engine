@@ -169,7 +169,7 @@ static __host__ __device__ __inline__ optix::float3 lookup_brdf_val(
 }
 
 #ifndef __CUDA_ARCH__
-static __host__ __inline__ optix::float3 integrate_brdf(vector<float>& brdf, int N)
+static __host__ __inline__ optix::float3 integrate_brdf(std::vector<float>& brdf, int N)
 
 {
 	optix::float3 sum = optix::make_float3(0.0f);

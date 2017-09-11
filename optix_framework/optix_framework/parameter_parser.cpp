@@ -2,11 +2,25 @@
 #include "xercesc/framework/LocalFileFormatTarget.hpp"
 
 #include <iostream>
+#include <fstream>
 
-XercesDOMParser * ParameterParser::configParser = nullptr;
-DOMDocument * ParameterParser::document = nullptr;
+#include <map>
+
+using namespace std;
+#include "xercesc/util/PlatformUtils.hpp"
+#include "xercesc/dom/DOM.hpp"
+#include <xercesc/parsers/XercesDOMParser.hpp>
+
+XERCES_CPP_NAMESPACE_USE
+
+
+static DOMDocument * document = nullptr;
+static XercesDOMParser * configParser = nullptr;
+
 string ParameterParser::document_file = string("");
 string ParameterParser::config_folder = string("");
+std::map<std::string, std::map<std::string, ParameterParser::NodeElem>>  ParameterParser::parameters;
+std::map<std::string, std::map<std::string, ParameterParser::NodeElem>>  ParameterParser::used_parameters;
 
 ParameterParser::ParameterParser(void)
 {
@@ -18,7 +32,7 @@ ParameterParser::~ParameterParser(void)
 	free();
 }
 
-DOMDocument * ParameterParser::createEmptyParameterSheet()
+DOMDocument * createEmptyParameterSheet()
 {	
     // Pointer to our DOMImplementation.
     DOMImplementation*    p_DOMImplementation = nullptr;
@@ -37,73 +51,7 @@ DOMDocument * ParameterParser::createEmptyParameterSheet()
 	return pDOMDocument;	
 }
 
-void ParameterParser::write_to_file(const char * FullFilePath )
-{
-	DOMImplementation	*pImplement	= nullptr;
-	DOMLSSerializer *pSerializer	= nullptr; // @DOMWriter
-	LocalFileFormatTarget *pTarget	= nullptr; 
-
-
-	//Return the first registered implementation that has the desired features. In this case, we are after
-	//a DOM implementation that has the LS feature... or Load/Save.
-
-	pImplement = DOMImplementationRegistry::getDOMImplementation(L"LS");
-
-	//From the DOMImplementation, create a DOMWriter.
-	//DOMWriters are used to serialize a DOM tree [back] into an XML document.
-
-	pSerializer = ((DOMImplementationLS*)pImplement)->createLSSerializer(); //@createDOMWriter();
-
-	//This line is optional. It just sets a feature of the Serializer to make the output
-	//more human-readable by inserting line-feeds, without actually inserting any new elements/nodes
-	//into the DOM tree. (There are many different features to set.) Comment it out and see the difference.
-
-	// @pSerializer->setFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true); // 
-	DOMLSOutput *pOutput = ((DOMImplementationLS*)pImplement)->createLSOutput();
-	DOMConfiguration *pConfiguration = pSerializer->getDomConfig();
-
-	// Have a nice output
-	if (pConfiguration->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
-		pConfiguration->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true); 
-
-	try
-	{
-		pTarget = new LocalFileFormatTarget(FullFilePath);
-	}
-	catch (xercesc::XMLException& e)
-	{
-		char* message = XMLString::transcode(e.getMessage());
-		std::cerr << "Error parsing file: " << message << std::endl;
-		XMLString::release(&message);
-		return;
-	}
-	pOutput->setByteStream(pTarget);
-
-	
-	// @pSerializer->write(pDOMDocument->getDocumentElement(), pOutput); // missing header "<xml ...>" if used
-	
-	try
-	{
-		pSerializer->write(document, pOutput); 
-	}
-	catch( xercesc::XMLException& e )
-	{
-		char* message = XMLString::transcode( e.getMessage() );
-		std::cerr << "Error parsing file: " << message << std::endl;
-		XMLString::release( &message );
-	}
-
-	delete pTarget;
-	pOutput->release();
-	pSerializer->release();
-}
-
-void ParameterParser::write_to_file()
-{
-	write_to_file((config_folder + document_file).c_str());
-}
-
-DOMDocument* ParameterParser::read_from_file(const char * FullFilePath)
+DOMDocument* read_from_file(const char * FullFilePath)
 {
 	
 	configParser->setValidationScheme(AbstractDOMParser::Val_Never);
@@ -124,10 +72,50 @@ DOMDocument* ParameterParser::read_from_file(const char * FullFilePath)
 	}
 	if(!doc)
 		doc = createEmptyParameterSheet();
+
 	return doc;
 }
 
-DOMNode* ParameterParser::find_node(const char * name, DOMElement* elementRoot)
+void ParameterParser::parse_doc()
+{
+	DOMElement* elementRoot = document->getDocumentElement();
+	if (elementRoot == nullptr || !elementRoot->hasChildNodes()) return;
+	DOMNodeList*      children = elementRoot->getChildNodes();
+	const  XMLSize_t nodeCount = children->getLength();
+
+	for (XMLSize_t xx = 0; xx < nodeCount; ++xx)
+	{
+		DOMNode* currentNode = children->item(xx);
+		if (currentNode->getNodeType() &&  // true is not nullptr
+			currentNode->getNodeType() == DOMNode::ELEMENT_NODE) // is element
+		{
+			// Found node which is an Element. Re-cast node as element
+			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >(currentNode);
+			const XMLCh * key = currentElement->getTagName();
+			auto group = std::string(XMLString::transcode(key));
+			Logger::error << "Node " << group << " found." << endl;
+
+			DOMNodeList* children2 = currentElement->getChildNodes();
+			const XMLSize_t nodes = children2->getLength();
+			for (XMLSize_t yy = 0; yy < nodes; ++yy)
+			{
+				DOMNode* nephew = children2->item(yy);
+				if (nephew->getNodeType() &&  // true is not nullptr
+					nephew->getNodeType() == DOMNode::ELEMENT_NODE) // is element
+				{
+					DOMElement* currentElementNephew = dynamic_cast<xercesc::DOMElement*>(nephew);
+					const char * v = XMLString::transcode(currentElementNephew->getAttribute(XMLString::transcode("value")));
+					const char * k = XMLString::transcode(currentElementNephew->getAttribute(XMLString::transcode("key")));
+					const char * c = XMLString::transcode(currentElementNephew->getAttribute(XMLString::transcode("comment")));
+					parameters[group][k] = { std::string(v), std::string(c) };
+					Logger::error << k << " " << v << endl;
+				}
+			}
+		}
+	}
+}
+
+DOMNode* find_node(const char * name, DOMElement* elementRoot)
 {
 	if (elementRoot == nullptr)
 		elementRoot = document->getDocumentElement();
@@ -145,6 +133,8 @@ DOMNode* ParameterParser::find_node(const char * name, DOMElement* elementRoot)
 		{
 			// Found node which is an Element. Re-cast node as element
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >( currentNode );
+
+
 			const XMLCh * key = currentElement->getAttribute(prop);
 
 			if( XMLString::equals(key, n))
@@ -156,7 +146,7 @@ DOMNode* ParameterParser::find_node(const char * name, DOMElement* elementRoot)
 	return nullptr;
 }
 
-DOMNode* ParameterParser::find_tag(const char* tag)
+DOMNode* find_tag(const char* tag)
 {
 	DOMElement* elementRoot = document->getDocumentElement();
 	if (elementRoot == nullptr || !elementRoot->hasChildNodes()) return nullptr;
@@ -188,6 +178,7 @@ void ParameterParser::init(const std::string & document_f)
 	XMLPlatformUtils::Initialize();
 	configParser = new XercesDOMParser;
 	document = read_from_file(document_f.c_str());
+	parse_doc();
 	document_file = string(document_f);
 	config_folder = get_parameter<std::string>("folders","config_folder", std::string("./"), "The folder where to look for all the configuration files.");
 }
@@ -195,17 +186,39 @@ void ParameterParser::init(const std::string & document_f)
 
 void ParameterParser::free()
 {
-	write_to_file(document_file.c_str());
 	document->release();
 	XMLPlatformUtils::Terminate();
 }
 
-void ParameterParser::set_document(const char * newPath)
+std::string tag(const std::string & s, bool is_end)
 {
-	write_to_file((config_folder + document_file).c_str());
-	document_file = string(newPath);
-	if(document)
-		document->release();
-	document = read_from_file((config_folder + document_file).c_str());
+	return std::string("<") + (is_end ? "/" : "") + s + ">";
 }
+
+void ParameterParser::dump_used_parameters(const std::string& document_f)
+{
+	stringstream ss;
+	ss << " <? xml version = \"1.0\" encoding = \"UTF - 8\" standalone = \"no\" ? >" << std::endl;
+	ss << "<ex:Optix_Framework_Parameters xmlns : ex = \"schemas.example.com/2008/\">" << std::endl;
+	for (const auto & pair : used_parameters)
+	{
+		ss << "\t" << tag(pair.first, false) << std::endl;
+		for(const auto & pair2 : pair.second)
+		{
+			ss << "\t\t<property " << "key=\"" << pair2.first << "\" " << "value=\"" << pair2.second.value << "\" " << "key=\"" << pair2.second.comment << "\"" << ">" << std::endl;
+		}
+		ss << "\t" << tag(pair.first, true) << std::endl;
+	}
+	ss << "</ex:Optix_Framework_Parameters>" << std::endl;
+	std::string res = ss.str();
+	std::ofstream ofs_data(document_f);
+	if (ofs_data.bad())
+	{
+		Logger::error << "Unable to open file " << document_f << endl;
+		return;
+	}
+	ofs_data << res << std::endl;
+	ofs_data.close();
+}
+
 

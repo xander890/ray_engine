@@ -82,7 +82,7 @@ optix::Program ShaderFactory::createProgram(std::string file, std::string progra
     }
     catch (optix::Exception&)
     {
-        Logger::warning << "Warning: function <" << get_full_program_name(program_name, method) << "> not found in file " << file << ". Reverting to full raytrace." << endl;
+        Logger::warning << "Warning: function <" << get_full_program_name(program_name, method) << "> not found in file " << file << ". Reverting to full raytrace." << std::endl;
         // Fall back to standard ray tracing
         result = context->createProgramFromPTXFile(get_path_ptx(file), program_name);
     }
@@ -116,4 +116,4 @@ std::unique_ptr<Shader> ShaderFactory::get_shader(int illum)
     return nullptr;
 }
 
-map<int, std::shared_ptr<Shader>> ShaderFactory::mShaderMap = map<int, std::shared_ptr<Shader>>();
+std::map<int, std::shared_ptr<Shader>> ShaderFactory::mShaderMap = std::map<int, std::shared_ptr<Shader>>();
