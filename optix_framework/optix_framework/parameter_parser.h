@@ -46,7 +46,6 @@ protected:
 
 	static std::map<std::string, std::map<std::string, NodeElem>> parameters;
 	static std::map<std::string, std::map<std::string, NodeElem>> used_parameters;
-	static std::string config_folder;
 	
 	static void parse_doc();
 };

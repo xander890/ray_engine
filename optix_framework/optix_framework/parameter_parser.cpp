@@ -18,7 +18,6 @@ static DOMDocument * document = nullptr;
 static XercesDOMParser * configParser = nullptr;
 
 string ParameterParser::document_file = string("");
-string ParameterParser::config_folder = string("");
 std::map<std::string, std::map<std::string, ParameterParser::NodeElem>>  ParameterParser::parameters;
 std::map<std::string, std::map<std::string, ParameterParser::NodeElem>>  ParameterParser::used_parameters;
 
@@ -58,6 +57,7 @@ DOMDocument* read_from_file(const char * FullFilePath)
 	configParser->setDoNamespaces(false);
 	configParser->setDoSchema(false);
 	configParser->setLoadExternalDTD(false);
+	Logger::error << FullFilePath;
 	DOMDocument * doc = nullptr;
 	try
 	{
@@ -67,22 +67,27 @@ DOMDocument* read_from_file(const char * FullFilePath)
 	catch( xercesc::XMLException& e )
 	{
 			char* message = XMLString::transcode( e.getMessage() );
-			std::cerr << "Error parsing file: " << message << std::endl;
+			Logger::error << "Error parsing file: " << std::string(message) << std::endl;
 			XMLString::release( &message );
 	}
-	if(!doc)
+	if (!doc)
+	{
+		Logger::error << "Unable to parse XML" << std::endl;
 		doc = createEmptyParameterSheet();
+	}
 
 	return doc;
 }
 
 void ParameterParser::parse_doc()
 {
+	Logger::info << "DOCUMENT" << std::endl;
 	DOMElement* elementRoot = document->getDocumentElement();
 	if (elementRoot == nullptr || !elementRoot->hasChildNodes()) return;
 	DOMNodeList*      children = elementRoot->getChildNodes();
 	const  XMLSize_t nodeCount = children->getLength();
 
+	Logger::info << "DOCUMENT" << std::endl;
 	for (XMLSize_t xx = 0; xx < nodeCount; ++xx)
 	{
 		DOMNode* currentNode = children->item(xx);
@@ -93,7 +98,7 @@ void ParameterParser::parse_doc()
 			DOMElement* currentElement = dynamic_cast< xercesc::DOMElement* >(currentNode);
 			const XMLCh * key = currentElement->getTagName();
 			auto group = std::string(XMLString::transcode(key));
-			Logger::error << "Node " << group << " found." << endl;
+			Logger::info << "Node " << group << " found." << endl;
 
 			DOMNodeList* children2 = currentElement->getChildNodes();
 			const XMLSize_t nodes = children2->getLength();
@@ -180,7 +185,6 @@ void ParameterParser::init(const std::string & document_f)
 	document = read_from_file(document_f.c_str());
 	parse_doc();
 	document_file = string(document_f);
-	config_folder = get_parameter<std::string>("folders","config_folder", std::string("./"), "The folder where to look for all the configuration files.");
 }
 
 
@@ -198,16 +202,16 @@ std::string tag(const std::string & s, bool is_end)
 void ParameterParser::dump_used_parameters(const std::string& document_f)
 {
 	stringstream ss;
-	ss << " <? xml version = \"1.0\" encoding = \"UTF - 8\" standalone = \"no\" ? >" << std::endl;
-	ss << "<ex:Optix_Framework_Parameters xmlns : ex = \"schemas.example.com/2008/\">" << std::endl;
+	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>" << std::endl;
+	ss << "<ex:Optix_Framework_Parameters xmlns:ex=\"schemas.example.com/2008/\">" << std::endl;
 	for (const auto & pair : used_parameters)
 	{
-		ss << "\t" << tag(pair.first, false) << std::endl;
+		ss << "    " << tag(pair.first, false) << std::endl;
 		for(const auto & pair2 : pair.second)
 		{
-			ss << "\t\t<property " << "key=\"" << pair2.first << "\" " << "value=\"" << pair2.second.value << "\" " << "key=\"" << pair2.second.comment << "\"" << ">" << std::endl;
+			ss << "        <property " << "key=\"" << pair2.first << "\" " << "value=\"" << pair2.second.value << "\" " << "comment=\"" << pair2.second.comment << "\"" << "/>" << std::endl;
 		}
-		ss << "\t" << tag(pair.first, true) << std::endl;
+		ss << "    " << tag(pair.first, true) << std::endl;
 	}
 	ss << "</ex:Optix_Framework_Parameters>" << std::endl;
 	std::string res = ss.str();
