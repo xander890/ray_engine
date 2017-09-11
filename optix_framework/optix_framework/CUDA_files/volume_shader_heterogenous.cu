@@ -144,7 +144,7 @@ RT_PROGRAM void shade()
     float3 w_i = -ray.direction;
     const MaterialDataCommon & material = get_material();
     const ScatteringMaterialProperties& props = material.scattering_properties;
-    float n1_over_n2 = 1.0f / props.relative_ior;
+    float n1_over_n2 = 1.0f / material.relative_ior;
     float cos_theta_in = dot(normal, w_i);
     float3 beam_T = make_float3(1.0f);
     uint& t = prd_radiance.seed;
@@ -153,11 +153,11 @@ RT_PROGRAM void shade()
     bool inside = cos_theta_in < 0.0f;
     if (inside)
     {
-        n1_over_n2 = props.relative_ior;
+        n1_over_n2 = material.relative_ior;
         normal = -normal;
         cos_theta_in = -cos_theta_in;
     }
-    else if (props.relative_ior < 1.0f)
+    else if (material.relative_ior < 1.0f)
     {
         beam_T = expf(-t_hit*props.absorption);
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;

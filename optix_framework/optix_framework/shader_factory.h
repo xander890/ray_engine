@@ -1,6 +1,7 @@
 #pragma once
 #include "shader.h"
 #include <memory>
+#include "logger.h"
 
 class ShaderFactory
 {
@@ -20,6 +21,10 @@ private:
 template <typename T>
 void ShaderFactory::add_shader(const ShaderInfo& shader_info)
 {
+	if (get_shader_map().count(shader_info.illum) != 0)
+	{
+		Logger::warning << "Replacing shader! Be careful to know what you are doing!" << std::endl;
+	}
     std::shared_ptr<Shader> s = make_shared<T>();
     s->initialize_shader(context, shader_info);
     get_shader_map()[shader_info.illum] = s;

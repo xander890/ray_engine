@@ -275,7 +275,7 @@ _glmDirName(char* path)
  * model - properly initialized GLMmodel structure
  * name  - name of the material library
  */
-  static int
+ int
 _glmReadMTL(GLMmodel* model, char* name)
 {
   FILE* file;
@@ -301,7 +301,7 @@ _glmReadMTL(GLMmodel* model, char* name)
   free(filename);
 
   /* count the number of materials in the file */
-  nummaterials = 1;
+  nummaterials = 0;
   while(fscanf(file, "%s", buf) != EOF) {
     switch(buf[0]) {
       case '#':       /* comment */
@@ -372,7 +372,7 @@ _glmReadMTL(GLMmodel* model, char* name)
     model->materials[i].dissolve_map_scaling[0] = 0;
     model->materials[i].dissolve_map_scaling[1] = 0;
   }
-  model->materials[0].name = _strdup("NO_ASSIGNED_MATERIAL");
+//  model->materials[0].name = _strdup("NO_ASSIGNED_MATERIAL");
 
   /* now, read in the data */
   nummaterials = 0;
@@ -385,50 +385,50 @@ _glmReadMTL(GLMmodel* model, char* name)
       case 'n':       /* newmtl */
 
         // Make sure the previous material has a name.
-        assert( model->materials[nummaterials].name );
+        //assert( model->materials[nummaterials].name );
 
         // Read in the new material name.
         fgets(buf, sizeof(buf), file);
         sscanf(buf, "%s %s", buf, buf);
         nummaterials++;
-        model->materials[nummaterials].name = _strdup(buf);
+        model->materials[nummaterials - 1].name = _strdup(buf);
         break;
       case 'N':
 		  {
 			  if(buf[1] == 's')
 			  {
-				  fscanf(file, "%f", &model->materials[nummaterials].shininess);
+				  fscanf(file, "%f", &model->materials[nummaterials - 1].shininess);
 			  }
 			  else if (buf[1] == 'i')
 			  {
-				  fscanf(file, "%f", &model->materials[nummaterials].ior);
+				  fscanf(file, "%f", &model->materials[nummaterials - 1].ior);
 			  }
 			break;
 		  }
       case 'T': // Tr
-        fscanf(file, "%f", &model->materials[nummaterials].refraction);
+        fscanf(file, "%f", &model->materials[nummaterials - 1].refraction);
         break;
       case 'd': // d
-        fscanf(file, "%f", &model->materials[nummaterials].alpha);
+        fscanf(file, "%f", &model->materials[nummaterials - 1].alpha);
         break;
       case 'i': // illum
-        fscanf(file, "%d", &model->materials[nummaterials].shader);
+        fscanf(file, "%d", &model->materials[nummaterials - 1].shader);
         break;
       case 'r': // reflectivity
-        fscanf(file, "%f", &model->materials[nummaterials].reflectivity);
+        fscanf(file, "%f", &model->materials[nummaterials - 1].reflectivity);
         break;
       case 'e': // emissive
         fscanf(file, "%f %f %f",
-            &model->materials[nummaterials].emissive[0],
-            &model->materials[nummaterials].emissive[1],
-            &model->materials[nummaterials].emissive[2]);
+            &model->materials[nummaterials - 1].emissive[0],
+            &model->materials[nummaterials - 1].emissive[1],
+            &model->materials[nummaterials - 1].emissive[2]);
         break;
 	  case 'A': // absorption
 		  fscanf(file, "%f %f %f %f",
-			  &model->materials[nummaterials].absorption[0],
-			  &model->materials[nummaterials].absorption[1],
-			  &model->materials[nummaterials].absorption[2],
-			  &model->materials[nummaterials].absorption[3]);
+			  &model->materials[nummaterials - 1].absorption[0],
+			  &model->materials[nummaterials - 1].absorption[1],
+			  &model->materials[nummaterials - 1].absorption[2],
+			  &model->materials[nummaterials - 1].absorption[3]);
 		  break;
       case 'm':
         {
@@ -436,17 +436,17 @@ _glmReadMTL(GLMmodel* model, char* name)
           float* scaling = 0;
           // Determine which type of map.
           if (strcmp(buf,"map_Ka")==0) {
-            map_name = model->materials[nummaterials].ambient_map;
-            scaling = model->materials[nummaterials].ambient_map_scaling;
+            map_name = model->materials[nummaterials - 1].ambient_map;
+            scaling = model->materials[nummaterials - 1].ambient_map_scaling;
           } else if (strcmp(buf,"map_Kd")==0) {
-            map_name = model->materials[nummaterials].diffuse_map;
-            scaling = model->materials[nummaterials].diffuse_map_scaling;
+            map_name = model->materials[nummaterials - 1].diffuse_map;
+            scaling = model->materials[nummaterials - 1].diffuse_map_scaling;
           } else if (strcmp(buf,"map_Ks")==0) {
-            map_name = model->materials[nummaterials].specular_map;
-            scaling = model->materials[nummaterials].ambient_map_scaling;
+            map_name = model->materials[nummaterials - 1].specular_map;
+            scaling = model->materials[nummaterials - 1].ambient_map_scaling;
           } else if (strcmp(buf,"map_D")==0) {
-            map_name = model->materials[nummaterials].dissolve_map;
-            scaling = model->materials[nummaterials].dissolve_map_scaling;
+            map_name = model->materials[nummaterials - 1].dissolve_map;
+            scaling = model->materials[nummaterials - 1].dissolve_map_scaling;
           } else {
             // We don't know what kind of map it is, so ignore it
             fprintf(stderr, "Unknown map: \"%s\" found at %s(%d)\n", buf,
@@ -475,21 +475,21 @@ _glmReadMTL(GLMmodel* model, char* name)
         switch(buf[1]) {
           case 'd':
             fscanf(file, "%f %f %f",
-                &model->materials[nummaterials].diffuse[0],
-                &model->materials[nummaterials].diffuse[1],
-                &model->materials[nummaterials].diffuse[2]);
+                &model->materials[nummaterials - 1].diffuse[0],
+                &model->materials[nummaterials - 1].diffuse[1],
+                &model->materials[nummaterials - 1].diffuse[2]);
             break;
           case 's':
             fscanf(file, "%f %f %f",
-                &model->materials[nummaterials].specular[0],
-                &model->materials[nummaterials].specular[1],
-                &model->materials[nummaterials].specular[2]);
+                &model->materials[nummaterials - 1].specular[0],
+                &model->materials[nummaterials - 1].specular[1],
+                &model->materials[nummaterials - 1].specular[2]);
             break;
           case 'a':
             fscanf(file, "%f %f %f",
-                &model->materials[nummaterials].ambient[0],
-                &model->materials[nummaterials].ambient[1],
-                &model->materials[nummaterials].ambient[2]);
+                &model->materials[nummaterials - 1].ambient[0],
+                &model->materials[nummaterials - 1].ambient[1],
+                &model->materials[nummaterials - 1].ambient[2]);
             break;
           default:
             /* eat up rest of line */
@@ -505,8 +505,7 @@ _glmReadMTL(GLMmodel* model, char* name)
   }
 
   // Make sure we found the same number of materials the second time around.
-  // Note that glm adds a default material to the beginning of the array
-  assert((nummaterials+1) == model->nummaterials);
+  assert((nummaterials) == model->nummaterials);
 
   return 0;
 }

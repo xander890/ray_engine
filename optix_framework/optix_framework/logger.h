@@ -6,13 +6,6 @@
 
 class Logger {
 
-#define USE_COLORS
-#ifdef USE_COLORS
-#define COLOR_SELECTOR(x) x
-#else
-#define COLOR_SELECTOR(x)
-#endif
-
 public:
 	explicit Logger(std::ostream& _out, const char * _color_symbol, const char * _color_string) : out(_out), color_symbol(_color_symbol), color_string(_color_string) {}
 
@@ -27,7 +20,9 @@ public:
 	{ 
 		if (start_of_line)
 		{
-			out << COLOR_SELECTOR(color_symbol << ) "[" << color_string << "] " COLOR_SELECTOR(<< RESET);
+			std::string color = is_color_enabled ? color_symbol : "";
+			std::string color_end = is_color_enabled ? RESET : "";
+			out << color << "[" << color_string << "] " << color_end;
 			start_of_line = false;
 		}
 		std::string a = get_str<T>(v);
@@ -49,6 +44,7 @@ public:
 	static Logger debug;
 	static Logger error;
 	static Logger warning;
+	static bool is_color_enabled;
 
 protected:
 	std::ostream& out;

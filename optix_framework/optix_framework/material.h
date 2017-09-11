@@ -4,12 +4,9 @@
 
 struct MaterialDataCommon
 {
-    optix::float3 emissive;
-    optix::float3 reflectivity;
-    optix::float3 absorption;
-    float  phong_exp;
-    float  ior;
     int    illum;
+	float  relative_ior;
+	float  shininess;
     TexPtr ambient_map;
     TexPtr diffuse_map;
     TexPtr specular_map;

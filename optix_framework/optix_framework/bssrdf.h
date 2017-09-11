@@ -34,7 +34,9 @@ __forceinline__ __device__ float3 get_beam_transmittance(const float depth, cons
 	switch (properties.selected_bssrdf)
 	{
 	case DIRECTIONAL_DIPOLE_BSSRDF:
+	case APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
 		return exp(-depth*properties.deltaEddExtinction);
+	case APPROX_STANDARD_DIPOLE_BSSRDF:
 	case STANDARD_DIPOLE_BSSRDF:
 	default:
 		return exp(-depth*properties.extinction);

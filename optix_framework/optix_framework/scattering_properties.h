@@ -9,7 +9,8 @@
 
 struct ScatteringMaterialProperties
 {
-    optix::float3 absorption;
+	// base parameters
+	optix::float3 absorption;
     optix::float3 scattering;
     optix::float3 meancosine;
 
@@ -18,8 +19,6 @@ struct ScatteringMaterialProperties
     optix::float3 reducedExtinction;
     optix::float3 D;
     optix::float3 albedo;
-    // base parameters
-    float relative_ior; //The usual assumption is that this can be intercheangeably the material ior or the ratio between it and air (ior = 1)
     optix::float3 transport;
     float C_phi;
     optix::float3 reducedAlbedo;

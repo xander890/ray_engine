@@ -38,6 +38,7 @@
 #include "optix_utils.h"
 #include "default_shader.h"
 #include <sampled_bssrdf.h>
+#include "render_task.h"
 
 using namespace std;
 using namespace optix;
@@ -59,24 +60,10 @@ void ObjScene::execute_on_scene_elements(function<void(Mesh&)> operation)
 
 void ObjScene::collect_image(unsigned int frame)
 {
-	if (mAutoMode)
-	{
-		if (frame == mFrames)
-		{
-			std::string name = mOutputFile;
-			export_raw(name);
-			exit(2);
-		}
-		else
-		{
-			return;
-		}
-	}
-
 	if (!collect_images) return;
 
 	std::string name = std::string("rendering_") + to_string(frame) + ".raw";
-	export_raw(name);
+	export_raw(name, rendering_output_buffer, frame);
 }
 
 void ObjScene::reset_renderer()
@@ -84,26 +71,11 @@ void ObjScene::reset_renderer()
 	m_frame = 0;
 }
 
-void ObjScene::setAutoMode()
-{
-	mAutoMode = true;
-}
-
-void ObjScene::setOutputFile(const string& cs)
-{
-	mOutputFile = cs;
-}
-
-void ObjScene::setFrames(int frames)
-{
-	mFrames = frames;
-}
-
 bool ObjScene::keyPressed(unsigned char key, int x, int y)
 {
-	if (mAutoMode)
+	if (current_render_task->is_active())
 		return false;
-	if (new_gui->keyPressed(key, x, y) || key >= 48 && key <= 57) // numbers avoided
+	if (gui->keyPressed(key, x, y) || key >= 48 && key <= 57) // numbers avoided
 	{
 		reset_renderer();
 		return true;
@@ -111,10 +83,10 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case 'e':
-		{
-			std::string res = std::string("result_optix.raw");
-			return export_raw(res);
-		}
+	{
+		std::string res = std::string("result_optix.raw");
+		return export_raw(res, rendering_output_buffer, m_frame);
+	}
 	case 'p':
 		//current_scene_type = Scene::NextEnumItem(current_scene_type);
 		if (current_scene_type == Scene::NotValidEnumItem)
@@ -126,11 +98,11 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 			  cout << ((use_optix) ? "Ray tracing" : "Rasterization") << endl;*/
 		return true;
 	case 'g':
-		{
-			new_gui->toggleVisibility();
-			return true;
-		}
-		break;
+	{
+		gui->toggleVisibility();
+		return true;
+	}
+	break;
 	case 'r':
 	{
 		Logger::info << "Reloading all shaders..." << std::endl;
@@ -146,16 +118,47 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 }
 
 
+ObjScene::ObjScene(const std::vector<std::string>& obj_filenames, const std::string & shader_name, const std::string & config_file, optix::int4 rendering_r)
+	: context(m_context),
+	current_scene_type(Scene::OPTIX_ONLY), current_miss_program(), filenames(obj_filenames), method(nullptr), m_frame(0u),
+	deforming(false),
+	config_file(config_file)
+{
+	calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
+	custom_rr = rendering_r;
+	mMeshes.clear();
+	current_render_task = make_unique<RenderTask>();
+}
+
+ObjScene::ObjScene()
+	: context(m_context),
+	current_scene_type(Scene::OPTIX_ONLY), filenames(1, "test.obj"),
+	m_frame(0u),
+	deforming(true),
+	config_file("config.xml")
+{
+	calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
+	mMeshes.clear();
+	custom_rr = make_int4(-1);
+	current_render_task = make_unique<RenderTask>();
+}
+
+inline ObjScene::~ObjScene()
+{
+	ParameterParser::free();
+	cleanUp();
+}
+
 bool ObjScene::drawGUI()
 {
 	bool changed = false;
-	ImmediateGUIDraw::TextColored({255,0,0,1}, "Rendering info ");
-	std::stringstream ss; 
+	ImmediateGUIDraw::TextColored({ 255,0,0,1 }, "Rendering info ");
+	std::stringstream ss;
 	ss << "Current frame: " << to_string(m_frame);
 	ImmediateGUIDraw::Text(ss.str().c_str());
+	static bool debug = false;
 	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		static bool debug;
 		if (ImmediateGUIDraw::Checkbox("Debug mode", &debug))
 		{
 			changed = true;
@@ -168,15 +171,6 @@ bool ObjScene::drawGUI()
 			{
 				returned_buffer = tonemap_output_buffer;
 			}
-		}
-
-		if (ImmediateGUIDraw::InputInt4("Zoom window", (int*)&zoom_debug_window))
-		{
-			context["zoom_window"]->setUint(zoom_debug_window);
-		}
-		if (ImmediateGUIDraw::InputInt4("Zoom area", (int*)&zoomed_area))
-		{
-			context["image_part_to_zoom"]->setUint(zoomed_area);
 		}
 
 		static int depth = context["max_depth"]->getInt();
@@ -208,11 +202,34 @@ bool ObjScene::drawGUI()
 			std::string filePath;
 			if (Dialogs::saveFileDialog(filePath))
 			{
-				export_raw(filePath);
+				export_raw(filePath, rendering_output_buffer, m_frame);
 			}
 		}
 
 	}
+
+
+	if (debug && ImmediateGUIDraw::CollapsingHeader("Debug"))
+	{
+		auto c = context["debug_index"]->getType();
+		uint2 debug_pixel = context["debug_index"]->getUint2();
+		if (ImmediateGUIDraw::InputInt2("Debug pixel", (int*)&debug_pixel))
+		{
+			context["debug_index"]->setUint(debug_pixel);
+		}
+
+		if (ImmediateGUIDraw::SliderInt4("Zoom window", (int*)&zoom_debug_window, 0, min(camera->get_width(), camera->get_height())))
+		{
+			context["zoom_window"]->setUint(zoom_debug_window);
+		}
+		if (ImmediateGUIDraw::SliderInt4("Zoom area", (int*)&zoomed_area, 0, min(camera->get_width(), camera->get_height())))
+		{
+			context["image_part_to_zoom"]->setUint(zoomed_area);
+		}
+		ImmediateGUIDraw::Checkbox("Colored logs", &Logger::is_color_enabled);
+	}
+
+
 	if (ImmediateGUIDraw::CollapsingHeader("Tone mapping"))
 	{
 		changed |= ImmediateGUIDraw::SliderFloat("Multiplier##TonemapMultiplier", &tonemap_multiplier, 0.0f, 2.0f, "%.3f", 1.0f);
@@ -257,6 +274,38 @@ bool ObjScene::drawGUI()
 		}
 	}
 
+	bool is_active = current_render_task->is_active();
+	int flag = is_active ? ImGuiTreeNodeFlags_DefaultOpen : 0;
+	if (ImmediateGUIDraw::CollapsingHeader("Render tasks", flag))
+	{
+		char InputBuf[256];
+		sprintf(InputBuf, "%s", current_render_task->destination_file.c_str());
+		if(!is_active && ImmediateGUIDraw::InputText("Destination file", InputBuf, ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			changed = true;
+			current_render_task->destination_file = std::string(InputBuf);
+		}
+		if (!is_active)
+		{
+			changed |= ImmediateGUIDraw::InputInt("Frames", &current_render_task->destination_samples);
+			changed |= ImmediateGUIDraw::Checkbox("Close program on finish", &current_render_task->close_program_on_exit);
+		}
+		if (!is_active && ImmediateGUIDraw::Button("Start task"))
+		{
+			start_render_task();
+		}
+		if (is_active)
+		{
+			std::stringstream ss;
+			ss << "Render task in progress. Progress: " << to_string(current_render_task->get_progress()) << "/" << to_string(current_render_task->destination_samples) << endl;
+			ImmediateGUIDraw::Text(ss.str().c_str());
+		}
+		if (is_active && ImmediateGUIDraw::Button("End task"))
+		{
+			current_render_task->end();
+		}
+	}
+
 	return changed;
 }
 
@@ -283,7 +332,7 @@ void ObjScene::create_3d_noise(float frequency)
             for (int k = 0; k < 256; k++)
             {
                 int idx = 256 * 256 * i + 256 * j + k;
-                buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
+                //buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
             }
     buffer->unmap();
 
@@ -301,15 +350,17 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
 
+	if (override_mat.size() > 0)
+	{
+		auto v = ObjLoader::parse_mtl_file(override_mat, context);
+		MaterialHost::set_default_material(v[0]);
+	}
+
     auto camera_type = PinholeCameraDefinitionType::String2Enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraDefinitionType::Enum2String(PinholeCameraDefinitionType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));
-
-
     int camera_width = ParameterParser::get_parameter<int>("camera", "window_width", 512, "The width of the window");
     int camera_height = ParameterParser::get_parameter<int>("camera", "window_height", 512, "The height of the window");
     int downsampling = ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, "");
     camera = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
-    
-
 
     ShaderFactory::init(context);
     ShaderInfo info = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
@@ -323,7 +374,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 		available_media.push_back(&kv.second);
 	}
 
-
 	current_miss_program = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
 
     tonemap_exponent = ParameterParser::get_parameter<float>("tonemap", "tonemap_exponent", 1.8f, "Tonemap exponent");
@@ -333,7 +383,6 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	context->setRayTypeCount(RAY_TYPE_COUNT);
 	context->setStackSize(ParameterParser::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
-
 	context["max_depth"]->setInt(ParameterParser::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
 
 	// Constant colors
@@ -464,7 +513,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	zoomed_area = make_uint4(camera_width / 2 - 5, camera_height / 2 - 5, 10, 10);
 	context["zoom_window"]->setUint(zoom_debug_window);
 	context["image_part_to_zoom"]->setUint(zoomed_area);
-
+	context["debug_index"]->setUint(make_uint2(0, 0));
 	// Environment cameras
 	
 
@@ -482,31 +531,19 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	context->validate();
 	context->compile();
 
-	if (new_gui == nullptr)
-	{
-		new_gui = new ImmediateGUI("GUI", camera->get_width(), camera->get_height());
-	}
+	gui = std::make_unique<ImmediateGUI>("Ray tracing demo", camera->get_width(), camera->get_height());
 
-	if (mAutoMode)
-	{
-		new_gui->toggleVisibility();
-		GLUTDisplay::setContinuousMode(GLUTDisplay::CDBenchmark);
-	}
 	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
 
-    MaterialDataCommon params;
+    ObjMaterial params;
 
-    params.absorption = make_float3(0);
-    params.emissive = make_float3(0);
     params.illum = 12;
-    params.ior = 1.3f;
-    params.phong_exp = 0;
-    params.reflectivity = make_float3(0);
-    params.ambient_map = loadTexture(m_context, "", make_float3(0))->getId();
-    params.diffuse_map = loadTexture(m_context, "", make_float3(1, 0, 0))->getId();
-    params.specular_map = loadTexture(m_context, "", make_float3(0))->getId();
+    params.ambient_tex = loadTexture(m_context, "", make_float3(0))->getId();
+    params.diffuse_tex = loadTexture(m_context, "", make_float3(1, 0, 0))->getId();
+    params.specular_tex = loadTexture(m_context, "", make_float3(0))->getId();
+	params.name = "ketchup";
 
-    material_ketchup = std::make_shared<MaterialHost>("ketchup", params);
+    material_ketchup = std::make_shared<MaterialHost>(params);
     execute_on_scene_elements([=](Mesh & m)
     {
         m.add_material(material_ketchup);
@@ -579,12 +616,42 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		context->launch(as_integer(CameraType::DEBUG), width, height);
 	}
 
+	if (current_render_task->is_active())
+	{
+		if (current_render_task->is_finished())
+		{
+			export_raw(current_render_task->destination_file, rendering_output_buffer, m_frame);
+			current_render_task->end();
+		}
+		current_render_task->update();
+	}
+
 	collect_image(m_frame);
 }
 
 Buffer ObjScene::getOutputBuffer()
 {
 	return returned_buffer;
+}
+
+void ObjScene::set_render_task(std::unique_ptr<RenderTask>& task)
+{
+	if (!current_render_task->is_active())
+		current_render_task = std::move(task);
+	else
+		Logger::error << "Wait of end of current task before setting a new one." << endl;
+}
+
+void ObjScene::start_render_task()
+{
+	reset_renderer();
+	GLUTDisplay::setContinuousMode(GLUTDisplay::CDBenchmark);
+	current_render_task->start();
+}
+
+void ObjScene::add_override_material_file(std::string mat)
+{
+	override_mat = mat;
 }
 
 optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height)
@@ -695,7 +762,7 @@ optix::Matrix4x4 ObjScene::get_object_transform(string filename)
 }
 
 
-bool ObjScene::export_raw(string& raw_path)
+bool ObjScene::export_raw(string& raw_path, optix::Buffer out, int frames)
 {
 	// export render data
     if (raw_path.length() == 0)
@@ -709,6 +776,8 @@ bool ObjScene::export_raw(string& raw_path)
         raw_path += ".raw";
 	}
 
+	RTsize w, h;
+	out->getSize(w, h);
 	std::string txt_file = raw_path.substr(0, raw_path.length() - 4) + ".txt";
 	ofstream ofs_data(txt_file);
 	if (ofs_data.bad())
@@ -716,12 +785,11 @@ bool ObjScene::export_raw(string& raw_path)
 		Logger::error <<  "Unable to open file " << txt_file << endl;
 		return false;
 	}
-	ofs_data << m_frame << endl << camera->get_width() << " " << camera->get_height() << endl;
+	ofs_data << frames << endl << w << " " << h << endl;
 	ofs_data << 1.0 << " " << 1.0f << " " << 1.0f;
 	ofs_data.close();
 
-	Buffer out = getOutputBuffer();
-	int size_buffer = camera->get_width() * camera->get_height() * 4;
+	RTsize size_buffer = w * h * 4;
 	float* mapped = new float[size_buffer];
 	memcpy(mapped, out->map(), size_buffer * sizeof(float));
 	out->unmap();
@@ -733,7 +801,7 @@ bool ObjScene::export_raw(string& raw_path)
 		return false;
 	}
 
-	int size_image = camera->get_width() * camera->get_height() * 3;
+	RTsize size_image = w * h * 3;
 	float* converted = new float[size_image];
 	float average = 0.0f;
 	for (int i = 0; i < size_image / 3; ++i)
@@ -774,28 +842,27 @@ bool ObjScene::mousePressed(int button, int state, int x, int y)
 		setDebugPixel(x, y);
 		return true;
 	}
-	return new_gui->mousePressed(button, state, x, y);
+	return gui->mousePressed(button, state, x, y);
 }
 
 bool ObjScene::mouseMoving(int x, int y)
 {
-	return new_gui->mouseMoving(x, y);
+	return gui->mouseMoving(x, y);
 }
 
 void ObjScene::postDrawCallBack()
 {
-	new_gui->start_draw();
+	gui->start_draw();
 	if (drawGUI())
 	{
 		reset_renderer();
 	}
-	new_gui->end_draw();
+	gui->end_draw();
 }
 
 void ObjScene::setDebugPixel(int i, int y)
 {
 	y = camera->get_height() - y;
-
 	Logger::info <<"Setting debug pixel to " << to_string(i) << " << " << to_string(y) <<endl;
 	context->setPrintLaunchIndex(i, y);
 	context["debug_index"]->setUint(i, y);
@@ -888,21 +955,21 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 
 	Matrix3x3 camera_matrix = Matrix3x3::identity();
 
-	fov = ParameterParser::get_parameter<float2>("camera", "camera_fov", make_float2(53.1301f, 53.1301f), "The camera FOVs (h|v)");
+	float fov = ParameterParser::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
 
     if (use_auto_camera)
 	{
 		camera_data = InitialCameraData(eye, // eye
 			m_scene_bounding_box.center(), // lookat
 			make_float3(0.0f, 1.0f, 0.0f), // up
-			fov.x, fov.y);
+			fov, fov);
 	}
 	else
 	{
 		eye = ParameterParser::get_parameter<float3>("camera", "camera_position", make_float3(1, 0, 0), "The camera initial position");
 		float3 lookat = ParameterParser::get_parameter<float3>("camera", "camera_lookat_point", make_float3(0, 0, 0), "The camera initial lookat point");
 		float3 up = ParameterParser::get_parameter<float3>("camera", "camera_up", make_float3(0, 1, 0), "The camera initial up");
-		camera_data = InitialCameraData(eye, lookat, up, fov.x, fov.y);
+		camera_data = InitialCameraData(eye, lookat, up, fov, fov);
 	}
 
 	if (camera_type == PinholeCameraDefinitionType::INVERSE_CAMERA_MATRIX)

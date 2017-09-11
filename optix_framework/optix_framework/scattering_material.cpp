@@ -8,7 +8,6 @@ using namespace optix;
 ScatteringMaterial& ScatteringMaterial::operator=(const ScatteringMaterial& cp)
 {
     absorption = cp.absorption;
-    ior = cp.ior;
     scattering = cp.scattering;
     asymmetry = cp.asymmetry;
     name = cp.name;
@@ -22,7 +21,6 @@ ScatteringMaterial& ScatteringMaterial::operator=(const ScatteringMaterial& cp)
 ScatteringMaterial::ScatteringMaterial(const ScatteringMaterial& cp)
 {
     absorption = cp.absorption;
-    ior = cp.ior;
     scattering = cp.scattering;
     asymmetry = cp.asymmetry;
     name = cp.name;
@@ -52,7 +50,7 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
   sigma_a = make_float3(0.0f);
   sigma_s = make_float3(0.0f);
   g = make_float3(0.0f);
-  ior = 1.3f;
+
   switch(material)
   {
   case Chicken:
@@ -98,7 +96,6 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
     name = "coffee";
   break;
   case Marble:
-    ior = 1.5f;
     sigma_a = make_float3(0.0021f,0.0041f,0.0071f);
     sigma_s = make_float3(2.19f,2.62f,3.00f);
     g = make_float3(0.0f, 0.0f, 0.0f);
@@ -162,12 +159,6 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
   default: ;
   }
   dirty = true;
-}
-
-void ScatteringMaterial::set_ior(float ior)
-{
-	this->ior = ior;
-	dirty = true;
 }
 
 void ScatteringMaterial::set_absorption(optix::float3 abs)
@@ -243,21 +234,20 @@ bool ScatteringMaterial::on_draw(std::string id)
 #undef ID_STRING
 }
 
-void ScatteringMaterial::computeCoefficients()
+void ScatteringMaterial::computeCoefficients(float ior)
 {
 	properties.absorption = max(absorption, make_float3(1.0e-8f)) * scale;
 	properties.scattering = scattering * scale;
 	properties.meancosine = asymmetry;
-	properties.relative_ior = ior;
 	properties.deltaEddExtinction = properties.scattering*(1.0f - properties.meancosine*properties.meancosine) + properties.absorption;
 
 	auto reducedScattering = properties.scattering * (make_float3(1.0f) - properties.meancosine);
 	properties.reducedExtinction = reducedScattering + properties.absorption;
 	properties.D = make_float3(1.0f) / (3.f * properties.reducedExtinction);
 	properties.transport = sqrt(3*properties.absorption*properties.reducedExtinction);
-	properties.C_phi = C_phi(properties.relative_ior);
-	properties.C_phi_inv = C_phi(1.0f/properties.relative_ior);
-	properties.C_E = C_E(properties.relative_ior);
+	properties.C_phi = C_phi(ior);
+	properties.C_phi_inv = C_phi(1.0f/ior);
+	properties.C_E = C_E(ior);
 	properties.reducedAlbedo = reducedScattering / properties.reducedExtinction;
 	properties.de = 2.131f * properties.D / sqrt(properties.reducedAlbedo);
 	properties.A = (1.0f - properties.C_E) / (2.0f * properties.C_phi);
@@ -270,7 +260,7 @@ void ScatteringMaterial::computeCoefficients()
 	properties.albedo = properties.scattering / properties.extinction;
 	//properties.two_de = 2.0f * properties.de;
 	//properties.de_sqr = properties.de * properties.de;
-	//properties.iorsq = properties.relative_ior * properties.relative_ior;
+	//properties.iorsq = ior * ior;
 	properties.min_transport = fminf(fminf(properties.transport.x, properties.transport.y), properties.transport.z);
 	properties.mean_transport = (properties.transport.x + properties.transport.y + properties.transport.z) / 3.0f;
 	dirty = false;
@@ -283,9 +273,5 @@ bool ScatteringMaterial::hasChanged()
 
 ScatteringMaterialProperties ScatteringMaterial::get_data()
 {
-    if (dirty)
-    {
-        computeCoefficients();
-    }
     return properties;
 }

@@ -18,6 +18,8 @@
 #include "enums.h"
 #include "immediate_gui.h"
 
+class RenderTask;
+
 //#define IOR_EST
 
 
@@ -34,35 +36,10 @@ class ObjScene : public SampleScene
 {
 public:
 
+	ObjScene(const std::vector<std::string>& obj_filenames, const std::string& shader_name, const std::string& config_file, optix::int4 rendering_r = make_int4(-1));
+	ObjScene();
 
-	ObjScene(const std::vector<std::string>& obj_filenames, const std::string& shader_name, const std::string& config_file, optix::int4 rendering_r = make_int4(-1))
-        : context(m_context),
-          current_scene_type(Scene::OPTIX_ONLY), current_miss_program(), filenames(obj_filenames), method(nullptr),        m_frame(0u),
-          deforming(false),
-          config_file(config_file)
-    {
-        calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
-		custom_rr = rendering_r;
-        mMeshes.clear();
-    }
-
-	ObjScene()
-		: context(m_context),
-		current_scene_type(Scene::OPTIX_ONLY), filenames(1, "test.obj"), 
-		  m_frame(0u),
-		  deforming(true),
-		  config_file("config.xml")
-	{
-		calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
-        mMeshes.clear();
-		custom_rr = make_int4(-1);
-	}
-
-	virtual ~ObjScene()
-	{
-		ParameterParser::free();
-		cleanUp();
-	}
+	virtual ~ObjScene();
 
 	virtual void cleanUp()
 	{
@@ -100,6 +77,8 @@ public:
 	IndexMatcher * index_matcher;
 #endif
 
+	std::unique_ptr<RenderTask> current_render_task;
+
 	virtual void getDebugText(std::string& text, float& x, float& y) override
 	{
 		text = "";// Scene::Enum2String(current_scene_type);
@@ -107,9 +86,11 @@ public:
 		y = 36.0f;
 	}
 
-	void setAutoMode();
-	void setOutputFile(const string& cs);
-	void setFrames(int frames);
+	void set_render_task(std::unique_ptr<RenderTask>& task);
+	void start_render_task();
+
+	std::string override_mat = "";
+	void add_override_material_file(std::string mat);
 
 private:
 	Context context;
@@ -121,23 +102,17 @@ private:
 	bool collect_images = false;
 	bool show_difference_image = false;
 	Aabb m_scene_bounding_box;
-	bool mAutoMode = false;
-	string mOutputFile = "rendering.raw";
-	int mFrames = -1;
 	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height);
 
 	void add_lights(vector<TriangleLight>& area_lights);
 	void set_miss_program();
-	optix::TextureSampler environment_sampler;
     std::unique_ptr<MissProgram> miss_program = nullptr;
-
-	optix::float2 fov;
 
 	// Geometry and transformation getters
 	optix::GeometryGroup get_geometry_group(unsigned int idx);
 	optix::Matrix4x4 get_object_transform(std::string filename);
 
-	bool export_raw(std::string& name);
+	static bool export_raw(std::string& name, optix::Buffer buffer, int frames);
 	void set_rendering_method(RenderingMethodType::EnumType t);
 	std::vector<std::string> filenames;
 
@@ -151,7 +126,7 @@ private:
 	optix::Buffer output_buffer;
 	
    
-	ImmediateGUI* new_gui = nullptr;
+	std::unique_ptr<ImmediateGUI> gui = nullptr;
 	void add_result_image(const string& image_file);
     std::vector<std::unique_ptr<Mesh>> mMeshes;
     std::shared_ptr<MaterialHost> material_ketchup;
@@ -187,6 +162,7 @@ private:
 
 	uint4 zoom_debug_window = make_uint4(20,20,300,300);
 	uint4 zoomed_area = make_uint4(0);
+
 };
 
 #endif // OBJSCENE_H

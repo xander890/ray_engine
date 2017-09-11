@@ -13,8 +13,6 @@ using namespace optix;
 
 Context ShaderFactory::context = nullptr;
 
-
-
 void load_normalized_CIE_functions(optix::Context & ctx)
 {
     Color<double> spectrum_cdf(spectrum_rgb_samples);
