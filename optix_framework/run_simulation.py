@@ -5,10 +5,10 @@ materials = ["potato", "ketchup", "white_grapefruit"]
 
 ior = 1.3
 
-illums = [14, 17]
-illum_names = {14 : "screen_space_sampling", 14 : "point_cloud_sampling"}
+illums = [12]
+illum_names = {12 : "volume_pt", 14 : "screen_space_sampling", 17 : "point_cloud_sampling"}
 
-mesh = "./meshes/unit_sphere.obj"
+mesh = "/meshes/unit_sphere.obj"
 
 frames = 100
 
@@ -27,6 +27,6 @@ for mat in materials:
 	for illum in illums:
 		with open(over_mat, 'w') as f:
 			f.write(create_mtl(mat, ior, illum))
-		res = '../results/rendering_' + str(mat)  + "_" + str(illum)
+		res = '../results/rendering_' + str(mat)  + "_" + str(illum_names[illum]) + "_" + str(frames) +  "_samples.raw" 
 		command = ['optix_framework.exe', mesh, '-o', res, '-f', str(frames), '--material_override', over_mat]
 		subprocess.call(command)

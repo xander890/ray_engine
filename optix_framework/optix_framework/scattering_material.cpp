@@ -50,6 +50,7 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
   sigma_a = make_float3(0.0f);
   sigma_s = make_float3(0.0f);
   g = make_float3(0.0f);
+  scale = 100.0f;
 
   switch(material)
   {
@@ -74,7 +75,7 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
   case Whitegrapefruit:
     sigma_a = make_float3(0.096f, 0.131f, 0.395f);
     sigma_s = make_float3(3.513f, 3.669f, 5.237f);
-    g = make_float3(0.548f, 0.545f, 0.565f);    
+    g = make_float3(0.548f, 0.545f, 0.565f);   
     name = "white grapefruit";
   break;
   case Beer:

@@ -279,7 +279,7 @@ bool ObjScene::drawGUI()
 	if (ImmediateGUIDraw::CollapsingHeader("Render tasks", flag))
 	{
 		char InputBuf[256];
-		sprintf(InputBuf, "%s", current_render_task->destination_file.c_str());
+		sprintf_s(InputBuf, "%s", current_render_task->destination_file.c_str());
 		if(!is_active && ImmediateGUIDraw::InputText("Destination file", InputBuf, ImGuiInputTextFlags_EnterReturnsTrue))
 		{
 			changed = true;
