@@ -1,7 +1,7 @@
 import sys
 import subprocess
 import os
-materials = ["potato", "ketchup", "white_grapefruit"]
+materials = ["white_grapefruit","potato","ketchup", "soy_milk"]
 
 ior = 1.3
 
@@ -10,7 +10,7 @@ illum_names = {12 : "volume_pt", 14 : "screen_space_sampling", 17 : "point_cloud
 
 mesh = "/meshes/unit_sphere.obj"
 
-frames = 100
+frames = 1000
 
 os.chdir('./build/')
 if not os.path.exists('../results'):

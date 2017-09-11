@@ -70,13 +70,13 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
     sigma_a = make_float3(0.0011f,0.0024f,0.014f);
     sigma_s = make_float3(2.55f,3.21f,3.77f);
     g = make_float3(0.0f, 0.0f, 0.0f);
-    name = "whole milk";
+    name = "whole_milk";
     break;
   case Whitegrapefruit:
     sigma_a = make_float3(0.096f, 0.131f, 0.395f);
     sigma_s = make_float3(3.513f, 3.669f, 5.237f);
     g = make_float3(0.548f, 0.545f, 0.565f);   
-    name = "white grapefruit";
+    name = "white_grapefruit";
   break;
   case Beer:
     sigma_a = make_float3(0.1449f,0.3141f,0.7286f);
@@ -88,7 +88,7 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
     sigma_a = make_float3(0.0001f,0.0005f,0.0034f);
     sigma_s = make_float3(2.433f,2.714f,4.563f);
     g = make_float3(0.873f, 0.858f, 0.832f);
-    name = "soy milk";
+    name = "soy_milk";
   break;
   case Coffee:
     sigma_a = make_float3(0.1669f,0.2287f,0.3078f);
@@ -124,13 +124,13 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
     sigma_a = make_float3(0.007f, 0.03f, 0.1f);
     sigma_s = make_float3(7.352f, 9.142f, 10.588f);
     g = make_float3(0.862f, 0.838f, 0.806f);
-    name = "chocolate milk";
+    name = "chocolate_milk";
   break;
     case ReducedMilk:
     sigma_a = make_float3(0.0001f, 0.0002f, 0.0005f);
     sigma_s = make_float3(10.748f, 12.209f, 13.931f);
     g = make_float3(0.819f, 0.797f, 0.746f);
-    name = "reduced milk";
+    name = "reduced_milk";
   break;
     case Mustard:
     sigma_s = make_float3(16.447f,18.536f,6.457f);
@@ -148,13 +148,13 @@ void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
     sigma_s = make_float3(3.923f, 4.018f, 4.351f);
     sigma_a = make_float3(0.003f, 0.005f, 0.013f);
     g = make_float3(0.330f, 0.322f, 0.316f);
-    name = "mixed soap";
+    name = "mixed_soap";
     break;
     case GlycerineSoap:
     sigma_s = make_float3(0.201f, 0.202f, 0.221f);
     sigma_a = make_float3(0.001f, 0.001f, 0.002f);
     g = make_float3(0.955f, 0.949f, 0.943f);
-    name = "glycerine soap";
+    name = "glycerine_soap";
     break;
   case Count: break;
   default: ;
