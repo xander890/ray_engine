@@ -68,7 +68,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>..\lib64\$(Configuration)\nfd.lib;..\lib64\AntTweakBar64.lib;..\lib64\assimp.lib;..\lib64\xerces-c_3.lib;..\lib64\$(Configuration)\gel.lib;..\lib64\$(Configuration)\optprops.lib;..\lib64\freeglut.lib;..\lib64\optix.1.lib;..\lib64\optixu.1.lib;..\lib64\glew32.lib;..\lib64\$(Configuration)\sutil.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <ShowProgress>LinkVerbose</ShowProgress>
+      <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
       <Command>echo Copying OptiX, freeglut and CUDA DLLs to output folder..
@@ -618,6 +618,7 @@ echo Done.</Command>
     <ClInclude Include="mesh.h" />
     <ClInclude Include="miss_program.h" />
     <ClInclude Include="optix_common.h" />
+    <ClInclude Include="optix_serialize.h" />
     <ClInclude Include="optix_utils.h" />
     <ClInclude Include="PerlinNoise.h" />
     <ClInclude Include="procedural_mesh.h" />

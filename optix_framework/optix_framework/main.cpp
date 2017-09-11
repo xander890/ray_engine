@@ -1,7 +1,7 @@
 // 02576 OptiX Rendering Framework
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
-
+#include "optix_serialize.h"
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -9,9 +9,6 @@
 #include <GLUTDisplay.h>
 #include "obj_scene.h"
 #include "render_task.h"
-
-using namespace std;
-using namespace optix;
 
 namespace
 {
@@ -26,13 +23,13 @@ namespace
 	}
 }
 
-void printUsageAndExit( const string& argv0 ) 
+void printUsageAndExit( const std::string& argv0 ) 
 {
-  cerr << "Usage  : " << argv0 << " [options] any_object.obj [another.obj ...]" << endl
-       << "options: --help           | -h            Print this usage message" << endl
-       << "         --shader         | -sh <shader>  specify the closest hit program to be used for shading" << endl
-	   << "options: --rectangle <ox oy w h>     renctangle to render." << endl
-	   << endl;
+	std::cerr << "Usage  : " << argv0 << " [options] any_object.obj [another.obj ...]" << std::endl
+       << "options: --help           | -h            Print this usage message" << std::endl
+       << "         --shader         | -sh <shader>  specify the closest hit program to be used for shading" << std::endl
+	   << "options: --rectangle <ox oy w h>     renctangle to render." << std::endl
+	   << std::endl;
   
   GLUTDisplay::printUsage();
 
@@ -42,24 +39,26 @@ void printUsageAndExit( const string& argv0 )
 
 int main( int argc, char** argv ) 
 {
-  vector<string> filenames;
-  string filename = "";
-  string shadername = "";
-  string output_file = "rendering.raw";
-  string config_file = "config.xml";
+	//test_cereal();
+ //  exit(0);
+	std::vector<std::string> filenames;
+	std::string filename = "";
+	std::string shadername = "";
+	std::string output_file = "rendering.raw";
+	std::string config_file = "config.xml";
   bool accel_caching_on = false;
   int4 rendering_rect = make_int4(-1);
   //std::map<std::string, std::string> parameters;
   bool auto_mode = false;
   int frames = 0;
-  std::unique_ptr<RenderTask> task = make_unique<RenderTask>();
+  std::unique_ptr<RenderTask> task = std::make_unique<RenderTask>();
   task->close_program_on_exit = true;
   std::string material_override_mtl = "";
 
   std::vector<std::string> additional_parameters;
   for ( int i = 1; i < argc; ++i ) 
   {
-    string arg( argv[i] );
+	  std::string arg( argv[i] );
     if( arg == "-h" || arg == "--help" ) 
     {
       printUsageAndExit( argv[0] ); 
@@ -106,27 +105,27 @@ int main( int argc, char** argv )
 	else if (arg == "-f" || arg == "--frames")
 	{
 		auto_mode = true;
-		task->destination_samples = stoi(argv[++i]);
+		task->destination_samples = std::stoi(argv[++i]);
 	}
 	else if (arg == "--rectangle")
 	{
 		if (i == argc - 1)
 			 printUsageAndExit( argv[0] );
-		rendering_rect.x = stoi(argv[++i]);
+		rendering_rect.x = std::stoi(argv[++i]);
 		if (i == argc - 1)
 			printUsageAndExit(argv[0]);
-		rendering_rect.y = stoi(argv[++i]);
+		rendering_rect.y = std::stoi(argv[++i]);
 		if (i == argc - 1)
 			printUsageAndExit(argv[0]);
-		rendering_rect.z = stoi(argv[++i]);
+		rendering_rect.z = std::stoi(argv[++i]);
 		if (i == argc - 1)
 			printUsageAndExit(argv[0]);
-		rendering_rect.w = stoi(argv[++i]);
+		rendering_rect.w = std::stoi(argv[++i]);
 	}
     else 
     {
       filename = argv[i];
-      string file_extension;
+	    std::string file_extension;
       size_t idx = filename.find_last_of('.');
       if(idx < filename.length())
       {

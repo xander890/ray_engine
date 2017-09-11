@@ -637,6 +637,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		if (current_render_task->is_finished())
 		{
 			export_raw(current_render_task->destination_file, rendering_output_buffer, m_frame);
+			ParameterParser::dump_used_parameters(current_render_task->destination_file + ".xml");
 			current_render_task->end();
 		}
 		current_render_task->update();
