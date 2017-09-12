@@ -231,7 +231,7 @@ glmSpheremapTexture(GLMmodel* model);
  *
  * model - initialized GLMmodel structure
  */
-SUTILAPI void glmDelete(GLMmodel* model);
+void glmDelete(GLMmodel* model);
 
 /* glmReadOBJ: Reads a model description from a Wavefront .OBJ file.
  * Returns a pointer to the created object which should be free'd with
@@ -241,9 +241,9 @@ SUTILAPI void glmDelete(GLMmodel* model);
  *
  * returns 0 if there was a problem reading the file.
  */
-SUTILAPI GLMmodel* glmReadOBJ(const char* filename);
+GLMmodel* glmReadOBJ(const char* filename);
 
-SUTILAPI int _glmReadMTL(GLMmodel* model, char* name);
+int _glmReadMTL(GLMmodel* model, char* name);
 
 /* glmWriteOBJ: Writes a model description in Wavefront .OBJ format to
  * a file.

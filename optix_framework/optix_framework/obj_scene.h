@@ -79,13 +79,6 @@ public:
 
 	std::unique_ptr<RenderTask> current_render_task;
 
-	virtual void getDebugText(std::string& text, float& x, float& y) override
-	{
-		text = "";// Scene::Enum2String(current_scene_type);
-		x = 10.0f;
-		y = 36.0f;
-	}
-
 	void set_render_task(std::unique_ptr<RenderTask>& task);
 	void start_render_task();
 

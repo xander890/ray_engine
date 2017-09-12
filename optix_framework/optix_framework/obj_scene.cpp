@@ -23,7 +23,7 @@
 #include "procedural_loader.h"
 #include "sphere.h"
 #include "dialogs.h"
-#include <sutil/ImageLoader.h>
+#include <ImageLoader.h>
 #include "presampled_surface_bssrdf.h"
 #include "GLUTDisplay.h"
 #include "aisceneloader.h"
@@ -604,10 +604,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	}
 	context["frame"]->setUint(m_frame++);
 
-	double time;
-	sutilCurrentTime(&time);
-
-
 	if (deforming)
 		scene->getAcceleration()->markDirty();
 
@@ -621,8 +617,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	unsigned int height = camera->get_height();
 	context->launch(as_integer(CameraType::STANDARD_RT), width, height);
 
-	double time1;
-	sutilCurrentTime(&time1);
 	// cout << "Elapsed (ray tracing): " << (time1 - time) * 1000 << endl;
 	// Apply tone mapping
 	context->launch(as_integer(CameraType::TONE_MAPPING), width, height);
@@ -662,7 +656,6 @@ void ObjScene::set_render_task(std::unique_ptr<RenderTask>& task)
 void ObjScene::start_render_task()
 {
 	reset_renderer();
-	GLUTDisplay::setContinuousMode(GLUTDisplay::CDBenchmark);
 	current_render_task->start();
 }
 

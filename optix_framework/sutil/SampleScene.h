@@ -118,8 +118,6 @@ public:
   SUTILAPI virtual bool   mousePressed(int button, int state, int x, int y) { return false;  }
   SUTILAPI virtual bool   mouseMoving(int x, int y) { return false; }
 
-  SUTILAPI virtual void  getDebugText(std::string & text, float & x, float & y) {}
-
   SUTILAPI virtual void postDrawCallBack() {};
 
   // Accessor

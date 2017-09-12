@@ -15,60 +15,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sutil.c">
-      <Filter>Header Files</Filter>
-    </ClCompile>
-    <ClCompile Include="glm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GLUTDisplay.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HDRLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Mouse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PPMLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SampleScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rply-1.01\rply.c">
-      <Filter>Header Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RawLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageDisplay.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="glm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GLUTDisplay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HDRLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ImageLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Mouse.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PPMLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SampleScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sutil.h">
@@ -77,20 +41,14 @@
     <ClInclude Include="sutilapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="rply-1.01\rply.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GL\glxew.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GL\wglew.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RawLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageDisplay.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="SampleScene.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -25,24 +25,7 @@ __forceinline__ __device__ float3 approximate_directional_dipole_bssrdf(const fl
 	const ScatteringMaterialProperties& properties)
 {
 	float3 w21 = -_w21;
-	float r = length(_xo - _xi);
-	float one_over_r = 1.0f / r;
-	float3 A = properties.albedo;
-	float3 one_over_l = properties.transport;
-	float3 s = burley_scaling_factor_diffuse_mfp_searchlight(A);
-	float3 s_over_l = s * one_over_l;
-
-	float3 exp1 = exp(-s_over_l*r);
-	float3 exp2 = exp(-s_over_l*r / 3.0f);
-
-	float3 one_over_dr = s_over_l * one_over_r;
-	float3 R = A * one_over_dr * (exp1 + exp2) / (8.0f * M_PIf); // Extra pi is to get BSSRDF from reflectance
-
-	float3 x = _xo - _xi;
-	
-	float3 additional_terms = make_float3(1.0f); 
-	additional_terms += max(0.0f, dot(x, _w12 + w21)) * one_over_dr;
-	additional_terms += max(0.0f, dot(x, _w12)*dot(x, w21)) * one_over_dr * one_over_dr;
-	// do debug buffer
-	return R * additional_terms / M_PIf; // Extra pi is to get BSSRDF from reflectance
+	float3 x = _xo - _xi;	
+	optix_print("w21 dir, MUST BE NEGATIVE %f\n", dot(w21, _no));
+	return approx_bssrdf(x, _w12, w21, properties) / M_PIf; // Extra pi is to get BSSRDF from reflectance
 }

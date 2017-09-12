@@ -32,41 +32,35 @@
 //
 //-----------------------------------------------------------------------------
 
-// Creates a TextureSampler object for the given PPM file.  If filename is 
-// empty or PPMLoader fails, a 1x1 texture is created with the provided default
+// Creates a TextureSampler object for the given HDR file.  If filename is 
+// empty or HDRLoader fails, a 1x1 texture is created with the provided default
 // texture color.
-SUTILAPI optix::TextureSampler loadPPMTexture( optix::Context context,
-                                             const std::string& ppm_filename,
-                                             const optix::float3& default_color );
+optix::TextureSampler loadHDRTexture( optix::Context& context,
+                                               const std::string& hdr_filename,
+                                               const optix::float3& default_color );
 
 
 //-----------------------------------------------------------------------------
 //
-// PPMLoader class declaration 
+// HDRLoader class declaration 
 //
 //-----------------------------------------------------------------------------
 
-class PPMLoader
+class HDRLoader
 {
 public:
-  SUTILAPI PPMLoader( const std::string& filename, const bool vflip = false );
-  SUTILAPI ~PPMLoader();
+  HDRLoader( const std::string& filename );
+  ~HDRLoader();
 
-  SUTILAPI optix::TextureSampler loadTexture( optix::Context context,
-                                              const optix::float3& default_color,
-                                              bool linearize_gamma = false);
-
-  SUTILAPI bool           failed() const;
-  SUTILAPI unsigned int   width() const;
-  SUTILAPI unsigned int   height() const;
-  SUTILAPI unsigned char* raster() const;
+  bool           failed()const;
+  unsigned int   width()const;
+  unsigned int   height()const;
+  float*         raster()const;
 
 private:
   unsigned int   m_nx;
   unsigned int   m_ny;
-  unsigned int   m_max_val;
-  unsigned char* m_raster;
-  bool           m_is_ascii;
+  float*         m_raster;
 
   static void getLine( std::ifstream& file_in, std::string& s );
 

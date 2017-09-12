@@ -130,7 +130,8 @@ void SampleScene::resize(unsigned int width, unsigned int height)
     }
 
   } catch( Exception& e ){
-    sutilReportError( e.getErrorString().c_str() );
+	  // FIXME LOGGER
+    //sutilReportError( e.getErrorString().c_str() );
     exit(2);
   }
 

@@ -33,7 +33,7 @@
 //
 //-----------------------------------------------------------------------------
 
-SUTILAPI optix::TextureSampler createOneElementSampler(optix::Context context, const optix::float3& default_color)
+optix::TextureSampler createOneElementSampler(optix::Context context, const optix::float3& default_color)
 {
     optix::TextureSampler sampler = context->createTextureSampler();
     sampler->setWrapMode(0, RT_WRAP_REPEAT);
@@ -64,7 +64,7 @@ SUTILAPI optix::TextureSampler createOneElementSampler(optix::Context context, c
     return sampler;
 }
 
-SUTILAPI optix::TextureSampler loadTexture( optix::Context context,
+optix::TextureSampler loadTexture( optix::Context context,
                                             const std::string& filename,
                                             const optix::float3& default_color )
 {
