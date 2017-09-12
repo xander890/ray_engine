@@ -20,7 +20,6 @@
  */
 
 #include <sutil.h>
-#include <ImageDisplay.h>
 //#include <sampleConfig.h>
 #include <stdio.h>
 #include <math.h>

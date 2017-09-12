@@ -65,7 +65,7 @@ inline void test_cereal()
 	}
 	
 
-//	Logger::info << ss.str();
+	Logger::info << ss.str();
 	cereal::JSONInputArchive iarchive(ss);
 	optix::float3 e1;
 	optix::uint2 e2;

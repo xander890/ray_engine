@@ -673,17 +673,6 @@ void ObjScene::add_override_material_file(std::string mat)
 
 optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height)
 {
-	// Set number of devices to be used
-	// Default, 0, means not to specify them here, but let OptiX use its default behavior.
-	if (m_num_devices)
-	{
-		int max_num_devices = Context::getDeviceCount();
-		int actual_num_devices = std::min(max_num_devices, std::max(1, m_num_devices));
-		std::vector<int> devs(actual_num_devices);
-		for (int i = 0; i < actual_num_devices; ++i) devs[i] = i;
-		context->setDevices(devs.begin(), devs.end());
-	}
-
     Buffer buffer = context->createBuffer(type);
 	buffer->setFormat(format);
     buffer->setSize(width, height);

@@ -17,13 +17,13 @@ __forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, c
 {
 	switch (properties.selected_bssrdf)
 	{
-	case APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
+	case ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
 		return approximate_directional_dipole_bssrdf(_xi, _ni, _w12, _xo, _no, _w21, properties);
-	case DIRECTIONAL_DIPOLE_BSSRDF:
+	case ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF:
 		return directional_dipole_bssrdf(_xi, _ni, _w12, _xo, _no, properties);
-	case APPROX_STANDARD_DIPOLE_BSSRDF:
+	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
 		return approximate_standard_dipole_bssrdf(length(_xo - _xi), properties);
-	case STANDARD_DIPOLE_BSSRDF:
+	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
 	default:
 		return standard_dipole_bssrdf(length(_xo - _xi), properties);
 	}
@@ -33,11 +33,11 @@ __forceinline__ __device__ float3 get_beam_transmittance(const float depth, cons
 {
 	switch (properties.selected_bssrdf)
 	{
-	case DIRECTIONAL_DIPOLE_BSSRDF:
-	case APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
+	case ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF:
+	case ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
 		return exp(-depth*properties.deltaEddExtinction);
-	case APPROX_STANDARD_DIPOLE_BSSRDF:
-	case STANDARD_DIPOLE_BSSRDF:
+	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
+	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
 	default:
 		return exp(-depth*properties.extinction);
 	}

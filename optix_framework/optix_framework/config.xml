@@ -7,7 +7,7 @@
         <property key="camera_lookat_point" value="0 0 0 " comment="The camera lookat point"/>
         <property key="camera_position" value="5 0 0" comment="The camera initial position"/>
         <property key="camera_up" value="0 1 0" comment="The camera initial up"/>
-        <property key="use_auto_camera" value="false" comment="Use a automatic placed camera or use the current data."/>
+        <property key="use_auto_camera" value="true" comment="Use a automatic placed camera or use the current data."/>
         <property key="window_height" value="1024" comment="The height of the window"/>
         <property key="window_width" value="1280" comment="The width of the window"/>
     </camera>
@@ -44,7 +44,7 @@
         <property key="default_light_type" value="AREA_LIGHT" comment="Type of the default light"/>
         <property key="default_point_light_intensity" value="20000.000 20000.000 20000.000" comment="Intensity of the default point light."/>
         <property key="default_point_light_position" value="125.00000 90.00000 -40.0000" comment="Position of the default point light."/>
-        <property key="environment_map" value="doge2.hdr" comment="Environment map file"/>
+        <property key="environment_map" value="summer_road2.hdr" comment="Environment map file"/>
         <property key="envmap_deltas" value="0.0000000000 0.0000000000 0.0000000000" comment="Environment map rotation"/>
         <property key="lightmap_multiplier" value="3" comment="Environment map multiplier"/>
         <property key="shadows" value="1" comment="Use shadows in rendering."/>

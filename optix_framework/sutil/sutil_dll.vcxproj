@@ -159,51 +159,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DeviceMemoryLogger.cpp" />
     <ClCompile Include="glm.cpp" />
     <ClCompile Include="GLUTDisplay.cpp" />
     <ClCompile Include="HDRLoader.cpp" />
-    <ClCompile Include="HostMesh.cpp" />
-    <ClCompile Include="HostMeshImpl.cpp" />
     <ClCompile Include="ImageDisplay.cpp" />
     <ClCompile Include="ImageLoader.cpp" />
-    <ClCompile Include="MeshBase.cpp" />
-    <ClCompile Include="MeshScene.cpp" />
     <ClCompile Include="Mouse.cpp" />
-    <ClCompile Include="OptixMesh.cpp" />
-    <ClCompile Include="OptixMeshImpl.cpp" />
     <ClCompile Include="PPMLoader.cpp" />
     <ClCompile Include="RawLoader.cpp" />
     <ClCompile Include="rply-1.01\rply.c" />
     <ClCompile Include="SampleScene.cpp" />
-    <ClCompile Include="SunSky.cpp" />
     <ClCompile Include="sutil.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="commonStructs.h" />
-    <ClInclude Include="DeviceMemoryLogger.h" />
     <ClInclude Include="glm.h" />
     <ClInclude Include="GLUTDisplay.h" />
     <ClInclude Include="GL\glxew.h" />
     <ClInclude Include="GL\wglew.h" />
     <ClInclude Include="HDRLoader.h" />
-    <ClInclude Include="HostMesh.h" />
-    <ClInclude Include="HostMeshImpl.h" />
     <ClInclude Include="ImageDisplay.h" />
     <ClInclude Include="ImageLoader.h" />
-    <ClInclude Include="MeshBase.h" />
-    <ClInclude Include="MeshException.h" />
-    <ClInclude Include="MeshScene.h" />
     <ClInclude Include="Mouse.h" />
-    <ClInclude Include="NsightHelper.h" />
-    <ClInclude Include="OptixMesh.h" />
-    <ClInclude Include="OptixMeshClasses.h" />
-    <ClInclude Include="OptixMeshImpl.h" />
     <ClInclude Include="PPMLoader.h" />
     <ClInclude Include="RawLoader.h" />
     <ClInclude Include="rply-1.01\rply.h" />
     <ClInclude Include="SampleScene.h" />
-    <ClInclude Include="SunSky.h" />
     <ClInclude Include="sutil.h" />
     <ClInclude Include="sutilapi.h" />
   </ItemGroup>

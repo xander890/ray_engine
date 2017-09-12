@@ -2,19 +2,23 @@
 #include <optix_world.h>
 #include "host_device_common.h"
 
-#define STANDARD_DIPOLE_BSSRDF 0
-#define DIRECTIONAL_DIPOLE_BSSRDF 1
-#define APPROX_STANDARD_DIPOLE_BSSRDF 2
-#define APPROX_DIRECTIONAL_DIPOLE_BSSRDF 3
-#define BSSRDF_COUNT 4
-
+namespace ScatteringDipole
+{
+	enum ScatteringDipoleEnum {
+		STANDARD_DIPOLE_BSSRDF = 0,
+		DIRECTIONAL_DIPOLE_BSSRDF = 1,
+		APPROX_STANDARD_DIPOLE_BSSRDF = 2,
+		APPROX_DIRECTIONAL_DIPOLE_BSSRDF = 3,
+		BSSRDF_COUNT = 4
+	};
+};
 struct ScatteringMaterialProperties
 {
 	// base parameters
 	optix::float3 absorption				DEFAULT(optix::make_float3(1));
     optix::float3 scattering				DEFAULT(optix::make_float3(0));
     optix::float3 meancosine				DEFAULT(optix::make_float3(0));
-	int selected_bssrdf						DEFAULT(APPROX_STANDARD_DIPOLE_BSSRDF);
+	int selected_bssrdf						DEFAULT(ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF);
 
     // derived parameters, no need to initialize
     optix::float3 extinction;

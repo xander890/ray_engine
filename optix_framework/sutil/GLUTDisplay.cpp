@@ -44,8 +44,6 @@
 // #define NVTX_ENABLE enables the nvToolsExt stuff from Nsight in NsightHelper.h
 //#define NVTX_ENABLE
 
-#include <NsightHelper.h>
-
 using namespace optix;
 
 //-----------------------------------------------------------------------------
@@ -283,8 +281,6 @@ void GLUTDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   }
   m_scene = scene;
   m_title = title;
-  m_scene->enableCPURendering(m_enable_cpu_rendering);
-  m_scene->setNumDevices( m_num_devices );
 
   if( m_benchmark_no_display ) {
     runBenchmarkNoDisplay();
@@ -670,17 +666,6 @@ void GLUTDisplay::keyPressed(unsigned char key, int x, int y)
     m_camera->getEyeLookUpFOV(eye, lookat, up, hfov, vfov);
     std::cerr << '"' << eye << lookat << up << vfov << '"' << std::endl;
     break;
-
-    case '[':
-      m_scene->incrementCPUThreads(-1);
-      break;
-      
-    case ']':
-      m_scene->incrementCPUThreads(1);
-      break;
-
-
-
   default:
     return;
   }
@@ -812,7 +797,6 @@ void GLUTDisplay::displayFrame()
     else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     {
-      nvtx::ScopedRange r( "glTexImage" );
       if(buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
       } else if(buffer_format == RT_FORMAT_FLOAT4) {
@@ -887,10 +871,8 @@ void GLUTDisplay::displayFrame()
     else if ((elementSize % 2) == 0) align = 2;
     glPixelStorei(GL_UNPACK_ALIGNMENT, align);
 
-    NVTX_RangePushA("glDrawPixels");
     glDrawPixels( static_cast<GLsizei>( buffer_width ), static_cast<GLsizei>( buffer_height ),
       gl_format, gl_data_type, imageData);
-    NVTX_RangePop();
 
     buffer->unmap();
 
@@ -924,7 +906,6 @@ void GLUTDisplay::display()
     SampleScene::RayGenCameraData camera_data( eye, U, V, W );
 
     {
-      nvtx::ScopedRange r( "trace" );
       m_scene->trace( camera_data, display_requested );
     }
 
@@ -936,7 +917,6 @@ void GLUTDisplay::display()
       // glClearColor(1.0, 0.0, 0.0, 0.0);
       // glClear(GL_COLOR_BUFFER_BIT);
 
-      nvtx::ScopedRange r( "displayFrame" );
       displayFrame();
     }
   } catch( Exception& e ){
@@ -1029,7 +1009,6 @@ void GLUTDisplay::display()
   }
 
   if ( display_requested && m_display_frames ) {
-    nvtx::ScopedRange r( "glutSwapBuffers" );
     // Swap buffers
     glutSwapBuffers();
   }
