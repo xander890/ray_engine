@@ -1,5 +1,6 @@
 #pragma once
-#include<optix_world.h>
+#include <optix_world.h>
+#include "host_device_common.h"
 
 #define STANDARD_DIPOLE_BSSRDF 0
 #define DIRECTIONAL_DIPOLE_BSSRDF 1
@@ -10,11 +11,12 @@
 struct ScatteringMaterialProperties
 {
 	// base parameters
-	optix::float3 absorption;
-    optix::float3 scattering;
-    optix::float3 meancosine;
+	optix::float3 absorption				DEFAULT(optix::make_float3(1));
+    optix::float3 scattering				DEFAULT(optix::make_float3(0));
+    optix::float3 meancosine				DEFAULT(optix::make_float3(0));
+	int selected_bssrdf						DEFAULT(APPROX_STANDARD_DIPOLE_BSSRDF);
 
-    // derived parameters
+    // derived parameters, no need to initialize
     optix::float3 extinction;
     optix::float3 reducedExtinction;
     optix::float3 D;
@@ -34,5 +36,4 @@ struct ScatteringMaterialProperties
     optix::float3 one_over_three_ext;
     float min_transport;
     optix::float3 deltaEddExtinction;
-	int selected_bssrdf;
 };

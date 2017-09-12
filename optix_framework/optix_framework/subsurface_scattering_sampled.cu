@@ -144,7 +144,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 		float3 d_tan = camera_data.eye - sample_on_tangent_plane;
 		float cos_alpha_tan = dot(-sample_ray_dir, no);
 
-		float jacobian = cos_alpha_tan / cos_alpha * dot(d, d) / dot(d_tan, d_tan);
+		float jacobian = max(1e-3, cos_alpha_tan) / max(1e-3,cos_alpha) * max(1e-3, dot(d, d)) / max(1e-3, dot(d_tan, d_tan));
 		integration_factor *= jacobian;
 	}
 	return true;

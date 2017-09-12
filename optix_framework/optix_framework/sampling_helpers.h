@@ -207,3 +207,23 @@ static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::
 	return sample_disk_exponential(sample, sigma, r, phi);
 }
 
+__host__ __device__ __inline__ float3 burley_scaling_factor_mfp_searchlight(const float3 & albedo)
+{
+	float3 temp = abs(albedo - optix::make_float3(0.8f));
+	return optix::make_float3(1.85f) - albedo + 7.0f * temp * temp * temp;
+}
+
+__host__ __device__ __inline__ float3 burley_scaling_factor_diffuse_mfp_searchlight(const float3 & albedo)
+{
+	float3 temp = albedo - optix::make_float3(0.33f);
+	temp *= temp; // pow 2
+	temp *= temp; // pow 4
+	return optix::make_float3(3.5f) + 100.0f * temp;
+}
+
+
+__host__ __device__ __inline__ float3 burley_scaling_factor_mfp_diffuse(const float3 & albedo)
+{
+	float3 temp = abs(albedo - optix::make_float3(0.8f));
+	return optix::make_float3(1.9f) - albedo + 3.5f * temp * temp;
+}
