@@ -99,7 +99,7 @@ int main( int argc, char** argv )
 			i++;
 			additional_parameters.push_back(std::string(argv[i]));
 		}
-		while (i < argc && std::string(argv[i+1])[0] != '-');
+		while (i+1 < argc && std::string(argv[i+1])[0] != '-');
 	}
 
 	else if (arg == "-f" || arg == "--frames")
