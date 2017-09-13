@@ -1,10 +1,7 @@
 // 02576 OptiX Rendering Framework
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
-#ifdef NOMINMAX
-#undef NOMINMAX
-#endif
-#include <GL/glut.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -25,7 +22,7 @@
 #include "dialogs.h"
 #include <ImageLoader.h>
 #include "presampled_surface_bssrdf.h"
-#include "GLUTDisplay.h"
+#include "GLFWDisplay.h"
 #include "aisceneloader.h"
 #include "shader_factory.h"
 #include "Medium.h"
@@ -40,6 +37,7 @@
 #include <sampled_bssrdf.h>
 #include "render_task.h"
 #include "volume_path_tracer.h"
+#include "glfw\glfw3.h"
 
 using namespace std;
 using namespace optix;
@@ -72,7 +70,7 @@ void ObjScene::reset_renderer()
 	m_frame = 0;
 }
 
-bool ObjScene::keyPressed(unsigned char key, int x, int y)
+bool ObjScene::keyPressed(int key, int x, int y)
 {
 	if (current_render_task->is_active())
 		return false;
@@ -83,12 +81,12 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 	}
 	switch (key)
 	{
-	case 'e':
+	case GLFW_KEY_E:
 	{
 		std::string res = std::string("result_optix.raw");
 		return export_raw(res, rendering_output_buffer, m_frame);
 	}
-	case 'p':
+	case GLFW_KEY_P:
 		//current_scene_type = Scene::NextEnumItem(current_scene_type);
 		if (current_scene_type == Scene::NotValidEnumItem)
 			current_scene_type = Scene::OPTIX_ONLY;
@@ -98,13 +96,13 @@ bool ObjScene::keyPressed(unsigned char key, int x, int y)
 			  context["output_buffer"]->setBuffer(createPBOOutputBuffer(RT_FORMAT_FLOAT4, window_width, window_height));
 			  cout << ((use_optix) ? "Ray tracing" : "Rasterization") << endl;*/
 		return true;
-	case 'g':
+	case GLFW_KEY_G:
 	{
 		gui->toggleVisibility();
 		return true;
 	}
 	break;
-	case 'r':
+	case GLFW_KEY_R:
 	{
 		Logger::info << "Reloading all shaders..." << std::endl;
 		execute_on_scene_elements([=](Mesh & m)
@@ -186,7 +184,7 @@ bool ObjScene::drawGUI()
 			changed = true;
 			InitialCameraData i;
 			load_camera_extrinsics(i);
-			GLUTDisplay::setCamera(i);
+			GLFWDisplay::setCamera(i);
 		}
 
 		ImmediateGUIDraw::SameLine();
@@ -350,7 +348,7 @@ void ObjScene::create_3d_noise(float frequency)
     context["noise_tex"]->setInt(sampler->getId());
 }
 
-void ObjScene::initScene(InitialCameraData& init_camera_data)
+void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_data)
 {
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(200);
@@ -546,7 +544,7 @@ void ObjScene::initScene(InitialCameraData& init_camera_data)
 	context->validate();
 	context->compile();
 
-	gui = std::make_unique<ImmediateGUI>("Ray tracing demo", camera->get_width(), camera->get_height());
+	gui = std::make_unique<ImmediateGUI>(window,"Ray tracing demo");
 
 	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
 
@@ -826,22 +824,11 @@ bool ObjScene::export_raw(string& raw_path, optix::Buffer out, int frames)
 
 void ObjScene::doResize(unsigned int width, unsigned int height)
 {
-	glutReshapeWindow(camera->get_width(), camera->get_height());
 }
 
 void ObjScene::resize(unsigned int width, unsigned int height)
 {
 	doResize(width, height);
-}
-
-bool ObjScene::mousePressed(int button, int state, int x, int y)
-{
-	if (button == 0x02 && debug_mode_enabled)
-	{
-		setDebugPixel(x, y);
-		return true;
-	}
-	return gui->mousePressed(button, state, x, y);
 }
 
 bool ObjScene::mouseMoving(int x, int y)
@@ -865,6 +852,16 @@ void ObjScene::setDebugPixel(int i, int y)
 	Logger::info <<"Setting debug pixel to " << to_string(i) << " << " << to_string(y) <<endl;
 	context->setPrintLaunchIndex(i, y);
 	context["debug_index"]->setUint(i, y);
+}
+
+bool ObjScene::mousePressed(int x, int y, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && debug_mode_enabled)
+	{
+		setDebugPixel(x, y);
+		return true;
+	}
+	return gui->mousePressed(x, y, button, action, mods);
 }
 
 void ObjScene::set_miss_program()

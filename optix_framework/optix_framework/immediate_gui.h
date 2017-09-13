@@ -3,11 +3,13 @@
 #include <string>
 namespace ImmediateGUIDraw = ImGui;
 
+struct GLFWwindow;
+
 class ImmediateGUI
 {
 public:
 
-	ImmediateGUI(const char* name, int window_width, int window_height);
+	ImmediateGUI(GLFWwindow * window, const char* name);
 
 	virtual ~ImmediateGUI();
 
@@ -15,9 +17,8 @@ public:
 	bool keyPressed(unsigned char key, int x, int y);
 	// Use this to add additional keys. Some are already handled but
 	// can be overridden.  Should return true if key was handled, false otherwise.
-	bool mousePressed(int button, int state, int x, int y);
+	bool mousePressed(int x, int y, int button, int action, int mods);
 	bool mouseMoving(int x, int y);
-	void setWindowSize(int x, int y);
 
 	void start_draw() const;
 	void end_draw() const;
@@ -30,7 +31,6 @@ public:
 
 private:
 	bool visible = true;
-	int window_width, window_height;
 	std::string name;
 
 };

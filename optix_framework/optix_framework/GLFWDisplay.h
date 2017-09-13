@@ -27,15 +27,15 @@
 
 class Mouse;
 class PinholeCamera;
-
+struct GLFWwindow;
 
 //-----------------------------------------------------------------------------
 // 
-// GLUTDisplay 
+// GLFWDisplay 
 //
 //-----------------------------------------------------------------------------
 
-class GLUTDisplay
+class GLFWDisplay
 {
 public:
   enum contDraw_E { CDNone=0, CDProgressive=1, CDAnimated=2, CDBenchmark=3, CDBenchmarkTimed=4 };
@@ -50,10 +50,6 @@ public:
 
 //  static bool isBenchmark() { return m_cur_continuous_mode == CDBenchmark || m_cur_continuous_mode == CDBenchmarkTimed ||
 //    m_app_continuous_mode == CDBenchmark || m_app_continuous_mode == CDBenchmarkTimed; }
-
-  // Make sure you only call this from the callback functions found in SampleScene:
-  // initScene, trace, getOutputBuffer, cleanUp, resize, doResize, and keyPressed.
-  static void postRedisplay();
 
   static void setUseSRGB(bool enabled) { m_use_sRGB = enabled; }
 
@@ -85,17 +81,17 @@ private:
   // return code is passed out, otherwise 2 is used as the return code.
   static void quit(int return_code=0);
 
-  // Glut callbacks
-  static void idle();
+  // callbacks
   static void display();
-  static void keyPressed(unsigned char key, int x, int y);
-  static void mouseButton(int button, int state, int x, int y);
-  static void mouseMotion(int x, int y);
-  static void resize(int width, int height);
+  static void keyPressed(GLFWwindow * window, int key, int scancode, int x, int y);
+  static void mouseButton(GLFWwindow * window, int button, int section, int modifiers);
+  static void mouseMotion(GLFWwindow * window, double x, double y);
+  static void resize(GLFWwindow * window, int width, int height);
 
   static Mouse*         m_mouse;
   static PinholeCamera* m_camera;
   static SampleScene*   m_scene;
+  static GLFWwindow * m_window;
 
 //  static double         m_last_frame_time;
 //  static unsigned int   m_last_frame_count;

@@ -53,7 +53,7 @@ public:
     float noise_frequency = 25;
 	int use_heterogenous_materials = 0;
 
-	virtual void initScene(InitialCameraData& camera_data) override;
+	virtual void initScene(GLFWwindow * window,InitialCameraData& camera_data) override;
 	virtual void trace(const RayGenCameraData& camera_data, bool& display) override;
 
 	virtual void trace(const RayGenCameraData& camera_data) override
@@ -63,13 +63,13 @@ public:
 	}
 
 	void collect_image(unsigned int frame);
-	virtual bool keyPressed(unsigned char key, int x, int y) override;
+	virtual bool keyPressed(int key, int x, int y) override;
 	virtual optix::Buffer getOutputBuffer() override;
 	virtual void doResize(unsigned int width, unsigned int height) override;
 	virtual void resize(unsigned int width, unsigned int height) override;
 	void postDrawCallBack() override;
 	void setDebugPixel(int i, int y);
-	bool mousePressed(int button, int state, int x, int y) override;
+	bool mousePressed(int x, int y,int button, int action, int mods) override;
 	bool mouseMoving(int x, int y) override;
 	void reset_renderer();
 

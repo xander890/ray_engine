@@ -45,14 +45,14 @@
     <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>..\build\</OutDir>
-    <LibraryPath>..\lib64\;"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <LibraryPath>..\lib64\;"..\glfw-3.2.1\lib-vc2015";"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>..\build\</OutDir>
-    <LibraryPath>..\lib64\;"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <LibraryPath>..\lib64\;"..\glfw-3.2.1\lib-vc2015";"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -68,16 +68,16 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;freeglut.lib;optix.1.lib;optixu.1.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <ShowProgress>LinkVerbose</ShowProgress>
+      <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
       <Command>echo Copying OptiX, freeglut and CUDA DLLs to output folder..
 xcopy /y /d "$"..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
 xcopy /y /d "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 xcopy /y /d "..\dll\assimp.dll" "$(OutDir)"
-xcopy /y /d "..\dll\freeglut.dll" "$(OutDir)"
+xcopy /y /d "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d "..\dll\xerces-c_3_1.dll" "$(OutDir)"
 echo Copying configuration specific ($(Configuration)) dlls...
@@ -133,7 +133,7 @@ echo Done.</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;freeglut.lib;optix.1.lib;optixu.1.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
@@ -141,7 +141,7 @@ echo Done.</Command>
 xcopy /y /d "$"..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
 xcopy /y /d "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 xcopy /y /d "..\dll\assimp.dll" "$(OutDir)"
-xcopy /y /d "..\dll\freeglut.dll" "$(OutDir)"
+xcopy /y /d "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d "..\dll\xerces-c_3_1.dll" "$(OutDir)"
 echo Copying configuration specific ($(Configuration)) dlls...
@@ -188,14 +188,14 @@ echo Done.</Command>
     <ClCompile Include="environment_map_background.cpp" />
     <ClCompile Include="folders.cpp" />
     <ClCompile Include="glm.cpp" />
-    <ClCompile Include="GLUTDisplay.cpp" />
+    <ClCompile Include="GLFWDisplay.cpp" />
     <ClCompile Include="HDRLoader.cpp" />
     <ClCompile Include="host_material.cpp" />
     <ClCompile Include="ImageLoader.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
-    <ClCompile Include="imgui\imgui_impl_glut.cpp" />
+    <ClCompile Include="imgui\imgui_impl_glfw_gl3.cpp" />
     <ClCompile Include="immediate_gui.cpp" />
     <ClCompile Include="light_host.cpp" />
     <ClCompile Include="logger.cpp" />
@@ -236,6 +236,10 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\chull.cu">
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
@@ -244,6 +248,10 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\constant_shader.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -259,6 +267,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\box.cu">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v6.5/bin/nvcc.exe" "CUDA_files/box.cu" -ptx -o "PTX_files/box.cu.ptx" -ccbin "C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin" -m64 -D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --use_fast_math --compiler-options /D_USE_MATH_DEFINES -DNVCC -I"C:/ProgramData/NVIDIA Corporation/OptiX SDK 3.7.0/include"</Command>
@@ -284,6 +294,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\constant_background.cu">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v6.5/bin/nvcc.exe" "CUDA_files/constantbg.cu" -ptx -o "PTX_files/constantbg.cu.ptx" -ccbin "C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin" -m64 -D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --use_fast_math --compiler-options /D_USE_MATH_DEFINES -DNVCC -I"C:/ProgramData/NVIDIA Corporation/OptiX SDK 3.7.0/include"</Command>
@@ -309,13 +321,19 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\depth_ray.cu">
-      <UseHostInclude Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</UseHostInclude>
+      <UseHostInclude Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</UseHostInclude>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\environment_map_background.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -330,6 +348,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\env_cameras.cu">
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
@@ -338,6 +358,10 @@ echo Done.</Command>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\glass_shader.cu">
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -350,6 +374,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\glossy_shader.cu">
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
@@ -358,6 +384,10 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\dispersion_shader.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -374,6 +404,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\metal_shader.cu">
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -386,6 +418,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\mirror_shader.cu">
       <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -398,6 +432,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\normal_shader.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -414,6 +450,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\lambertian_shader.cu">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling phong.cu into phong.cu.ptx...</Message>
@@ -441,6 +479,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\pinhole_camera.cu">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling pinhole_camera.cu into pinhole_camera.cu.ptx...</Message>
@@ -466,6 +506,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\sample_camera.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -482,6 +524,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\sky_model_background.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -496,6 +540,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\subsurface_scattering_shader.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -512,6 +558,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\tonemap_camera.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -528,6 +576,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\triangle_mesh.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -544,6 +594,8 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\volume_shader.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -551,12 +603,20 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu">
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="debug_camera.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
@@ -564,6 +624,10 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="sphere.cu">
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
@@ -572,12 +636,20 @@ echo Done.</Command>
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
     <CudaCompile Include="subsurface_scattering_sampled.cu">
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Include>
+      <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Include>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
@@ -600,14 +672,14 @@ echo Done.</Command>
     <ClInclude Include="device_mesh_data.h" />
     <ClInclude Include="environment_map_background.h" />
     <ClInclude Include="glm.h" />
-    <ClInclude Include="GLUTDisplay.h" />
+    <ClInclude Include="GLFWDisplay.h" />
     <ClInclude Include="HDRLoader.h" />
     <ClInclude Include="host_device_common.h" />
     <ClInclude Include="host_material.h" />
     <ClInclude Include="ImageLoader.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
-    <ClInclude Include="imgui\imgui_impl_glut.h" />
+    <ClInclude Include="imgui\imgui_impl_glfw_gl3.h" />
     <ClInclude Include="imgui\imgui_internal.h" />
     <ClInclude Include="imgui\stb_rect_pack.h" />
     <ClInclude Include="imgui\stb_textedit.h" />

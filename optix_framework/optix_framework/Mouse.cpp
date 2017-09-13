@@ -23,29 +23,12 @@
 #include <optixu/optixu_matrix_namespace.h>
 #include <iostream>
 
-#ifdef NOMINMAX
-#undef NOMINMAX
-#endif
-# ifdef _WIN32
-#   include <cfloat>
-#   define ISFINITE _finite
-# else
-#   include <cmath>
-#   define ISFINITE std::isfinite
-# endif
-#define GLUT_FOUND
-#ifdef GLUT_FOUND
-#  if defined(__APPLE__)
-#    include <GLUT/glut.h>
-#  else
-#    include <GL/glut.h>
-#  endif
-#else
-#  error "You in big trouble without the GLUT."
-#endif
+#include <glfw\glfw3.h>
+#include <cmath>
+#define ISFINITE std::isfinite
 
-#define GLUT_MOTION 2
-
+#define GLFW_MOTION -1
+#include "logger.h"
 
 //-----------------------------------------------------------------------------
 // 
@@ -295,22 +278,28 @@ Mouse::Mouse(PinholeCamera* camera, int xres, int yres)
 {
 }
 
-void Mouse::handleMouseFunc(int button, int state, int x, int y, int modifier)
+bool Mouse::handleMouseFunc(int x, int y, int button, int action, int modifier)
 {
-  switch(state) {
-  case GLUT_DOWN:
-    current_interaction = InteractionState(modifier, button, state);
-    call_func(x,y);
+  switch(action) {
+  case GLFW_PRESS:
+    current_interaction = InteractionState(modifier, button, GLFW_PRESS);
+    return call_func(x,y);
     break;
-  case GLUT_UP:
+  case GLFW_RELEASE:
+	  current_interaction.state = GLFW_RELEASE;
     break;
   }
+  return false;
 }
 
-void Mouse::handleMoveFunc(int x, int y)
+bool Mouse::handleMoveFunc(int x, int y)
 {
-  current_interaction.state = GLUT_MOTION;
-  call_func(x,y);
+	if (current_interaction.state == GLFW_PRESS || current_interaction.state == GLFW_MOTION)
+	{
+		current_interaction.state = GLFW_MOTION;
+		return call_func(x, y);
+	}
+	return false;
 }
 
 void Mouse::handlePassiveMotionFunc(int x, int y)
@@ -324,23 +313,33 @@ void Mouse::handleResize(int new_xres, int new_yres)
   camera->setAspectRatio(static_cast<float>(xres)/yres);
 }
 
-void Mouse::call_func(int x, int y)
+bool Mouse::call_func(int x, int y)
 {
   int modifier = current_interaction.modifier;
   int button   = current_interaction.button;
-  if (modifier == 0                 && button == GLUT_LEFT_BUTTON)
-    rotate(x, y);
-  if (modifier == 0                 && button == GLUT_MIDDLE_BUTTON)
-    translate(x, y);
-  if (modifier == GLUT_ACTIVE_SHIFT && button == GLUT_RIGHT_BUTTON)
-    fov(x, y);
-  if (modifier == 0                 && button == GLUT_RIGHT_BUTTON)
-    dolly(x, y);
+  bool camera_changed = false;
+  if (modifier == 0 && button == GLFW_MOUSE_BUTTON_LEFT)
+  {
+	  rotate(x, y); camera_changed = true;
+  }
+  if (modifier == 0 && button == GLFW_MOUSE_BUTTON_MIDDLE)
+  {
+	  translate(x, y); camera_changed = true;
+  }
+  if (modifier == GLFW_MOD_SHIFT    && button == GLFW_MOUSE_BUTTON_RIGHT)
+  {
+	  fov(x, y); camera_changed = true;
+  }
+  if (modifier == 0 && button == GLFW_MOUSE_BUTTON_RIGHT)
+  {
+	  dolly(x, y); camera_changed = true;
+  }
+  return camera_changed;
 }
 
 void Mouse::fov(int x, int y)
 {
-  if(current_interaction.state == GLUT_MOTION) {
+  if(current_interaction.state == GLFW_MOTION) {
     float xmotion = (current_interaction.last_x - x)/static_cast<float>(xres);
     float ymotion = (current_interaction.last_y - y)/static_cast<float>(yres);
     float scale;
@@ -365,7 +364,7 @@ void Mouse::fov(int x, int y)
 
 void Mouse::translate(int x, int y)
 {
-  if(current_interaction.state == GLUT_MOTION) {
+  if(current_interaction.state == GLFW_MOTION) {
     float xmotion =  float(current_interaction.last_x - x)/xres;
     float ymotion = -float(current_interaction.last_y - y)/yres;
     float2 translation = make_float2(xmotion, ymotion) * translate_speed;
@@ -379,7 +378,7 @@ void Mouse::translate(int x, int y)
 
 void Mouse::dolly(int x, int y)
 {
-  if(current_interaction.state == GLUT_MOTION) {
+  if(current_interaction.state == GLFW_MOTION) {
     float xmotion = -float(current_interaction.last_x - x)/xres;
     float ymotion = -float(current_interaction.last_y - y)/yres;
 
@@ -402,11 +401,11 @@ void Mouse::rotate(int x, int y)
   float xpos = 2.0f*static_cast<float>(x)/static_cast<float>(xres) - 1.0f;
   float ypos = 1.0f - 2.0f*static_cast<float>(y)/static_cast<float>(yres);
 
-  if ( current_interaction.state == GLUT_DOWN ) {
+  if ( current_interaction.state == GLFW_PRESS ) {
     
     current_interaction.rotate_from = projectToSphere( xpos, ypos, 0.8f );
 
-  } else if(current_interaction.state == GLUT_MOTION) {
+  } else if(current_interaction.state == GLFW_MOTION) {
 
     float3 to( projectToSphere( xpos, ypos, 0.8f ) );
     float3 from( current_interaction.rotate_from );

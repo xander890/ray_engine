@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2008 - 2009 NVIDIA Corporation.  All rights reserved.
  *
@@ -19,18 +18,11 @@
  * SUCH DAMAGES
  */
 
+#include <GLFWDisplay.h>
 #include <GL/glew.h>
-#include <GL/wglew.h>
-#ifdef NOMINMAX
-#undef NOMINMAX
-#endif
-#include <GL/glut.h>
-
-#define NOMINMAX
-#include <GLUTDisplay.h>
+#include <glfw\glfw3.h>
+#include <SampleScene.h>
 #include <Mouse.h>
-
-
 #include <optixu/optixu_math_stream_namespace.h>
 
 #include <iostream>
@@ -45,79 +37,95 @@ using namespace optix;
 
 //-----------------------------------------------------------------------------
 // 
-// GLUTDisplay class implementation 
+// GLFWDisplay class implementation 
 //-----------------------------------------------------------------------------
 
-Mouse*         GLUTDisplay::m_mouse = 0;
-PinholeCamera* GLUTDisplay::m_camera = 0;
-SampleScene*   GLUTDisplay::m_scene = 0;
-bool           GLUTDisplay::m_display_frames = true;
+Mouse*         GLFWDisplay::m_mouse = nullptr;
+PinholeCamera* GLFWDisplay::m_camera = nullptr;
+SampleScene*   GLFWDisplay::m_scene = nullptr;
+GLFWwindow*    GLFWDisplay::m_window = nullptr;
+bool           GLFWDisplay::m_display_frames = true;
 
-unsigned int   GLUTDisplay::m_texId = 0;
-bool           GLUTDisplay::m_sRGB_supported = false;
-bool           GLUTDisplay::m_use_sRGB = false;
+unsigned int   GLFWDisplay::m_texId = 0;
+bool           GLFWDisplay::m_sRGB_supported = false;
+bool           GLFWDisplay::m_use_sRGB = false;
 
-bool           GLUTDisplay::m_initialized = false;
-std::string    GLUTDisplay::m_title = "";
+bool           GLFWDisplay::m_initialized = false;
+std::string    GLFWDisplay::m_title = "";
 
-bool            GLUTDisplay::m_requires_display = true;
-bool            GLUTDisplay::m_benchmark_no_display = false;
+bool            GLFWDisplay::m_requires_display = true;
+bool            GLFWDisplay::m_benchmark_no_display = false;
 
 
-void GLUTDisplay::printUsage()
+void GLFWDisplay::printUsage()
 {
 
 }
 
-void GLUTDisplay::init( int& argc, char** argv )
+static void error_callback(int error, const char* description)
+{
+	Logger::error << description << std::endl;
+}
+
+void GLFWDisplay::init( int& argc, char** argv )
 {
   m_initialized = true;
 
   if (!m_benchmark_no_display)
   {
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+	  if (!glfwInit())
+	  {
+		  Logger::error << "Error initializing GLFW " << std::endl;
+	  }
   }
 }
 
-void GLUTDisplay::run( const std::string& title, SampleScene* scene, contDraw_E continuous_mode )
+void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E continuous_mode )
 {
   if ( !m_initialized ) {
-    std::cerr << "ERROR - GLUTDisplay::run() called before GLUTDisplay::init()" << std::endl;
+    std::cerr << "ERROR - GLFWDisplay::run() called before GLFWDisplay::init()" << std::endl;
     exit(2);
   }
   m_scene = scene;
   m_title = title;
 
-  // Initialize GLUT and GLEW first. Now initScene can use OpenGL and GLEW.
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-  glutInitWindowSize( 128, 128 );
-  glutInitWindowPosition(100,100);
-  glutCreateWindow( m_title.c_str() );
-  glutHideWindow();
+  m_window = glfwCreateWindow(1, 1, m_title.c_str(), nullptr, nullptr);
+  glfwMakeContextCurrent(m_window);
+
   glewInit();
+  GLint GlewInitResult = glewInit();
+  if (GLEW_OK != GlewInitResult)
+  {
+	  printf("ERROR: %s\n", glewGetErrorString(GlewInitResult));
+	  exit(EXIT_FAILURE);
+  }
+
   if (glewIsSupported( "GL_EXT_texture_sRGB GL_EXT_framebuffer_sRGB")) {
     m_sRGB_supported = true;
   }
-  // Turn off vertical sync
-  wglSwapIntervalEXT(0);
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-  // If m_app_continuous_mode was already set to CDBenchmark* on the command line then preserve it.
+
+
+  if (!m_window)
+  {
+	  glfwTerminate();
+	  exit(EXIT_FAILURE);
+  }
 
   int buffer_width;
   int buffer_height;
   try {
     // Set up scene
     SampleScene::InitialCameraData camera_data;
-    m_scene->initScene( camera_data );
+    m_scene->initScene( m_window, camera_data );
 
     // Initialize camera according to scene params
     m_camera = new PinholeCamera( camera_data.eye,
                                  camera_data.lookat,
                                  camera_data.up,
-                                 -1.0f, // hfov is ignored when using keep vertical
+								camera_data.vfov, // hfov is ignored when using keep vertical
                                  camera_data.vfov,
                                  PinholeCamera::KeepVertical );
 
@@ -126,12 +134,15 @@ void GLUTDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
     buffer->getSize( buffer_width_rts, buffer_height_rts );
     buffer_width  = static_cast<int>(buffer_width_rts);
     buffer_height = static_cast<int>(buffer_height_rts);
+	m_camera->setAspectRatio(buffer_width / (float)buffer_height);
     m_mouse = new Mouse( m_camera, buffer_width, buffer_height );
+	m_mouse->handleMouseFunc(0, 0, -1, GLFW_PRESS, 0);
   } catch( Exception& e ){
     Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }
 
+  glfwSetWindowSize(m_window, buffer_width, buffer_height);
   // Initialize state
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -140,24 +151,20 @@ void GLUTDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   glLoadIdentity();
   glViewport(0, 0, buffer_width, buffer_height);
 
-  glutShowWindow();
+  glfwSetKeyCallback(m_window, keyPressed);
+  glfwSetMouseButtonCallback(m_window, mouseButton);
+  glfwSetCursorPosCallback(m_window, mouseMotion);
+  glfwSetWindowSizeCallback(m_window, resize);
+ 
 
-  // reshape window to the correct window resize
-  glutReshapeWindow( buffer_width, buffer_height);
-
-  // Set callbacks
-  glutKeyboardFunc(keyPressed);
-  glutDisplayFunc(display);
-  glutMouseFunc(mouseButton);
-  glutMotionFunc(mouseMotion);
-  glutReshapeFunc(resize);
-  glutIdleFunc(idle);
-
-  // Enter main loop
-  glutMainLoop();
+  while (!glfwWindowShouldClose(m_window))
+  {
+	  glfwPollEvents();
+	  display();
+  }
 }
 
-void GLUTDisplay::setCamera(SampleScene::InitialCameraData& camera_data)
+void GLFWDisplay::setCamera(SampleScene::InitialCameraData& camera_data)
 {
   m_camera->setParameters(camera_data.eye,
                          camera_data.lookat,
@@ -165,76 +172,24 @@ void GLUTDisplay::setCamera(SampleScene::InitialCameraData& camera_data)
                          camera_data.hfov, 
                          camera_data.vfov,
                          PinholeCamera::KeepVertical );
-  glutPostRedisplay();  
-}
-
-void GLUTDisplay::postRedisplay()
-{
-  glutPostRedisplay();
-}
-
-void GLUTDisplay::keyPressed(unsigned char key, int x, int y)
-{
-  try {
-    if( m_scene->keyPressed(key, x, y) ) {
-      glutPostRedisplay();
-      return;
-    }
-  } catch( Exception& e ){
-    Logger::error << ( e.getErrorString().c_str() );
-    exit(2);
-  }
-
-  switch (key) {
-  case 27: // esc
-  case 'q':
-    quit();
-
-  case 'c':
-    float3 eye, lookat, up;
-    float hfov, vfov;
-
-    m_camera->getEyeLookUpFOV(eye, lookat, up, hfov, vfov);
-    std::cerr << '"' << eye << lookat << up << vfov << '"' << std::endl;
-    break;
-  default:
-    return;
-  }
 }
 
 
-void GLUTDisplay::mouseButton(int button, int state, int x, int y)
-{
-	y += 9;
-	if (!m_scene->mousePressed(button, state, x, y))
-	{
-		m_mouse->handleMouseFunc(button, state, x, y, glutGetModifiers());
-		m_scene->signalCameraChanged();
-	}
-    glutPostRedisplay();
-}
 
 
-void GLUTDisplay::mouseMotion(int x, int y)
-{
-	y += 9;
-	if (!m_scene->mouseMoving(x, y))
-	{
-		m_mouse->handleMoveFunc(x, y);
-		m_scene->signalCameraChanged();		
-	}
-	glutPostRedisplay();
-}
 
 
-void GLUTDisplay::resize(int width, int height)
+void GLFWDisplay::resize(GLFWwindow * window, int width, int height)
 {
   // disallow size 0
   width  = max(1, width);
   height = max(1, height);
+  m_camera->setAspectRatio(width / (float)height);
 
   m_scene->signalCameraChanged();
   m_mouse->handleResize( width, height );
+
+  glfwSetWindowSize(window, width, height);
 
   try {
     m_scene->resize(width, height);
@@ -247,17 +202,9 @@ void GLUTDisplay::resize(int width, int height)
   glLoadIdentity();
   glOrtho(0, 1, 0, 1, -1, 1);
   glViewport(0, 0, width, height);
-  glutPostRedisplay();
 }
 
-
-void GLUTDisplay::idle()
-{
-  glutPostRedisplay();
-}
-
-
-void GLUTDisplay::displayFrame()
+void GLFWDisplay::displayFrame()
 {
   GLboolean sRGB = GL_FALSE;
   if (m_use_sRGB && m_sRGB_supported) {
@@ -396,7 +343,7 @@ void GLUTDisplay::displayFrame()
   }
 }
 
-void GLUTDisplay::display()
+void GLFWDisplay::display()
 {
 
   bool display_requested = true;
@@ -431,11 +378,65 @@ void GLUTDisplay::display()
 
   if ( display_requested && m_display_frames ) {
     // Swap buffers
-    glutSwapBuffers();
+	  glfwSwapBuffers(m_window);
   }
 }
 
-void GLUTDisplay::quit(int return_code)
+void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int x, int y)
+{
+	try {
+		if (m_scene->keyPressed(key, x, y)) {
+			return;
+		}
+	}
+	catch (Exception& e) {
+		Logger::error << (e.getErrorString().c_str());
+		exit(2);
+	}
+
+	switch (key) {
+	case 27: // esc
+	case GLFW_KEY_Q:
+		quit();
+
+	case GLFW_KEY_C:
+		float3 eye, lookat, up;
+		float hfov, vfov;
+
+		m_camera->getEyeLookUpFOV(eye, lookat, up, hfov, vfov);
+		std::cerr << '"' << eye << lookat << up << vfov << '"' << std::endl;
+		break;
+	default:
+		return;
+	}
+}
+
+void GLFWDisplay::mouseButton(GLFWwindow * window, int button, int action, int modifiers)
+{
+	double xd, yd;
+	glfwGetCursorPos(window, &xd, &yd);
+	int x = static_cast<int>(xd);
+	int y = static_cast<int>(yd);
+	if (!m_scene->mousePressed(x,y,button, action, modifiers))
+	{
+		m_mouse->handleMouseFunc(x,y,button, action, modifiers);
+		m_scene->signalCameraChanged();
+	}
+}
+
+void GLFWDisplay::mouseMotion(GLFWwindow * window, double xd, double yd)
+{
+	int x = static_cast<int>(xd);
+	int y = static_cast<int>(yd);
+	m_mouse->handleMoveFunc(x, y);
+	if (m_mouse->handleMoveFunc(x, y))
+	{
+		m_scene->signalCameraChanged();
+	}
+}
+
+
+void GLFWDisplay::quit(int return_code)
 {
   try {
     if(m_scene)

@@ -6,7 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
-#include <GLUTDisplay.h>
+#include <GLFWDisplay.h>
 #include "obj_scene.h"
 #include "render_task.h"
 
@@ -31,7 +31,7 @@ void printUsageAndExit( const std::string& argv0 )
 	   << "options: --rectangle <ox oy w h>     renctangle to render." << std::endl
 	   << std::endl;
   
-  GLUTDisplay::printUsage();
+  GLFWDisplay::printUsage();
 
   exit(0);
 }
@@ -140,7 +140,7 @@ int main( int argc, char** argv )
 	}
 	//if ( filenames.size() == 0 ) 
 	//  filenames.push_back(string("./meshes/") + "closed_bunny_vn.obj");
-	GLUTDisplay::init( argc, argv );
+	GLFWDisplay::init( argc, argv );
 
 	try 
 	{
@@ -151,7 +151,7 @@ int main( int argc, char** argv )
 	scene->set_render_task(task);
 	if (auto_mode)
 		scene->start_render_task();
-	GLUTDisplay::run( "Optix Renderer", scene );
+	GLFWDisplay::run( "Optix Renderer", scene );
 
 	} 
 	catch( Exception & e )

@@ -39,10 +39,11 @@ class PinholeCamera;
 class Mouse {
 public:
   Mouse(PinholeCamera* camera, int xres, int yres);
-  void handleMouseFunc(int button, int state, int x, int y, int modifier);
-  void handleMoveFunc(int x, int y);
+  bool handleMouseFunc(int x, int y, int button, int action, int modifier);
+  bool handleMoveFunc(int x, int y);
   void handlePassiveMotionFunc(int x, int y);
   void handleResize(int new_xres, int new_yres);
+
 
 private:
   struct InteractionState {
@@ -57,7 +58,7 @@ private:
     optix::float3 rotate_from;
   };
 
-  void call_func(int x, int y);
+  bool call_func(int x, int y);
 
   void fov(int x, int y);
   void translate(int x, int y);

@@ -205,9 +205,6 @@
     <ClCompile Include="imgui\imgui_draw.cpp">
       <Filter>Source Files\GUI\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\imgui_impl_glut.cpp">
-      <Filter>Source Files\GUI\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="render_task.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -226,14 +223,17 @@
     <ClCompile Include="RawLoader.cpp">
       <Filter>Source Files\Loaders</Filter>
     </ClCompile>
-    <ClCompile Include="GLUTDisplay.cpp">
-      <Filter>Source Files\Display</Filter>
-    </ClCompile>
     <ClCompile Include="Mouse.cpp">
       <Filter>Source Files\Cameras</Filter>
     </ClCompile>
     <ClCompile Include="SampleScene.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_glfw_gl3.cpp">
+      <Filter>Source Files\GUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="GLFWDisplay.cpp">
+      <Filter>Source Files\Display</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -445,9 +445,6 @@
     <ClInclude Include="imgui\imconfig.h">
       <Filter>Header Files\GUI\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui\imgui_impl_glut.h">
-      <Filter>Header Files\GUI\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="imgui\imgui.h">
       <Filter>Header Files\GUI\imgui</Filter>
     </ClInclude>
@@ -499,14 +496,17 @@
     <ClInclude Include="RawLoader.h">
       <Filter>Header Files\Loaders</Filter>
     </ClInclude>
-    <ClInclude Include="GLUTDisplay.h">
-      <Filter>Header Files\Display</Filter>
-    </ClInclude>
     <ClInclude Include="Mouse.h">
       <Filter>Header Files\Cameras</Filter>
     </ClInclude>
     <ClInclude Include="SampleScene.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_glfw_gl3.h">
+      <Filter>Header Files\GUI\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="GLFWDisplay.h">
+      <Filter>Header Files\Display</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

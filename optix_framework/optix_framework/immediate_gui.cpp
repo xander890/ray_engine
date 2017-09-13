@@ -1,21 +1,19 @@
 #include "immediate_gui.h"
 #define IMGUI_DISABLE_TEST_WINDOWS
-#include "imgui/imgui_impl_glut.h"
+#include "imgui/imgui_impl_glfw_gl3.h"
 
-#include "GL\glew.h"
-#ifdef NOMINMAX
-#undef NOMINMAX
-#endif
-#include "GL\freeglut.h"
+#include<glfw\glfw3.h>
 
-ImmediateGUI::ImmediateGUI(const char * name, int window_width, int window_height) : name(name), window_width(window_width), window_height(window_height)
+
+ImmediateGUI::ImmediateGUI(GLFWwindow * window, const char * name)
 {
-	ImGui_ImplGLUT_Init();
+	this->name = name;
+	ImGui_ImplGlfwGL3_Init(window, false);
 }
 
 ImmediateGUI::~ImmediateGUI()
 {
-	ImGui_ImplGLUT_Shutdown();
+	ImGui_ImplGlfwGL3_Shutdown();
 }
 
 bool ImmediateGUI::keyPressed(unsigned char key, int x, int y)
@@ -25,17 +23,19 @@ bool ImmediateGUI::keyPressed(unsigned char key, int x, int y)
 	return false;
 }
 
-bool ImmediateGUI::mousePressed(int button, int state, int x, int y)
+
+
+bool ImmediateGUI::mousePressed(int x, int y, int button, int action, int mods)
 {
 	ImGuiIO& io = ImGui::GetIO();
 	io.MousePos = ImVec2((float)x, (float)y);
 
-	if (state == GLUT_DOWN && (button == GLUT_LEFT_BUTTON))
+	if (action == GLFW_PRESS && (button == GLFW_MOUSE_BUTTON_LEFT))
 		io.MouseDown[0] = true;
 	else
 		io.MouseDown[0] = false;
 
-	if (state == GLUT_DOWN && (button == GLUT_RIGHT_BUTTON))
+	if (action == GLFW_PRESS && (button == GLFW_MOUSE_BUTTON_RIGHT))
 		io.MouseDown[1] = true;
 	else
 		io.MouseDown[1] = false;
@@ -48,48 +48,15 @@ bool ImmediateGUI::mouseMoving(int x, int y)
 	ImGuiIO& io = ImGui::GetIO();
 	io.MousePos = ImVec2((float)x, (float)y);
 	
-	return ImGui::IsMouseHoveringAnyWindow();
-}
-
-void ImmediateGUI::setWindowSize(int x, int y)
-{
-	window_width = x;
-	window_height = y;
+	return true;
 }
 
 void ImmediateGUI::start_draw() const
 {
 	static bool show_test_window = false;
 	static bool show_another_window = false;
-	ImGui_ImplGLUT_NewFrame(window_width, window_height);
+	ImGui_ImplGlfwGL3_NewFrame();
 
-	//// 1. Show a simple window
-	//// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
-	//{
-	//	static float f = 0.0f;
-	//	ImGui::Text("Hello, world!");
-	//	ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-	//	if (ImGui::Button("Test Window")) show_test_window ^= 1;
-	//	if (ImGui::Button("Another Window")) show_another_window ^= 1;
-	//	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	//}
-
-	//// 2. Show another simple window, this time using an explicit Begin/End pair
-	//if (show_another_window)
-	//{
-	//	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-	//	ImGui::Begin("Another Window", &show_another_window);
-	//	ImGui::Text("Hello");
-	//	ImGui::End();
-	//}
-
-	//// 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
-	//if (show_test_window)
-	//{
-	//	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-	//	ImGui::ShowTestWindow(&show_test_window);
-	//}
-	
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(400, 600), ImGuiSetCond_Always);
 	ImGui::Begin(name.c_str(), (bool*)&visible);

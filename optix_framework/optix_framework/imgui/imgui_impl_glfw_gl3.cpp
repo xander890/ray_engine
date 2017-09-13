@@ -1,24 +1,26 @@
-// ImGui Glut binding with OpenGL
-// You can copy and use unmodified imgui_impl_* files in your project.
+// ImGui GLFW binding with OpenGL3 + shaders
+// In this binding, ImTextureID is used to store an OpenGL 'GLuint' texture identifier. Read the FAQ about ImTextureID in imgui.cpp.
+
+// You can copy and use unmodified imgui_impl_* files in your project. See main.cpp for an example of using this.
 // If you use this binding you'll need to call 4 functions: ImGui_ImplXXXX_Init(), ImGui_ImplXXXX_NewFrame(), ImGui::Render() and ImGui_ImplXXXX_Shutdown().
-// See main.cpp for an example of using this.
+// If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
 // https://github.com/ocornut/imgui
 
+#include <imgui\imgui.h>
+#include "imgui_impl_glfw_gl3.h"
 
-#include "imgui.h"
-#include "imgui_impl_glut.h"
-
-#include "GL\glew.h"
-#ifdef NOMINMAX
-#undef NOMINMAX
+// GL3W/GLFW
+#include <GL/glew.h>    // This example is using gl3w to access OpenGL functions (because it is small). You may use glew/glad/glLoadGen/etc. whatever already works for you.
+#include <GLFW/glfw3.h>
+#ifdef _WIN32
+#undef APIENTRY
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#include <GLFW/glfw3native.h>
 #endif
-#include "GL\freeglut.h"
-
-#include <iostream>
 
 // Data
-static int          oldTimeSinceStart = 0;
-
+static GLFWwindow*  g_Window = NULL;
 static double       g_Time = 0.0f;
 static bool         g_MousePressed[3] = { false, false, false };
 static float        g_MouseWheel = 0.0f;
@@ -29,9 +31,9 @@ static int          g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_Attr
 static unsigned int g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
 // This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
-// If text or lines are blurry when integrating ImGui in your engine:
-// - in your Render function, try translating your projection matrix by (0.5f,0.5f) or (0.375f,0.375f)
-void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
+// Note that this implementation is little overcomplicated because we are saving/setting up/restoring every OpenGL state explicitly, in order to be able to run within any OpenGL engine that doesn't do so. 
+// If text or lines are blurry when integrating ImGui in your engine: in your Render function, try translating your projection matrix by (0.5f,0.5f) or (0.375f,0.375f)
+void ImGui_ImplGlfwGL3_RenderDrawLists(ImDrawData* draw_data)
 {
 	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 	ImGuiIO& io = ImGui::GetIO();
@@ -135,17 +137,50 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 	glScissor(last_scissor_box[0], last_scissor_box[1], (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
 }
 
-static const char* ImGui_ImplGLUT_GetClipboardText(void * data)
+static const char* ImGui_ImplGlfwGL3_GetClipboardText(void* user_data)
 {
-    std::cerr << "ImGui_ImplGLUT_GetClipboardText not implemented\n";
-    return "";
+	return glfwGetClipboardString((GLFWwindow*)user_data);
 }
 
-static void ImGui_ImplGLUT_SetClipboardText(void * data, const char* text)
+static void ImGui_ImplGlfwGL3_SetClipboardText(void* user_data, const char* text)
 {
+	glfwSetClipboardString((GLFWwindow*)user_data, text);
 }
 
-bool ImGui_ImplGLUTGL3_CreateFontsTexture()
+void ImGui_ImplGlfwGL3_MouseButtonCallback(GLFWwindow*, int button, int action, int /*mods*/)
+{
+	if (action == GLFW_PRESS && button >= 0 && button < 3)
+		g_MousePressed[button] = true;
+}
+
+void ImGui_ImplGlfwGL3_ScrollCallback(GLFWwindow*, double /*xoffset*/, double yoffset)
+{
+	g_MouseWheel += (float)yoffset; // Use fractional mouse wheel, 1.0 unit 5 lines.
+}
+
+void ImGui_ImplGlfwGL3_KeyCallback(GLFWwindow*, int key, int, int action, int mods)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (action == GLFW_PRESS)
+		io.KeysDown[key] = true;
+	if (action == GLFW_RELEASE)
+		io.KeysDown[key] = false;
+
+	(void)mods; // Modifiers are not reliable across systems
+	io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
+	io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
+	io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
+	io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+}
+
+void ImGui_ImplGlfwGL3_CharCallback(GLFWwindow*, unsigned int c)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (c > 0 && c < 0x10000)
+		io.AddInputCharacter((unsigned short)c);
+}
+
+bool ImGui_ImplGlfwGL3_CreateFontsTexture()
 {
 	// Build texture atlas
 	ImGuiIO& io = ImGui::GetIO();
@@ -171,8 +206,7 @@ bool ImGui_ImplGLUTGL3_CreateFontsTexture()
 	return true;
 }
 
-
-bool ImGui_ImplGLUT_CreateDeviceObjects()
+bool ImGui_ImplGlfwGL3_CreateDeviceObjects()
 {
 	// Backup GL state
 	GLint last_texture, last_array_buffer, last_vertex_array;
@@ -239,7 +273,7 @@ bool ImGui_ImplGLUT_CreateDeviceObjects()
 	glVertexAttribPointer(g_AttribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, col));
 #undef OFFSETOF
 
-	ImGui_ImplGLUTGL3_CreateFontsTexture();
+	ImGui_ImplGlfwGL3_CreateFontsTexture();
 
 	// Restore modified GL state
 	glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -249,7 +283,7 @@ bool ImGui_ImplGLUT_CreateDeviceObjects()
 	return true;
 }
 
-void ImGui_ImplGLUT_InvalidateDeviceObjects()
+void    ImGui_ImplGlfwGL3_InvalidateDeviceObjects()
 {
 	if (g_VaoHandle) glDeleteVertexArrays(1, &g_VaoHandle);
 	if (g_VboHandle) glDeleteBuffers(1, &g_VboHandle);
@@ -275,60 +309,101 @@ void ImGui_ImplGLUT_InvalidateDeviceObjects()
 	}
 }
 
-bool ImGui_ImplGLUT_Init()
+bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks)
 {
-    ImGuiIO& io = ImGui::GetIO();
+	g_Window = window;
 
-    io.RenderDrawListsFn = ImGui_ImplGLUT_RenderDrawLists;   // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
-    io.SetClipboardTextFn = ImGui_ImplGLUT_SetClipboardText;
-    io.GetClipboardTextFn = ImGui_ImplGLUT_GetClipboardText;
+	ImGuiIO& io = ImGui::GetIO();
+	io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;                         // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+	io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
+	io.KeyMap[ImGuiKey_RightArrow] = GLFW_KEY_RIGHT;
+	io.KeyMap[ImGuiKey_UpArrow] = GLFW_KEY_UP;
+	io.KeyMap[ImGuiKey_DownArrow] = GLFW_KEY_DOWN;
+	io.KeyMap[ImGuiKey_PageUp] = GLFW_KEY_PAGE_UP;
+	io.KeyMap[ImGuiKey_PageDown] = GLFW_KEY_PAGE_DOWN;
+	io.KeyMap[ImGuiKey_Home] = GLFW_KEY_HOME;
+	io.KeyMap[ImGuiKey_End] = GLFW_KEY_END;
+	io.KeyMap[ImGuiKey_Delete] = GLFW_KEY_DELETE;
+	io.KeyMap[ImGuiKey_Backspace] = GLFW_KEY_BACKSPACE;
+	io.KeyMap[ImGuiKey_Enter] = GLFW_KEY_ENTER;
+	io.KeyMap[ImGuiKey_Escape] = GLFW_KEY_ESCAPE;
+	io.KeyMap[ImGuiKey_A] = GLFW_KEY_A;
+	io.KeyMap[ImGuiKey_C] = GLFW_KEY_C;
+	io.KeyMap[ImGuiKey_V] = GLFW_KEY_V;
+	io.KeyMap[ImGuiKey_X] = GLFW_KEY_X;
+	io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
+	io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
 
-    io.KeyMap[ImGuiKey_Tab]        = 9;                     // tab
-    io.KeyMap[ImGuiKey_LeftArrow]  = GLUT_KEY_LEFT;         // Left
-    io.KeyMap[ImGuiKey_RightArrow] = GLUT_KEY_RIGHT;        // Right
-    io.KeyMap[ImGuiKey_UpArrow]    = GLUT_KEY_UP;           // Up
-    io.KeyMap[ImGuiKey_DownArrow]  = GLUT_KEY_DOWN;         // Down
-    io.KeyMap[ImGuiKey_PageUp]     = GLUT_KEY_PAGE_UP;      // PageUp
-    io.KeyMap[ImGuiKey_PageDown]   = GLUT_KEY_PAGE_DOWN;    // PageDown
-    io.KeyMap[ImGuiKey_Home]       = GLUT_KEY_HOME;         // Home
-    io.KeyMap[ImGuiKey_End]        = GLUT_KEY_END;          // End
-    io.KeyMap[ImGuiKey_Delete]     = 127;                   // Delete
-    io.KeyMap[ImGuiKey_Backspace]  = 8;                     // Backspace
-    io.KeyMap[ImGuiKey_Enter]      = 13;                    // Enter
-    io.KeyMap[ImGuiKey_Escape]     = 27;                    // Escape
-    io.KeyMap[11]                  = 1;                     // ctrl-A
-    io.KeyMap[12]                  = 3;                     // ctrl-C
-    io.KeyMap[13]                  = 22;                    // ctrl-V
-    io.KeyMap[14]                  = 24;                    // ctrl-X
-    io.KeyMap[15]                  = 25;                    // ctrl-Y
-    io.KeyMap[16]                  = 26;                    // ctrl-Z
+	io.RenderDrawListsFn = ImGui_ImplGlfwGL3_RenderDrawLists;       // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
+	io.SetClipboardTextFn = ImGui_ImplGlfwGL3_SetClipboardText;
+	io.GetClipboardTextFn = ImGui_ImplGlfwGL3_GetClipboardText;
+	io.ClipboardUserData = g_Window;
+#ifdef _WIN32
+	io.ImeWindowHandle = glfwGetWin32Window(g_Window);
+#endif
 
-    return true;
+	if (install_callbacks)
+	{
+		glfwSetMouseButtonCallback(window, ImGui_ImplGlfwGL3_MouseButtonCallback);
+		glfwSetScrollCallback(window, ImGui_ImplGlfwGL3_ScrollCallback);
+		glfwSetKeyCallback(window, ImGui_ImplGlfwGL3_KeyCallback);
+		glfwSetCharCallback(window, ImGui_ImplGlfwGL3_CharCallback);
+	}
+
+	return true;
 }
 
-void ImGui_ImplGLUT_Shutdown()
+void ImGui_ImplGlfwGL3_Shutdown()
 {
-    ImGui_ImplGLUT_InvalidateDeviceObjects();
-    ImGui::Shutdown();
+	ImGui_ImplGlfwGL3_InvalidateDeviceObjects();
+	ImGui::Shutdown();
 }
 
-void ImGui_ImplGLUT_NewFrame(int w, int h)
+void ImGui_ImplGlfwGL3_NewFrame()
 {
-    if (!g_FontTexture)
-        ImGui_ImplGLUT_CreateDeviceObjects();
+	if (!g_FontTexture)
+		ImGui_ImplGlfwGL3_CreateDeviceObjects();
 
-    ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO& io = ImGui::GetIO();
 
-    // Setup display size (every frame to accommodate for window resizing)
-    io.DisplaySize = ImVec2((float)w, (float)h);
+	// Setup display size (every frame to accommodate for window resizing)
+	int w, h;
+	int display_w, display_h;
+	glfwGetWindowSize(g_Window, &w, &h);
+	glfwGetFramebufferSize(g_Window, &display_w, &display_h);
+	io.DisplaySize = ImVec2((float)w, (float)h);
+	io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
 
-    // Setup time step
-    int timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
-    float deltaTime = (timeSinceStart - oldTimeSinceStart)/1000.0f;
+	// Setup time step
+	double current_time = glfwGetTime();
+	io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
+	g_Time = current_time;
 
-    io.DeltaTime = deltaTime > 0.0 ? deltaTime : (float)(1.0f / 60.0f);
-    oldTimeSinceStart = timeSinceStart;
+	// Setup inputs
+	// (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
+	if (glfwGetWindowAttrib(g_Window, GLFW_FOCUSED))
+	{
+		double mouse_x, mouse_y;
+		glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
+		io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
+	}
+	else
+	{
+		io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+	}
 
-    // Start the frame
-    ImGui::NewFrame();
+	for (int i = 0; i < 3; i++)
+	{
+		io.MouseDown[i] = g_MousePressed[i] || glfwGetMouseButton(g_Window, i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+		g_MousePressed[i] = false;
+	}
+
+	io.MouseWheel = g_MouseWheel;
+	g_MouseWheel = 0.0f;
+
+	// Hide OS mouse cursor if ImGui is drawing it
+	glfwSetInputMode(g_Window, GLFW_CURSOR, io.MouseDrawCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+
+	// Start the frame
+	ImGui::NewFrame();
 }

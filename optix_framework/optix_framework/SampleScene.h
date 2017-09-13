@@ -25,7 +25,7 @@
 // SampleScene virtual class
 //
 //-----------------------------------------------------------------------------
-
+struct GLFWwindow;
 class SampleScene 
 {
 protected:
@@ -78,7 +78,7 @@ public:
   //----------------------------------------------------------------------------
 
   // Create the optix scene and return initial viewing parameters
-  virtual void   initScene( InitialCameraData& camera_data )=0;
+  virtual void   initScene(GLFWwindow * window, InitialCameraData& camera_data )=0;
   
   // Update camera shader with new viewing params and then trace
   virtual void   trace( const RayGenCameraData& camera_data )=0;
@@ -106,11 +106,11 @@ public:
 
   // Use this to add additional keys. Some are already handled but
   // can be overridden.  Should return true if key was handled, false otherwise.
-  virtual bool   keyPressed(unsigned char key, int x, int y) { return false; }
+  virtual bool   keyPressed(int key, int x, int y) { return false; }
 
   // Use this to add additional keys. Some are already handled but
   // can be overridden.  Should return true if key was handled, false otherwise.
-  virtual bool   mousePressed(int button, int state, int x, int y) { return false;  }
+  virtual bool   mousePressed(int x, int y, int button, int action, int mods) { return false;  }
   virtual bool   mouseMoving(int x, int y) { return false; }
 
   virtual void postDrawCallBack() {};
