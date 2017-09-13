@@ -6,7 +6,7 @@
  *  www: http://www.pobox.com/~ndr
  */
 
-
+#pragma warning(disable:4996) 
 /* includes */
 #include <glm.h>
 

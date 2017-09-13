@@ -10,7 +10,7 @@
 #include <folders.h>
 #include <area_light.h>
 
-#include <sutil\SampleScene.h>
+#include <SampleScene.h>
 
 #pragma once
 #include <glm.h>

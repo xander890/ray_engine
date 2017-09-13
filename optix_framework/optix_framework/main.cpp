@@ -156,7 +156,7 @@ int main( int argc, char** argv )
 	} 
 	catch( Exception & e )
 	{
-	sutilReportError( e.getErrorString().c_str() );
+	Logger::error<<  (e.getErrorString().c_str());
 	exit(1);
 	}
 	return 0;

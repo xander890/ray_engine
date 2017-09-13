@@ -23,7 +23,6 @@
 
 #include <string>
 #include <optixu/optixpp_namespace.h>
-#include <sutil.h>
 #include <SampleScene.h>
 
 class Mouse;
@@ -36,29 +35,29 @@ class PinholeCamera;
 //
 //-----------------------------------------------------------------------------
 
-class SUTILCLASSAPI GLUTDisplay
+class GLUTDisplay
 {
 public:
   enum contDraw_E { CDNone=0, CDProgressive=1, CDAnimated=2, CDBenchmark=3, CDBenchmarkTimed=4 };
 
-  SUTILAPI static void init( int& argc, char** argv );
-  SUTILAPI static void run( const std::string& title, SampleScene* scene, contDraw_E continuous_mode = CDNone );
-  SUTILAPI static void printUsage();
+  static void init( int& argc, char** argv );
+  static void run( const std::string& title, SampleScene* scene, contDraw_E continuous_mode = CDNone );
+  static void printUsage();
 
-  SUTILAPI static void setRequiresDisplay( const bool requires_display )
+  static void setRequiresDisplay( const bool requires_display )
   { m_requires_display = requires_display; }
-  SUTILAPI static void setCamera(SampleScene::InitialCameraData& camera_data);
+  static void setCamera(SampleScene::InitialCameraData& camera_data);
 
-//  SUTILAPI static bool isBenchmark() { return m_cur_continuous_mode == CDBenchmark || m_cur_continuous_mode == CDBenchmarkTimed ||
+//  static bool isBenchmark() { return m_cur_continuous_mode == CDBenchmark || m_cur_continuous_mode == CDBenchmarkTimed ||
 //    m_app_continuous_mode == CDBenchmark || m_app_continuous_mode == CDBenchmarkTimed; }
 
   // Make sure you only call this from the callback functions found in SampleScene:
   // initScene, trace, getOutputBuffer, cleanUp, resize, doResize, and keyPressed.
-  SUTILAPI static void postRedisplay();
+  static void postRedisplay();
 
-  SUTILAPI static void setUseSRGB(bool enabled) { m_use_sRGB = enabled; }
+  static void setUseSRGB(bool enabled) { m_use_sRGB = enabled; }
 
-//  SUTILAPI static int getTimedFrames() { return m_timed_frames; }
+//  static int getTimedFrames() { return m_timed_frames; }
 
 private:
 

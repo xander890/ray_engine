@@ -18,20 +18,15 @@
  * INABILITY TO USE THIS SOFTWARE, EVEN IF NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGES
  */
-
 #pragma once
-
-
 #include <optixu/optixpp_namespace.h>
-#include <sutil.h>
-
 //-----------------------------------------------------------------------------
 // 
 // SampleScene virtual class
 //
 //-----------------------------------------------------------------------------
 
-class SUTILCLASSAPI SampleScene 
+class SampleScene 
 {
 protected:
   typedef optix::float3 float3;
@@ -44,8 +39,8 @@ public:
   // V   - Vertical axis of view plane.   length(V) -> view plane height at focal distance 
   struct RayGenCameraData 
   { 
-    SUTILAPI RayGenCameraData() {}
-    SUTILAPI RayGenCameraData( const float3& m_eye, const float3& m_U, const float3& m_V, const float3& m_W )
+    RayGenCameraData() {}
+    RayGenCameraData( const float3& m_eye, const float3& m_U, const float3& m_V, const float3& m_W )
       : eye(m_eye), U(m_U), V(m_V), W(m_W) {}
     float3 eye;
     float3 U;
@@ -56,9 +51,9 @@ public:
   // Used to specify initial viewing parameters 
   struct InitialCameraData
   {
-    SUTILAPI InitialCameraData() {}
-    SUTILAPI InitialCameraData( const std::string& camera_string );
-	SUTILAPI InitialCameraData(float3 m_eye, float3 m_lookat, float3 m_up, float m_hfov,float  m_vfov)
+    InitialCameraData() {}
+    InitialCameraData( const std::string& camera_string );
+	InitialCameraData(float3 m_eye, float3 m_lookat, float3 m_up, float m_hfov,float  m_vfov)
       : eye(m_eye), lookat(m_lookat), up(m_up), vfov(m_vfov), hfov(m_hfov) {}
 
     float3 eye;
@@ -68,14 +63,14 @@ public:
 	float  hfov;
   };
 
-  SUTILAPI SampleScene();
-  SUTILAPI virtual ~SampleScene() {}
+  SampleScene();
+  virtual ~SampleScene() {}
 
-  SUTILAPI void  signalCameraChanged() { m_camera_changed = true; }
+  void  signalCameraChanged() { m_camera_changed = true; }
 
 
-  SUTILAPI void  setUseVBOBuffer( bool onoff ) { m_use_vbo_buffer = onoff; }
-  SUTILAPI bool  usesVBOBuffer() { return m_use_vbo_buffer; }
+  void  setUseVBOBuffer( bool onoff ) { m_use_vbo_buffer = onoff; }
+  bool  usesVBOBuffer() { return m_use_vbo_buffer; }
 
 
   //----------------------------------------------------------------------------
@@ -83,16 +78,16 @@ public:
   //----------------------------------------------------------------------------
 
   // Create the optix scene and return initial viewing parameters
-  SUTILAPI virtual void   initScene( InitialCameraData& camera_data )=0;
+  virtual void   initScene( InitialCameraData& camera_data )=0;
   
   // Update camera shader with new viewing params and then trace
-  SUTILAPI virtual void   trace( const RayGenCameraData& camera_data )=0;
+  virtual void   trace( const RayGenCameraData& camera_data )=0;
 
   // Update camera shader with new viewing params and then trace
-  SUTILAPI virtual void   trace( const RayGenCameraData& camera_data, bool& display );
+  virtual void   trace( const RayGenCameraData& camera_data, bool& display );
  
   // Return the output buffer to be displayed
-  SUTILAPI virtual optix::Buffer getOutputBuffer()=0;
+  virtual optix::Buffer getOutputBuffer()=0;
  
   //----------------------------------------------------------------------------
   // Optional virtual interface
@@ -100,32 +95,30 @@ public:
   
   // This cleans up the Context.  If you override it, you should call
   // SampleScene::cleanUp() explicitly.
-  SUTILAPI virtual void   cleanUp();
+  virtual void   cleanUp();
 
   // Will resize the output buffer (which might use a VBO) then call doResize.
   // Override this if you want to handle ALL buffer resizes yourself.
-  SUTILAPI virtual void   resize(unsigned int width, unsigned int height);
+  virtual void   resize(unsigned int width, unsigned int height);
 
   // Where derived classes should handle resizing all buffers except outputBuffer.
-  SUTILAPI virtual void   doResize(unsigned int width, unsigned int height) {}
+  virtual void   doResize(unsigned int width, unsigned int height) {}
 
   // Use this to add additional keys. Some are already handled but
   // can be overridden.  Should return true if key was handled, false otherwise.
-  SUTILAPI virtual bool   keyPressed(unsigned char key, int x, int y) { return false; }
+  virtual bool   keyPressed(unsigned char key, int x, int y) { return false; }
 
   // Use this to add additional keys. Some are already handled but
   // can be overridden.  Should return true if key was handled, false otherwise.
-  SUTILAPI virtual bool   mousePressed(int button, int state, int x, int y) { return false;  }
-  SUTILAPI virtual bool   mouseMoving(int x, int y) { return false; }
+  virtual bool   mousePressed(int button, int state, int x, int y) { return false;  }
+  virtual bool   mouseMoving(int x, int y) { return false; }
 
-  SUTILAPI virtual void postDrawCallBack() {};
+  virtual void postDrawCallBack() {};
 
   // Accessor
-  SUTILAPI optix::Context& getContext() { return m_context; }
+  optix::Context& getContext() { return m_context; }
 
 protected:
-  SUTILAPI optix::Buffer createOutputBuffer(RTformat format, unsigned int width, unsigned int height);
-
   optix::Context m_context;
 
   bool   m_camera_changed;

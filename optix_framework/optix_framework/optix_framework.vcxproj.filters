@@ -208,9 +208,6 @@
     <ClCompile Include="imgui\imgui_impl_glut.cpp">
       <Filter>Source Files\GUI\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="gui.cpp">
-      <Filter>Source Files\Legacy</Filter>
-    </ClCompile>
     <ClCompile Include="render_task.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -228,6 +225,15 @@
     </ClCompile>
     <ClCompile Include="RawLoader.cpp">
       <Filter>Source Files\Loaders</Filter>
+    </ClCompile>
+    <ClCompile Include="GLUTDisplay.cpp">
+      <Filter>Source Files\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="Mouse.cpp">
+      <Filter>Source Files\Cameras</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleScene.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -457,9 +463,6 @@
     <ClInclude Include="imgui\stb_truetype.h">
       <Filter>Header Files\GUI\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="gui.h">
-      <Filter>Legacy</Filter>
-    </ClInclude>
     <ClInclude Include="directional_dipole.h">
       <Filter>Header Files\Materials\Dipoles</Filter>
     </ClInclude>
@@ -495,6 +498,15 @@
     </ClInclude>
     <ClInclude Include="RawLoader.h">
       <Filter>Header Files\Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="GLUTDisplay.h">
+      <Filter>Header Files\Display</Filter>
+    </ClInclude>
+    <ClInclude Include="Mouse.h">
+      <Filter>Header Files\Cameras</Filter>
+    </ClInclude>
+    <ClInclude Include="SampleScene.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -612,14 +624,17 @@
     <Filter Include="Source Files\GUI\imgui">
       <UniqueIdentifier>{660f06d2-4ec3-41ca-be30-24ecd9ce6105}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Legacy">
-      <UniqueIdentifier>{032eb5e6-a668-42c4-a1cf-4d224c6a35e5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Legacy">
       <UniqueIdentifier>{a0c731e9-6497-4524-bc5e-268efba27f6f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Materials\Dipoles">
       <UniqueIdentifier>{14016807-5211-43cb-927a-10f8652e8b6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Display">
+      <UniqueIdentifier>{207aae66-3c20-4781-88c4-84cf11f7ef5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Display">
+      <UniqueIdentifier>{00ef0901-712c-4015-af5a-433f0c64dda9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

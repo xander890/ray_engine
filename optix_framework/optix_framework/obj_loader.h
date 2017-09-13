@@ -20,7 +20,7 @@
  */
 
 #pragma once
-#include <sutil.h>
+
 #include <optix_world.h>
 #include <glm.h>
 #include <string>

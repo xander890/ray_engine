@@ -23,6 +23,9 @@
 #include <optixu/optixu_matrix_namespace.h>
 #include <iostream>
 
+#ifdef NOMINMAX
+#undef NOMINMAX
+#endif
 # ifdef _WIN32
 #   include <cfloat>
 #   define ISFINITE _finite

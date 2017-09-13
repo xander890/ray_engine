@@ -22,7 +22,7 @@
 #pragma once
 #define _USE_MATH_DEFINES
 
-#include <sutil.h>
+
 #include <optixu/optixu_math_namespace.h>
 #include <optixu/optixu_matrix_namespace.h>
 
@@ -38,11 +38,11 @@ class PinholeCamera;
 
 class Mouse {
 public:
-  SUTILAPI Mouse(PinholeCamera* camera, int xres, int yres);
-  SUTILAPI void handleMouseFunc(int button, int state, int x, int y, int modifier);
-  SUTILAPI void handleMoveFunc(int x, int y);
-  SUTILAPI void handlePassiveMotionFunc(int x, int y);
-  SUTILAPI void handleResize(int new_xres, int new_yres);
+  Mouse(PinholeCamera* camera, int xres, int yres);
+  void handleMouseFunc(int button, int state, int x, int y, int modifier);
+  void handleMoveFunc(int x, int y);
+  void handlePassiveMotionFunc(int x, int y);
+  void handleResize(int new_xres, int new_yres);
 
 private:
   struct InteractionState {
@@ -94,22 +94,22 @@ public:
     KeepNone
   };
 
-  SUTILAPI PinholeCamera(float3 eye, float3 lookat, float3 up, float hfov=60, float vfov=60,
+  PinholeCamera(float3 eye, float3 lookat, float3 up, float hfov=60, float vfov=60,
                          AspectRatioMode arm = KeepVertical);
 
-  SUTILAPI void setup();
+  void setup();
   
-  SUTILAPI void getEyeUVW(float3& eye, float3& U, float3& V, float3& W);
+  void getEyeUVW(float3& eye, float3& U, float3& V, float3& W);
 
-  SUTILAPI void getEyeLookUpFOV(float3& eye, float3& lookat, float3& up, float& HFOV, float& VFOV);
+  void getEyeLookUpFOV(float3& eye, float3& lookat, float3& up, float& HFOV, float& VFOV);
 
-  SUTILAPI void scaleFOV(float);
-  SUTILAPI void translate(float2);
-  SUTILAPI void dolly(float);
-  SUTILAPI void transform( const optix::Matrix4x4& trans );
-  SUTILAPI void setAspectRatio(float ratio);
+  void scaleFOV(float);
+  void translate(float2);
+  void dolly(float);
+  void transform( const optix::Matrix4x4& trans );
+  void setAspectRatio(float ratio);
   
-  SUTILAPI void setParameters(float3 eye_in, float3 lookat_in, float3 up_in, float hfov_in, float vfov_in, PinholeCamera::AspectRatioMode aspectRatioMode_in);
+  void setParameters(float3 eye_in, float3 lookat_in, float3 up_in, float hfov_in, float vfov_in, PinholeCamera::AspectRatioMode aspectRatioMode_in);
 
   enum TransformCenter {
     LookAt,

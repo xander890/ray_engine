@@ -19,26 +19,24 @@
  * SUCH DAMAGES
  */
 
-#if defined(__APPLE__)
-#  include <GLUT/glut.h>
-#  define GL_FRAMEBUFFER_SRGB_EXT           0x8DB9
-#  define GL_FRAMEBUFFER_SRGB_CAPABLE_EXT   0x8DBA
-#else
-#  include <GL/glew.h>
-#  if defined(_WIN32)
-#    include <GL/wglew.h>
-#  endif
-#  include <GL/glut.h>
+#include <GL/glew.h>
+#include <GL/wglew.h>
+#ifdef NOMINMAX
+#undef NOMINMAX
 #endif
+#include <GL/glut.h>
 
+#define NOMINMAX
 #include <GLUTDisplay.h>
 #include <Mouse.h>
+
 
 #include <optixu/optixu_math_stream_namespace.h>
 
 #include <iostream>
 #include <cstdio> //sprintf
 #include <sstream>
+#include "logger.h"
 
 // #define NVTX_ENABLE enables the nvToolsExt stuff from Nsight in NsightHelper.h
 //#define NVTX_ENABLE
@@ -130,7 +128,7 @@ void GLUTDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
     buffer_height = static_cast<int>(buffer_height_rts);
     m_mouse = new Mouse( m_camera, buffer_width, buffer_height );
   } catch( Exception& e ){
-    sutilReportError( e.getErrorString().c_str() );
+    Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }
 
@@ -183,7 +181,7 @@ void GLUTDisplay::keyPressed(unsigned char key, int x, int y)
       return;
     }
   } catch( Exception& e ){
-    sutilReportError( e.getErrorString().c_str() );
+    Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }
 
@@ -241,7 +239,7 @@ void GLUTDisplay::resize(int width, int height)
   try {
     m_scene->resize(width, height);
   } catch( Exception& e ){
-    sutilReportError( e.getErrorString().c_str() );
+    Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }
 
@@ -424,7 +422,7 @@ void GLUTDisplay::display()
       displayFrame();
     }
   } catch( Exception& e ){
-    sutilReportError( e.getErrorString().c_str() );
+    Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }
   m_scene->postDrawCallBack();
@@ -445,13 +443,13 @@ void GLUTDisplay::quit(int return_code)
       m_scene->cleanUp();
       if (m_scene->getContext().get() != 0)
       {
-        sutilReportError( "Derived scene class failed to call SampleScene::cleanUp()" );
+        Logger::error << ( "Derived scene class failed to call SampleScene::cleanUp()" );
         exit(2);
       }
     }
     exit(return_code);
   } catch( Exception& e ) {
-    sutilReportError( e.getErrorString().c_str() );
+    Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }
 }

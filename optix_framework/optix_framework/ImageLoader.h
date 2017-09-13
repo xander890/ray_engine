@@ -22,7 +22,7 @@
 #pragma once
 
 #include <optixu/optixpp_namespace.h>
-#include <sutil.h>
+
 #include <string>
 #include <iosfwd>
 

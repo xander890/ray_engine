@@ -38,7 +38,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <algorithm>
-
+#include "logger.h"
 
 using namespace optix;
 
@@ -58,48 +58,6 @@ SampleScene::InitialCameraData::InitialCameraData( const std::string &camstr)
 {
   std::istringstream istr(camstr);
   istr >> eye >> lookat >> up >> vfov;
-}
-
-Buffer SampleScene::createOutputBuffer( RTformat format,
-                                        unsigned int width,
-                                        unsigned int height = 1)
-{
-
-  Buffer buffer;
-
-  if ( m_use_vbo_buffer )
-  {
-    /*
-      Allocate first the memory for the gl buffer, then attach it to OptiX.
-    */
-    GLuint vbo = 0;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    size_t element_size;
-    m_context->checkError(rtuGetSizeForRTformat(format, &element_size));
-    glBufferData(GL_ARRAY_BUFFER, element_size * width * height, 0, GL_STREAM_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    buffer = m_context->createBufferFromGLBO(RT_BUFFER_OUTPUT, vbo);
-    buffer->setFormat(format);
-	if (width == 1)
-	{
-		buffer->setSize(height);
-	}
-	else if (height == 1)
-	{
-		buffer->setSize(width);
-	}
-	else
-	{
-		buffer->setSize(width, height);
-	}
-  }
-  else {
-    buffer = m_context->createBuffer( RT_BUFFER_OUTPUT, format, width, height);
-  }
-
-  return buffer;
 }
 
 void SampleScene::cleanUp()
@@ -131,7 +89,7 @@ void SampleScene::resize(unsigned int width, unsigned int height)
 
   } catch( Exception& e ){
 	  // FIXME LOGGER
-    //sutilReportError( e.getErrorString().c_str() );
+	Logger::error <<  e.getErrorString();
     exit(2);
   }
 

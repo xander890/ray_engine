@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <sutil.h>
+
 #include "obj_loader.h"
 #include "singular_light.h"
 #include "obj_scene.h"
