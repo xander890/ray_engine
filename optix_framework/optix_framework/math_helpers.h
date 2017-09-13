@@ -153,7 +153,10 @@ static __host__ __device__ __inline__ optix::float3 pow(const optix::float3 &val
 {
 	return optix::make_float3(powf(value1.x, exp.x), powf(value1.y, exp.y), powf(value1.z, exp.z));
 }
-
+static __host__ __device__ __inline__ optix::float3 pow(const optix::float3 &value1, const float exp)
+{
+	return optix::make_float3(powf(value1.x, exp), powf(value1.y, exp), powf(value1.z, exp));
+}
 
 static __host__ __device__ __inline__ float step(const float &edge, const float &x)
 {

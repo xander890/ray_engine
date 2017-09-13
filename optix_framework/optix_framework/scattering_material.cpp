@@ -185,9 +185,9 @@ void ScatteringMaterial::set_asymmetry(float asymm)
 
 bool ScatteringMaterial::on_draw(std::string id)
 {
-	const char * dips[BSSRDF_COUNT] = { "Standard dipole" , "Directional dipole", "Approximate Standard (Burley)", "Approximate Directional (Frisvad)" };
+	const char * dips[ScatteringDipole::BSSRDF_COUNT] = { "Standard dipole" , "Directional dipole", "Approximate Standard (Burley)", "Approximate Directional (Frisvad)" };
 	#define ID_STRING(x,id) (std::string(x) + "##" + id + x).c_str()
-	if (ImmediateGUIDraw::Combo(ID_STRING("Dipole", id), &properties.selected_bssrdf, dips, BSSRDF_COUNT, BSSRDF_COUNT))
+	if (ImmediateGUIDraw::Combo(ID_STRING("Dipole", id), &properties.selected_bssrdf, dips, ScatteringDipole::BSSRDF_COUNT, ScatteringDipole::BSSRDF_COUNT))
 	{
 		dirty = true;
 	}

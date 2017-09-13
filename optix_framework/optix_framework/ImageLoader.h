@@ -21,26 +21,22 @@
 
 #pragma once
 
-#include <optixu/optixu_vector_types.h>
+#include <optixu/optixpp_namespace.h>
+#include <sutil.h>
+#include <string>
+#include <iosfwd>
 
-typedef struct struct_BasicLight
-{
-#if defined(__cplusplus)
-  typedef optix::float3 float3;
-#endif
-  float3 pos;
-  float3 color;
-  int    casts_shadow; 
-  int    padding;      // make this structure 32 bytes -- powers of two are your friend!
-} BasicLight;
+//-----------------------------------------------------------------------------
+//
+// Utility functions
+//
+//-----------------------------------------------------------------------------
 
-struct TriangleLight
-{
-#if defined(__cplusplus)
-  typedef optix::float3 float3;
-#endif
-  float3 v1, v2, v3;
-  float3 normal;
-  float3 emission;
-};
+// Creates a TextureSampler object for the given image file.  If filename is 
+// empty or the image loader fails, a 1x1 texture is created with the provided 
+// default texture color.
+optix::TextureSampler loadTexture( optix::Context context,
+                                            const std::string& filename,
+                                            const optix::float3& default_color );
 
+optix::TextureSampler createOneElementSampler(optix::Context context, const optix::float3& default_color);

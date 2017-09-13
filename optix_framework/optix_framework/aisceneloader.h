@@ -13,7 +13,7 @@
 #include <sutil\SampleScene.h>
 
 #pragma once
-#include <sutil/glm.h>
+#include <glm.h>
 
 
 class AISceneLoader

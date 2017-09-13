@@ -44,7 +44,6 @@ public:
         this->scattering = scattering;
         this->asymmetry = meancosine;
         mStandardMaterial = DefaultScatteringMaterial::Count; // Custom
-		properties.selected_bssrdf = DIRECTIONAL_DIPOLE_BSSRDF;
 		dirty = true;
     }
 
@@ -53,7 +52,6 @@ public:
         scale = prop_scale;
         mStandardMaterial = static_cast<int>(material);
         getDefaultMaterial(material);
-		properties.selected_bssrdf = DIRECTIONAL_DIPOLE_BSSRDF;
 		dirty = true;
     }
 

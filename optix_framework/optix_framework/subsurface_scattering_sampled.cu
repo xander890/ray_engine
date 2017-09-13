@@ -144,7 +144,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 		float3 d_tan = camera_data.eye - sample_on_tangent_plane;
 		float cos_alpha_tan = dot(-sample_ray_dir, no);
 
-		float jacobian = cos_alpha_tan / cos_alpha * dot(d, d) / dot(d_tan, d_tan);
+		float jacobian = max(1e-3, cos_alpha_tan) / max(1e-3,cos_alpha) * max(1e-3, dot(d, d)) / max(1e-3, dot(d_tan, d_tan));
 		integration_factor *= jacobian;
 	}
 	return true;
@@ -235,9 +235,9 @@ RT_PROGRAM void shade()
 		float cos_theta_i = max(dot(wi, ni), 0.0f);
 		float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
 		float sin_theta_t_sqr = recip_ior*recip_ior*(1.0f - cos_theta_i_sqr);
-		float cos_theta_t = sqrt(1.0f - sin_theta_t_sqr);
-		float3 w12 = recip_ior*(cos_theta_i*ni - wi) - ni*cos_theta_t;
-		float T12 = 1.0f - fresnel_R(cos_theta_i, cos_theta_t, recip_ior);
+		float cos_theta_t_i = sqrt(1.0f - sin_theta_t_sqr);
+		float3 w12 = recip_ior*(cos_theta_i*ni - wi) - ni*cos_theta_t_i;
+		float T12 = 1.0f - fresnel_R(cos_theta_i, cos_theta_t_i, recip_ior);
 
 		float3 w21 = no * cos_theta_t - recip_ior * (cos_theta_o * no - wo);
 

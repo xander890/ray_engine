@@ -188,8 +188,11 @@ echo Done.</Command>
     <ClCompile Include="dialogs.cpp" />
     <ClCompile Include="environment_map_background.cpp" />
     <ClCompile Include="folders.cpp" />
+    <ClCompile Include="glm.cpp" />
     <ClCompile Include="gui.cpp" />
+    <ClCompile Include="HDRLoader.cpp" />
     <ClCompile Include="host_material.cpp" />
+    <ClCompile Include="ImageLoader.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
@@ -200,6 +203,7 @@ echo Done.</Command>
     <ClCompile Include="mesh.cpp" />
     <ClCompile Include="miss_program.cpp" />
     <ClCompile Include="PerlinNoise.cpp" />
+    <ClCompile Include="PPMLoader.cpp" />
     <ClCompile Include="procedural_mesh.cpp" />
     <ClCompile Include="glossy.cpp" />
     <ClCompile Include="material_library.cpp" />
@@ -210,6 +214,7 @@ echo Done.</Command>
     <ClCompile Include="path_tracing.cpp" />
     <ClCompile Include="plint.cpp" />
     <ClCompile Include="procedural_loader.cpp" />
+    <ClCompile Include="RawLoader.cpp" />
     <ClCompile Include="rendering_method.cpp" />
     <ClCompile Include="render_task.cpp" />
     <ClCompile Include="sampled_bssrdf.cpp" />
@@ -593,8 +598,11 @@ echo Done.</Command>
     <ClInclude Include="device_environment_map.h" />
     <ClInclude Include="device_mesh_data.h" />
     <ClInclude Include="environment_map_background.h" />
+    <ClInclude Include="glm.h" />
+    <ClInclude Include="HDRLoader.h" />
     <ClInclude Include="host_device_common.h" />
     <ClInclude Include="host_material.h" />
+    <ClInclude Include="ImageLoader.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_impl_glut.h" />
@@ -621,9 +629,11 @@ echo Done.</Command>
     <ClInclude Include="optix_serialize.h" />
     <ClInclude Include="optix_utils.h" />
     <ClInclude Include="PerlinNoise.h" />
+    <ClInclude Include="PPMLoader.h" />
     <ClInclude Include="procedural_mesh.h" />
     <ClInclude Include="color_helpers.h" />
     <ClInclude Include="directional_dipole.h" />
+    <ClInclude Include="RawLoader.h" />
     <ClInclude Include="render_task.h" />
     <ClInclude Include="sampled_bssrdf.h" />
     <ClInclude Include="simplex_noise.h" />

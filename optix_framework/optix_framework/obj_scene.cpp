@@ -23,7 +23,7 @@
 #include "procedural_loader.h"
 #include "sphere.h"
 #include "dialogs.h"
-#include <sutil/ImageLoader.h>
+#include <ImageLoader.h>
 #include "presampled_surface_bssrdf.h"
 #include "GLUTDisplay.h"
 #include "aisceneloader.h"
@@ -604,10 +604,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	}
 	context["frame"]->setUint(m_frame++);
 
-	double time;
-	sutilCurrentTime(&time);
-
-
 	if (deforming)
 		scene->getAcceleration()->markDirty();
 
@@ -621,8 +617,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	unsigned int height = camera->get_height();
 	context->launch(as_integer(CameraType::STANDARD_RT), width, height);
 
-	double time1;
-	sutilCurrentTime(&time1);
 	// cout << "Elapsed (ray tracing): " << (time1 - time) * 1000 << endl;
 	// Apply tone mapping
 	context->launch(as_integer(CameraType::TONE_MAPPING), width, height);
@@ -662,7 +656,6 @@ void ObjScene::set_render_task(std::unique_ptr<RenderTask>& task)
 void ObjScene::start_render_task()
 {
 	reset_renderer();
-	GLUTDisplay::setContinuousMode(GLUTDisplay::CDBenchmark);
 	current_render_task->start();
 }
 
@@ -673,17 +666,6 @@ void ObjScene::add_override_material_file(std::string mat)
 
 optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height)
 {
-	// Set number of devices to be used
-	// Default, 0, means not to specify them here, but let OptiX use its default behavior.
-	if (m_num_devices)
-	{
-		int max_num_devices = Context::getDeviceCount();
-		int actual_num_devices = std::min(max_num_devices, std::max(1, m_num_devices));
-		std::vector<int> devs(actual_num_devices);
-		for (int i = 0; i < actual_num_devices; ++i) devs[i] = i;
-		context->setDevices(devs.begin(), devs.end());
-	}
-
     Buffer buffer = context->createBuffer(type);
 	buffer->setFormat(format);
     buffer->setSize(width, height);

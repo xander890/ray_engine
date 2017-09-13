@@ -73,17 +73,10 @@ public:
 
   SUTILAPI void  signalCameraChanged() { m_camera_changed = true; }
 
-  SUTILAPI void  setNumDevices( int ndev );
-  SUTILAPI void  enableCPURendering(bool enable);
-  SUTILAPI void  incrementCPUThreads(int delta); // can pass in negative values
 
   SUTILAPI void  setUseVBOBuffer( bool onoff ) { m_use_vbo_buffer = onoff; }
   SUTILAPI bool  usesVBOBuffer() { return m_use_vbo_buffer; }
 
-  // Create path to the SDK's ptx file for given base filename and target (.ptx
-  // extension is added).  The returned pointer is valid until the next
-  // invocation of ptxpath.
-  SUTILAPI static const char* const ptxpath( const std::string& target, const std::string& base );
 
   //----------------------------------------------------------------------------
   // Pure virtual interface to be implemented
@@ -125,8 +118,6 @@ public:
   SUTILAPI virtual bool   mousePressed(int button, int state, int x, int y) { return false;  }
   SUTILAPI virtual bool   mouseMoving(int x, int y) { return false; }
 
-  SUTILAPI virtual void  getDebugText(std::string & text, float & x, float & y) {}
-
   SUTILAPI virtual void postDrawCallBack() {};
 
   // Accessor
@@ -139,10 +130,5 @@ protected:
 
   bool   m_camera_changed;
   bool   m_use_vbo_buffer;
-  int    m_num_devices;
-  bool   m_cpu_rendering_enabled;
 
-private:
-  // Checks to see if CPU mode has been enabled and sets the appropriate flags.
-  void updateCPUMode();
 };
