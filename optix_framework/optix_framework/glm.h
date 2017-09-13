@@ -12,8 +12,6 @@
 // For SUTILAPI
 #define _USE_MATH_DEFINES
 
-
-
 /* includes */
 
 /* defines */

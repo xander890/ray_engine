@@ -45,14 +45,14 @@
     <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>..\build\</OutDir>
-    <LibraryPath>..\lib64\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <LibraryPath>..\lib64\;"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>..\build\</OutDir>
-    <LibraryPath>..\lib64\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <LibraryPath>..\lib64\;"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -61,7 +61,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;_DEBUG;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;..\optix\include;..\GL;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;"..\OptiX SDK 4.1.1\include";;..\GL;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -74,10 +74,9 @@
     </Link>
     <PostBuildEvent>
       <Command>echo Copying OptiX, freeglut and CUDA DLLs to output folder..
-xcopy /y /d "$(Optix_Dir)\bin64\*.dll" "$(OutDir)"
+xcopy /y /d "$"..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
 xcopy /y /d "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 xcopy /y /d "..\dll\assimp.dll" "$(OutDir)"
-xcopy /y /d "..\dll\AntTweakBar64.dll" "$(OutDir)"
 xcopy /y /d "..\dll\freeglut.dll" "$(OutDir)"
 xcopy /y /d "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d "..\dll\xerces-c_3_1.dll" "$(OutDir)"
@@ -85,8 +84,7 @@ echo Copying configuration specific ($(Configuration)) dlls...
 xcopy /y /d "..\dll\$(Configuration)\*.dll" "$(OutDir)"
 xcopy /y /d "..\dll\$(Configuration)\*.pdb" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
-xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"
-</Command>
+xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying OptiX and CUDA DLLs to output folder..</Message>
@@ -125,7 +123,7 @@ echo Done.</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NOMINMAX;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;..\optix\include;..\GL;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;"..\OptiX SDK 4.1.1\include";;..\GL;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalOptions>/Fp %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -136,14 +134,13 @@ echo Done.</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;freeglut.lib;optix.1.lib;optixu.1.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ShowProgress>LinkVerbose</ShowProgress>
+      <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
       <Command>echo Copying OptiX, freeglut and CUDA DLLs to output folder..
-xcopy /y /d "$(Optix_Dir)\bin64\*.dll" "$(OutDir)"
+xcopy /y /d "$"..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
 xcopy /y /d "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 xcopy /y /d "..\dll\assimp.dll" "$(OutDir)"
-xcopy /y /d "..\dll\AntTweakBar64.dll" "$(OutDir)"
 xcopy /y /d "..\dll\freeglut.dll" "$(OutDir)"
 xcopy /y /d "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d "..\dll\xerces-c_3_1.dll" "$(OutDir)"
@@ -151,8 +148,7 @@ echo Copying configuration specific ($(Configuration)) dlls...
 xcopy /y /d "..\dll\$(Configuration)\*.dll" "$(OutDir)"
 xcopy /y /d "..\dll\$(Configuration)\*.pdb" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
-xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"
-</Command>
+xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"</Command>
       <Message>Copying OptiX and CUDA DLLs to output folder..</Message>
     </PostBuildEvent>
     <CudaCompile>

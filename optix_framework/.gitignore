@@ -29,6 +29,7 @@ bld/
 [Ll]og/
 [Dd]ata/
 [Bb]uild/
+[Rr]esults/
 
 optix_framework/PTX_files/
 optix_framework/out.ppm
