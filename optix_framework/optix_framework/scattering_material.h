@@ -38,25 +38,8 @@ class ScatteringMaterial
 {
 public:
 
-    ScatteringMaterial(optix::float3 absorption,
-                       optix::float3 scattering,
-                       optix::float3 meancosine, float scale = 1.0f, const char * name = "")
-        : scale(scale), name(name)
-    {
-        this->absorption = absorption;
-        this->scattering = scattering;
-        this->asymmetry = meancosine;
-        mStandardMaterial = DefaultScatteringMaterial::Count; // Custom
-		dirty = true;
-    }
-
-    ScatteringMaterial(DefaultScatteringMaterial material, float prop_scale = 100.0f)
-    {
-        scale = prop_scale;
-        mStandardMaterial = static_cast<int>(material);
-        getDefaultMaterial(material);
-		dirty = true;
-    }
+    ScatteringMaterial(optix::float3 absorption, optix::float3 scattering, optix::float3 meancosine, float scale = 1.0f, const char * name = "");
+	ScatteringMaterial(DefaultScatteringMaterial material, float prop_scale = 100.0f);
 
     ScatteringMaterial& operator=(const ScatteringMaterial& cp);
     ScatteringMaterial(const ScatteringMaterial& cp);
@@ -79,6 +62,7 @@ public:
     ScatteringMaterialProperties get_data();
 
     static std::vector<ScatteringMaterial> defaultMaterials;
+	static std::vector<ScatteringMaterial> initializeDefaultMaterials();
 
 private:
     ScatteringMaterialProperties properties;
@@ -90,7 +74,6 @@ private:
     const char* name;
     bool dirty = true;
 
-    static std::vector<ScatteringMaterial> initializeDefaultMaterials();
     int mStandardMaterial;
 
 	friend class cereal::access;
