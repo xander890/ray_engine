@@ -11,12 +11,16 @@ using optix::float3;
 __device__ optix::float3 approx_bssrdf(const float3& x, const float3& w12, const float3& w21, const ScatteringMaterialProperties& properties)
 {
 	const float c = 0.125f*M_1_PIf; // 1/(8 pi)
-	float r_sqr = dot(x, x);
-	float r = sqrtf(r_sqr);
-	float3 r_tr = properties.transport*3.0f*r / properties.extinction;
-	float3 S = make_float3(1.0f) + make_float3(dot(x, w12 + w21)) / r_tr + make_float3(dot(x, w12)*dot(x, w21)) / (r_tr*r_tr);
-	S *= c*(expf(-r_tr) + expf(-r_tr / 3.0f)) / r_tr;
-	return max(S, make_float3(0.0f));
+	const float r_sqr = dot(x, x);
+	const float r = sqrtf(r_sqr);
+	float3 x_norm = x / r;
+	const float3 A = properties.approx_property_A;
+	const float3 s = properties.approx_property_s;
+	const float3 sr = r * s;
+
+	float3 R = c / r * A * (exp(-sr) + exp(-sr / 3.0f));
+	float3 S = R * (make_float3(1.0f) + dot(x_norm, w12 + w21) * s + dot(x_norm, w12)*dot(x_norm, w21) * s * s);
+	return S * M_1_PIf;
 }
 
 
@@ -26,6 +30,5 @@ __forceinline__ __device__ float3 approximate_directional_dipole_bssrdf(const fl
 {
 	float3 w21 = -_w21;
 	float3 x = _xo - _xi;	
-	optix_print("w21 dir, MUST BE NEGATIVE %f\n", dot(w21, _no));
 	return approx_bssrdf(x, _w12, w21, properties) / M_PIf; // Extra pi is to get BSSRDF from reflectance
 }
