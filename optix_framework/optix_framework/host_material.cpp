@@ -79,9 +79,6 @@ bool is_valid_material(ObjMaterial& mat)
 
 MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContext(context), mMaterialName(), mMaterialData()
 {
-	if(ScatteringMaterial::defaultMaterials.size() == 0)
-		ScatteringMaterial::initializeDefaultMaterials();
-
 	ObjMaterial * data = &mat;
 	if (mat.illum == -1)
 	{

@@ -361,6 +361,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
+	ScatteringMaterial::initializeDefaultMaterials();
 
 	if (override_mat.size() > 0)
 	{

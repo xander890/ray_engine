@@ -25,6 +25,7 @@ public:
 	template <typename T>
 	static T get_parameter(const char * tag, const char * n, T default_value, const char * comment = "")
 	{
+		Logger::info << "Params: " << std::to_string((int)parameters.size()) << std::endl;
 		T val;
 		if (parameters.count(tag) != 0 && parameters[tag].count(n) != 0)
 		{

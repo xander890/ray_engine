@@ -22,46 +22,58 @@ class Material:
         s += "illum " + str(self.illum) + "\n"
         return s
         
-        
-pot = Material("potato", 12, ior=1.3, absorption=[0.0024,0.009,0.12], scattering=[0.68,0.70,0.55], asymmetry=[0,0,0], scale=100.0)
-materials = [pot]
+def run(samples, datapath, materials, meshes, params, dest_file):
+	for material in materials:
+		material_to_write = datapath + material[:-4] + '.mtl'
+		material_to_write_bk = material_to_write + '.bak'
+		shutil.move(material_to_write, material_to_write_bk)
+		with open(material_to_write, 'w') as f:
+			f.write(str(materials[material]))
+		if not os.path.exists(dest_file):
+			command = ['optix_framework.exe'] + meshes + ['-o', res, '-f', str(frame)]
+			if len(params) > 0:
+				command += ["--parameter_override"] + params
+			print(" ".join(command))
+			subprocess.call(command)
+		else:
+			print(dest_file + " already exists, skipping.")
 
-illums = [14]
-illum_names = {12 : "volume_pt", 14 : "screen_space_sampling", 17 : "point_cloud_sampling"}
+	for material in materials:
+		material_to_write = datapath + material[:-4] + '.mtl'
+		material_to_write_bk = material_to_write + '.bak'
+		shutil.move(material_to_write_bk, material_to_write)
+		
+dipoles = ["STANDARD_DIPOLE_BSSRDF","DIRECTIONAL_DIPOLE_BSSRDF","APPROX_STANDARD_DIPOLE_BSSRDF","APPROX_DIRECTIONAL_DIPOLE_BSSRDF"]
+bssrdf_override_template = "bssrdf/bssrdf_model %s bssrdf/approximate_A \"%s\" bssrdf/approximate_s \"%s\""
+potato = Material("potato", 12, ior=1.3, absorption=[0.0024,0.009,0.12], scattering=[0.68,0.70,0.55], asymmetry=[0,0,0], scale=100.0)
 
-scenes = {"rendering" : ["/meshes/unit_sphere_2.obj"], "rendering_disc_lights" : ["/meshes/unit_sphere_2.obj", "/meshes/circle_lights.obj"]}
-scene_overrides = {"rendering" : [], "rendering_disc_lights" : ["light/background_constant_color", "\"0.1 0.1 0.1\""]}
+def vec_str(a):
+	return " ".join([str(q) for q in a])
 
-material_to_write = "../data/meshes/unit_sphere.mtl"
-material_to_write_bk = material_to_write + '.bak'
+if __name__ == "__main__":
+	materials = {"/meshes/unit_sphere_2.obj" : potato} 
+	illums = [14]
+	illum_names = {12 : "volume_pt", 14 : "screen_space_sampling", 17 : "point_cloud_sampling"}
+	scenes = {"rendering" : ["/meshes/unit_sphere_2.obj"], "rendering_disc_lights" : ["/meshes/unit_sphere_2.obj", "/meshes/circle_lights.obj"]}
+	scene_overrides = {"rendering" : [], "rendering_disc_lights" : ["light/background_constant_color", "\"0.1 0.1 0.1\""]}
+	frames = {"rendering" : 50, "rendering_disc_lights" : 50 }
 
-frames = {"rendering" : 50, "rendering_disc_lights" : 50 }
+	scenes_to_render = ["rendering"]
+	A = [1.0, 1.0, 1.0]
+	s = [1.0, 1.0, 1.0]
+	os.chdir('./build/')
+	if not os.path.exists('../results'):
+		os.mkdir('../results')
 
-os.chdir('./build/')
-if not os.path.exists('../results'):
-    os.mkdir('../results')
+	for dipole in dipoles:
+		for scene in scenes_to_render:
+			meshes = scenes[scene]
+			frame = frames[scene]
+			print(meshes)
+			for illum in illums:
+				for mat in materials.values():
+					mat.illum = illum
+				res = '../results/'+ scene + "_" + str(illum_names[illum]) + "_" + str(frame) +  "_samples"+dipole.lower()+".raw" 
+				bf = (bssrdf_override_template % (dipole, vec_str(A),vec_str(s))).split(" ")
+				run(frame, '../data', materials, meshes, scene_overrides[scene] + bf, res)
 
-shutil.move(material_to_write, material_to_write_bk)
-
-for scene in scenes:
-    meshes = scenes[scene]
-    frame = frames[scene]
-    print(meshes)
-    for mat in materials:
-        for illum in illums:
-            mat.illum = illum
-            with open(material_to_write, 'w') as f:
-                f.write(str(mat))
-            res = '../results/'+scene+'_' + mat.name + "_" + str(illum_names[illum]) + "_" + str(frame) +  "_samples.raw" 
-            print(res)
-            if not os.path.exists(res):
-                command = ['optix_framework.exe'] + meshes + ['-o', res, '-f', str(frame)]
-                print(len(scene_overrides[scene]))
-                if len(scene_overrides[scene]) > 0:
-                    command += ["--parameter_override"] + scene_overrides[scene]
-                print(" ".join(command))
-                subprocess.call(command)
-            else:
-                print(res + " already exists, skipping.")
-
-shutil.move(material_to_write_bk, material_to_write)

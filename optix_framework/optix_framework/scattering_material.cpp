@@ -58,6 +58,7 @@ ScatteringMaterial::ScatteringMaterial(const ScatteringMaterial& cp)
 
 std::vector<ScatteringMaterial> ScatteringMaterial::initializeDefaultMaterials()
 {
+	defaultMaterials.clear();
     std::vector<ScatteringMaterial> res;
     for (int i = 0; i < DefaultScatteringMaterial::Count; i++)
     {
@@ -221,7 +222,7 @@ bool ScatteringMaterial::on_draw(std::string id)
 	}
 
 	std::vector<std::string> vv;
-	for (int i = 0; i < DefaultScatteringMaterial::Count; i++)
+	for (int i = 0; i < defaultMaterials.size(); i++)
 	{
 		vv.push_back(defaultMaterials[i].name);
 	}
