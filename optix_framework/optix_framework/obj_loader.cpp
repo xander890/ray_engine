@@ -411,7 +411,7 @@ void ObjLoader::createMaterialParams( GLMmodel* model )
 
 	GLMmaterial& mat = model->materials[i];
 	ObjMaterial params = convert_mat(mat, m_context);
-    m_material_params[i] = std::make_shared<MaterialHost>(params);
+    m_material_params[i] = std::make_shared<MaterialHost>(m_context, params);
   }
 }
 

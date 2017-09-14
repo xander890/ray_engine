@@ -60,7 +60,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;_DEBUG;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;"..\OptiX SDK 4.1.1\include";;..\GL;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -68,7 +68,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
@@ -133,7 +133,7 @@ echo Done.</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
@@ -183,6 +183,7 @@ echo Done.</Command>
     <ClCompile Include="camera_host.cpp" />
     <ClCompile Include="chull.cpp" />
     <ClCompile Include="constant_background.cpp" />
+    <ClCompile Include="cputimer.cpp" />
     <ClCompile Include="default_shader.cpp" />
     <ClCompile Include="dialogs.cpp" />
     <ClCompile Include="environment_map_background.cpp" />
@@ -667,6 +668,7 @@ echo Done.</Command>
     <ClInclude Include="camera.h" />
     <ClInclude Include="camera_host.h" />
     <ClInclude Include="constant_background.h" />
+    <ClInclude Include="cputimer.h" />
     <ClInclude Include="default_shader.h" />
     <ClInclude Include="device_environment_map.h" />
     <ClInclude Include="device_mesh_data.h" />

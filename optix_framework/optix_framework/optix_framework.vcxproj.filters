@@ -235,6 +235,9 @@
     <ClCompile Include="GLFWDisplay.cpp">
       <Filter>Source Files\Display</Filter>
     </ClCompile>
+    <ClCompile Include="cputimer.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -507,6 +510,9 @@
     </ClInclude>
     <ClInclude Include="GLFWDisplay.h">
       <Filter>Header Files\Display</Filter>
+    </ClInclude>
+    <ClInclude Include="cputimer.h">
+      <Filter>Header Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

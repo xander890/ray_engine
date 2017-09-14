@@ -53,14 +53,12 @@ void Mesh::load_materials()
 	}
 
     create_and_bind_optix_data();
-    std::vector<MaterialDataCommon> data;
-    data.resize(mMaterialData.size());
     size_t n = mMaterialData.size();
+	MaterialDataCommon* data = reinterpret_cast<MaterialDataCommon*>(mMaterialBuffer->map());
     for (int i = 0; i < n; i++)
     {
-        data[i] = mMaterialData[i]->get_data_copy();
+		memcpy(&data[i], &mMaterialData[i]->get_data(), sizeof(MaterialDataCommon));
     }
-    memcpy(mMaterialBuffer->map(), data.data(), n * sizeof(MaterialDataCommon));
     mMaterialBuffer->unmap();
     mMaterial["material_buffer"]->setBuffer(mMaterialBuffer);    
     mMaterial["main_material"]->setUserData(sizeof(MaterialDataCommon), &data[0]);

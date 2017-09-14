@@ -52,3 +52,26 @@ template<typename T> optix::Buffer create_and_initialize_buffer(optix::Context &
     initialize_buffer(buf, objs);
     return buf;
 }
+
+template<typename T> void get_texture_pixel(optix::Context & ctx, T&elem, int texture_ptr)
+{
+	if (texture_ptr < 0)
+		return;
+	optix::TextureSampler tex = ctx->getTextureSamplerFromId(texture_ptr);
+	optix::Buffer buf = tex->getBuffer();
+	assert(buf->getElementSize() == sizeof(T));
+	memcpy(&elem, buf->map(), sizeof(T));
+	buf->unmap();
+}
+
+template<typename T> void set_texture_pixel(optix::Context & ctx, const T& elem, int texture_ptr)
+{
+	if (texture_ptr < 0)
+		return;
+	optix::TextureSampler tex = ctx->getTextureSamplerFromId(texture_ptr);
+	optix::Buffer buf = tex->getBuffer();
+	buf->setSize(1);
+	assert(buf->getElementSize() == sizeof(T));
+	memcpy(buf->map(), &elem , sizeof(T));
+	buf->unmap();
+}

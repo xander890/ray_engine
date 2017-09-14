@@ -558,7 +558,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
     params.specular_tex = loadTexture(m_context, "", make_float3(0))->getId();
 	params.name = "ketchup";
 
-    material_ketchup = std::make_shared<MaterialHost>(params);
+    material_ketchup = std::make_shared<MaterialHost>(context,params);
     execute_on_scene_elements([=](Mesh & m)
     {
         m.add_material(material_ketchup);

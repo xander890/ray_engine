@@ -7,7 +7,7 @@
         <property key="camera_lookat_point" value="0 0 0 " comment="The camera lookat point"/>
         <property key="camera_position" value="5 0 0" comment="The camera initial position"/>
         <property key="camera_up" value="0 1 0" comment="The camera initial up"/>
-        <property key="use_auto_camera" value="true" comment="Use a automatic placed camera or use the current data."/>
+        <property key="use_auto_camera" value="false" comment="Use a automatic placed camera or use the current data."/>
         <property key="window_height" value="1024" comment="The height of the window"/>
         <property key="window_width" value="1280" comment="The width of the window"/>
     </camera>

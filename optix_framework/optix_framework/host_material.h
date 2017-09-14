@@ -10,13 +10,11 @@ class ScatteringMaterial;
 class MaterialHost : std::enable_shared_from_this<MaterialHost>
 {
 public:
-	MaterialHost() {}
-	MaterialHost(ObjMaterial& data);
+	MaterialHost(optix::Context& ctx, ObjMaterial& data);
     ~MaterialHost();
 
 	bool on_draw(std::string id);
-    MaterialDataCommon& get_data(); 
-    MaterialDataCommon get_data_copy();
+    const MaterialDataCommon& get_data(); 
     std::string get_name() { return mMaterialName; }
 	bool hasChanged();
 	static void set_default_material(ObjMaterial mat);
@@ -36,6 +34,12 @@ private:
 	{
 		archive(cereal::make_nvp("name", mMaterialName), CEREAL_NVP(mMaterialData.illum), CEREAL_NVP(mMaterialData.relative_ior), CEREAL_NVP(mMaterialData.shininess), CEREAL_NVP(scattering_material));
 	}
+	optix::Context mContext;
+
+	bool first_time_gui = true;
+	optix::float4 ka_gui = optix::make_float4(0, 0, 0, 1);
+	optix::float4 kd_gui = optix::make_float4(0, 0, 0, 1);
+	optix::float4 ks_gui = optix::make_float4(0, 0, 0, 1);
 };
 
 

@@ -7,6 +7,7 @@
 #include "obj_loader.h"
 
 #include "optical_helper.h"
+#include "optix_utils.h"
 
 using optix::float3;
 
@@ -24,11 +25,33 @@ bool MaterialHost::on_draw(std::string id = "")
 {
 	bool changed = false;
 	std::string myid = id + "Material" + std::to_string(mMaterialID);
-	std::string newgroup = "Material " + std::to_string(mMaterialID) + "##" + myid;
+	std::string newgroup = mMaterialName + " (ID: " + std::to_string(mMaterialID) + ") ##" + myid;
 	if (ImmediateGUIDraw::TreeNode(newgroup.c_str()))
 	{
+
+		if (first_time_gui)
+		{
+			get_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
+			get_texture_pixel<optix::float4>(mContext, kd_gui, mMaterialData.diffuse_map);
+			get_texture_pixel<optix::float4>(mContext, ks_gui, mMaterialData.specular_map);
+			first_time_gui = false;
+		}
+		
+		if (ImmediateGUIDraw::InputFloat3((std::string("Ambient##Ambient") + myid).c_str(), &ka_gui.x))
+		{
+			set_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
+		}
+		if (ImmediateGUIDraw::InputFloat3((std::string("Diffuse##Diffuse") + myid).c_str(), &kd_gui.x))
+		{
+			set_texture_pixel<optix::float4>(mContext, kd_gui, mMaterialData.diffuse_map);
+		}
+		if (ImmediateGUIDraw::InputFloat3((std::string("Specular##Specular") + myid).c_str(), &ks_gui.x))
+		{
+			set_texture_pixel<optix::float4>(mContext, ks_gui, mMaterialData.specular_map);
+		}
+
 		changed |= scattering_material->on_draw(myid);
-		if (ImmediateGUIDraw::InputFloat("Relative IOR", &mMaterialData.relative_ior))
+		if (ImmediateGUIDraw::InputFloat((std::string("Relative IOR##IOR") + myid).c_str(), &mMaterialData.relative_ior))
 		{
 			changed = true;
 			mHasChanged = true;
@@ -55,7 +78,7 @@ bool is_valid_material(ObjMaterial& mat)
 	return mat.scale > 0.0f && dot(mat.absorption, optix::make_float3(1)) >= 0.0f && dot(mat.asymmetry, optix::make_float3(1)) >= 0.0f && dot(mat.scattering, optix::make_float3(1)) >= 0.0f;
 }
 
-MaterialHost::MaterialHost(ObjMaterial& mat) : mMaterialName(), mMaterialData()
+MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContext(context), mMaterialName(), mMaterialData()
 {
 	
 	ObjMaterial * data = &mat;
@@ -140,27 +163,17 @@ MaterialHost::MaterialHost(ObjMaterial& mat) : mMaterialName(), mMaterialData()
 MaterialHost::~MaterialHost() = default;
 
 
-MaterialDataCommon& MaterialHost::get_data()
+const MaterialDataCommon& MaterialHost::get_data()
 {
 	if (mHasChanged || scattering_material->hasChanged())
 	{
 		scattering_material->computeCoefficients(mMaterialData.relative_ior);
 		mHasChanged = false;
+		mMaterialData.scattering_properties = scattering_material->get_data();
 	}
-    mMaterialData.scattering_properties = scattering_material->get_data();
     return mMaterialData;
 }
 
-MaterialDataCommon MaterialHost::get_data_copy()
-{
-	if (mHasChanged || scattering_material->hasChanged())
-	{
-		scattering_material->computeCoefficients(mMaterialData.relative_ior);
-		mHasChanged = false;
-	}
-	mMaterialData.scattering_properties = scattering_material->get_data();
-    return mMaterialData;
-}
 
 bool MaterialHost::hasChanged()
 {
