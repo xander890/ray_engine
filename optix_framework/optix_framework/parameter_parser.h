@@ -30,6 +30,7 @@ public:
 		{
 			val = tovalue<T>(parameters[tag][n].value);
 			used_parameters[tag][n] = parameters[tag][n];
+			used_parameters[tag][n].comment = std::string(comment);
 		}
 		else
 		{
