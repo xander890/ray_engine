@@ -974,21 +974,24 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 
 	Matrix3x3 camera_matrix = Matrix3x3::identity();
 
-	float fov = ParameterParser::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
+	float vfov = ParameterParser::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
+
+	float ratio = camera->get_width() / (float)camera->get_height();
+	float hfov = RtoD(2.0f*atanf(ratio*tanf(DtoR(0.5f*(vfov)))));
 
     if (use_auto_camera)
 	{
 		camera_data = InitialCameraData(eye, // eye
 			m_scene_bounding_box.center(), // lookat
 			make_float3(0.0f, 1.0f, 0.0f), // up
-			fov, fov);
+			hfov, vfov);
 	}
 	else
 	{
 		eye = ParameterParser::get_parameter<float3>("camera", "camera_position", make_float3(1, 0, 0), "The camera initial position");
 		float3 lookat = ParameterParser::get_parameter<float3>("camera", "camera_lookat_point", make_float3(0, 0, 0), "The camera initial lookat point");
 		float3 up = ParameterParser::get_parameter<float3>("camera", "camera_up", make_float3(0, 1, 0), "The camera initial up");
-		camera_data = InitialCameraData(eye, lookat, up, fov, fov);
+		camera_data = InitialCameraData(eye, lookat, up, hfov, vfov);
 	}
 
 	if (camera_type == PinholeCameraDefinitionType::INVERSE_CAMERA_MATRIX)
