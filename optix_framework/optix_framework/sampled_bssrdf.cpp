@@ -1,6 +1,7 @@
 #include "sampled_bssrdf.h"
 #include "mesh.h"
 #include "immediate_gui.h"
+#include "scattering_material.h"
 
 SampledBSSRDF::SampledBSSRDF() : Shader()
 {

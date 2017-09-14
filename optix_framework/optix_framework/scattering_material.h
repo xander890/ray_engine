@@ -4,8 +4,11 @@
 #include <memory>
 #include <optix_world.h>
 #include "structs.h"
-
+#include <cereal/access.hpp>
+#include <cereal/types/vector.hpp>
+#include "cereal/types/memory.hpp"
 #include "scattering_properties.h"
+#include "optix_serialize.h"
 
 class MaterialHost;
 
@@ -37,8 +40,8 @@ public:
 
     ScatteringMaterial(optix::float3 absorption,
                        optix::float3 scattering,
-                       optix::float3 meancosine)
-        : scale(1.0f), name("")
+                       optix::float3 meancosine, float scale = 1.0f, const char * name = "")
+        : scale(scale), name(name)
     {
         this->absorption = absorption;
         this->scattering = scattering;
@@ -89,6 +92,13 @@ private:
 
     static std::vector<ScatteringMaterial> initializeDefaultMaterials();
     int mStandardMaterial;
+
+	friend class cereal::access;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(CEREAL_NVP(scale), CEREAL_NVP(scattering), CEREAL_NVP(asymmetry), CEREAL_NVP(absorption));
+	}
 };
 
 #endif // scattering_material_h__

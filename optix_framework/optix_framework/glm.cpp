@@ -352,10 +352,19 @@ _glmReadMTL(GLMmodel* model, char* name)
     model->materials[i].emissive[1] = 0.0f;
     model->materials[i].emissive[2] = 0.0f;
     model->materials[i].emissive[3] = 1.0f;
-	model->materials[i].absorption[0] = 0.0f;
-	model->materials[i].absorption[1] = 0.0f;
-	model->materials[i].absorption[2] = 0.0f;
+	model->materials[i].absorption[0] = -1.0f;
+	model->materials[i].absorption[1] = -1.0f;
+	model->materials[i].absorption[2] = -1.0f;
 	model->materials[i].absorption[3] = 1.0f;
+	model->materials[i].scattering[0] = -1.0f;
+	model->materials[i].scattering[1] = -1.0f;
+	model->materials[i].scattering[2] = -1.0f;
+	model->materials[i].scattering[3] = 1.0f;
+	model->materials[i].asymmetry[0] = -1.0f;
+	model->materials[i].asymmetry[1] = -1.0f;
+	model->materials[i].asymmetry[2] = -1.0f;
+	model->materials[i].asymmetry[3] = 1.0f;
+	model->materials[i].scale = -1.0f;
 
 
     model->materials[i].ambient_map[0] = '\0';
@@ -423,12 +432,36 @@ _glmReadMTL(GLMmodel* model, char* name)
             &model->materials[nummaterials - 1].emissive[1],
             &model->materials[nummaterials - 1].emissive[2]);
         break;
-	  case 'A': // absorption
-		  fscanf(file, "%f %f %f %f",
-			  &model->materials[nummaterials - 1].absorption[0],
-			  &model->materials[nummaterials - 1].absorption[1],
-			  &model->materials[nummaterials - 1].absorption[2],
-			  &model->materials[nummaterials - 1].absorption[3]);
+	  case 'S': // scattering parameters
+	  {
+		  if (buf[1] == 'a')
+		  {
+			  fscanf(file, "%f %f %f",
+				  &model->materials[nummaterials - 1].absorption[0],
+				  &model->materials[nummaterials - 1].absorption[1],
+				  &model->materials[nummaterials - 1].absorption[2]);
+		  }
+		  else if (buf[1] == 's')
+		  {
+			  fscanf(file, "%f %f %f",
+				  &model->materials[nummaterials - 1].scattering[0],
+				  &model->materials[nummaterials - 1].scattering[1],
+				  &model->materials[nummaterials - 1].scattering[2]);
+		  }
+		  else if (buf[1] == 'g')
+		  {
+			  fscanf(file, "%f %f %f",
+				  &model->materials[nummaterials - 1].asymmetry[0],
+				  &model->materials[nummaterials - 1].asymmetry[1],
+				  &model->materials[nummaterials - 1].asymmetry[2]);
+		  }
+		  else if (buf[1] == 'c')
+		  {
+			  fscanf(file, "%f", &model->materials[nummaterials - 1].scale);
+		  }
+		  break;
+	  }
+
 		  break;
       case 'm':
         {

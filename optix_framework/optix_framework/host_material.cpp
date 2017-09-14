@@ -50,6 +50,11 @@ void get_relative_ior(const MPMLMedium& med_in, const MPMLMedium& med_out, optix
 	kappa = (eta1 * kappa2 - eta2 * kappa1) / ab;
 }
 
+bool is_valid_material(ObjMaterial& mat)
+{
+	return mat.scale > 0.0f && dot(mat.absorption, optix::make_float3(1)) >= 0.0f && dot(mat.asymmetry, optix::make_float3(1)) >= 0.0f && dot(mat.scattering, optix::make_float3(1)) >= 0.0f;
+}
+
 MaterialHost::MaterialHost(ObjMaterial& mat) : mMaterialName(), mMaterialData()
 {
 	
@@ -77,51 +82,63 @@ MaterialHost::MaterialHost(ObjMaterial& mat) : mMaterialName(), mMaterialData()
 	mMaterialData.shininess = data->shininess;
 	mMaterialData.specular_map = data->specular_tex;
 
-    Logger::info << "Looking for material properties for material " << mMaterialName << "..." << std::endl;
-    ScatteringMaterial def = ScatteringMaterial(DefaultScatteringMaterial::Marble);
-	
-	if (findAndReturnMaterial(mMaterialName, def))
+	if (is_valid_material(*data))
 	{
-		Logger::info << "Material found in default materials. " << std::endl;
-		scattering_material = std::make_unique<ScatteringMaterial>(def);
-		mMaterialData.relative_ior = data->ior == 0.0f ? 1.3f : data->ior;
-		mMaterialData.ior_complex_imag_sq = optix::make_float3(mMaterialData.relative_ior*mMaterialData.relative_ior);
-		mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
-		Logger::debug << std::to_string(scattering_material->get_scale()) << std::endl;
+		Logger::info << mMaterialName << " is a valid obj material. Using obj parameters. " << std::endl;
+		mMaterialData.relative_ior = mat.ior;
+		scattering_material = std::make_unique<ScatteringMaterial>(mat.absorption, mat.scattering, mat.asymmetry, mat.scale, mMaterialName.c_str());
 	}
-	else if (MaterialLibrary::media.count(mMaterialName) != 0)
-    {
-		Logger::info << "Material found in mpml file. " << std::endl;
-		MPMLMedium mat = MaterialLibrary::media[mMaterialName];
-		MPMLMedium air = MaterialLibrary::media["air"];
-		float3 eta, kappa;
-		get_relative_ior(air, mat, eta, kappa);
-		mMaterialData.relative_ior = dot(eta, optix::make_float3(0.3333f));
-		mMaterialData.ior_complex_real_sq = eta*eta;
-		mMaterialData.ior_complex_imag_sq = kappa*kappa;
-		scattering_material = std::make_unique<ScatteringMaterial>(mat.absorption, mat.scattering, mat.asymmetry);
-    }
-    else if (MaterialLibrary::interfaces.count(mMaterialName) != 0)
-    {
-        Logger::info << "Material found in mpml file as interface. " << std::endl;
-        MPMLInterface interface = MaterialLibrary::interfaces[mMaterialName];
-		float3 eta, kappa;
-		get_relative_ior(*interface.med_out, *interface.med_in, eta, kappa);
-		mMaterialData.relative_ior = dot(eta, optix::make_float3(0.3333f));
-		mMaterialData.ior_complex_real_sq = eta*eta;
-		mMaterialData.ior_complex_imag_sq = kappa*kappa;
-        scattering_material = std::make_unique<ScatteringMaterial>(interface.med_in->absorption, interface.med_in->scattering, interface.med_in->asymmetry);
-    }
-    else
-    {
-        Logger::warning << "Scattering properties for material " << mMaterialName << "  not found. " << std::endl;
-		mMaterialData.relative_ior = 1.0f;
-		mMaterialData.ior_complex_imag_sq = optix::make_float3(mMaterialData.relative_ior*mMaterialData.relative_ior);
-		scattering_material = std::make_unique<ScatteringMaterial>(optix::make_float3(1), optix::make_float3(0), optix::make_float3(1));
-		mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
-    }
+	else
+	{
+		Logger::info << "Looking for material properties for material " << mMaterialName << "..." << std::endl;
+		ScatteringMaterial def = ScatteringMaterial(DefaultScatteringMaterial::Marble);
+
+		if (findAndReturnMaterial(mMaterialName, def))
+		{
+			Logger::info << "Material found in default materials. " << std::endl;
+			scattering_material = std::make_unique<ScatteringMaterial>(def);
+			mMaterialData.relative_ior = data->ior == 0.0f ? 1.3f : data->ior;
+			mMaterialData.ior_complex_imag_sq = optix::make_float3(mMaterialData.relative_ior*mMaterialData.relative_ior);
+			mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
+			Logger::debug << std::to_string(scattering_material->get_scale()) << std::endl;
+		}
+		else if (MaterialLibrary::media.count(mMaterialName) != 0)
+		{
+			Logger::info << "Material found in mpml file. " << std::endl;
+			MPMLMedium mat = MaterialLibrary::media[mMaterialName];
+			MPMLMedium air = MaterialLibrary::media["air"];
+			float3 eta, kappa;
+			get_relative_ior(air, mat, eta, kappa);
+			mMaterialData.relative_ior = dot(eta, optix::make_float3(0.3333f));
+			mMaterialData.ior_complex_real_sq = eta*eta;
+			mMaterialData.ior_complex_imag_sq = kappa*kappa;
+			scattering_material = std::make_unique<ScatteringMaterial>(mat.absorption, mat.scattering, mat.asymmetry);
+		}
+		else if (MaterialLibrary::interfaces.count(mMaterialName) != 0)
+		{
+			Logger::info << "Material found in mpml file as interface. " << std::endl;
+			MPMLInterface interface = MaterialLibrary::interfaces[mMaterialName];
+			float3 eta, kappa;
+			get_relative_ior(*interface.med_out, *interface.med_in, eta, kappa);
+			mMaterialData.relative_ior = dot(eta, optix::make_float3(0.3333f));
+			mMaterialData.ior_complex_real_sq = eta*eta;
+			mMaterialData.ior_complex_imag_sq = kappa*kappa;
+			scattering_material = std::make_unique<ScatteringMaterial>(interface.med_in->absorption, interface.med_in->scattering, interface.med_in->asymmetry);
+		}
+		else
+		{
+			Logger::warning << "Scattering properties for material " << mMaterialName << "  not found. " << std::endl;
+			mMaterialData.relative_ior = 1.0f;
+			mMaterialData.ior_complex_imag_sq = optix::make_float3(mMaterialData.relative_ior*mMaterialData.relative_ior);
+			scattering_material = std::make_unique<ScatteringMaterial>(optix::make_float3(1), optix::make_float3(0), optix::make_float3(1));
+			mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
+		}
+	}
 
 }
+
+MaterialHost::~MaterialHost() = default;
+
 
 MaterialDataCommon& MaterialHost::get_data()
 {

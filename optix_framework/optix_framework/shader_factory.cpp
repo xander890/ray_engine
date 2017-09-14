@@ -9,6 +9,7 @@
 #include "mesh.h"
 #include "presampled_surface_bssrdf.h"
 #include "optix_helpers.h"
+#include "scattering_material.h"
 using namespace optix;
 
 Context ShaderFactory::context = nullptr;

@@ -51,6 +51,9 @@ typedef struct _GLMmaterial
   float specular[4];      // Ks specular component
   float emissive[4];      // emissive component
   float absorption[4];   // Added: absorption.
+  float scattering[4];   // Added: absorption.
+  float asymmetry[4];   // Added: absorption.
+  float scale;   // Added: absorption.
   float shininess;        // Ns specular exponent
   float refraction;       // Tr
   float ior;

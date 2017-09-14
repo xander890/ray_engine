@@ -38,8 +38,11 @@ struct ObjMaterial
 	int diffuse_tex = -1;       // Kd diffuse component
 	int ambient_tex = -1;       // Ka ambient component
 	int specular_tex = -1;      // Ks specular component
-	optix::float4 emissive = optix::make_float4(0);      // emissive component
-	optix::float4 absorption = optix::make_float4(0);;   // Added: absorption.
+	optix::float3 emissive = optix::make_float3(0);      // emissive component
+	optix::float3 absorption = optix::make_float3(0);;   // Added: absorption.
+	optix::float3 scattering = optix::make_float3(0);;   // Added: absorption.
+	optix::float3 asymmetry = optix::make_float3(0);;   // Added: absorption.
+	float scale = 1;   // Added: absorption.
 	float shininess = 1;        // Ns specular exponent
 	float refraction = 0;       // Tr
 	float ior = 1;

@@ -1,6 +1,6 @@
 #include "presampled_surface_bssrdf.h"
 #include "material_library.h"
-
+#include "scattering_material.h"
 void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx, const ShaderInfo& shader_info)
 {
     Shader::initialize_shader(ctx, shader_info);

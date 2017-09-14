@@ -377,8 +377,11 @@ ObjMaterial ObjLoader::convert_mat(GLMmaterial& mat, optix::Context ctx)
 	params.name = std::string(mat.name);
 	params.reflectivity = mat.reflectivity;
 	params.refraction = mat.refraction;
-	params.emissive = make_float4(mat.emissive[0], mat.emissive[1], mat.emissive[2], mat.emissive[3]);
-	params.absorption = make_float4(mat.absorption[0], mat.absorption[1], mat.absorption[2], mat.absorption[3]);
+	params.emissive = make_float3(mat.emissive[0], mat.emissive[1], mat.emissive[2]);
+	params.absorption = make_float3(mat.absorption[0], mat.absorption[1], mat.absorption[2]);
+	params.asymmetry = make_float3(mat.asymmetry[0], mat.asymmetry[1], mat.asymmetry[2]);
+	params.scattering = make_float3(mat.scattering[0], mat.scattering[1], mat.scattering[2]);
+	params.scale = mat.scale;
 
 	float3 Kd = make_float3(mat.diffuse[0],
 		mat.diffuse[1],

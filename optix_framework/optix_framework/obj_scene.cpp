@@ -2,10 +2,10 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
+#include <cereal/archives/json.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
-
 #include "obj_loader.h"
 #include "singular_light.h"
 #include "obj_scene.h"
@@ -38,6 +38,9 @@
 #include "render_task.h"
 #include "volume_path_tracer.h"
 #include "glfw\glfw3.h"
+#include "optix_serialize.h"
+#include "host_material.h"
+#include "scattering_material.h"
 
 using namespace std;
 using namespace optix;
@@ -568,7 +571,10 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
  
 
 	 Logger::info<<"Scene initialized."<<endl;
-	 ParameterParser::dump_used_parameters("text.xml");
+	 std::stringstream ss;
+	 cereal::JSONOutputArchive archive(ss);
+	 archive(*mMeshes[0]);
+	 Logger::info << ss.str() << std::endl;
 }
 
 

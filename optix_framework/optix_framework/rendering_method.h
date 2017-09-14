@@ -5,7 +5,6 @@
 #include <map>
 #include <vector>
 #include "folders.h"
-#include "mesh.h"
 
 class RenderingMethod 
 {

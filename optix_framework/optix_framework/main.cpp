@@ -9,6 +9,7 @@
 #include <GLFWDisplay.h>
 #include "obj_scene.h"
 #include "render_task.h"
+#include "scattering_material.h"
 
 namespace
 {

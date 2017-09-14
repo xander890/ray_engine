@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include "glm.h"
+#include "scattering_material.h"
 
 using namespace std;
 using namespace optix;

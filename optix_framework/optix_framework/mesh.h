@@ -4,8 +4,11 @@
 #include "enums.h"
 #include <memory>
 #include "rendering_method.h"
+#include <cereal/access.hpp>
+#include <cereal/types/vector.hpp>
+#include "cereal/types/memory.hpp"
+#include "host_material.h"
 
-class MaterialHost;
 
 struct MeshData
 {
@@ -65,4 +68,13 @@ private:
 	bool mReloadShader = true;
 	bool mReloadGeometry = true;
 	bool mReloadMaterials = true;
+
+	friend class cereal::access;
+	// Serialization
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(cereal::make_nvp("name", mMeshName));
+		archive(cereal::make_nvp("materials",mMaterialData));
+	}
 };
