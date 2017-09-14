@@ -395,9 +395,10 @@ void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int x, 
 	}
 
 	switch (key) {
-	case 27: // esc
+	case GLFW_KEY_ESCAPE:
 	case GLFW_KEY_Q:
 		quit();
+		break;
 
 	case GLFW_KEY_C:
 		float3 eye, lookat, up;
