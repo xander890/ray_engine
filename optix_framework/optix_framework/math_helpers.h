@@ -163,3 +163,13 @@ static __host__ __device__ __inline__ float step(const float &edge, const float 
 	  return (x < edge)? 0.0f : 1.0f;
 }
 
+static __host__ __device__ __inline__ float DtoR(float d)
+{
+	return d*(M_PIf / 180.f);
+}
+
+
+static __host__ __device__ __inline__ float RtoD(float r)
+{
+	return r*(180.f / M_PIf);
+}

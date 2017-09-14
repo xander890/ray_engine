@@ -28,7 +28,6 @@
 
 class PinholeCamera;
 
-
 //-----------------------------------------------------------------------------
 // 
 // Mouse class -- handles user mouse events. This class defines the mouse

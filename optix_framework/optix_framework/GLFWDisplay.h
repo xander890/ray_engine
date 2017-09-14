@@ -35,6 +35,8 @@ struct GLFWwindow;
 //
 //-----------------------------------------------------------------------------
 
+
+
 class GLFWDisplay
 {
 public:
@@ -83,7 +85,7 @@ private:
 
   // callbacks
   static void display();
-  static void keyPressed(GLFWwindow * window, int key, int scancode, int x, int y);
+  static void keyPressed(GLFWwindow * window, int key, int scancode, int action, int modifier);
   static void mouseButton(GLFWwindow * window, int button, int section, int modifiers);
   static void mouseMotion(GLFWwindow * window, double x, double y);
   static void resize(GLFWwindow * window, int width, int height);

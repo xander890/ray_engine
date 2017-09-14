@@ -22,7 +22,7 @@
 #include <Mouse.h>
 #include <optixu/optixu_matrix_namespace.h>
 #include <iostream>
-
+#include "math_helpers.h"
 #include <glfw\glfw3.h>
 #include <cmath>
 #define ISFINITE std::isfinite
@@ -70,17 +70,6 @@ namespace {
     }
 
     return dst;
-  }
-
-  inline float DtoR(float d)
-  {
-    return d*(static_cast<float>(M_PI)/180.f);
-  }
-
-
-  inline float RtoD(float r)
-  {
-    return r*(180.f/static_cast<float>(M_PI));
   }
 
 

@@ -382,10 +382,12 @@ void GLFWDisplay::display()
   }
 }
 
-void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int x, int y)
+void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int action, int modifier)
 {
+	if (action == GLFW_RELEASE)
+		return;
 	try {
-		if (m_scene->keyPressed(key, x, y)) {
+		if (m_scene->keyPressed(key, action, modifier)) {
 			return;
 		}
 	}

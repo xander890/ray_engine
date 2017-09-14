@@ -16,7 +16,7 @@ ImmediateGUI::~ImmediateGUI()
 	ImGui_ImplGlfwGL3_Shutdown();
 }
 
-bool ImmediateGUI::keyPressed(unsigned char key, int x, int y)
+bool ImmediateGUI::keyPressed(int key, int action, int modifier)
 {
 	ImGuiIO& io = ImGui::GetIO();
 	io.AddInputCharacter(key);

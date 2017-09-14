@@ -14,7 +14,7 @@ public:
 	virtual ~ImmediateGUI();
 
 
-	bool keyPressed(unsigned char key, int x, int y);
+	bool keyPressed(int key, int action, int modifier);
 	// Use this to add additional keys. Some are already handled but
 	// can be overridden.  Should return true if key was handled, false otherwise.
 	bool mousePressed(int x, int y, int button, int action, int mods);

@@ -41,6 +41,7 @@
 #include "optix_serialize.h"
 #include "host_material.h"
 #include "scattering_material.h"
+#include "math_helpers.h"
 
 using namespace std;
 using namespace optix;
@@ -73,11 +74,11 @@ void ObjScene::reset_renderer()
 	m_frame = 0;
 }
 
-bool ObjScene::keyPressed(int key, int x, int y)
+bool ObjScene::keyPressed(int key, int action, int modifier)
 {
 	if (current_render_task->is_active())
 		return false;
-	if (gui->keyPressed(key, x, y) || key >= 48 && key <= 57) // numbers avoided
+	if (gui->keyPressed(key, action, modifier) || key >= 48 && key <= 57) // numbers avoided
 	{
 		reset_renderer();
 		return true;

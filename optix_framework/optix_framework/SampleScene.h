@@ -106,7 +106,7 @@ public:
 
   // Use this to add additional keys. Some are already handled but
   // can be overridden.  Should return true if key was handled, false otherwise.
-  virtual bool   keyPressed(int key, int x, int y) { return false; }
+  virtual bool   keyPressed(int key, int action, int modifier) { return false; }
 
   // Use this to add additional keys. Some are already handled but
   // can be overridden.  Should return true if key was handled, false otherwise.
