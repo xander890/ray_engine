@@ -42,6 +42,7 @@
 #include "host_material.h"
 #include "scattering_material.h"
 #include "math_helpers.h"
+#include "cputimer.h"
 
 using namespace std;
 using namespace optix;
@@ -91,14 +92,7 @@ bool ObjScene::keyPressed(int key, int action, int modifier)
 		return export_raw(res, rendering_output_buffer, m_frame);
 	}
 	case GLFW_KEY_P:
-		//current_scene_type = Scene::NextEnumItem(current_scene_type);
-		if (current_scene_type == Scene::NotValidEnumItem)
-			current_scene_type = Scene::OPTIX_ONLY;
-		reset_renderer();
-		/*	  Buffer out = context["output_buffer"]->getBuffer();
-			  out->destroy();
-			  context["output_buffer"]->setBuffer(createPBOOutputBuffer(RT_FORMAT_FLOAT4, window_width, window_height));
-			  cout << ((use_optix) ? "Ray tracing" : "Rasterization") << endl;*/
+		mbPaused = !mbPaused;
 		return true;
 	case GLFW_KEY_G:
 	{
@@ -157,7 +151,11 @@ bool ObjScene::drawGUI()
 	bool changed = false;
 	ImmediateGUIDraw::TextColored({ 255,0,0,1 }, "Rendering info ");
 	std::stringstream ss;
-	ss << "Current frame: " << to_string(m_frame);
+	ss << "Current frame: " << to_string(m_frame) << std::endl;
+	ss << "Time (load):        " << to_string(render_time_load * 1000) << " ms (" << to_string(1.0 / render_time_load) << " FPS)"<< std::endl;
+	ss << "Time (pre trace):   " << to_string(render_time_pre_trace * 1000) << " ms (" << to_string(1.0 / render_time_pre_trace) << " FPS)" << std::endl;
+	ss << "Time (render):      " << to_string(render_time_main * 1000) << " ms (" << to_string(1.0 / render_time_main) << " FPS)" << std::endl;
+	ss << "Time (tonemap/dbg): " << to_string(render_time_tonemap * 1000) << " ms (" << to_string(1.0 / render_time_tonemap) << " FPS)";
 	ImmediateGUIDraw::Text(ss.str().c_str());
 	static bool debug = false;
 	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
@@ -578,11 +576,17 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	 Logger::info << ss.str() << std::endl;
 }
 
+void update_timer(double & current, double n)
+{
+	current = 0.9*current + 0.1*n;
+}
 
 
 void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 {
 	display = true;
+	if (mbPaused)
+		return;
 	//context["comparison_image_weight"]->setFloat(comparison_image_weight);
 	//context["show_difference_image"]->setInt(show_difference_image);
 	//context["comparison_texture"]->setInt(comparison_image->getId());
@@ -597,10 +601,14 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
     context["tonemap_multiplier"]->setFloat(tonemap_multiplier);
 	context["tonemap_exponent"]->setFloat(tonemap_exponent);
 	
+	double t0 = currentTime();
+
 	execute_on_scene_elements([=](Mesh & m)
 	{
 		m.load();
 	});
+	double t1 = currentTime();
+	update_timer(render_time_load, t1 - t0);
 
 	if (m_camera_changed)
 	{
@@ -612,24 +620,33 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	if (deforming)
 		scene->getAcceleration()->markDirty();
 
+	t0 = currentTime();
     method->pre_trace();
     execute_on_scene_elements([=](Mesh & m)
     {
         m.pre_trace();
     });
+	t1 = currentTime();
+	update_timer(render_time_pre_trace, t1 - t0);
 
 	unsigned int width = camera->get_width();
 	unsigned int height = camera->get_height();
-	context->launch(as_integer(CameraType::STANDARD_RT), width, height);
 
+	t0 = currentTime();
+	context->launch(as_integer(CameraType::STANDARD_RT), width, height);
+	t1 = currentTime();
+	update_timer(render_time_main, t1 - t0);
 	// cout << "Elapsed (ray tracing): " << (time1 - time) * 1000 << endl;
 	// Apply tone mapping
+	t0 = currentTime();
 	context->launch(as_integer(CameraType::TONE_MAPPING), width, height);
 
 	if (debug_mode_enabled == true)
 	{
 		context->launch(as_integer(CameraType::DEBUG), width, height);
 	}
+	t1 = currentTime();
+	update_timer(render_time_tonemap ,t1 - t0);
 
 	if (current_render_task->is_active())
 	{
@@ -675,7 +692,6 @@ optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format,
 	buffer->setFormat(format);
     buffer->setSize(width, height);
     context[name]->setBuffer(buffer);
-
 	return buffer;
 }
 

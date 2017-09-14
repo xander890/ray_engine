@@ -158,7 +158,12 @@ private:
 
 	std::vector<std::string> parameters_override;
 
+	double render_time_main = 0.0;
+	double render_time_load = 0.0;
+	double render_time_pre_trace = 0.0;
+	double render_time_tonemap = 0.0;
 
+	bool mbPaused = false;
 };
 
 #endif // OBJSCENE_H
