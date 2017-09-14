@@ -58,8 +58,8 @@ void ImmediateGUI::start_draw() const
 	ImGui_ImplGlfwGL3_NewFrame();
 
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(400, 600), ImGuiSetCond_Always);
-	ImGui::Begin(name.c_str(), (bool*)&visible);
+	ImGui::SetNextWindowSize(ImVec2(500, 600), ImGuiSetCond_Always);
+	ImGui::Begin(name.c_str(), (bool*)&visible, ImGuiWindowFlags_ShowBorders);
 }
 
 void ImmediateGUI::end_draw() const
