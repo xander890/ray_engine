@@ -4,7 +4,7 @@ import os
 import shutil
 
 class Material:
-    def __init__(self, name, illum, ior, absorption, scattering, asymmetry, scale):
+    def __init__(self, name, illum, ior, ka, kd, ks, absorption, scattering, asymmetry, scale):
         self.name = name
         self.illum = illum
         self.ior = ior
@@ -12,8 +12,16 @@ class Material:
         self.scattering = scattering
         self.g = asymmetry
         self.scale = scale
+        self.ka = ka
+        self.kd = kd
+        self.ks = ks
+        
+        
     def __str__(self):
         s = "newmtl " + self.name + "\n"
+        s += "Ka " + str(" ".join([str(a) for a in self.ka])) + "\n"
+        s += "Kd " + str(" ".join([str(a) for a in self.kd])) + "\n"
+        s += "Ks " + str(" ".join([str(a) for a in self.ks])) + "\n"
         s += "Ni " + str(self.ior) + "\n"
         s += "Sa " + str(" ".join([str(a) for a in self.absorption])) + "\n"
         s += "Ss " + str(" ".join([str(a) for a in self.scattering])) + "\n"
@@ -23,19 +31,20 @@ class Material:
         return s
         
         
-pot = Material("potato", 12, ior=1.3, absorption=[0.0024,0.009,0.12], scattering=[0.68,0.70,0.55], asymmetry=[0,0,0], scale=100.0)
+pot = Material("potato", 12, ior=1.3, ka=[0,0,0], kd =[1,1,0], ks = [0,0,0], absorption=[0.0024,0.009,0.12], scattering=[0.68,0.70,0.55], asymmetry=[0,0,0], scale=7.0)
 materials = [pot]
 
-illums = [14]
+illums = [12]
 illum_names = {12 : "volume_pt", 14 : "screen_space_sampling", 17 : "point_cloud_sampling"}
 
 scenes = {"rendering" : ["/meshes/unit_sphere_2.obj"], "rendering_disc_lights" : ["/meshes/unit_sphere_2.obj", "/meshes/circle_lights.obj"]}
-scene_overrides = {"rendering" : [], "rendering_disc_lights" : ["light/background_constant_color", "\"0.1 0.1 0.1\""]}
+scenes_to_render = ["rendering_disc_lights"]
+scene_overrides = {"rendering" : [], "rendering_disc_lights" : ["light/background_constant_color", "\"0.0 0.0 0.0\""]}
 
 material_to_write = "../data/meshes/unit_sphere.mtl"
 material_to_write_bk = material_to_write + '.bak'
 
-frames = {"rendering" : 50, "rendering_disc_lights" : 50 }
+frames = {"rendering" : 50, "rendering_disc_lights" : 50000}
 
 os.chdir('./build/')
 if not os.path.exists('../results'):
@@ -43,7 +52,7 @@ if not os.path.exists('../results'):
 
 shutil.move(material_to_write, material_to_write_bk)
 
-for scene in scenes:
+for scene in scenes_to_render:
     meshes = scenes[scene]
     frame = frames[scene]
     print(meshes)
