@@ -226,7 +226,6 @@ void ParameterParser::override_parameters(std::vector<std::string>& override_arg
 	for (int i = 0; i < override_argv.size(); i++)
 	{
 		std::string a = override_argv[i];
-	
 		const size_t sep = a.find_first_of("/");
 		if (sep != std::string::npos)
 		{
@@ -235,7 +234,6 @@ void ParameterParser::override_parameters(std::vector<std::string>& override_arg
 			i++;
 			auto a2 = override_argv[i];
 			a2.erase(std::remove(a2.begin(), a2.end(), '\"'), a2.end());
-			Logger::info << a2 << std::endl;
 			if (parameters.count(tag) != 0 && parameters[tag].count(elem) != 0)
 			{
 				std::string old = parameters[tag][elem].value;
