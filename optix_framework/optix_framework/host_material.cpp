@@ -49,13 +49,12 @@ bool MaterialHost::on_draw(std::string id = "")
 		{
 			set_texture_pixel<optix::float4>(mContext, ks_gui, mMaterialData.specular_map);
 		}
-
-		changed |= scattering_material->on_draw(myid);
 		if (ImmediateGUIDraw::InputFloat((std::string("Relative IOR##IOR") + myid).c_str(), &mMaterialData.relative_ior))
 		{
 			changed = true;
 			mHasChanged = true;
 		}
+		changed |= scattering_material->on_draw(myid);
 		ImmediateGUIDraw::TreePop();
 	}
 	return changed;
@@ -80,7 +79,6 @@ bool is_valid_material(ObjMaterial& mat)
 
 MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContext(context), mMaterialName(), mMaterialData()
 {
-	
 	ObjMaterial * data = &mat;
 	if (mat.illum == -1)
 	{

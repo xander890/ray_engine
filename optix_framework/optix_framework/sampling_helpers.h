@@ -94,7 +94,7 @@ static
 	optix::float3 differential_reflect_direction(optix::float3 dPdx, optix::float3 dDdx, optix::float3 dNdP, 
 	optix::float3 D, optix::float3 N)
 {
-	float3 dNdx = dNdP*dPdx;
+	optix::float3 dNdx = dNdP*dPdx;
 	float dDNdx = dot(dDdx,N) + dot(D,dNdx);
 	return dDdx - 2*(dot(D,N)*dNdx + dDNdx*N);
 }
@@ -112,7 +112,7 @@ static __host__ __device__ __inline__
 		eta = 1.f / ior;
 	}
 
-	float3 dNdx = dNdP*dPdx;
+	optix::float3 dNdx = dNdP*dPdx;
 	float mu = eta*dot(D,N)-dot(T,N);
 	float TN = -sqrtf(1-eta*eta*(1-dot(D,N)*dot(D,N)));
 	float dDNdx = dot(dDdx,N) + dot(D,dNdx);
@@ -128,20 +128,20 @@ static __host__ __device__ __inline__ optix::float3 sample_point_triangle(float 
 	return (1-zeta1) * v0 + zeta1 * (1-zeta2) * v1 + zeta1 * zeta2 * v2;
 }
 
-__inline__ __device__ float3 sample_HG(optix::float3& forward, optix::uint& t)
+__inline__ __device__ optix::float3 sample_HG(optix::float3& forward, optix::uint& t)
 {
     float xi = rnd(t);
     float cos_theta = 1.0f - 2.0f*xi;
     float phi = 2.0f*M_PIf*rnd(t);
     float sin_theta = sqrtf(1.0f - cos_theta*cos_theta);
-    optix::float3 v = make_float3(sin_theta*cosf(phi), sin_theta*sinf(phi), cos_theta);
+    optix::float3 v = optix::make_float3(sin_theta*cosf(phi), sin_theta*sinf(phi), cos_theta);
 
     // Rotate from z-axis to actual normal and return
     rotate_to_normal(forward, v);
     return v;
 }
 
-__inline__ __device__ float3 sample_HG(optix::float3& forward, float g, optix::uint& t)
+__inline__ __device__ optix::float3 sample_HG(optix::float3& forward, float g, optix::uint& t)
 {
     float xi = rnd(t);
     float cos_theta;
@@ -158,16 +158,11 @@ __inline__ __device__ float3 sample_HG(optix::float3& forward, float g, optix::u
 
     // Calculate new direction as if the z-axis were the forward direction
     float sin_theta = sqrtf(1.0f - cos_theta*cos_theta);
-    float3 v = make_float3(sin_theta*cosf(phi), sin_theta*sinf(phi), cos_theta);
+    optix::float3 v = optix::make_float3(sin_theta*cosf(phi), sin_theta*sinf(phi), cos_theta);
 
     // Rotate from z-axis to actual normal and return
     rotate_to_normal(forward, v);
     return v;
-}
-
-static __inline__ __device__ optix::float2 sample_disk(float radius, optix::uint & t)
-{
-
 }
 
 
@@ -207,23 +202,23 @@ static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::
 	return sample_disk_exponential(sample, sigma, r, phi);
 }
 
-__host__ __device__ __inline__ float3 burley_scaling_factor_mfp_searchlight(const float3 & albedo)
+__host__ __device__ __inline__ optix::float3 burley_scaling_factor_mfp_searchlight(const optix::float3 & albedo)
 {
-	float3 temp = abs(albedo - optix::make_float3(0.8f));
+	optix::float3 temp = abs(albedo - optix::make_float3(0.8f));
 	return optix::make_float3(1.85f) - albedo + 7.0f * temp * temp * temp;
 }
 
-__host__ __device__ __inline__ float3 burley_scaling_factor_diffuse_mfp_searchlight(const float3 & albedo)
+__host__ __device__ __inline__ optix::float3 burley_scaling_factor_diffuse_mfp_searchlight(const optix::float3 & albedo)
 {
-	float3 temp = albedo - optix::make_float3(0.33f);
+	optix::float3 temp = albedo - optix::make_float3(0.33f);
 	temp *= temp; // pow 2
 	temp *= temp; // pow 4
 	return optix::make_float3(3.5f) + 100.0f * temp;
 }
 
 
-__host__ __device__ __inline__ float3 burley_scaling_factor_mfp_diffuse(const float3 & albedo)
+__host__ __device__ __inline__ optix::float3 burley_scaling_factor_mfp_diffuse(const optix::float3 & albedo)
 {
-	float3 temp = abs(albedo - optix::make_float3(0.8f));
+	optix::float3 temp = abs(albedo - optix::make_float3(0.8f));
 	return optix::make_float3(1.9f) - albedo + 3.5f * temp * temp;
 }

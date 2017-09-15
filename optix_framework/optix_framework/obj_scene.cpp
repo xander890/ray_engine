@@ -360,8 +360,10 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	context->setPrintLaunchIndex(0, 0);
 	ParameterParser::init(config_file);
 	ParameterParser::override_parameters(parameters_override);
+
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
+	ScatteringMaterial::initializeDefaultMaterials();
 
 	if (override_mat.size() > 0)
 	{

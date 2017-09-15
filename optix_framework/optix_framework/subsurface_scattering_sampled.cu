@@ -147,6 +147,11 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 		float jacobian = max(1e-3, cos_alpha_tan) / max(1e-3,cos_alpha) * max(1e-3, dot(d, d)) / max(1e-3, dot(d_tan, d_tan));
 		integration_factor *= jacobian;
 	}
+	if (bssrdf_sampling_properties->sampling_method == BSSRDF_SAMPLING_NORMAL_BASED_HERY
+		)
+	{
+		integration_factor /= abs(dot(no, ni));
+	}
 	return true;
 }
 
