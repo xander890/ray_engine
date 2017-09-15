@@ -77,6 +77,11 @@ void ObjScene::reset_renderer()
 
 bool ObjScene::keyPressed(int key, int action, int modifier)
 {
+	if (key == GLFW_KEY_P)
+	{
+		mbPaused = !mbPaused;
+		return true;
+	}
 	if (current_render_task->is_active())
 		return false;
 	if (gui->keyPressed(key, action, modifier) || key >= 48 && key <= 57) // numbers avoided
@@ -91,9 +96,6 @@ bool ObjScene::keyPressed(int key, int action, int modifier)
 		std::string res = std::string("result_optix.raw");
 		return export_raw(res, rendering_output_buffer, m_frame);
 	}
-	case GLFW_KEY_P:
-		mbPaused = !mbPaused;
-		return true;
 	case GLFW_KEY_G:
 	{
 		gui->toggleVisibility();
