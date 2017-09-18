@@ -6,7 +6,6 @@
 apply-gitignore = !git ls-files -ci --exclude-standard -z | xargs -0 git rm --cached
 
 # User-specific files
-*.raw
 *.suo
 *.user
 *.userosscache
