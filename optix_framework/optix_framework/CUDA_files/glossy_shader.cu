@@ -137,47 +137,7 @@ __inline__ __device__ float3 get_brdf(const float3& hit_pos, float3 & normal, co
 }
 
 
-// Closest hit program for Lambertian shading using the basic light as a directional source + specular term (blinn phong)
 RT_PROGRAM void shade()
-{
-	//float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, geometric_normal));
-	//float3 ffnormal = faceforward(normal, -ray.direction, normal);
-	//float3 k_a = make_float3(tex2D(ambient_map, texcoord.x, texcoord.y));
-	//float3 k_s = make_float3(tex2D(specular_map, texcoord.x, texcoord.y));
-	//float3 hit_pos = ray.origin + t_hit * ray.direction;
-	//hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
-
-	//float3 color = make_float3(0.0f);
-	////color +=  k_a;  
-	//float3 view = -normalize(W);
-	//for (unsigned int i = 0; i < light_size(); ++i)
-	//{
-	//	// Diffuse
-	//	float3 light_vector;
-	//	float3 light_radiance;
-	//	int cast_shadows;
-
-	//	HitInfo data(hit_pos, normal);
-	//	unsigned int s = 0;
-	//	evaluate_direct_light(data.hit_point, data.hit_normal, light_vector, light_radiance, cast_shadows, s, i);
-
-	//	float attenuation = 1.0f;
-	//	if (cast_shadows)
-	//	{
-	//		attenuation = trace_shadow_ray(hit_pos, -light_vector, scene_epsilon, RT_DEFAULT_MAX);
-	//	}
-
-	//	if (attenuation > 0.0f)
-	//	{
-	//		float f = torrance_sparrow_brdf(ffnormal, -light_vector, view, ior);
-
-	//		color += k_s * f;
-	//	}
-	//}
-	//prd_radiance.result = color;
-}
-
-RT_PROGRAM void shade_path_tracing()
 {
     const MaterialDataCommon & material = get_material();
 	float3 normal;

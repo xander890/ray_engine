@@ -229,7 +229,8 @@ RT_PROGRAM void shade()
 	{
 		float integration_factor;
 		float3 xi, ni;
-		importance_sample_position(xo, no, wo, props, t, xi, ni, integration_factor);
+		if (!importance_sample_position(xo, no, wo, props, t, xi, ni, integration_factor))
+			continue;
 		// Real hit point
 		
 		optix::float3 wi = make_float3(0);

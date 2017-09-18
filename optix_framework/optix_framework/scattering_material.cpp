@@ -56,15 +56,14 @@ ScatteringMaterial::ScatteringMaterial(const ScatteringMaterial& cp)
 	dirty = true;
 }
 
-std::vector<ScatteringMaterial> ScatteringMaterial::initializeDefaultMaterials()
+void ScatteringMaterial::initializeDefaultMaterials()
 {
 	defaultMaterials.clear();
     std::vector<ScatteringMaterial> res;
     for (int i = 0; i < DefaultScatteringMaterial::Count; i++)
     {
-        res.push_back(ScatteringMaterial(static_cast<DefaultScatteringMaterial>(i)));
+		defaultMaterials.push_back(ScatteringMaterial(static_cast<DefaultScatteringMaterial>(i)));
     }
-    return res;
 }
 
 std::vector<ScatteringMaterial> ScatteringMaterial::defaultMaterials;

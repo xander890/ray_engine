@@ -18,11 +18,6 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 
-
-
-
-
-
 // Russian roulette variables
 rtDeclareVariable(int, max_splits, , );
 
@@ -34,41 +29,41 @@ RT_PROGRAM void any_hit_shadow() {
  shadow_hit(prd_shadow, emission);
 }
 
+//
+//// Closest hit program for Lambertian shading using the basic light as a directional source + specular term (blinn phong)
+//RT_PROGRAM void shade() 
+//{ 
+//	float3 color = make_float3(0.0f);
+//    const MaterialDataCommon & material = get_material();
+//	
+//  if(prd_radiance.depth < max_depth)
+//  {
+//		float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
+//		float3 ffnormal = faceforward(normal, -ray.direction, normal);
+//		float3 hit_pos = ray.origin + t_hit * ray.direction;
+//
+//
+//		PerRayData_radiance prd_refract = prepare_new_pt_payload(prd_radiance);
+//
+//		PerRayData_radiance prd_refl = prepare_new_pt_payload(prd_radiance);
+//
+//		Ray reflected_ray, refracted_ray;
+//		float R, cos_theta;
+//		get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+//
+//		rtTrace(top_object, reflected_ray, prd_refl);
+//		prd_refract.seed = prd_refl.seed;
+//
+//		color += R * prd_refl.result;
+//		rtTrace(top_object, refracted_ray, prd_refract);
+//		color += (1-R) * prd_refract.result;
+//		prd_radiance.seed = prd_refract.seed;
+//		
+//	}
+//	prd_radiance.result = color; 
+//}
 
-// Closest hit program for Lambertian shading using the basic light as a directional source + specular term (blinn phong)
-RT_PROGRAM void shade() 
-{ 
-	float3 color = make_float3(0.0f);
-    const MaterialDataCommon & material = get_material();
-	
-  if(prd_radiance.depth < max_depth)
-  {
-		float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
-		float3 ffnormal = faceforward(normal, -ray.direction, normal);
-		float3 hit_pos = ray.origin + t_hit * ray.direction;
-
-
-		PerRayData_radiance prd_refract = prepare_new_pt_payload(prd_radiance);
-
-		PerRayData_radiance prd_refl = prepare_new_pt_payload(prd_radiance);
-
-		Ray reflected_ray, refracted_ray;
-		float R, cos_theta;
-		get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
-
-		rtTrace(top_object, reflected_ray, prd_refl);
-		prd_refract.seed = prd_refl.seed;
-
-		color += R * prd_refl.result;
-		rtTrace(top_object, refracted_ray, prd_refract);
-		color += (1-R) * prd_refract.result;
-		prd_radiance.seed = prd_refract.seed;
-		
-	}
-	prd_radiance.result = color; 
-}
-
-RT_PROGRAM void shade_path_tracing(void)
+RT_PROGRAM void shade_path_tracing()
 {
   float3 color = make_float3(0.0f);
   const MaterialDataCommon & material = get_material();

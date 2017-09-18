@@ -93,48 +93,7 @@ __inline__ __device__ float3 shade_specular(const float3& hit_pos, const float3 
 	return color;
 }
 
-// Closest hit program for Lambertian shading using the basic light as a directional source + specular term (blinn phong)
 RT_PROGRAM void shade()
-{
-    const MaterialDataCommon & material = get_material();
-	float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
-	float3 ffnormal = faceforward(normal, -ray.direction, normal);
-    float3 k_a = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
-	float3 hit_pos = ray.origin + t_hit * ray.direction;
-
-	hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
-	prd_radiance.flags &= ~(RayFlags::USE_EMISSION); //Unset use emission
-
-	float3 color = make_float3(0.0f);
-	color += k_a;  
-	//optix_print("%f", k_a.x);
-	float3 view = normalize(camera_data.W);
-	uint s = prd_radiance.seed;
-	for (uint i = 0; i < light_size(); ++i)
-	{
-		// Diffuse
-		float3 direct = make_float3(0);
-		int M = 20;
-		for (int j = 0; j < M; j++)
-		{
-			float3 light_vector;
-			float3 light_radiance;
-			int cast_shadows;
-			s = lcg(s);
-			evaluate_direct_light(hit_pos, normal, light_vector, light_radiance, cast_shadows, s, i);
-			float attenuation = 1.0f;
-			direct += shade_specular(hit_pos, ffnormal, light_vector, light_radiance, view);
-		}
-		color += direct / static_cast<float>(M);
-		
-	}
-	prd_radiance.result = color;
-	prd_radiance.seed = s;
-}
-
-
-
-RT_PROGRAM void shade_path_tracing()
 {
 	const MaterialDataCommon & material = get_material();
 	float3 k_d = get_k_d();

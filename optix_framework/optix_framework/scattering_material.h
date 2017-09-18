@@ -62,7 +62,7 @@ public:
     ScatteringMaterialProperties get_data();
 
     static std::vector<ScatteringMaterial> defaultMaterials;
-	static std::vector<ScatteringMaterial> initializeDefaultMaterials();
+	static void initializeDefaultMaterials();
 
 private:
     ScatteringMaterialProperties properties;

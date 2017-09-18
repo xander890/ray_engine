@@ -109,7 +109,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
 #else
     for (int i = 0; i < maximum_volume_steps; i++)
     {
-        extinction = get_extinction(ray.origin, colorband);
+        //extinction = get_extinction(ray.origin, colorband);
         // Sample new distance
         ray.tmax = -log(rnd(t)) / extinction;
 
@@ -121,14 +121,14 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
             // New ray origin
             ray.origin += ray.direction * ray.tmax;
 
-            g = get_asymmetry(ray.origin, colorband);
+          //  g = get_asymmetry(ray.origin, colorband);
             // New ray direction 
             ray.direction = sample_HG(ray.direction, g, t);
         }
         else // Intersection hit
             return true;
 
-        albedo = get_albedo(ray.origin, colorband);
+//        albedo = get_albedo(ray.origin, colorband);
         // Break if absorbed
         if (rnd(t) > albedo)
             return false;
