@@ -74,8 +74,7 @@
     </Link>
     <PostBuildEvent>
       <Command>echo Copying OptiX, freeglut and CUDA DLLs to output folder..
-xcopy /y /d "$"..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
-xcopy /y /d "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+xcopy /y /d "..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
 xcopy /y /d "..\dll\assimp.dll" "$(OutDir)"
 xcopy /y /d "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d "..\dll\glew32.dll" "$(OutDir)"
@@ -138,8 +137,7 @@ echo Done.</Command>
     </Link>
     <PostBuildEvent>
       <Command>echo Copying OptiX, freeglut and CUDA DLLs to output folder..
-xcopy /y /d "$"..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
-xcopy /y /d "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+xcopy /y /d "..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
 xcopy /y /d "..\dll\assimp.dll" "$(OutDir)"
 xcopy /y /d "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d "..\dll\glew32.dll" "$(OutDir)"

@@ -11,6 +11,6 @@ __device__ float3 approximate_standard_dipole_bssrdf(float r, const ScatteringMa
 	float3 s = properties.approx_property_s;
 	float3 sr = r * s;
 	float c = 0.125*M_1_PIf;
-	float3 R =  c / r * A * (exp(-sr) + exp(-sr / 3.0f));
+	float3 R =  A * c * s / r * (exp(-sr) + exp(-sr / 3.0f));
 	return R * M_1_PIf;
 }

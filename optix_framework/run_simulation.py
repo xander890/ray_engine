@@ -33,21 +33,22 @@ class Material:
 
 
 def run(samples, datapath, materials, meshes, params, dest_file):
+    if os.path.exists(dest_file):
+        print( dest_file + " already exists, skipping.")
+        return
     for material in materials:
         material_to_write = datapath + material[:-4] + '.mtl'
         material_to_write_bk = material_to_write + '.bak'
         shutil.move(material_to_write, material_to_write_bk)
         with open(material_to_write, 'w') as f:
             f.write(str(materials[material]))
-        if not os.path.exists(dest_file):
-            command = ['optix_framework.exe'] + meshes + ['-o', dest_file, '-f', str(samples)]
-            if len(params) > 0:
-                command += ["--parameter_override"] + params
-            print(" ".join(command))
-            with open(dest_file[:-4] + '.log.txt', 'w') as f:
-                subprocess.call(command, stdout=f, stderr=f)
-        else:
-            print( dest_file + " already exists, skipping.")
+        command = ['optix_framework.exe'] + meshes + ['-o', dest_file, '-f', str(samples)]
+        if len(params) > 0:
+            command += ["--parameter_override"] + params
+        print(" ".join(command))
+        with open(dest_file[:-4] + '.log.txt', 'w') as f:
+            subprocess.call(command, stdout=f, stderr=f)
+
 
     for material in materials:
         material_to_write = datapath + material[:-4] + '.mtl'
