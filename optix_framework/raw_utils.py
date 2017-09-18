@@ -52,7 +52,13 @@ def save_raw(filename, data):
      
     with open(raw_filename, 'wb') as f:
         f.write(bin)
-        
+
+def save_png(filename, data):
+    from PIL import Image  
+    image = np.clip(data, 0.0, 1.0) * 255.0
+    image_tm = image.astype('uint8')
+    img = Image.fromarray(image_tm, 'RGB')
+    img.save(filename)        
         
 if __name__ == "__main__":
     from PIL import Image     
