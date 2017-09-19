@@ -97,6 +97,7 @@ public:
 
   static std::vector<ObjMaterial> parse_mtl_file(std::string mtl, optix::Context & ctx);
   static ObjMaterial convert_mat(GLMmaterial& mat, optix::Context ctx);
+  optix::GeometryGroup   m_geometrygroup;
 
 protected:
 
@@ -113,7 +114,6 @@ protected:
   std::string            m_pathname;
   std::string            m_filename;
   optix::Context         m_context;
-  optix::GeometryGroup   m_geometrygroup;
   optix::Buffer          m_vbuffer;
   optix::Buffer          m_nbuffer;
   optix::Buffer          m_tbuffer;

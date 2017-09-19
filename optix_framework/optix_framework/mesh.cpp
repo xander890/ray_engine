@@ -146,11 +146,36 @@ void Mesh::create_and_bind_optix_data()
         bind = true;
     }
 
+	if (!mTransform)
+	{
+		mTransform = mContext->createTransform();
+		bind = true;
+	}
+
+	if (!mGeometryGroup)
+	{
+		mGeometryGroup = mContext->createGeometryGroup();
+		bind = true;
+	}
+
     if (bind)
     {
+		mGeometryGroup->setChildCount(1);
         mGeometryInstance->setGeometry(mGeometry);
         mGeometryInstance->setMaterialCount(1);
         mGeometryInstance->setMaterial(0, mMaterial);
+
+		optix::Acceleration acceleration = mContext->createAcceleration(std::string("Trbvh"));
+		acceleration->setProperty("refit", "0");
+		acceleration->setProperty("vertex_buffer_name", "vertex_buffer");
+		acceleration->setProperty("index_buffer_name", "vindex_buffer");
+		
+		mGeometryGroup->setAcceleration(acceleration);
+		acceleration->markDirty();
+		mGeometryGroup->setChild(0, mGeometryInstance);
+
+		mTransform->setMatrix(false, optix::Matrix4x4::identity().getData(), nullptr);
+		mTransform->setChild(mGeometryGroup);
     }    
 }
 

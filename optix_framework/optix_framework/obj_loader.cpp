@@ -326,22 +326,22 @@ std::vector<std::unique_ptr<Mesh>> ObjLoader::createGeometryInstances(GLMmodel* 
   assert( triangle_count == model->numtriangles );
   
   // Set up group 
-  const unsigned current_child_count = m_geometrygroup->getChildCount();
-  m_geometrygroup->setChildCount( current_child_count + static_cast<unsigned int>(instances.size()) );
-  optix::Acceleration acceleration = m_context->createAcceleration(m_ASBuilder, m_ASTraverser);
-  acceleration->setProperty( "refit", m_ASRefine );
-	if ( m_ASBuilder   == std::string("Sbvh") ||
-		 m_ASBuilder   == std::string("Trbvh") ||
-		 m_ASBuilder   == std::string("TriangleKdTree") ||
-		 m_ASTraverser == std::string( "KdTree" )) {
-	  acceleration->setProperty( "vertex_buffer_name", "vertex_buffer" );
-	  acceleration->setProperty( "index_buffer_name", "vindex_buffer" );
-  }
-  m_geometrygroup->setAcceleration( acceleration );
-  acceleration->markDirty();
+ // m_geometrygroup = m_context->createGeometryGroup();
+ // m_geometrygroup->setChildCount( static_cast<unsigned int>(instances.size()) );
+ // optix::Acceleration acceleration = m_context->createAcceleration(m_ASBuilder, m_ASTraverser);
+ // acceleration->setProperty( "refit", m_ASRefine );
+	//if ( m_ASBuilder   == std::string("Sbvh") ||
+	//	 m_ASBuilder   == std::string("Trbvh") ||
+	//	 m_ASBuilder   == std::string("TriangleKdTree") ||
+	//	 m_ASTraverser == std::string( "KdTree" )) {
+	//  acceleration->setProperty( "vertex_buffer_name", "vertex_buffer" );
+	//  acceleration->setProperty( "index_buffer_name", "vindex_buffer" );
+ // }
+ // m_geometrygroup->setAcceleration( acceleration );
+ // acceleration->markDirty();
 
-  for ( unsigned int i = 0; i < instances.size(); ++i )
-	m_geometrygroup->setChild( current_child_count + i, instances[i]->mGeometryInstance );
+ // for ( unsigned int i = 0; i < instances.size(); ++i )
+	//m_geometrygroup->setChild( i, instances[i]->get_geometry_instance() );
 
   if (m_large_geom) {
 	rtBufferDestroy( m_vbuffer->get() );

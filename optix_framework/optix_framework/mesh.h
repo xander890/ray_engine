@@ -49,8 +49,13 @@ public:
 	void pre_trace();
 
 	optix::GeometryInstance get_geometry_instance() { return mGeometryInstance;  }
+	optix::GeometryGroup get_static_handle() { return mGeometryGroup; }
+	optix::Transform get_dynamic_handle() { return mTransform; }
 private:
 	optix::GeometryInstance mGeometryInstance = nullptr;
+	optix::GeometryGroup mGeometryGroup = nullptr;
+	optix::Transform mTransform = nullptr;
+
 	MeshData mMeshData;
 	std::unique_ptr<Shader> mShader;
 

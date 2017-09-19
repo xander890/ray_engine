@@ -17,7 +17,7 @@
 #include "ambient_occlusion.h"
 #include "path_tracing.h"
 #include "logger.h"
-#include "procedural_loader.h"
+//#include "procedural_loader.h"
 #include "sphere.h"
 #include "dialogs.h"
 #include <ImageLoader.h>
@@ -438,27 +438,29 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	AISceneLoader l = AISceneLoader(s.c_str(), context);
 #endif
 	m_scene_bounding_box = bbox;
+	scene->setChildCount(0);
 	for (unsigned int i = 0; i < filenames.size(); ++i)
 	{
 		// Load OBJ scene
 		Logger::info <<"Loading obj " << filenames[i]  << "..." <<endl;
-		GeometryGroup geometry_group = context->createGeometryGroup();
-		ObjLoader* loader = new ObjLoader((Folders::data_folder + filenames[i]).c_str(), context, geometry_group);
+		ObjLoader* loader = new ObjLoader((Folders::data_folder + filenames[i]).c_str(), context, nullptr);
         vector<std::unique_ptr<Mesh>> v = loader->load(get_object_transform(filenames[i]));
 		for (auto& c : v)
 		{
 			mMeshes.push_back(std::move(c));
+			scene->addChild(mMeshes.back()->get_dynamic_handle());
 		}
 
 	    m_scene_bounding_box.include(loader->getSceneBBox());
 		loader->getAreaLights(lights);
  
-		delete loader;
 		// Set material shaders
 
 		// Add geometry group to the group of scene objects
-		scene->setChild(i, geometry_group);
+		
+		delete loader;
 	}
+	
 
     execute_on_scene_elements([=](Mesh & m)
     {
@@ -480,33 +482,33 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 		pscenefile.close();
 	}
 
-	scene->setChildCount(static_cast<unsigned int>(filenames.size() + procedural.size()));
-	for (int i = 0; i < procedural.size(); i++)
-	{
-		GeometryGroup geometry_group = context->createGeometryGroup();
-		ProceduralMesh* mesh = procedural[i];
-		if (mesh != nullptr)
-		{
-			ObjLoader* loader = new ProceduralLoader(mesh, context, geometry_group);
-			loader->load();
-			m_scene_bounding_box.include(loader->getSceneBBox());
-			loader->getAreaLights(lights);
-			delete loader;
-
-			// Set material shaders
-			for (unsigned int j = 0; j < geometry_group->getChildCount(); ++j)
-			{
-//				GeometryInstance gi = geometry_group->getChild(j);
-//				addMERLBRDFtoGeometry(gi, use_merl_brdf);
-
-                // FIXME
-				//method->init(gi);
-			}
-
-			// Add geometry group to the group of scene objects
-			scene->setChild(static_cast<unsigned int>(filenames.size()) + i, geometry_group);
-		}
-	}
+	
+//	for (int i = 0; i < procedural.size(); i++)
+//	{
+//		GeometryGroup geometry_group = context->createGeometryGroup();
+//		ProceduralMesh* mesh = procedural[i];
+//		if (mesh != nullptr)
+//		{
+//			ObjLoader* loader = new ProceduralLoader(mesh, context, geometry_group);
+//			loader->load();
+//			m_scene_bounding_box.include(loader->getSceneBBox());
+//			loader->getAreaLights(lights);
+//			delete loader;
+//
+//			// Set material shaders
+//			for (unsigned int j = 0; j < geometry_group->getChildCount(); ++j)
+//			{
+////				GeometryInstance gi = geometry_group->getChild(j);
+////				addMERLBRDFtoGeometry(gi, use_merl_brdf);
+//
+//                // FIXME
+//				//method->init(gi);
+//			}
+//
+//			// Add geometry group to the group of scene objects
+//			scene->setChild(static_cast<unsigned int>(filenames.size()) + i, geometry_group);
+//		}
+//	}
 
     context["top_object"]->set(scene);
     context["top_shadower"]->set(scene);
