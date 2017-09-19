@@ -157,7 +157,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 
 
 // Closest hit program for Lambertian shading using the basic light as a directional source
-RT_PROGRAM void shade()
+__device__ __forceinline__ void _shade()
 {
 	if (prd_radiance.depth > max_depth)
 	{
@@ -277,3 +277,6 @@ RT_PROGRAM void shade()
 	}
 #endif
 }
+
+RT_PROGRAM void shade() { _shade(); }
+RT_PROGRAM void shade_path_tracing() { _shade(); }

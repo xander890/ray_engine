@@ -30,7 +30,6 @@ public:
 
     void init(const char* name, MeshData meshdata, std::shared_ptr<MaterialHost> material);
 
-    optix::GeometryInstance mGeometryInstance = nullptr;
     optix::Geometry mGeometry = nullptr;
     optix::Context  mContext;
     optix::Material mMaterial = nullptr;
@@ -49,7 +48,9 @@ public:
 	bool on_draw();
 	void pre_trace();
 
+	optix::GeometryInstance get_geometry_instance() { return mGeometryInstance;  }
 private:
+	optix::GeometryInstance mGeometryInstance = nullptr;
 	MeshData mMeshData;
 	std::unique_ptr<Shader> mShader;
 

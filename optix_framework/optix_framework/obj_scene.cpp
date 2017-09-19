@@ -547,8 +547,6 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	float scene_epsilon = 1.e-4f * max_dim;
 	context["scene_epsilon"]->setFloat(scene_epsilon);
 	// Prepare to run 
-	context->validate();
-	context->compile();
 
 	gui = std::make_unique<ImmediateGUI>(window,"Ray tracing demo");
 
@@ -571,13 +569,14 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	context["show_difference_image"]->setInt(show_difference_image);
 	context["merl_brdf_multiplier"]->setFloat(make_float3(1));
 
- 
+	context->validate();
+
 
 	 Logger::info<<"Scene initialized."<<endl;
-	 std::stringstream ss;
-	 cereal::JSONOutputArchive archive(ss);
-	 archive(*mMeshes[0]);
-	 Logger::info << ss.str() << std::endl;
+	 //std::stringstream ss;
+	 //cereal::JSONOutputArchive archive(ss);
+	 //archive(*mMeshes[0]);
+	 //Logger::info << ss.str() << std::endl;
 }
 
 void update_timer(double & current, double n)
@@ -635,9 +634,10 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 
 	unsigned int width = camera->get_width();
 	unsigned int height = camera->get_height();
-
+	
 	t0 = currentTime();
 	context->launch(as_integer(CameraType::STANDARD_RT), width, height);
+
 	t1 = currentTime();
 	update_timer(render_time_main, t1 - t0);
 	// cout << "Elapsed (ray tracing): " << (time1 - time) * 1000 << endl;

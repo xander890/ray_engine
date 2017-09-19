@@ -54,7 +54,7 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
     }
     v_idx_buff->unmap();
     v_buff->unmap();
-    object.mGeometryInstance["total_area"]->setFloat(totalArea);
+    object.get_geometry_instance()["total_area"]->setFloat(totalArea);
     std::cout << "Area: " << totalArea << std::endl;
 
     for (unsigned int i = 0; i < triangles; ++i)
@@ -63,7 +63,7 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
     }
     Buffer cdf_buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, triangles);
     memcpy(cdf_buffer->map(), cdf, triangles * sizeof(float));
-        object.mGeometryInstance["area_cdf"]->setBuffer(cdf_buffer);
+        object.get_geometry_instance()["area_cdf"]->setBuffer(cdf_buffer);
     cdf_buffer->unmap();
     delete[] cdf;
 
@@ -74,7 +74,7 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
 void PresampledSurfaceBssrdf::pre_trace_mesh(Mesh& obj)
 {
     Geometry g = obj.mGeometry;
-    GeometryInstance object = obj.mGeometryInstance;
+    GeometryInstance object = obj.get_geometry_instance();
     context["sampling_vertex_buffer"]->setBuffer(g["vertex_buffer"]->getBuffer());
     context["sampling_normal_buffer"]->setBuffer(g["normal_buffer"]->getBuffer());
     context["sampling_vindex_buffer"]->setBuffer(g["vindex_buffer"]->getBuffer());

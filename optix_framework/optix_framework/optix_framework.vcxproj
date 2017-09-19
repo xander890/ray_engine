@@ -212,7 +212,10 @@ echo Done.</Command>
     <ClCompile Include="parameter_parser.cpp" />
     <ClCompile Include="path_tracing.cpp" />
     <ClCompile Include="plint.cpp" />
-    <ClCompile Include="procedural_loader.cpp" />
+    <ClCompile Include="procedural_loader.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="RawLoader.cpp" />
     <ClCompile Include="rendering_method.cpp" />
     <ClCompile Include="render_task.cpp" />
