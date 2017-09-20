@@ -50,7 +50,7 @@ public:
     float get_scale() const { return scale; }
     optix::float3 get_scattering() const { return scattering; }
     optix::float3 get_absorption() const { return absorption; }
-    float get_asymmetry() const { return asymmetry.x; }
+	optix::float3 get_asymmetry() const { return asymmetry; }
 
 	void set_absorption(optix::float3 abs);
     void set_scattering(optix::float3 sc);

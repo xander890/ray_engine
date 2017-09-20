@@ -17,19 +17,20 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 
 os.chdir('./optimization_results')
-xopt = np.loadtxt('xopt.txt')
-fopt = np.loadtxt('fopt.txt')
-allvecs = np.loadtxt('allvecs.txt')
+
+import pickle
+
+with open('plotdata.pkl', 'rb') as f:
+    plotdata = pickle.load(f)
 
 #%%
     
 #%%
-ref_file = 'rendering_disc_lights_potato_volume_pt_50000_samples.raw'
+ref_file = plotdata["ref_name"]
 reference = read_raw(ref_file)
 save_png('reference.png', reference)
 
-opt = 'approx_standard_dipole_bssrdf_A_0.996483001172_0.98730606488_0.820895522388_s_0.290580785502_0.46286926265_1.13194856469.raw'
-opt2 = 'approx_standard_dipole_bssrdf_a_0.996483001172_0.98730606488_0.820895522388_s_0.29057578187_0.463248699355_2.29839264787.raw'
+opt = plotdata["opt_name"]
 
 def process(opt, name, res):
     optimum = read_raw(opt)
@@ -63,5 +64,5 @@ def process(opt, name, res):
     plt.plot(data[:,2],data[:,3],'b')
     plt.savefig(name + '_curves.pdf', bbox_inches='tight')
     plt.close("all")
-process(opt, 'gradientless', 'result.txt')
-process(opt2, 'gradient', 'results_gradient.txt')
+    
+process(opt, 'potato', 'result.txt')

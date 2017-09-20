@@ -50,9 +50,7 @@ RT_PROGRAM void mesh_intersect( int primIdx )
   float3 n;
   float  t, beta, gamma;
   if( intersect_triangle_branchless( ray, p0, p1, p2, n, t, beta, gamma ) ) {
-
     if(  rtPotentialIntersection( t ) ) {
-
       int3 n_idx = nindex_buffer[ primIdx ];
 
       if ( normal_buffer.size() == 0 || n_idx.x < 0 || n_idx.y < 0 || n_idx.z < 0 ) {
@@ -79,7 +77,6 @@ RT_PROGRAM void mesh_intersect( int primIdx )
       }
 
 	  barys = make_float2(beta, gamma);
-
       rtReportIntersection(0);
     }
   }

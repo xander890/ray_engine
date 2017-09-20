@@ -15,8 +15,6 @@ rtDeclareVariable(CameraData,   camera_data, , );
 // Window variables
 rtBuffer<float4, 2> output_buffer;
 
-//#define TIME_VIEW
-
 __forceinline__ __device__ bool check_bounds()
 {
 	return	launch_index.x >= camera_data.render_bounds.x && launch_index.x < camera_data.render_bounds.x + camera_data.render_bounds.z &&

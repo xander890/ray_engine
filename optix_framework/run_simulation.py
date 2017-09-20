@@ -3,34 +3,7 @@ import subprocess
 import os
 import shutil
 import numpy as np
-
-class Material:
-    def __init__(self, name, illum, ior, ka, kd, ks, absorption, scattering, asymmetry, scale):
-        self.name = name
-        self.illum = illum
-        self.ior = ior
-        self.absorption = np.array(absorption)
-        self.scattering = np.array(scattering)
-        self.g = np.array(asymmetry)
-        self.scale = scale
-        self.ka = np.array(ka)
-        self.kd = np.array(kd)
-        self.ks = np.array(ks)
-        
-        
-    def __str__(self):
-        s = "newmtl " + self.name + "\n"
-        s += "Ka " + str(" ".join([str(a) for a in self.ka])) + "\n"
-        s += "Kd " + str(" ".join([str(a) for a in self.kd])) + "\n"
-        s += "Ks " + str(" ".join([str(a) for a in self.ks])) + "\n"
-        s += "Ni " + str(self.ior) + "\n"
-        s += "Sa " + str(" ".join([str(a) for a in self.absorption])) + "\n"
-        s += "Ss " + str(" ".join([str(a) for a in self.scattering])) + "\n"
-        s += "Sg " + str(" ".join([str(a) for a in self.g])) + "\n"
-        s += "Sc " + str(self.scale) + "\n"
-        s += "illum " + str(self.illum) + "\n"
-        return s
-
+from materials import Material
 
 def run(samples, datapath, materials, meshes, params, dest_file):
     if os.path.exists(dest_file):
@@ -56,13 +29,13 @@ def run(samples, datapath, materials, meshes, params, dest_file):
         shutil.move(material_to_write_bk, material_to_write)
         
 dipoles = ["STANDARD_DIPOLE_BSSRDF","DIRECTIONAL_DIPOLE_BSSRDF","APPROX_STANDARD_DIPOLE_BSSRDF","APPROX_DIRECTIONAL_DIPOLE_BSSRDF"]
-potato = Material("potato", 12, ior=1.3, ka=[0,0,0], kd =[1,1,0], ks = [0,0,0], absorption=[0.0024,0.009,0.12], scattering=[0.68,0.70,0.55], asymmetry=[0,0,0], scale=7.0)
 
 def vec_str(a, sep=" "):
     return sep.join([str(q) for q in a])
 
 
 if __name__ == "__main__":
+    from materials import potato
     materials = {"/meshes/unit_sphere_2.obj" : potato} 
     illums = [12]
     illum_names = {12 : "volume_pt", 14 : "screen_space_sampling", 17 : "point_cloud_sampling"}
