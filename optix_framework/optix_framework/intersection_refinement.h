@@ -39,28 +39,27 @@ __device__ __inline__ float intersectPlane( const optix::float3& origin,
 // Offset the hit point using integer arithmetic
 __device__ __inline__ optix::float3 offset( const optix::float3& hit_point, const optix::float3& normal )
 {
-  using namespace optix;
-
+  
   const float epsilon = 1.0e-4f;
   const float offset  = 4096.0f*2.0f;
 
-  float3 offset_point = hit_point;
-  if( __float_as_int( hit_point.x )&0x7fffffff  < __float_as_int( epsilon ) ) {
+  optix::float3 offset_point = hit_point;
+  if(optix::__float_as_int( hit_point.x )&0x7fffffff  < optix::__float_as_int( epsilon ) ) {
     offset_point.x += epsilon * normal.x;
   } else {
-    offset_point.x = __int_as_float( __float_as_int( offset_point.x ) + int(copysign( offset, hit_point.x )*normal.x) );
+    offset_point.x = optix::__int_as_float(optix::__float_as_int( offset_point.x ) + int(copysign( offset, hit_point.x )*normal.x) );
   }
 
-  if( __float_as_int( hit_point.y )&0x7fffffff  < __float_as_int( epsilon ) ) {
+  if(optix::__float_as_int( hit_point.y )&0x7fffffff  < optix::__float_as_int( epsilon ) ) {
     offset_point.y += epsilon * normal.y;
   } else {
-    offset_point.y = __int_as_float( __float_as_int( offset_point.y ) + int(copysign( offset, hit_point.y )*normal.y) );
+    offset_point.y = optix::__int_as_float(optix::__float_as_int( offset_point.y ) + int(copysign( offset, hit_point.y )*normal.y) );
   }
 
-  if( __float_as_int( hit_point.z )&0x7fffffff  < __float_as_int( epsilon ) ) {
+  if(optix::__float_as_int( hit_point.z )&0x7fffffff  < __float_as_int( epsilon ) ) {
     offset_point.z += epsilon * normal.z;
   } else {
-    offset_point.z = __int_as_float( __float_as_int( offset_point.z ) + int(copysign( offset, hit_point.z )*normal.z) );
+    offset_point.z = optix::__int_as_float( __float_as_int( offset_point.z ) + int(copysign( offset, hit_point.z )*normal.z) );
   }
 
   return offset_point;
@@ -73,11 +72,10 @@ __device__ __inline__ void refine_and_offset_hitpoint( const optix::float3& orig
                                                        optix::float3& back_hit_point,
                                                        optix::float3& front_hit_point )
 {
-  using namespace optix;
-
+  
   // Refine hit point
   float  refined_t          = intersectPlane( original_hit_point, direction, normal, p );
-  float3 refined_hit_point  = original_hit_point + refined_t*direction;
+  optix::float3 refined_hit_point  = original_hit_point + refined_t*direction;
 
   // Offset hit point
   if( dot( direction, normal ) > 0.0f ) {

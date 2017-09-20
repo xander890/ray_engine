@@ -99,6 +99,21 @@ void Mesh::load_shader()
 	mShader->load_data();
 }
 
+void Mesh::load_transform()
+{
+	if (!mTransform)
+	{
+		mTransform = std::make_unique<Transform>();
+	}
+	if (mTransform->has_changed())
+	{
+		mOptixTransform->setMatrix(false, mTransform->get_matrix().getData(), nullptr);
+		mGeometryGroup->getAcceleration()->markDirty();
+		if(transform_changed_event != nullptr)
+			transform_changed_event();
+	}
+}
+
 void Mesh::reload_shader()
 {
 	mReloadShader = true;
@@ -109,6 +124,7 @@ void Mesh::load()
 	load_geometry();
 	load_materials();
 	load_shader();
+	load_transform();
 }
 
 void Mesh::set_method(RenderingMethodType::EnumType method)
@@ -146,9 +162,9 @@ void Mesh::create_and_bind_optix_data()
         bind = true;
     }
 
-	if (!mTransform)
+	if (!mOptixTransform)
 	{
-		mTransform = mContext->createTransform();
+		mOptixTransform = mContext->createTransform();
 		bind = true;
 	}
 
@@ -174,8 +190,7 @@ void Mesh::create_and_bind_optix_data()
 		acceleration->markDirty();
 		mGeometryGroup->setChild(0, mGeometryInstance);
 
-		mTransform->setMatrix(false, optix::Matrix4x4::identity().getData(), nullptr);
-		mTransform->setChild(mGeometryGroup);
+		mOptixTransform->setChild(mGeometryGroup);
     }    
 }
 
@@ -191,6 +206,12 @@ bool Mesh::on_draw()
 	bool changed = false;
 	if (ImmediateGUIDraw::TreeNode(mMeshName.c_str()))
 	{
+		if (ImmediateGUIDraw::TreeNode((std::string("Transform##Transform") + mMeshName).c_str()))
+		{
+			changed |= mTransform->on_draw();
+			ImmediateGUIDraw::TreePop();
+		}
+		
 		auto map = ShaderFactory::get_map();
 		std::vector<std::string> vv;
 		std::vector<int> illummap;

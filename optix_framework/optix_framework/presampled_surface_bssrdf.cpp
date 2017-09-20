@@ -1,13 +1,16 @@
 #include "presampled_surface_bssrdf.h"
 #include "material_library.h"
 #include "scattering_material.h"
+
+using namespace optix;
+
 void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx, const ShaderInfo& shader_info)
 {
     Shader::initialize_shader(ctx, shader_info);
     //in static constructor
 
     std::string ptx_path = get_path_ptx("sample_camera.cu");
-    Program ray_gen_program = context->createProgramFromPTXFile( ptx_path, "sample_camera" );
+    optix::Program ray_gen_program = context->createProgramFromPTXFile( ptx_path, "sample_camera" );
     entry_point = context->getEntryPointCount();
     context->setEntryPointCount(entry_point + 1);
     context->setRayGenerationProgram(entry_point , ray_gen_program);

@@ -20,13 +20,6 @@
 
 class RenderTask;
 
-//#define IOR_EST
-
-
-#ifdef IOR_EST
-#include "indexofrefractionmatcher.h"
-#endif
-
 #include "structs.h"
 #include <functional>
 #include "camera.h"
@@ -36,7 +29,7 @@ class ObjScene : public SampleScene
 {
 public:
 
-	ObjScene(const std::vector<std::string>& obj_filenames, const std::string& shader_name, const std::string& config_file, optix::int4 rendering_r = make_int4(-1));
+	ObjScene(const std::vector<std::string>& obj_filenames, const std::string& shader_name, const std::string& config_file, optix::int4 rendering_r = optix::make_int4(-1));
 	ObjScene();
 
 	virtual ~ObjScene();
@@ -73,10 +66,6 @@ public:
 	bool mouseMoving(int x, int y) override;
 	void reset_renderer();
 
-#ifdef IOR_EST
-	IndexMatcher * index_matcher;
-#endif
-
 	std::unique_ptr<RenderTask> current_render_task;
 
 	void set_render_task(std::unique_ptr<RenderTask>& task);
@@ -86,7 +75,7 @@ public:
 	void add_override_material_file(std::string mat);
 	void add_override_parameters(std::vector<std::string> & params);
 private:
-	Context context;
+	optix::Context context;
 	bool debug_mode_enabled = true;
 
 	Scene::EnumType current_scene_type;
@@ -94,7 +83,7 @@ private:
 	BackgroundType::EnumType current_miss_program;
 	bool collect_images = false;
 	bool show_difference_image = false;
-	Aabb m_scene_bounding_box;
+	optix::Aabb m_scene_bounding_box;
 	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height);
 
 	void add_lights(std::vector<TriangleLight>& area_lights);
@@ -109,7 +98,7 @@ private:
 	void set_rendering_method(RenderingMethodType::EnumType t);
 	std::vector<std::string> filenames;
 
-	Group scene;
+	optix::Group scene;
 	//std::vector<optix::uint2> lights;
 	RenderingMethod* method;
 
@@ -151,10 +140,10 @@ private:
 	void load_camera_extrinsics(InitialCameraData & data);
 
 	const std::string config_file = "config.xml";
-	int4 custom_rr;
+	optix::int4 custom_rr;
 
-	uint4 zoom_debug_window = make_uint4(20,20,300,300);
-	uint4 zoomed_area = make_uint4(0);
+	optix::uint4 zoom_debug_window = optix::make_uint4(20,20,300,300);
+	optix::uint4 zoomed_area = optix::make_uint4(0);
 
 	std::vector<std::string> parameters_override;
 
@@ -164,6 +153,8 @@ private:
 	double render_time_tonemap = 0.0;
 
 	bool mbPaused = false;
+
+	void transform_changed();
 };
 
 #endif // OBJSCENE_H

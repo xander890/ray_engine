@@ -420,7 +420,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	// Create group for scene objects and float acceleration structure
 	scene = context->createGroup();
 	scene->setChildCount(static_cast<unsigned int>(filenames.size()));
-	Acceleration acceleration = context->createAcceleration("Trbvh");
+	Acceleration acceleration = context->createAcceleration("Bvh");
 	scene->setAcceleration(acceleration);
 	acceleration->markDirty();
 
@@ -443,10 +443,11 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	{
 		// Load OBJ scene
 		Logger::info <<"Loading obj " << filenames[i]  << "..." <<endl;
-		ObjLoader* loader = new ObjLoader((Folders::data_folder + filenames[i]).c_str(), context, nullptr);
+		ObjLoader* loader = new ObjLoader((Folders::data_folder + filenames[i]).c_str(), context);
         vector<std::unique_ptr<Mesh>> v = loader->load(get_object_transform(filenames[i]));
 		for (auto& c : v)
 		{
+			c->transform_changed_event = std::bind(&ObjScene::transform_changed, this);
 			mMeshes.push_back(std::move(c));
 			scene->addChild(mMeshes.back()->get_dynamic_handle());
 		}
@@ -1006,6 +1007,11 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 	}
 
 	reset_renderer();
+}
+
+void ObjScene::transform_changed()
+{
+	scene->getAcceleration()->markDirty();
 }
 
 void ObjScene::add_override_parameters(std::vector<std::string>& params)

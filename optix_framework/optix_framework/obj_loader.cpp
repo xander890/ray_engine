@@ -62,52 +62,12 @@ namespace
 //------------------------------------------------------------------------------
 
 ObjLoader::ObjLoader( const char* filename,
-					  Context& context,
-					  GeometryGroup geometrygroup,
-					  Material material,
-					  bool force_load_material_params,
-					  const char* ASBuilder,
-					  const char* ASTraverser,
-					  const char* ASRefine,
-					  bool large_geom )
+					  Context& context)
 : m_filename( filename ),
   m_context( context ),
-  m_geometrygroup( geometrygroup ),
   m_vbuffer( 0 ),
   m_nbuffer( 0 ),
   m_tbuffer( 0 ),
-  m_have_default_material( true ),
-  m_force_load_material_params( force_load_material_params ),
-  m_ASBuilder  (ASBuilder),
-  m_ASTraverser(ASTraverser),
-  m_ASRefine   (ASRefine),
-  m_large_geom (large_geom),
-  m_aabb(),
-  m_lights()
-{
-  m_pathname = m_filename.substr(0,m_filename.find_last_of("/\\")+1);
-}
-
-
-ObjLoader::ObjLoader( const char* filename,
-					  Context& context,
-					  GeometryGroup geometrygroup,
-					  const char* ASBuilder,
-					  const char* ASTraverser,
-					  const char* ASRefine,
-					  bool large_geom )
-: m_filename( filename ),
-  m_context( context ),
-  m_geometrygroup( geometrygroup ),
-  m_vbuffer( 0 ),
-  m_nbuffer( 0 ),
-  m_tbuffer( 0 ),
-  m_have_default_material( false ),
-  m_force_load_material_params( false ),
-  m_ASBuilder  (ASBuilder),
-  m_ASTraverser(ASTraverser),
-  m_ASRefine   (ASRefine),
-  m_large_geom( large_geom),
   m_aabb(),
   m_lights()
 {
@@ -321,30 +281,6 @@ std::vector<std::unique_ptr<Mesh>> ObjLoader::createGeometryInstances(GLMmodel* 
     rtMesh->init(name.c_str(), meshdata, materialData);
     
 	instances.push_back( std::move(rtMesh) );
-  }
-
-  assert( triangle_count == model->numtriangles );
-  
-  // Set up group 
- // m_geometrygroup = m_context->createGeometryGroup();
- // m_geometrygroup->setChildCount( static_cast<unsigned int>(instances.size()) );
- // optix::Acceleration acceleration = m_context->createAcceleration(m_ASBuilder, m_ASTraverser);
- // acceleration->setProperty( "refit", m_ASRefine );
-	//if ( m_ASBuilder   == std::string("Sbvh") ||
-	//	 m_ASBuilder   == std::string("Trbvh") ||
-	//	 m_ASBuilder   == std::string("TriangleKdTree") ||
-	//	 m_ASTraverser == std::string( "KdTree" )) {
-	//  acceleration->setProperty( "vertex_buffer_name", "vertex_buffer" );
-	//  acceleration->setProperty( "index_buffer_name", "vindex_buffer" );
- // }
- // m_geometrygroup->setAcceleration( acceleration );
- // acceleration->markDirty();
-
- // for ( unsigned int i = 0; i < instances.size(); ++i )
-	//m_geometrygroup->setChild( i, instances[i]->get_geometry_instance() );
-
-  if (m_large_geom) {
-	rtBufferDestroy( m_vbuffer->get() );
   }
     return instances;
 }

@@ -229,6 +229,7 @@ echo Done.</Command>
     <ClCompile Include="presampled_surface_bssrdf.cpp" />
     <ClCompile Include="sky_model.cpp" />
     <ClCompile Include="sphere.cpp" />
+    <ClCompile Include="transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CUDA_files\absorbing_glass.cu">
@@ -749,6 +750,7 @@ echo Done.</Command>
     <ClInclude Include="standard_dipole.h" />
     <ClInclude Include="structs.h" />
     <ClInclude Include="structs_device.h" />
+    <ClInclude Include="transform.h" />
     <ClInclude Include="volume_path_tracer.h" />
   </ItemGroup>
   <ItemGroup>

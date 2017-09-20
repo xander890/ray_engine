@@ -46,7 +46,7 @@ int main( int argc, char** argv )
 	std::string output_file = "rendering.raw";
 	std::string config_file = "config.xml";
 	bool accel_caching_on = false;
-	int4 rendering_rect = make_int4(-1);
+	optix::int4 rendering_rect = optix::make_int4(-1);
 	//std::map<std::string, std::string> parameters;
 	bool auto_mode = false;
 	int frames = 0;
@@ -155,7 +155,7 @@ int main( int argc, char** argv )
 	GLFWDisplay::run( "Optix Renderer", scene );
 
 	} 
-	catch( Exception & e )
+	catch(optix::Exception & e )
 	{
 	Logger::error<<  (e.getErrorString().c_str());
 	exit(1);

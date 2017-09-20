@@ -238,6 +238,7 @@
     <ClCompile Include="cputimer.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -514,6 +515,7 @@
     <ClInclude Include="cputimer.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="transform.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

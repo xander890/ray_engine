@@ -8,23 +8,22 @@
 #include "color_helpers.h"
 
 
-using namespace optix;
 #pragma once
 
 struct PerezData
 {
-	float3 A,B,C,D,E;
+	optix::float3 A,B,C,D,E;
 };
 
 __constant__ const float SKY_SCALE = 0.03f;
 
-static __inline__ __device__ __host__ float3 perez_model(float cos_theta, float gamma, float cos_gamma, PerezData & data)
+static __inline__ __device__ __host__ optix::float3 perez_model(float cos_theta, float gamma, float cos_gamma, PerezData & data)
 {
-	const float3 one = make_float3(1.0f);
+	const optix::float3 one = optix::make_float3(1.0f);
 	return (one + data.A * exp(data.B / cos_theta)) * (one + data.C * exp(data.D * gamma) + data.E * cos_gamma * cos_gamma);
 }
 
-static __inline__ __device__ __host__ float3 sky_color(int ray_depth, float3 & v, float3& sun_position, float3 & up, float3 & sky_factor, float3 & sun_color, PerezData & data)
+static __inline__ __device__ __host__ optix::float3 sky_color(int ray_depth, optix::float3 & v, optix::float3& sun_position, optix::float3 & up, optix::float3 & sky_factor, optix::float3 & sun_color, PerezData & data)
 {
 	float cos_gamma = dot(v, sun_position);
 	float cos_theta = dot(v,up);
@@ -33,7 +32,7 @@ static __inline__ __device__ __host__ float3 sky_color(int ray_depth, float3 & v
 	//if (cos_gamma > 0.9999f && ray_depth == 0) // actual sun
 	//	return sun_color;
 	float gamma = acos(cos_gamma);
-	float3 lum = sky_factor * perez_model(cos_theta, gamma, cos_gamma,data);
+	optix::float3 lum = sky_factor * perez_model(cos_theta, gamma, cos_gamma,data);
 	return Yxy2rgb(lum) * SKY_SCALE / 1000.0f;
 }
 
@@ -46,9 +45,9 @@ static __inline__ __device__ __host__ float3 sky_color(int ray_depth, float3 & v
 class SkyModel : public MissProgram
 {
 public:
-	SkyModel(float3 up, float3 north) : up(up), north(north) {  }
+	SkyModel(optix::float3 up, optix::float3 north) : up(up), north(north) {  }
 	~SkyModel(void);
-	float3 get_sky_color(float3 v);
+	optix::float3 get_sky_color(optix::float3 v);
 	void get_directional_light(SingularLightData & light);
 
     virtual void init(optix::Context & ctx) override;
@@ -60,14 +59,14 @@ private:
 	int day;
 	int hour;
 	float latitude;
-	float3 up;
-	float3 north;
+	optix::float3 up;
+	optix::float3 north;
 	float turbidity;
 	PerezData perez_data;
-	float3 sky_factor;
+	optix::float3 sky_factor;
 	float cos_sun_theta;
-	float3 sun_position;
-	float2 solar_coords;
+	optix::float3 sun_position;
+	optix::float2 solar_coords;
 	optix::float3 sun_color;
 
 	struct PreethamData
@@ -83,10 +82,10 @@ private:
     void update_data();
 
 	float get_solar_declination();
-	float2 get_solar_coordinates();
-	float3 get_sun_position(float2 & coords);
+	optix::float2 get_solar_coordinates();
+	optix::float3 get_sun_position(optix::float2 & coords);
 	float calculate_absorption( float sun_theta, float m, float lambda, float turbidity, float k_o, float k_wa );
-	float3 get_sun_color();
+	optix::float3 get_sun_color();
 
 private:
     virtual bool get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program) override;

@@ -60,26 +60,10 @@ class ObjLoader
 {
 public:
   ObjLoader( const char* filename,                 // Model filename
-                      optix::Context& context,               // Context for RT object creation
-                      optix::GeometryGroup geometrygroup,   // Empty geom group to hold model
-                      const char* ASBuilder   = "Sbvh",
-                      const char* ASTraverser = "Bvh",
-                      const char* ASRefine = "0",
-                      bool large_geom = false ); 
+                      optix::Context& context); 
   
-  // Reorder geom data for page fault minimization
-  ObjLoader( const char* filename,
-                      optix::Context& context,
-                      optix::GeometryGroup geometrygroup,
-                      optix::Material material,                // Material override
-                      bool force_load_material_params = false, // Set obj_material params even though material is overridden
-                      const char* ASBuilder   = "Sbvh",
-                      const char* ASTraverser = "Bvh",
-                      const char* ASRefine = "0",
-                      bool large_geom = false);                // Reorder geom data for page fault minimization
-
-    virtual ~ObjLoader() {} // makes sure CRT objects are destroyed on the correct heap
-
+  virtual ~ObjLoader() {} // makes sure CRT objects are destroyed on the correct heap
+	
   virtual void setIntersectProgram( optix::Program program );
   virtual void setBboxProgram(optix::Program program);
   virtual std::vector<std::unique_ptr<Mesh>> load();
@@ -97,7 +81,6 @@ public:
 
   static std::vector<ObjMaterial> parse_mtl_file(std::string mtl, optix::Context & ctx);
   static ObjMaterial convert_mat(GLMmaterial& mat, optix::Context ctx);
-  optix::GeometryGroup   m_geometrygroup;
 
 protected:
 
@@ -119,12 +102,6 @@ protected:
   optix::Buffer          m_tbuffer;
 
   optix::Buffer          m_light_buffer;
-  bool                   m_have_default_material;
-  bool                   m_force_load_material_params;
-  const char*            m_ASBuilder;
-  const char*            m_ASTraverser;
-  const char*            m_ASRefine;
-  bool                   m_large_geom;
   optix::Aabb            m_aabb;
   std::vector<std::shared_ptr<MaterialHost>> m_material_params;
 

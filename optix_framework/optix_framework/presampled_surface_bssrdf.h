@@ -3,7 +3,6 @@
 
 #include <shader.h>
 #include <mesh.h>
-using namespace optix;
 
 const unsigned int SAMPLES_FRAME = 1000;
 
@@ -20,7 +19,7 @@ public:
 
 private:
     int entry_point;
-    Buffer m_samples;
+	optix::Buffer m_samples;
 };
 
 

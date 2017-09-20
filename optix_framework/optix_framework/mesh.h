@@ -8,7 +8,7 @@
 #include <cereal/types/vector.hpp>
 #include "cereal/types/memory.hpp"
 #include "host_material.h"
-
+#include "transform.h"
 
 struct MeshData
 {
@@ -50,18 +50,24 @@ public:
 
 	optix::GeometryInstance get_geometry_instance() { return mGeometryInstance;  }
 	optix::GeometryGroup get_static_handle() { return mGeometryGroup; }
-	optix::Transform get_dynamic_handle() { return mTransform; }
+	optix::Transform get_dynamic_handle() { return mOptixTransform; }
+
+	typedef std::function<void()> TransformChangedDelegate;
+	TransformChangedDelegate transform_changed_event = nullptr;
+
 private:
 	optix::GeometryInstance mGeometryInstance = nullptr;
 	optix::GeometryGroup mGeometryGroup = nullptr;
-	optix::Transform mTransform = nullptr;
+	optix::Transform mOptixTransform = nullptr;
 
 	MeshData mMeshData;
 	std::unique_ptr<Shader> mShader;
+	std::unique_ptr<Transform> mTransform;
 
 	void load_materials();
 	void load_geometry();
 	void load_shader();
+	void load_transform();
 
 	std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
     void create_and_bind_optix_data();
