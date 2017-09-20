@@ -425,8 +425,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	acceleration->markDirty();
 
 	// We need the scene bounding box for placing the camera
-	Aabb bbox;
-
+	Aabb bbox(make_float3(-1,-1,-1), make_float3(1,1,1));
 	
     RenderingMethodType::EnumType t = RenderingMethodType::String2Enum(ParameterParser::get_parameter<string>("config", "rendering_type", RenderingMethodType::Enum2String(RenderingMethodType::RECURSIVE_RAY_TRACING), "Rendering method"));
 	set_rendering_method(t);
