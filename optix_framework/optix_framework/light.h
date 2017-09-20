@@ -13,6 +13,7 @@ rtBuffer<SingularLightData, 1> singular_lights;
 rtBuffer<TriangleLight, 1> area_lights;
 
 rtDeclareVariable(int, light_type, , );
+rtDeclareVariable(unsigned int, importance_sample_area_lights, , ) = 0;
 
 __forceinline__ __device__
 int no_light_size() { return 1; }
@@ -150,4 +151,31 @@ __device__ __forceinline__ int light_size()
     case LIGHT_TYPE_POINT: 
     case LIGHT_TYPE_DIR: return singular_light_size(); break;
     }
+}
+
+__device__ __inline__ void sample_light(const float3& position, const float3 & normal, const uint& ray_depth, uint& seed, float3 & wi, float3 & Li)
+{
+	if (importance_sample_area_lights == 0)
+	{
+		float zeta1 = rnd(seed);
+		float zeta2 = rnd(seed);
+		optix::float3 smp = sample_hemisphere_cosine(optix::make_float2(zeta1, zeta2), normal);
+		wi = normalize(smp);
+
+		PerRayData_radiance prd = get_empty();
+		prd.flags = RayFlags::USE_EMISSION;
+		prd.depth = ray_depth + 1;
+		prd.seed = seed;
+		optix::Ray ray = optix::make_Ray(position, wi, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+
+		rtTrace(top_object, ray, prd);
+		seed = prd.seed;
+		Li = prd.result * M_PIf;
+	}
+	else
+	{
+		int casts_shadows = 0;
+		unsigned int light_index;
+		evaluate_direct_light(position, normal, wi, Li, casts_shadows, seed, light_index);
+	}
 }

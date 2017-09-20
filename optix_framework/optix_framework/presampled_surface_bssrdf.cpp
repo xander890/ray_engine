@@ -1,6 +1,7 @@
 #include "presampled_surface_bssrdf.h"
 #include "material_library.h"
 #include "scattering_material.h"
+#include "immediate_gui.h"
 
 using namespace optix;
 
@@ -24,11 +25,11 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx, const Shader
     context["sampling_vindex_buffer"]->setBuffer(empty_bufferi3);
     context["sampling_nindex_buffer"]->setBuffer(empty_bufferi3);
 
-    m_samples = context->createBuffer(RT_BUFFER_OUTPUT);
-    m_samples->setFormat(RT_FORMAT_USER);
-    m_samples->setElementSize(sizeof(PositionSample));
-    m_samples->setSize(SAMPLES_FRAME);
-    context["sampling_output_buffer"]->setBuffer(m_samples);
+    mSampleBuffer = context->createBuffer(RT_BUFFER_OUTPUT);
+    mSampleBuffer->setFormat(RT_FORMAT_USER);
+    mSampleBuffer->setElementSize(sizeof(PositionSample));
+    mSampleBuffer->setSize(mSamples);
+    context["sampling_output_buffer"]->setBuffer(mSampleBuffer);
 }
 
 void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
@@ -83,6 +84,17 @@ void PresampledSurfaceBssrdf::pre_trace_mesh(Mesh& obj)
     context["sampling_vindex_buffer"]->setBuffer(g["vindex_buffer"]->getBuffer());
     context["sampling_nindex_buffer"]->setBuffer(g["nindex_buffer"]->getBuffer());
     context["bssrdf_enabled"]->setUint(0);	// Disabling BSSRDF computation on sample collection.
-    context->launch(entry_point, SAMPLES_FRAME);
+    context->launch(entry_point, mSamples);
     context["bssrdf_enabled"]->setUint(1);
+}
+
+bool PresampledSurfaceBssrdf::on_draw()
+{
+	bool changed = false;
+	if (ImmediateGUIDraw::InputInt("Area samples", (int*)&mSamples))
+	{
+		changed = true;
+		mSampleBuffer->setSize(mSamples);
+	}
+	return changed;
 }

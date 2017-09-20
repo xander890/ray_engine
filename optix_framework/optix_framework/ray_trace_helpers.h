@@ -94,24 +94,4 @@ __device__ __inline__ void get_glass_rays(const optix::Ray& ray, const float ior
 }
 
 
-
-__device__ __inline__ void sample_light(const float3& position, const float3 & normal, const uint& ray_depth, uint& seed, float3 & wi, float3 & Li)
-{
-	float zeta1 = rnd(seed);
-	float zeta2 = rnd(seed);
-	optix::float3 smp = sample_hemisphere_cosine(optix::make_float2(zeta1, zeta2), normal);
-	wi = normalize(smp);
-
-	PerRayData_radiance prd = get_empty();
-	prd.flags = RayFlags::USE_EMISSION;
-	prd.depth = ray_depth+1;
-	prd.seed = seed;
-	optix::Ray ray = optix::make_Ray(position, wi, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
-
-	rtTrace(top_object, ray, prd);
-	seed = prd.seed;
-	Li = prd.result * M_PIf;
-}
-
-
 #endif

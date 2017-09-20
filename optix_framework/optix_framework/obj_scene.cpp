@@ -223,21 +223,21 @@ bool ObjScene::drawGUI()
 
 	if (debug && ImmediateGUIDraw::CollapsingHeader("Debug"))
 	{
-		auto c = context["debug_index"]->getType();
 		uint2 debug_pixel = context["debug_index"]->getUint2();
 		if (ImmediateGUIDraw::InputInt2("Debug pixel", (int*)&debug_pixel))
 		{
-			context["debug_index"]->setUint(debug_pixel);
+			setDebugPixel(debug_pixel.x, debug_pixel.y);
 		}
 
-		if (ImmediateGUIDraw::SliderInt4("Zoom window", (int*)&zoom_debug_window, 0, min(camera->get_width(), camera->get_height())))
+		if (ImmediateGUIDraw::Button("Center debug pixel"))
 		{
-			context["zoom_window"]->setUint(zoom_debug_window);
+			setDebugPixel((int)(zoomed_area.x + zoomed_area.z / 2), (int)(zoomed_area.y + zoomed_area.w / 2));
 		}
-		if (ImmediateGUIDraw::SliderInt4("Zoom area", (int*)&zoomed_area, 0, min(camera->get_width(), camera->get_height())))
-		{
-			context["image_part_to_zoom"]->setUint(zoomed_area);
-		}
+
+		ImmediateGUIDraw::InputInt4("Zoom window", (int*)&zoom_debug_window);
+		
+		ImmediateGUIDraw::InputInt4("Zoom area", (int*)&zoomed_area);
+
 		ImmediateGUIDraw::Checkbox("Colored logs", &Logger::is_color_enabled);
 	}
 
@@ -254,6 +254,15 @@ bool ObjScene::drawGUI()
 		}
 	}
 	
+	if (ImmediateGUIDraw::CollapsingHeader("Misc"))
+	{
+		if (ImmediateGUIDraw::Checkbox("Importance sample area lights", &mImportanceSampleAreaLights))
+		{
+			changed = true;
+			context["importance_sample_area_lights"]->setUint(static_cast<unsigned int>(mImportanceSampleAreaLights));
+		}
+	}
+
 	if (ImmediateGUIDraw::CollapsingHeader("Background"))
 	{
 		const char * miss_programs[3] = { "Constant Background", "Environment map", "Sky model"  };
@@ -461,6 +470,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 		delete loader;
 	}
 	
+	context["importance_sample_area_lights"]->setUint(mImportanceSampleAreaLights);
 
     execute_on_scene_elements([=](Mesh & m)
     {
@@ -583,7 +593,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 
 void update_timer(double & current, double n)
 {
-	current = 0.9*current + 0.1*n;
+	current = n;
 }
 
 
@@ -649,6 +659,9 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 
 	if (debug_mode_enabled == true)
 	{
+		context["zoom_window"]->setUint(zoom_debug_window);
+		context["image_part_to_zoom"]->setUint(zoomed_area);
+
 		context->launch(as_integer(CameraType::DEBUG), width, height);
 	}
 	t1 = currentTime();
@@ -877,7 +890,6 @@ void ObjScene::postDrawCallBack()
 
 void ObjScene::setDebugPixel(int i, int y)
 {
-	y = camera->get_height() - y;
 	Logger::info <<"Setting debug pixel to " << to_string(i) << " << " << to_string(y) <<endl;
 	context->setPrintLaunchIndex(i, y);
 	context["debug_index"]->setUint(i, y);
@@ -885,9 +897,11 @@ void ObjScene::setDebugPixel(int i, int y)
 
 bool ObjScene::mousePressed(int x, int y, int button, int action, int mods)
 {
+	y = camera->get_height() - y;
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && debug_mode_enabled)
 	{
 		setDebugPixel(x, y);
+		zoomed_area = make_uint4(x - (int)zoomed_area.z / 2, y - (int)zoomed_area.w / 2, zoomed_area.z, zoomed_area.w);
 		return true;
 	}
 	return gui->mousePressed(x, y, button, action, mods);

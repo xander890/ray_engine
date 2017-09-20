@@ -34,6 +34,7 @@ void SampledBSSRDF::load_data()
 	{
 		Logger::info << "Reloading shader" << std::endl;
 		initialize_buffer<BSSRDFSamplingProperties>(mPropertyBuffer, *properties);
+		context["samples_per_pixel"]->setUint(mSamples);
 	}
 	mHasChanged = false;
 }
@@ -51,6 +52,12 @@ bool SampledBSSRDF::on_draw()
 	mHasChanged |= ImGui::RadioButton("Show all", &properties->show_mode, BSSRDF_SHADERS_SHOW_ALL); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Refraction", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFRACTION); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Reflection", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFLECTION);
+
+	if (ImGui::InputInt("Samples per pixel", (int*)&mSamples))
+	{
+		mHasChanged = true;
+	}
+
 	return mHasChanged;
 }
 

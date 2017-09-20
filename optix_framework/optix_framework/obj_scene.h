@@ -155,6 +155,7 @@ private:
 	bool mbPaused = false;
 
 	void transform_changed();
+	bool mImportanceSampleAreaLights = true;
 };
 
 #endif // OBJSCENE_H

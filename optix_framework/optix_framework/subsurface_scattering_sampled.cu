@@ -34,6 +34,8 @@ rtDeclareVariable(CameraData, camera_data, , );
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
+rtDeclareVariable(unsigned int, samples_per_pixel, , );
+
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow()
@@ -221,7 +223,7 @@ __device__ __forceinline__ void _shade()
 #endif
 
 	float3 L_d = make_float3(0.0f);
-	uint N = 1;// sampling_output_buffer.size();
+	uint N = samples_per_pixel;// sampling_output_buffer.size();
 
 	int count = 0;
 

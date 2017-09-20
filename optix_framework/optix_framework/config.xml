@@ -43,7 +43,7 @@
     <property key="x_axis_anisotropic" value="1 0 0 " comment=""/>
   </glossy>
   <light>
-    <property key="background_constant_color" value="0.5 0.5 0.5" comment="Environment map file"/>
+    <property key="background_constant_color" value="0.0 0.0 0.0" comment="Environment map file"/>
     <property key="default_directional_light_direction" value="0.000000 -1.00000 0.000000" comment="Direction of the default directional light"/>
     <property key="default_directional_light_intensity" value="10 10 10" comment="Intensity of the default directional light"/>
     <property key="default_light_type" value="AREA_LIGHT" comment="Type of the default light"/>

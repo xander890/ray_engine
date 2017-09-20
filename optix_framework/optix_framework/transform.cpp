@@ -35,7 +35,14 @@ optix::Matrix4x4 Transform::get_matrix()
 bool Transform::on_draw()
 {
 	impl->mHasChanged |= ImmediateGUIDraw::InputFloat3("Translate##TranslateTransform" + impl->id, &impl->mTranslation.x , 2);
-	impl->mHasChanged |= ImmediateGUIDraw::InputFloat3("Rotation axis##RotationAxisTransform" + impl->id, &impl->mRotationAxis.x, 2);
+
+	static optix::float3 val = impl->mRotationAxis;
+	if (ImmediateGUIDraw::InputFloat3("Rotation axis##RotationAxisTransform" + impl->id, &val.x, 2))
+	{
+		impl->mHasChanged = true;
+		impl->mRotationAxis = optix::normalize(val);
+	}
+
 	impl->mHasChanged |= ImmediateGUIDraw::InputFloat("Rotation angle##RotationAngleTransform" + impl->id, &impl->mRotationAngle, 2);
 	impl->mHasChanged |= ImmediateGUIDraw::InputFloat3("Scale##ScaleTransform" + impl->id, &impl->mScale.x, 2);
 	return impl->mHasChanged;

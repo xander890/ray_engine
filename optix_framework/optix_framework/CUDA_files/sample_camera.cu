@@ -21,7 +21,6 @@ rtBuffer<int3>   sampling_vindex_buffer;
 rtBuffer<int3>   sampling_nindex_buffer;
 rtBuffer<float>  area_cdf;  
 rtDeclareVariable(float, total_area, , );
-rtDeclareVariable(unsigned int, N, , );
 
 // Window variables
 rtBuffer<PositionSample> sampling_output_buffer;
