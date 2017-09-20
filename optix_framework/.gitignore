@@ -31,6 +31,8 @@ bld/
 
 optix_framework/PTX_files/
 optix_framework/out.ppm
+optix_framework/result_optix.raw
+optix_framework/result_optix.txt
 optix_framework/imgui.ini
 
 
