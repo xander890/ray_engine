@@ -50,8 +50,6 @@ int main( int argc, char** argv )
 	//std::map<std::string, std::string> parameters;
 	bool auto_mode = false;
 	int frames = 0;
-	std::unique_ptr<RenderTask> task = std::make_unique<RenderTask>();
-	task->close_program_on_exit = true;
 	std::string material_override_mtl = "";
 
 	std::vector<std::string> additional_parameters;
@@ -74,8 +72,8 @@ int main( int argc, char** argv )
 		if (i == argc - 1)
 			printUsageAndExit(argv[0]);
 		auto_mode = true;
-		task->destination_file = argv[++i];
-		lower_case_string(task->destination_file);
+		output_file = argv[++i];
+		lower_case_string(output_file);
 	}
 	else if (arg == "-sh" || arg == "--shader")
 	{
@@ -104,7 +102,7 @@ int main( int argc, char** argv )
 	else if (arg == "-f" || arg == "--frames")
 	{
 		auto_mode = true;
-		task->destination_samples = std::stoi(argv[++i]);
+		frames = std::stoi(argv[++i]);
 	}
 	else if (arg == "--rectangle")
 	{
@@ -142,6 +140,7 @@ int main( int argc, char** argv )
 	//if ( filenames.size() == 0 ) 
 	//  filenames.push_back(string("./meshes/") + "closed_bunny_vn.obj");
 	GLFWDisplay::init( argc, argv );
+	std::unique_ptr<RenderTask> task = std::make_unique<RenderTaskFrames>(frames, output_file, true);
 
 	try 
 	{

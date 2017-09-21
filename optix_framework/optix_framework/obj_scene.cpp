@@ -53,7 +53,6 @@ void ObjScene::add_result_image(const string& image_file)
 	context["comparison_texture"]->setInt(comparison_image->getId());
 }
 
-
 void ObjScene::execute_on_scene_elements(function<void(Mesh&)> operation) 
 {
     for (std::unique_ptr<Mesh> & m : mMeshes)
@@ -126,20 +125,20 @@ ObjScene::ObjScene(const std::vector<std::string>& obj_filenames, const std::str
 	calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
 	custom_rr = rendering_r;
 	mMeshes.clear();
-	current_render_task = make_unique<RenderTask>();
+	current_render_task = make_unique<RenderTaskFrames>(1000, "res.raw", false);
 }
 
 ObjScene::ObjScene()
 	: context(m_context),
 	current_scene_type(Scene::OPTIX_ONLY), filenames(1, "test.obj"),
 	m_frame(0u),
-	deforming(true),
+	deforming(false),
 	config_file("config.xml")
 {
 	calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
 	mMeshes.clear();
 	custom_rr = make_int4(-1);
-	current_render_task = make_unique<RenderTask>();
+	current_render_task = make_unique<RenderTaskFrames>(1000, "res.raw", false);
 }
 
 inline ObjScene::~ObjScene()
@@ -295,36 +294,11 @@ bool ObjScene::drawGUI()
 		}
 	}
 
-	bool is_active = current_render_task->is_active();
-	int flag = is_active ? ImGuiTreeNodeFlags_DefaultOpen : 0;
+	const bool is_active = current_render_task->is_active();
+	const int flag = is_active ? ImGuiTreeNodeFlags_DefaultOpen : 0;
 	if (ImmediateGUIDraw::CollapsingHeader("Render tasks", flag))
 	{
-		char InputBuf[256];
-		sprintf_s(InputBuf, "%s", current_render_task->destination_file.c_str());
-		if(!is_active && ImmediateGUIDraw::InputText("Destination file", InputBuf, ImGuiInputTextFlags_EnterReturnsTrue))
-		{
-			changed = true;
-			current_render_task->destination_file = std::string(InputBuf);
-		}
-		if (!is_active)
-		{
-			changed |= ImmediateGUIDraw::InputInt("Frames", &current_render_task->destination_samples);
-			changed |= ImmediateGUIDraw::Checkbox("Close program on finish", &current_render_task->close_program_on_exit);
-		}
-		if (!is_active && ImmediateGUIDraw::Button("Start task"))
-		{
-			start_render_task();
-		}
-		if (is_active)
-		{
-			std::stringstream ss;
-			ss << "Render task in progress. Progress: " << to_string(current_render_task->get_progress()) << "/" << to_string(current_render_task->destination_samples) << endl;
-			ImmediateGUIDraw::Text(ss.str().c_str());
-		}
-		if (is_active && ImmediateGUIDraw::Button("End task"))
-		{
-			current_render_task->end();
-		}
+		current_render_task->on_draw();
 	}
 
 	return changed;
@@ -615,7 +589,9 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 
     context["tonemap_multiplier"]->setFloat(tonemap_multiplier);
 	context["tonemap_exponent"]->setFloat(tonemap_exponent);
-	
+
+	const double total0 = currentTime();
+
 	double t0 = currentTime();
 
 	execute_on_scene_elements([=](Mesh & m)
@@ -667,15 +643,17 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	t1 = currentTime();
 	update_timer(render_time_tonemap ,t1 - t0);
 
+	const double total1 = currentTime();
+
 	if (current_render_task->is_active())
 	{
 		if (current_render_task->is_finished())
 		{
-			export_raw(current_render_task->destination_file, rendering_output_buffer, m_frame);
-			ParameterParser::dump_used_parameters(current_render_task->destination_file + ".xml");
+			export_raw(current_render_task->get_destination_file(), rendering_output_buffer, m_frame);
+			ParameterParser::dump_used_parameters(current_render_task->get_destination_file() + ".xml");
 			current_render_task->end();
 		}
-		current_render_task->update();
+		current_render_task->update(static_cast<float>(total1 - total0));
 	}
 
 	collect_image(m_frame);
@@ -696,7 +674,6 @@ void ObjScene::set_render_task(std::unique_ptr<RenderTask>& task)
 
 void ObjScene::start_render_task()
 {
-	reset_renderer();
 	current_render_task->start();
 }
 
@@ -801,8 +778,9 @@ optix::Matrix4x4 ObjScene::get_object_transform(string filename)
 }
 
 
-bool ObjScene::export_raw(string& raw_path, optix::Buffer out, int frames)
+bool ObjScene::export_raw(const string& raw_p, optix::Buffer out, int frames)
 {
+	std::string raw_path = raw_p;
 	// export render data
     if (raw_path.length() == 0)
     {

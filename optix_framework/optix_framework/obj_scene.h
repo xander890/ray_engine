@@ -65,11 +65,11 @@ public:
 	bool mousePressed(int x, int y,int button, int action, int mods) override;
 	bool mouseMoving(int x, int y) override;
 	void reset_renderer();
+	void start_render_task();
 
 	std::unique_ptr<RenderTask> current_render_task;
 
 	void set_render_task(std::unique_ptr<RenderTask>& task);
-	void start_render_task();
 
 	std::string override_mat = "";
 	void add_override_material_file(std::string mat);
@@ -94,7 +94,7 @@ private:
 	optix::GeometryGroup get_geometry_group(unsigned int idx);
 	optix::Matrix4x4 get_object_transform(std::string filename);
 
-	static bool export_raw(std::string& name, optix::Buffer buffer, int frames);
+	static bool export_raw(const std::string& name, optix::Buffer buffer, int frames);
 	void set_rendering_method(RenderingMethodType::EnumType t);
 	std::vector<std::string> filenames;
 
