@@ -47,10 +47,10 @@ __forceinline__ __device__ float get_sampling_mfp(const ScatteringMaterialProper
 	{
 	case ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
 	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
-		return optix::dot(properties.approx_property_s, make_float3(0.333333f));
+		return properties.sampling_mfp_s;
 	case ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF:
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
 	default:
-		return properties.mean_transport;
+		return properties.sampling_mfp_tr;
 	}
 }

@@ -1,5 +1,7 @@
 #pragma once
 #include "host_device_common.h"
+#include <algorithm>
+#include <map>
 enum class CameraType { STANDARD_RT = 0, TONE_MAPPING = 1, DEBUG = 2, COUNT = 3 };
 
 template <typename E>
@@ -28,6 +30,42 @@ auto as_integer(E const value)
 #define IMPROVED_ENUM_NAME PinholeCameraDefinitionType
 #define IMPROVED_ENUM_LIST ENUMITEM(INVERSE_CAMERA_MATRIX) ENUMITEM(EYE_LOOKAT_UP_VECTORS) 
 #include "improved_enum.h"
+
+namespace SamplingMfpType
+{
+	enum SamplingMfpTypeEnum {
+		X = 0, Y = 1, Z = 2, MIN = 3, MAX = 4, MEAN = 5, COUNT = 6
+	};
+
+	static std::map< SamplingMfpTypeEnum, std::string > info
+	{
+		{ X, "X" },{ Y, "Y" },{ Z, "Z" },{ MIN, "MIN" },{ MAX, "MAX" },{ MEAN, "MEAN" }
+	};
+
+	inline std::string to_string(SamplingMfpTypeEnum e)
+	{
+		return info[e];
+	}
+
+	inline __host__ std::string get_enum_string()
+	{
+		std::string r;
+		for (int i = 0; i < SamplingMfpTypeEnum::COUNT; i++)
+		{
+			r += to_string(static_cast<SamplingMfpTypeEnum>(i)) + " ";
+		}
+		return r;
+	}
+
+	inline __host__ SamplingMfpTypeEnum to_enum(std::string e)
+	{
+		auto it = std::find_if(info.begin(), info.end(),
+			[e](const std::pair<SamplingMfpTypeEnum, std::string> & t) -> bool { return e.compare(t.second) == 0; });
+		if (it != info.end())
+			return it->first;
+		return COUNT;
+	}
+};
 
 
 //#define OVERRIDE_TRANSLUCENT_WITH_APPLE_JUICE

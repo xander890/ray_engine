@@ -45,7 +45,6 @@ namespace ScatteringDipole
 		else if (e.compare("APPROX_STANDARD_DIPOLE_BSSRDF") == 0)		return ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF;
 		else															return ScatteringDipole::STANDARD_DIPOLE_BSSRDF;
 	}
-
 };
 
 struct ScatteringMaterialProperties
@@ -72,13 +71,13 @@ struct ScatteringMaterialProperties
     optix::float3 rev_D;
     float global_coeff;
     optix::float3 two_a_de;
-    float mean_transport;
+    float sampling_mfp_tr;
     optix::float3 one_over_three_ext;
-    float min_transport;
-    optix::float3 deltaEddExtinction;
+	int pad;
+	optix::float3 deltaEddExtinction;
 
 	optix::float3 approx_property_A		DEFAULT(optix::make_float3(1));
 	int pad0;
 	optix::float3 approx_property_s		DEFAULT(optix::make_float3(1));
-	int pad1;
+	float sampling_mfp_s;
 };

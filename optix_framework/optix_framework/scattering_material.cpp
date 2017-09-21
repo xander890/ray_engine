@@ -4,8 +4,11 @@
 #include "immediate_gui.h"
 #include "sampling_helpers.h"
 #include "parameter_parser.h"
+#include <algorithm>
+#include "enums.h"
 
 using namespace optix;
+
 
 ScatteringMaterial::ScatteringMaterial(optix::float3 absorption, optix::float3 scattering, optix::float3 meancosine, float scale, const char * name)
 	: scale(scale), name(name)
@@ -17,6 +20,7 @@ ScatteringMaterial::ScatteringMaterial(optix::float3 absorption, optix::float3 s
 	properties.approx_property_A = ParameterParser::get_parameter<optix::float3>("bssrdf", "approximate_A", make_float3(1), "Approximate value A for approximate dipoles.");
 	properties.approx_property_s = ParameterParser::get_parameter<optix::float3>("bssrdf", "approximate_s", make_float3(1), "Approximate value A for approximate dipoles.");
 	properties.selected_bssrdf = ScatteringDipole::to_enum(ParameterParser::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
+	mSamplingType = SamplingMfpType::to_enum(ParameterParser::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
 	dirty = true;
 }
 
@@ -28,6 +32,7 @@ ScatteringMaterial::ScatteringMaterial(DefaultScatteringMaterial material, float
 	properties.approx_property_A = ParameterParser::get_parameter<optix::float3>("bssrdf", "approximate_A", properties.approx_property_A, "Approximate value A for approximate dipoles.");
 	properties.approx_property_s = ParameterParser::get_parameter<optix::float3>("bssrdf", "approximate_s", properties.approx_property_s, "Approximate value A for approximate dipoles.");
 	properties.selected_bssrdf = ScatteringDipole::to_enum(ParameterParser::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
+	mSamplingType = SamplingMfpType::to_enum(ParameterParser::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
 	dirty = true;
 }
 
@@ -285,6 +290,22 @@ bool ScatteringMaterial::on_draw(std::string id)
 #undef ID_STRING
 }
 
+float computeSamplingMfp(SamplingMfpType::SamplingMfpTypeEnum e, const optix::float3& t)
+{
+	switch (e)
+	{
+	case SamplingMfpType::X: return t.x;
+	case SamplingMfpType::Y: return t.y;
+	case SamplingMfpType::Z: return t.z;
+	case SamplingMfpType::MIN: return optix::fminf(t);
+	case SamplingMfpType::MAX: return optix::fmaxf(t);
+	case SamplingMfpType::MEAN: return optix::dot(t, optix::make_float3(0.333f));
+	case SamplingMfpType::COUNT: 
+	default:
+		return 0;
+	}
+}
+
 void ScatteringMaterial::computeCoefficients(float ior)
 {
 	properties.absorption = max(absorption, make_float3(1.0e-8f)) * scale;
@@ -312,9 +333,9 @@ void ScatteringMaterial::computeCoefficients(float ior)
 	//properties.two_de = 2.0f * properties.de;
 	//properties.de_sqr = properties.de * properties.de;
 	//properties.iorsq = ior * ior;
-	properties.min_transport = fminf(fminf(properties.transport.x, properties.transport.y), properties.transport.z);
-	properties.mean_transport = (properties.transport.x + properties.transport.y + properties.transport.z) / 3.0f;
-
+	Logger::info << "Will sample using MFP: " << SamplingMfpType::to_string(mSamplingType) << std::endl;
+	properties.sampling_mfp_tr = computeSamplingMfp(mSamplingType, properties.transport);
+	properties.sampling_mfp_s = computeSamplingMfp(mSamplingType, properties.approx_property_s);
 	dirty = false;
 }
 
