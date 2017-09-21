@@ -36,6 +36,7 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 rtDeclareVariable(unsigned int, samples_per_pixel, , );
 
+rtDeclareVariable(BufPtr<BSSRDFSamplingProperties>, bssrdf_sampling_properties, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow()
@@ -49,7 +50,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	float3 & xi, float3 & ni, float & integration_factor)
 {
 	float cos_theta_o = abs(dot(wo, no));
-	float chosen_transport_rr = props.min_transport;
+	float chosen_sampling_mfp = get_sampling_mfp(props);
 	PerRayData_normal_depth attribute_fetch_ray_payload = { make_float3(0.0f), RT_DEFAULT_MAX };
 	optix::Ray attribute_fetch_ray;
 	attribute_fetch_ray.ray_type = RAY_TYPE_ATTRIBUTE;
@@ -59,7 +60,8 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 
 	optix::float2 sample = make_float2(rnd(t), rnd(t));
 	float r, phi;
-	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_transport_rr, r, phi);
+	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, r, phi);
+	r = max(bssrdf_sampling_properties->R_min, r);
 	float3 sample_ray_dir;
 	float3 sample_ray_origin;
 	float t_max;
@@ -82,8 +84,8 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	{
 		sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
 		sample_ray_dir = -no;
-		sample_ray_origin = sample_on_tangent_plane + no * bssrdf_sampling_properties->R_max;
-		t_max = RT_DEFAULT_MAX; //bssrdf_sampling_properties->R_max * 2.0f;
+		sample_ray_origin = sample_on_tangent_plane + no * bssrdf_sampling_properties->d_max;
+		t_max = RT_DEFAULT_MAX; 
 	}
 	break;
 	case BSSRDF_SAMPLING_MIS_KING:
@@ -111,7 +113,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 		float3 t1 = axes[(main_axis + 1) % 3];
 		float3 t2 = axes[(main_axis + 2) % 3];
 		sample_on_tangent_plane = xo + t1*disc_sample.x + t2*disc_sample.y;
-		sample_ray_origin = sample_on_tangent_plane + top * bssrdf_sampling_properties->R_max;
+		sample_ray_origin = sample_on_tangent_plane + top * bssrdf_sampling_properties->d_max;
 		sample_ray_dir = -top;
 		t_max = RT_DEFAULT_MAX; //2.0f * bssrdf_sampling_properties->R_max;
 		integration_factor /= mis_weights[main_axis];
@@ -133,7 +135,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	xi = attribute_fetch_ray.origin + attribute_fetch_ray_payload.depth * attribute_fetch_ray.direction;
 	ni = attribute_fetch_ray_payload.normal;
 
-	float pdf_disk = chosen_transport_rr * exp(-r * chosen_transport_rr) / (2.0f* M_PIf);
+	float pdf_disk = chosen_sampling_mfp * exp(-r * chosen_sampling_mfp) / (2.0f* M_PIf);
 	integration_factor *= r / pdf_disk;
 	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
 

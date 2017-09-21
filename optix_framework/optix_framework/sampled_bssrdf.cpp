@@ -44,10 +44,11 @@ bool SampledBSSRDF::on_draw()
 	std::vector<const char*> elems{ "Mertens et. al", "Hery et al." , "King et al." };
 	
 	mHasChanged |= ImmediateGUIDraw::Combo("Sampling technique", &properties->sampling_method, elems.data(), (int)elems.size(), (int)elems.size());
+	mHasChanged |= ImmediateGUIDraw::InputFloat("Min radius", &properties->R_min);
 	if(properties->sampling_method == BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
 		mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->correct_camera);
 	if (properties->sampling_method != BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
-		mHasChanged |= ImmediateGUIDraw::DragFloat("Radius max", &properties->R_max, 0.1f, 0.0f, 1.0f);
+		mHasChanged |= ImmediateGUIDraw::DragFloat("Distance from surface", &properties->d_max, 0.1f, 0.0f, 1.0f);
 	
 	mHasChanged |= ImGui::RadioButton("Show all", &properties->show_mode, BSSRDF_SHADERS_SHOW_ALL); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Refraction", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFRACTION); ImGui::SameLine();
