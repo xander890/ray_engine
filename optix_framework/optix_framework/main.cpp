@@ -49,7 +49,8 @@ int main( int argc, char** argv )
 	optix::int4 rendering_rect = optix::make_int4(-1);
 	//std::map<std::string, std::string> parameters;
 	bool auto_mode = false;
-	int frames = 0;
+	int frames = -1;
+	float time = -1.0f;
 	std::string material_override_mtl = "";
 
 	std::vector<std::string> additional_parameters;
@@ -98,7 +99,11 @@ int main( int argc, char** argv )
 		}
 		while (i+1 < argc && std::string(argv[i+1])[0] != '-');
 	}
-
+	else if (arg == "-t" || arg == "--time")
+	{
+		auto_mode = true;
+		time = std::stof(argv[++i]);
+	}
 	else if (arg == "-f" || arg == "--frames")
 	{
 		auto_mode = true;
@@ -140,17 +145,33 @@ int main( int argc, char** argv )
 	//if ( filenames.size() == 0 ) 
 	//  filenames.push_back(string("./meshes/") + "closed_bunny_vn.obj");
 	GLFWDisplay::init( argc, argv );
-	std::unique_ptr<RenderTask> task = std::make_unique<RenderTaskFrames>(frames, output_file, true);
-
+	
 	try 
 	{
 	ObjScene * scene = new ObjScene( filenames, shadername, config_file, rendering_rect );
 	if(material_override_mtl.size() > 0)
 		scene->add_override_material_file(material_override_mtl);
 	scene->add_override_parameters(additional_parameters);
-	scene->set_render_task(task);
+
 	if (auto_mode)
+	{
+		std::unique_ptr<RenderTask> task = nullptr;
+		if (frames > 0)
+		{
+			task = std::make_unique<RenderTaskFrames>(frames, output_file, true);
+		}
+		else if (time > 0.0f)
+		{		
+			task = std::make_unique<RenderTaskTime>(time, output_file, true);
+		}
+		else
+		{
+			Logger::error << "Time or frames not specified" << std::endl;
+			exit(2);
+		}
+		scene->set_render_task(task);
 		scene->start_render_task();
+	}
 	GLFWDisplay::run( "Optix Renderer", scene );
 
 	} 
