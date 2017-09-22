@@ -27,6 +27,7 @@ rtDeclareVariable(PerRayData_normal_depth, prd_attr, rtPayload, );
 // Closest hit program for Lambertian shading using the basic light as a directional source + specular term (blinn phong)
 RT_PROGRAM void attribute_closest_hit()
 {
+	optix_print("Depth ray hit! ID %d\n", mesh_id);
 	prd_attr.depth = t_hit;
 	prd_attr.normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 }

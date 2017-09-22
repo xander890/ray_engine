@@ -9,6 +9,8 @@
 #include <array>
 Mesh::Mesh(optix::Context ctx) : mContext(ctx)
 {
+	static int id = 0;
+	mMeshID = id++;
 }
 
 void Mesh::init(const char* name, MeshData meshdata, std::shared_ptr<MaterialHost> material)
@@ -82,6 +84,8 @@ void Mesh::load_geometry()
     mGeometry["tindex_buffer"]->setBuffer(mMeshData.mTIbuffer);
     mGeometry["num_triangles"]->setUint(mMeshData.mNumTriangles);
     mGeometryInstance["num_triangles"]->setUint(mMeshData.mNumTriangles);
+	mGeometryInstance["current_geometry_node"]->set(mGeometryGroup);
+	mGeometryInstance["mesh_id"]->setInt(mMeshID);
     initialize_buffer<optix::Aabb>(mBBoxBuffer, mMeshData.mBoundingBox);
     BufPtr<optix::Aabb> bptr = BufPtr<optix::Aabb>(mBBoxBuffer->getId());
     mGeometryInstance["local_bounding_box"]->setUserData(sizeof(BufPtr<optix::Aabb>), &bptr);
@@ -204,7 +208,7 @@ void Mesh::add_material(std::shared_ptr<MaterialHost> material)
 bool Mesh::on_draw()
 {
 	bool changed = false;
-	if (ImmediateGUIDraw::TreeNode(mMeshName.c_str()))
+	if (ImmediateGUIDraw::TreeNode((mMeshName + " ID: " + std::to_string(mMeshID)).c_str()))
 	{
 		if (ImmediateGUIDraw::TreeNode((std::string("Transform##Transform") + mMeshName).c_str()))
 		{

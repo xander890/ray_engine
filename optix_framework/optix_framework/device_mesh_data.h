@@ -10,3 +10,5 @@ rtBuffer<int3>   nindex_buffer;    // normal indices
 rtBuffer<int3>   tindex_buffer;    // texcoord indices
 rtDeclareVariable(unsigned int, num_triangles, , );
 rtDeclareVariable(BufPtr<optix::Aabb>, local_bounding_box, , );
+rtDeclareVariable(rtObject, current_geometry_node, , );
+rtDeclareVariable(int, mesh_id, , );

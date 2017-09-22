@@ -89,4 +89,5 @@ private:
 		archive(cereal::make_nvp("name", mMeshName));
 		archive(cereal::make_nvp("materials",mMaterialData));
 	}
+	int mMeshID;
 };

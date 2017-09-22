@@ -124,8 +124,8 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	attribute_fetch_ray.direction = sample_ray_dir;
 	attribute_fetch_ray.origin = sample_ray_origin; 
 
-	rtTrace(top_object, attribute_fetch_ray, attribute_fetch_ray_payload);
-	optix_print("Depth ray: %s\n", abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3 ? "Miss" : "Hit");
+	rtTrace(current_geometry_node, attribute_fetch_ray, attribute_fetch_ray_payload);
+//	optix_print("Depth ray: %s\n", abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3 ? "Miss" : "Hit");
 
 	if (abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3) // Miss
 		return false;
@@ -152,7 +152,9 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	if (bssrdf_sampling_properties->sampling_method == BSSRDF_SAMPLING_NORMAL_BASED_HERY
 		)
 	{
-		integration_factor /= abs(dot(no, ni));
+		float inv_jac = dot(normalize(no), normalize(ni));
+		optix_print("Dot no ni: %f\n", inv_jac);
+		integration_factor = inv_jac > 0.0f? integration_factor/inv_jac : 0.0f;
 	}
 	return true;
 }
@@ -254,7 +256,7 @@ __device__ __forceinline__ void _shade()
 		{
 			float3 S_d = bssrdf(xi, ni, w12, xo, no, w21, props);
 			L_d += L_i * S_d * T12 * integration_factor;
-			optix_print("Ld %f %f %f T12 %f int %f\n", L_d.x, L_d.y, L_d.z, T12, integration_factor);
+			optix_print("Ld %f %f %f Li %f %f %f T12 %f int %f\n", L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
 		}
 	}
 #ifdef TRANSMIT
