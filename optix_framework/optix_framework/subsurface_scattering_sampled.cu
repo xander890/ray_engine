@@ -154,8 +154,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	if (bssrdf_sampling_properties->sampling_method == BSSRDF_SAMPLING_NORMAL_BASED_HERY
 		)
 	{
-		float inv_jac = dot(normalize(no), normalize(ni));
-		optix_print("Dot no ni: %f\n", inv_jac);
+		float inv_jac = max(bssrdf_sampling_properties->dot_no_ni_min, dot(normalize(no), normalize(ni)));
 		integration_factor = inv_jac > 0.0f? integration_factor/inv_jac : 0.0f;
 	}
 	return true;

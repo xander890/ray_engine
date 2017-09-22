@@ -48,16 +48,15 @@ bool SampledBSSRDF::on_draw()
 	if(properties->sampling_method == BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
 		mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->correct_camera);
 	if (properties->sampling_method != BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
+	{
 		mHasChanged |= ImmediateGUIDraw::DragFloat("Distance from surface", &properties->d_max, 0.1f, 0.0f, 1.0f);
-	
+		mHasChanged |= ImGui::InputFloat("Min no ni", &properties->dot_no_ni_min);
+	}
 	mHasChanged |= ImGui::RadioButton("Show all", &properties->show_mode, BSSRDF_SHADERS_SHOW_ALL); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Refraction", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFRACTION); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Reflection", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFLECTION);
 
-	if (ImGui::InputInt("Samples per pixel", (int*)&mSamples))
-	{
-		mHasChanged = true;
-	}
+	mHasChanged |= ImGui::InputInt("Samples per pixel", (int*)&mSamples);
 
 	return mHasChanged;
 }
