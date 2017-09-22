@@ -186,20 +186,23 @@ static __inline__ __device__ optix::float2 sample_disk(const optix::float2 & sam
 	p.y = r * sin(phi);
 	return p;
 }
-static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::float2 & sample, float sigma, float & r, float & phi)
+
+static __inline__ __device__ optix::float2 sample_disk_exponential(optix::uint & seed, float sigma, float & pdf, float & r, float & phi)
 {
+	optix::float2 sample = optix::make_float2(rnd(seed), rnd(seed));
 	optix::float2 p;
 	r = -log(sample.x) / sigma;
 	phi = 2.0f * M_PIf * sample.y;
 	p.x = r * cos(phi);
 	p.y = r * sin(phi);
+	pdf = sigma * sample.x / (2.0f* M_PIf);
 	return p;
 }
 
-static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::float2 & sample, float sigma)
+static __inline__ __device__ optix::float2 sample_disk_exponential(optix::uint & seed, float sigma, float & pdf)
 {
 	float r, phi;
-	return sample_disk_exponential(sample, sigma, r, phi);
+	return sample_disk_exponential(seed, sigma, pdf, r, phi);
 }
 
 __host__ __device__ __inline__ optix::float3 burley_scaling_factor_mfp_searchlight(const optix::float3 & albedo)

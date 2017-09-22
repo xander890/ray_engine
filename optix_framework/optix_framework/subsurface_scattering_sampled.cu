@@ -46,101 +46,51 @@ RT_PROGRAM void any_hit_shadow()
 	rtTerminateRay();
 }
 
-__device__ __forceinline__ bool importance_sample_position(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
-	float3 & xi, float3 & ni, float & integration_factor)
+__device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, const optix::float3& direction, float & depth, optix::float3 & normal, const float t_max = RT_DEFAULT_MAX)
 {
-	float cos_theta_o = abs(dot(wo, no));
-	float chosen_sampling_mfp = get_sampling_mfp(props);
 	PerRayData_normal_depth attribute_fetch_ray_payload = { make_float3(0.0f), RT_DEFAULT_MAX };
 	optix::Ray attribute_fetch_ray;
 	attribute_fetch_ray.ray_type = RAY_TYPE_ATTRIBUTE;
 	attribute_fetch_ray.tmin = scene_epsilon;
-	
-	attribute_fetch_ray.origin = camera_data.eye;
-
-	optix::float2 sample = make_float2(rnd(t), rnd(t));
-	float r, phi;
-	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, r, phi);
-	r = max(bssrdf_sampling_properties->R_min, r);
-	float3 sample_ray_dir;
-	float3 sample_ray_origin;
-	float t_max;
-	optix::float3 to, bo;
-	create_onb(no, to, bo);
-	integration_factor = 1.0f;
-	float3 sample_on_tangent_plane;
-
-	switch (bssrdf_sampling_properties->sampling_method)
-	{
-	case BSSRDF_SAMPLING_CAMERA_BASED_MERTENS:
-	{
-		sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
-		sample_ray_dir = normalize(sample_on_tangent_plane - camera_data.eye);
-		sample_ray_origin = camera_data.eye;
-		t_max = RT_DEFAULT_MAX;
-	}
-		break;
-	case BSSRDF_SAMPLING_NORMAL_BASED_HERY:
-	{
-		sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
-		sample_ray_dir = -no;
-		sample_ray_origin = sample_on_tangent_plane + no * bssrdf_sampling_properties->d_max;
-		t_max = RT_DEFAULT_MAX; 
-	}
-	break;
-	case BSSRDF_SAMPLING_MIS_KING:
-	{
-		optix::float3 axes[3] = { no, bo, to };
-		float var = rnd(t);
-		int main_axis = 0;
-		float* mis_weights = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
-
-		if (var > mis_weights[0])
-		{
-			if (var > mis_weights[0]+ mis_weights[1])
-			{
-				// to on top
-				main_axis = 2;
-			}
-			else
-			{
-				// bo on top
-				main_axis = 1;
-			}
-		}
-
-		float3 top = axes[main_axis];
-		float3 t1 = axes[(main_axis + 1) % 3];
-		float3 t2 = axes[(main_axis + 2) % 3];
-		sample_on_tangent_plane = xo + t1*disc_sample.x + t2*disc_sample.y;
-		sample_ray_origin = sample_on_tangent_plane + top * bssrdf_sampling_properties->d_max;
-		sample_ray_dir = -top;
-		t_max = RT_DEFAULT_MAX; //2.0f * bssrdf_sampling_properties->R_max;
-		integration_factor /= mis_weights[main_axis];
-	}
-	break;
-	}
-
 	attribute_fetch_ray_payload.depth = t_max;
 	attribute_fetch_ray.tmax = t_max;
-	attribute_fetch_ray.direction = sample_ray_dir;
-	attribute_fetch_ray.origin = sample_ray_origin; 
+	attribute_fetch_ray.direction = direction;
+	attribute_fetch_ray.origin = origin;
 
 	rtTrace(current_geometry_node, attribute_fetch_ray, attribute_fetch_ray_payload);
-//	optix_print("Depth ray: %s\n", abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3 ? "Miss" : "Hit");
 
 	if (abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3) // Miss
 		return false;
+	depth = attribute_fetch_ray_payload.depth;
+	normal = attribute_fetch_ray_payload.normal;
+	return true;
+}
 
-	xi = attribute_fetch_ray.origin + attribute_fetch_ray_payload.depth * attribute_fetch_ray.direction;
-	ni = attribute_fetch_ray_payload.normal;
 
-	float pdf_disk = chosen_sampling_mfp * exp(-r * chosen_sampling_mfp) / (2.0f* M_PIf);
+__device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
+	float3 & xi, float3 & ni, float & integration_factor)
+{
+	float chosen_sampling_mfp = get_sampling_mfp(props);
+	float r, phi, pdf_disk;
+	optix::float2 disc_sample = sample_disk_exponential(t, chosen_sampling_mfp, pdf_disk, r, phi);
+
+	float t_max = RT_DEFAULT_MAX;
+	optix::float3 to, bo;
+	create_onb(no, to, bo);
+	integration_factor = 1.0f;
+	float3 sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
+	float3 sample_ray_dir = normalize(sample_on_tangent_plane - camera_data.eye);
+	float3 sample_ray_origin = camera_data.eye;
+
+	float depth;
+	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, t_max))
+		return false;
+	xi = sample_ray_origin + depth * sample_ray_dir;
+
 	integration_factor *= r / pdf_disk;
 	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
 
-	if (bssrdf_sampling_properties->sampling_method == BSSRDF_SAMPLING_CAMERA_BASED_MERTENS
-		&& bssrdf_sampling_properties->correct_camera == 1)
+	if (bssrdf_sampling_properties->correct_camera == 1)
 	{
 		float3 d = camera_data.eye - xi;
 		float cos_alpha = dot(-sample_ray_dir, ni);
@@ -148,16 +98,98 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 		float3 d_tan = camera_data.eye - sample_on_tangent_plane;
 		float cos_alpha_tan = dot(-sample_ray_dir, no);
 
-		float jacobian = max(1e-3, cos_alpha_tan) / max(1e-3,cos_alpha) * max(1e-3, dot(d, d)) / max(1e-3, dot(d_tan, d_tan));
+		float jacobian = max(1e-3, cos_alpha_tan) / max(1e-3, cos_alpha) * max(1e-3, dot(d, d)) / max(1e-3, dot(d_tan, d_tan));
 		integration_factor *= jacobian;
 	}
-	if (bssrdf_sampling_properties->sampling_method == BSSRDF_SAMPLING_NORMAL_BASED_HERY
-		)
-	{
-		float inv_jac = max(bssrdf_sampling_properties->dot_no_ni_min, dot(normalize(no), normalize(ni)));
-		integration_factor = inv_jac > 0.0f? integration_factor/inv_jac : 0.0f;
-	}
 	return true;
+}
+__device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
+	float3 & xi, float3 & ni, float & integration_factor)
+{
+	float chosen_sampling_mfp = get_sampling_mfp(props);
+	float r, phi, pdf_disk;
+	optix::float2 disc_sample = sample_disk_exponential(t, chosen_sampling_mfp, pdf_disk, r, phi);
+
+	optix::float3 to, bo;
+	create_onb(no, to, bo);
+	integration_factor = 1.0f;
+
+	float3 sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
+	float3 sample_ray_dir = -no;
+	float3 sample_ray_origin = sample_on_tangent_plane + no * bssrdf_sampling_properties->d_max;
+	float t_max = RT_DEFAULT_MAX;
+
+	float depth;
+	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, t_max))
+		return false;
+	xi = sample_ray_origin + depth * sample_ray_dir;
+
+	integration_factor *= r / pdf_disk;
+	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
+	float inv_jac = max(bssrdf_sampling_properties->dot_no_ni_min, dot(normalize(no), normalize(ni)));
+	integration_factor = inv_jac > 0.0f ? integration_factor / inv_jac : 0.0f;
+	return true;
+}
+
+__device__ __forceinline__ bool tangent_mis_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
+	float3 & xi, float3 & ni, float & integration_factor)
+{
+	float chosen_sampling_mfp = get_sampling_mfp(props);
+	float r, phi, pdf_disk;
+	optix::float2 disc_sample = sample_disk_exponential(t, chosen_sampling_mfp, pdf_disk, r, phi);
+
+	optix::float3 to, bo;
+	create_onb(no, to, bo);
+	integration_factor = 1.0f;
+
+	optix::float3 axes[3] = { no, bo, to };
+	float var = rnd(t);
+	int main_axis = 0;
+	float* mis_weights = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
+
+	if (var > mis_weights[0])
+	{
+		if (var > mis_weights[0] + mis_weights[1])
+		{
+			// to on top
+			main_axis = 2;
+		}
+		else
+		{
+			// bo on top
+			main_axis = 1;
+		}
+	}
+
+	float3 top = axes[main_axis];
+	float3 t1 = axes[(main_axis + 1) % 3];
+	float3 t2 = axes[(main_axis + 2) % 3];
+	float3 sample_on_tangent_plane = xo + t1*disc_sample.x + t2*disc_sample.y;
+	float3 sample_ray_origin = sample_on_tangent_plane + top * bssrdf_sampling_properties->d_max;
+	float3 sample_ray_dir = -top;
+	float t_max = RT_DEFAULT_MAX; //2.0f * bssrdf_sampling_properties->R_max;
+	integration_factor /= mis_weights[main_axis];
+
+	float depth;
+	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, t_max))
+		return false;
+	xi = sample_ray_origin + depth * sample_ray_dir;
+
+	integration_factor *= r / pdf_disk;
+	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
+	return true;
+
+}
+
+__device__ __forceinline__ bool importance_sample_position(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
+	float3 & xi, float3 & ni, float & integration_factor)
+{
+	switch (bssrdf_sampling_properties->sampling_method)
+	{
+	case BSSRDF_SAMPLING_CAMERA_BASED_MERTENS:  return camera_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BSSRDF_SAMPLING_NORMAL_BASED_HERY:		return tangent_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BSSRDF_SAMPLING_MIS_KING:				return tangent_mis_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	}
 }
 
 
