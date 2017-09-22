@@ -9,6 +9,7 @@
 #include "cereal/types/memory.hpp"
 #include "scattering_properties.h"
 #include "optix_serialize.h"
+#include "enums.h"
 
 class MaterialHost;
 
@@ -75,6 +76,7 @@ private:
     bool dirty = true;
 
     int mStandardMaterial;
+	SamplingMfpType::SamplingMfpTypeEnum mSamplingType;
 
 	friend class cereal::access;
 	template<class Archive>

@@ -298,7 +298,20 @@ bool ObjScene::drawGUI()
 	const int flag = is_active ? ImGuiTreeNodeFlags_DefaultOpen : 0;
 	if (ImmediateGUIDraw::CollapsingHeader("Render tasks", flag))
 	{
+		static int current_item = 0;
+		const char * items[2] = { "Frame based", "Time based" };
+		if (!current_render_task->is_active())
+		{
+			if (ImmediateGUIDraw::Combo("Render task type", &current_item, items, 2))
+			{
+				if(current_item == 0)
+					current_render_task = std::make_unique<RenderTaskFrames>(1000, current_render_task->get_destination_file(), false);
+				else
+					current_render_task = std::make_unique<RenderTaskTime>(10.0f, current_render_task->get_destination_file(), false);
+			}
+		}
 		current_render_task->on_draw();
+
 	}
 
 	return changed;

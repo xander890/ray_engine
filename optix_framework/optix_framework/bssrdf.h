@@ -9,8 +9,6 @@
 
 using optix::float3;
 
-rtDeclareVariable(BufPtr<BSSRDFSamplingProperties>, bssrdf_sampling_properties, , );
-
 __forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, const float3& _w12,
 	const float3& _xo, const float3& _no, const float3 & _w21,
 	const ScatteringMaterialProperties& properties)
@@ -40,5 +38,19 @@ __forceinline__ __device__ float3 get_beam_transmittance(const float depth, cons
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
 	default:
 		return exp(-depth*properties.extinction);
+	}
+}
+
+__forceinline__ __device__ float get_sampling_mfp(const ScatteringMaterialProperties& properties)
+{
+	switch (properties.selected_bssrdf)
+	{
+	case ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
+	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
+		return properties.sampling_mfp_s;
+	case ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF:
+	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
+	default:
+		return properties.sampling_mfp_tr;
 	}
 }
