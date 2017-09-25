@@ -61,7 +61,7 @@ __device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, con
 
 	rtTrace(current_geometry_node, attribute_fetch_ray, attribute_fetch_ray_payload);
 
-	//optix_print("Miss? %s\n", abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3 ? "true" : "false");
+	optix_print("Miss? %s, dir %f %f %f\n", abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3 ? "true" : "false", direction.x, direction.y, direction.z);
 
 	if (abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3) // Miss
 		return false;
@@ -193,7 +193,7 @@ __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float
 	return true;
 }
 
-__device__ __forceinline__ bool tangent_mis_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
+__device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
 	float3 & xi, float3 & ni, float & integration_factor)
 {
 	float chosen_sampling_mfp = get_sampling_mfp(props);
@@ -222,13 +222,11 @@ __device__ __forceinline__ bool tangent_mis_based_sampling(const float3 & xo, co
 	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
 	float inv_jac = max(0.0f, dot(normalize(top), normalize(ni)));
 	
-	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor /= inv_jac;
-
+	// No jacobian, it may give singularities.
 	return true;
 }
 
-__device__ __forceinline__ bool tangent_mis_king(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
+__device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
 	float3 & xi, float3 & ni, float & integration_factor)
 {
 	float chosen_sampling_mfp = get_sampling_mfp(props);
@@ -241,35 +239,67 @@ __device__ __forceinline__ bool tangent_mis_king(const float3 & xo, const float3
 
 	// We first choose one of the sampling axes...
 	optix::float3 axes[3] = { no, bo, to };
-	int main_axis = choose_sampling_axis(t);
-	float* mis_weights_pdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
-	float3 top = axes[main_axis];
 
-	float3 t1 = axes[(main_axis + 1) % 3];
-	float3 t2 = axes[(main_axis + 2) % 3];
 	const float pdf_top = 0.5f;
 
 #define TOP 0
 #define BOTTOM 1
 	float verse_mult[2] = { 1, -1 };
-	float verse_offset[2] = { 0.0f, -scene_epsilon * 2.0f };
-	int verse = rnd(t) < pdf_top ? TOP : BOTTOM;
-	top *= verse_mult[verse];
-	integration_factor /= mis_weights_pdf[main_axis]; // We already divide by the chosen pdf.
-	integration_factor /= 1.0f - pdf_top; // ...and for the chosen axis
+	float verse_offset[2] = { scene_epsilon, -scene_epsilon * 3.0f };
 
-	const float offset = verse_offset[verse]; //including plane self intersections.
-	// We sample the main axis
-	if (!sample_xi_ni_from_tangent_hemisphere(xo, top, t1, t2, disc_sample, t, xi, ni, offset))
+	float pdf[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f };
+	float3 xis[6];
+	float3 nis[6];
+
+	float norm = 0.0f;
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			float3 top = verse_mult[j] * axes[i];
+			float3 tan, bit;
+			create_onb(top, tan, bit);
+			float offset = verse_offset[j];
+			int idx = i * 2 + j;
+			if (!sample_xi_ni_from_tangent_hemisphere(xo, top, tan, bit, disc_sample, t, xis[idx], nis[idx], offset))
+			{
+				pdf[idx] = 0.0f;
+				continue;
+			}
+			pdf[idx] = 1.0f;
+			norm += pdf[idx];
+		}
+	}
+
+	if (norm == 0.0f)
 		return false;
-#undef TOP
-#undef BOTTOM
 
+	float cdf[7] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f, 0.0f };
+	for (int i = 1; i <= 6; i++)
+	{
+		pdf[i - 1] /= norm;
+		cdf[i] = cdf[i - 1] + pdf[i - 1];
+	}
+
+	float test = 0.0f;
+	for (int i = 0; i < 6; i++) test += pdf[i];
+	optix_print("Pdf %f %f %f %f %f %f %f\n", pdf[0], pdf[1], pdf[2], pdf[3], pdf[4], pdf[5], pdf[6]);
+	optix_print("Test %f, %f %f %f %f %f %f %f\n", test, cdf[0], cdf[1], cdf[2], cdf[3], cdf[4], cdf[5], cdf[6]);
+
+	int axis = 0;
+	float var = rnd(t);
+	for (int i = 0; i < 7; i++)
+	{
+		axis = var > cdf[i] ? i : axis;
+	}
+
+	float3 ax = axes[axis / 2] * verse_mult[axis % 2];
+	integration_factor /= pdf[axis]; 
+	ni = nis[axis];
+	xi = xis[axis];
 	integration_factor *= r / pdf_disk;
-	float inv_jac = max(0.0f, dot(normalize(top), normalize(ni)));
-
-	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor = inv_jac > 0.0f ? integration_factor / inv_jac : 0.0f;
+	//if (bssrdf_sampling_properties->use_jacobian == 1)
+	//	integration_factor /= max(0.0f, abs(dot(normalize(ax), normalize(ni))));
 	return true;
 }
 
@@ -280,9 +310,9 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	{
 	case BSSRDF_SAMPLING_CAMERA_BASED:				return camera_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
 	case BSSRDF_SAMPLING_TANGENT_PLANE:				return tangent_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
-	case BSSRDF_SAMPLING_MIS_AXIS:					return tangent_mis_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
 	case BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES:	return tangent_no_offset(xo, no, wo, props, t, xi, ni, integration_factor);	break;
-	case BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES:		return tangent_mis_king(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BSSRDF_SAMPLING_MIS_AXIS:					return axis_mis(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES:		return axis_mis_probes(xo, no, wo, props, t, xi, ni, integration_factor);	break;
 	}
 }
 
