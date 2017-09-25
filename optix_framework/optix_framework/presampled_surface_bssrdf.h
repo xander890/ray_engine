@@ -18,7 +18,7 @@ public:
 private:
     int entry_point;
 	optix::Buffer mSampleBuffer;
-	unsigned int mSamples = 10000;
+	unsigned int mSamples = 1000;
 };
 
 

@@ -143,7 +143,7 @@ ObjScene::ObjScene()
 
 inline ObjScene::~ObjScene()
 {
-	ParameterParser::free();
+	ConfigParameters::free();
 	cleanUp();
 }
 
@@ -213,7 +213,7 @@ bool ObjScene::drawGUI()
 			std::string filePath;
 			if (Dialogs::saveFileDialog(filePath))
 			{
-				ParameterParser::dump_used_parameters(filePath);
+				ConfigParameters::dump_used_parameters(filePath);
 			}
 		}
 
@@ -354,8 +354,8 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	context->setPrintBufferSize(200);
 	setDebugEnabled(false);
 	context->setPrintLaunchIndex(0, 0);
-	ParameterParser::init(config_file);
-	ParameterParser::override_parameters(parameters_override);
+	ConfigParameters::init(config_file);
+	ConfigParameters::override_parameters(parameters_override);
 
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
@@ -367,10 +367,10 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 		MaterialHost::set_default_material(v[0]);
 	}
 
-    auto camera_type = PinholeCameraType::to_enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), std::string("Type of the camera. Types: ") + PinholeCameraType::get_full_string()));
-    int camera_width = ParameterParser::get_parameter<int>("camera", "window_width", 512, "The width of the window");
-    int camera_height = ParameterParser::get_parameter<int>("camera", "window_height", 512, "The height of the window");
-    int downsampling = ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, "");
+    auto camera_type = PinholeCameraType::to_enum(ConfigParameters::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), std::string("Type of the camera. Types: ") + PinholeCameraType::get_full_string()));
+    int camera_width = ConfigParameters::get_parameter<int>("camera", "window_width", 512, "The width of the window");
+    int camera_height = ConfigParameters::get_parameter<int>("camera", "window_height", 512, "The height of the window");
+    int downsampling = ConfigParameters::get_parameter<int>("camera", "camera_downsampling", 1, "");
     camera = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
 
     ShaderFactory::init(context);
@@ -389,22 +389,22 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 		available_media.push_back(&kv.second);
 	}
 
-	current_miss_program = BackgroundType::to_enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::to_string(BackgroundType::CONSTANT_BACKGROUND), std::string("Miss program. ") + BackgroundType::get_full_string()));
+	current_miss_program = BackgroundType::to_enum(ConfigParameters::get_parameter<string>("config", "default_miss_type", BackgroundType::to_string(BackgroundType::CONSTANT_BACKGROUND), std::string("Miss program. ") + BackgroundType::get_full_string()));
 
-    tonemap_exponent = ParameterParser::get_parameter<float>("tonemap", "tonemap_exponent", 1.8f, "Tonemap exponent");
-    tonemap_multiplier = ParameterParser::get_parameter<float>("tonemap", "tonemap_multiplier", 1.f, "Tonemap multiplier");
+    tonemap_exponent = ConfigParameters::get_parameter<float>("tonemap", "tonemap_exponent", 1.8f, "Tonemap exponent");
+    tonemap_multiplier = ConfigParameters::get_parameter<float>("tonemap", "tonemap_multiplier", 1.f, "Tonemap multiplier");
 
 	// Setup context
 	context->setRayTypeCount(RAY_TYPE_COUNT);
-	context->setStackSize(ParameterParser::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
+	context->setStackSize(ConfigParameters::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
-	context["max_depth"]->setInt(ParameterParser::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
+	context["max_depth"]->setInt(ConfigParameters::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
 
 	// Constant colors
 	context["bad_color"]->setFloat(0.0f, 1.0f, 0.0f);
     context["bg_color"]->setFloat(0.3f, 0.3f, 0.3f);
 	
-	bool use_abs = ParameterParser::get_parameter<bool>("config", "use_absorption", true, "Use absorption in rendering.");
+	bool use_abs = ConfigParameters::get_parameter<bool>("config", "use_absorption", true, "Use absorption in rendering.");
 	Logger::debug << "Absorption is " << (use_abs ? "ON" : "OFF") << endl;
 
 	// Tone mapping pass
@@ -423,7 +423,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	// We need the scene bounding box for placing the camera
 	Aabb bbox(make_float3(-1,-1,-1), make_float3(1,1,1));
 	
-    RenderingMethodType::EnumType t = RenderingMethodType::to_enum(ParameterParser::get_parameter<string>("config", "rendering_type", RenderingMethodType::to_string(RenderingMethodType::RECURSIVE_RAY_TRACING), std::string("Rendering method. ") + RenderingMethodType::get_full_string()));
+    RenderingMethodType::EnumType t = RenderingMethodType::to_enum(ConfigParameters::get_parameter<string>("config", "rendering_type", RenderingMethodType::to_string(RenderingMethodType::RECURSIVE_RAY_TRACING), std::string("Rendering method. ") + RenderingMethodType::get_full_string()));
 	set_rendering_method(t);
 
 	// Load geometry from OBJ files into the group of scene objects
@@ -662,7 +662,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		if (current_render_task->is_finished())
 		{
 			export_raw(current_render_task->get_destination_file(), rendering_output_buffer, m_frame);
-			ParameterParser::dump_used_parameters(current_render_task->get_destination_file() + ".xml");
+			ConfigParameters::dump_used_parameters(current_render_task->get_destination_file() + ".xml");
 			current_render_task->end();
 		}
 		current_render_task->update(static_cast<float>(total1 - total0));
@@ -706,13 +706,13 @@ optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format,
 void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 {
 	Logger::info << "Adding light buffers to scene..." << endl;
-    LightTypes::EnumType default_light_type = LightTypes::to_enum(ParameterParser::get_parameter<string>("light", "default_light_type", LightTypes::to_string(LightTypes::DIRECTIONAL_LIGHT), "Type of the default light"));
+    LightTypes::EnumType default_light_type = LightTypes::to_enum(ConfigParameters::get_parameter<string>("light", "default_light_type", LightTypes::to_string(LightTypes::DIRECTIONAL_LIGHT), "Type of the default light"));
 
-	float3 light_dir = ParameterParser::get_parameter<float3>("light","default_directional_light_direction", make_float3(0.0f, -1.0f, 0.0f), "Direction of the default directional light");
-	float3 light_radiance = ParameterParser::get_parameter<float3>("light", "default_directional_light_intensity", make_float3(5.0f), "Intensity of the default directional light");
-	float3 light_pos = ParameterParser::get_parameter<float3>("light", "default_point_light_position", make_float3(0.08f, 0.1f, 0.11f), "Position of the default point light.");
-	float3 light_intensity = ParameterParser::get_parameter<float3>("light", "default_point_light_intensity", make_float3(0.05f), "Intensity of the default point light.");
-	int shadows = ParameterParser::get_parameter<int>("light", "shadows", 1, "Use shadows in rendering.");
+	float3 light_dir = ConfigParameters::get_parameter<float3>("light","default_directional_light_direction", make_float3(0.0f, -1.0f, 0.0f), "Direction of the default directional light");
+	float3 light_radiance = ConfigParameters::get_parameter<float3>("light", "default_directional_light_intensity", make_float3(5.0f), "Intensity of the default directional light");
+	float3 light_pos = ConfigParameters::get_parameter<float3>("light", "default_point_light_position", make_float3(0.08f, 0.1f, 0.11f), "Position of the default point light.");
+	float3 light_intensity = ConfigParameters::get_parameter<float3>("light", "default_point_light_intensity", make_float3(0.05f), "Intensity of the default point light.");
+	int shadows = ConfigParameters::get_parameter<int>("light", "shadows", 1, "Use shadows in rendering.");
 
 	std::string ptx_path_light = get_path_ptx("light_programs.cu");
 
@@ -905,7 +905,7 @@ void ObjScene::set_miss_program()
 	{
 	case BackgroundType::ENVIRONMENT_MAP:
 	{
-        string env_map_name = ParameterParser::get_parameter<string>("light", "environment_map", "pisa.hdr", "Environment map file");
+        string env_map_name = ConfigParameters::get_parameter<string>("light", "environment_map", "pisa.hdr", "Environment map file");
         miss_program = std::make_unique<EnvironmentMap>(env_map_name);
 	}
     break;
@@ -916,7 +916,7 @@ void ObjScene::set_miss_program()
     break;
     case BackgroundType::CONSTANT_BACKGROUND:
 	default:
-        float3 color = ParameterParser::get_parameter<float3>("light", "background_constant_color", make_float3(0.5), "Environment map file");
+        float3 color = ConfigParameters::get_parameter<float3>("light", "background_constant_color", make_float3(0.5), "Environment map file");
         miss_program = std::make_unique<ConstantBackground>(color);
         break;
     }
@@ -974,17 +974,17 @@ void ObjScene::updateGlassObjects()
 
 void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 {
-    auto camera_type = PinholeCameraType::to_enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));  
+    auto camera_type = PinholeCameraType::to_enum(ConfigParameters::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));  
 
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	float3 eye = m_scene_bounding_box.center();
 	eye.z += 3 * max_dim;
 
-	bool use_auto_camera = ParameterParser::get_parameter<bool>("camera", "use_auto_camera", false, "Use a automatic placed camera or use the current data.");
+	bool use_auto_camera = ConfigParameters::get_parameter<bool>("camera", "use_auto_camera", false, "Use a automatic placed camera or use the current data.");
 
 	Matrix3x3 camera_matrix = Matrix3x3::identity();
 
-	float vfov = ParameterParser::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
+	float vfov = ConfigParameters::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
 
 	float ratio = camera->get_width() / (float)camera->get_height();
 	float hfov = RtoD(2.0f*atanf(ratio*tanf(DtoR(0.5f*(vfov)))));
@@ -998,15 +998,15 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 	}
 	else
 	{
-		eye = ParameterParser::get_parameter<float3>("camera", "camera_position", make_float3(1, 0, 0), "The camera initial position");
-		float3 lookat = ParameterParser::get_parameter<float3>("camera", "camera_lookat_point", make_float3(0, 0, 0), "The camera initial lookat point");
-		float3 up = ParameterParser::get_parameter<float3>("camera", "camera_up", make_float3(0, 1, 0), "The camera initial up");
+		eye = ConfigParameters::get_parameter<float3>("camera", "camera_position", make_float3(1, 0, 0), "The camera initial position");
+		float3 lookat = ConfigParameters::get_parameter<float3>("camera", "camera_lookat_point", make_float3(0, 0, 0), "The camera initial lookat point");
+		float3 up = ConfigParameters::get_parameter<float3>("camera", "camera_up", make_float3(0, 1, 0), "The camera initial up");
 		camera_data = InitialCameraData(eye, lookat, up, hfov, vfov);
 	}
 
 	if (camera_type == PinholeCameraType::INVERSE_CAMERA_MATRIX)
 	{
-		camera_matrix = ParameterParser::get_parameter<Matrix3x3>("camera", "inv_camera_matrix", Matrix3x3::identity(), "The camera inverse calibration matrix K^-1 * R^-1");
+		camera_matrix = ConfigParameters::get_parameter<Matrix3x3>("camera", "inv_camera_matrix", Matrix3x3::identity(), "The camera inverse calibration matrix K^-1 * R^-1");
 	}
 
 	reset_renderer();

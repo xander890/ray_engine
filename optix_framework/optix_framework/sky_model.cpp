@@ -6,10 +6,10 @@ void SkyModel::update_data()
 {
     if (dot(north, up) != 0.0f)
         throw std::exception("North and up are not perpendicular.");
-    day = ParameterParser::get_parameter<int>("sky", "day", 12, "Default day for the sun model.");
-    hour = ParameterParser::get_parameter<int>("sky", "hour", 15, "Default hour of the day for the sun model.");
-    latitude = M_PIf / 180.0f * ParameterParser::get_parameter<float>("sky", "latitude", 45.0f, "Default latitude (deg) for the sun model.");
-    turbidity = ParameterParser::get_parameter<float>("sky", "turbidity", 2.0f, "Default turbidity of the sky.");
+    day = ConfigParameters::get_parameter<int>("sky", "day", 12, "Default day for the sun model.");
+    hour = ConfigParameters::get_parameter<int>("sky", "hour", 15, "Default hour of the day for the sun model.");
+    latitude = M_PIf / 180.0f * ConfigParameters::get_parameter<float>("sky", "latitude", 45.0f, "Default latitude (deg) for the sun model.");
+    turbidity = ConfigParameters::get_parameter<float>("sky", "turbidity", 2.0f, "Default turbidity of the sky.");
 
     perez_data.A = make_float3(0.1787f * turbidity - 1.4630f, -0.0193f * turbidity - 0.2592f, -0.0167f * turbidity - 0.2608f);
     perez_data.B = make_float3(-0.3554f * turbidity + 0.4275f, -0.0665f * turbidity + 0.0008f, -0.0950f * turbidity + 0.0092f);

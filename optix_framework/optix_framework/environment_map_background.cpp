@@ -18,8 +18,8 @@ void EnvironmentMap::init(optix::Context & ctx)
     context = ctx;
     ctx["envmap_enabled"]->setInt(1);
 
-    envmap_deltas = ParameterParser::get_parameter<float3>("light", "envmap_deltas", make_float3(0), "Rotation offsetof environment map.");
-    properties.lightmap_multiplier = make_float3(ParameterParser::get_parameter<float>("light", "lightmap_multiplier", (1.0f), "Environment map multiplier"));
+    envmap_deltas = ConfigParameters::get_parameter<float3>("light", "envmap_deltas", make_float3(0), "Rotation offsetof environment map.");
+    properties.lightmap_multiplier = make_float3(ConfigParameters::get_parameter<float>("light", "lightmap_multiplier", (1.0f), "Environment map multiplier"));
     bool is_env = false;
     is_env = true;
     std::string ptx_path = get_path_ptx("env_cameras.cu");

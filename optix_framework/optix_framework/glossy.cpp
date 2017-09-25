@@ -43,14 +43,14 @@ optix::TextureSampler createOneElementSampler(optix::Context context, const opti
 void GlossyShader::initialize_shader(optix::Context context, const ShaderInfo& shader_info)
 {
     Shader::initialize_shader(context, shader_info);
-    blinn_exponent = ParameterParser::get_parameter<float>("glossy", "blinn_exp", 1.0f);
-    anisotropic_exp = ParameterParser::get_parameter<optix::float2>("glossy", "anisotropic_exp", optix::make_float2(.5f, 1.0f));
-    x_axis_anisotropic = ParameterParser::get_parameter<optix::float3>("glossy", "x_axis_anisotropic", optix::make_float3(1.0f, 0.0f, 0.0f));
+    blinn_exponent = ConfigParameters::get_parameter<float>("glossy", "blinn_exp", 1.0f);
+    anisotropic_exp = ConfigParameters::get_parameter<optix::float2>("glossy", "anisotropic_exp", optix::make_float2(.5f, 1.0f));
+    x_axis_anisotropic = ConfigParameters::get_parameter<optix::float3>("glossy", "x_axis_anisotropic", optix::make_float3(1.0f, 0.0f, 0.0f));
     get_merl_brdf_list(Folders::merl_database_file.c_str(), brdf_names);
     merl_folder = Folders::merl_folder;
-    merl_correction = ParameterParser::get_parameter<float3>("glossy", "merl_multiplier", make_float3(1.0f), "Multiplication factor for MERL materials. Premultiplied on sampling the brdf.");
+    merl_correction = ConfigParameters::get_parameter<float3>("glossy", "merl_multiplier", make_float3(1.0f), "Multiplication factor for MERL materials. Premultiplied on sampling the brdf.");
     Logger::debug << "Merl correction factor: " << std::to_string(merl_correction.x) << " " << std::to_string(merl_correction.y) << " " << std::to_string(merl_correction.z) << std::endl;
-    use_merl_brdf = ParameterParser::get_parameter<bool>("config", "use_merl_brdf", false, "configure the ray tracer to try to use the MERL brdf database whenever possible.");
+    use_merl_brdf = ConfigParameters::get_parameter<bool>("config", "use_merl_brdf", false, "configure the ray tracer to try to use the MERL brdf database whenever possible.");
 }
 
 void GlossyShader::set_data(Mesh& object)
