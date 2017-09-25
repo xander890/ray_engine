@@ -569,12 +569,15 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 
 	context->validate();
 
-
-	 Logger::info<<"Scene initialized."<<endl;
+	RayGenCameraData dummy;
+	trace(dummy);
+	reset_renderer();
+    Logger::info<<"Scene initialized."<<endl;
 	 //std::stringstream ss;
 	 //cereal::JSONOutputArchive archive(ss);
 	 //archive(*mMeshes[0]);
 	 //Logger::info << ss.str() << std::endl;
+	 
 }
 
 void update_timer(double & current, double n)
@@ -613,6 +616,8 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	double t1 = currentTime();
 	update_timer(render_time_load, t1 - t0);
 
+	t0 = currentTime();
+
 	if (m_camera_changed)
 	{
 		reset_renderer();
@@ -624,6 +629,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		scene->getAcceleration()->markDirty();
 
 	t0 = currentTime();
+
     method->pre_trace();
     execute_on_scene_elements([=](Mesh & m)
     {
@@ -643,6 +649,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	// cout << "Elapsed (ray tracing): " << (time1 - time) * 1000 << endl;
 	// Apply tone mapping
 	t0 = currentTime();
+
 	context->launch(tonemap_entry_point, width, height);
 
 	if (debug_mode_enabled == true)
@@ -669,6 +676,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	}
 
 	collect_image(m_frame);
+
 }
 
 Buffer ObjScene::getOutputBuffer()
