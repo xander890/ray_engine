@@ -156,7 +156,7 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   glfwSetCursorPosCallback(m_window, mouseMotion);
   glfwSetWindowSizeCallback(m_window, resize);
  
-
+  m_scene->sceneInitialized();
   while (!glfwWindowShouldClose(m_window))
   {
 	  glfwPollEvents();
