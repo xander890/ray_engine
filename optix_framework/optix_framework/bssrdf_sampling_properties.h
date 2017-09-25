@@ -17,7 +17,6 @@ struct BSSRDFSamplingProperties
 	int sampling_method				DEFAULT(BSSRDF_SAMPLING_NORMAL_BASED_HERY);
 	int correct_camera				DEFAULT(1);
 	float d_max						DEFAULT(1.0f);
-	float R_min						DEFAULT(0.0f);
 	float dot_no_ni_min				DEFAULT(0.001f);
 	optix::float3 mis_weights		DEFAULT(optix::make_float3(0.5f, 0.25f, 0.25f));
 	int show_mode					DEFAULT(BSSRDF_SHADERS_SHOW_ALL);
