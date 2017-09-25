@@ -2,6 +2,7 @@
 #include "material_library.h"
 #include "scattering_material.h"
 #include "immediate_gui.h"
+#include "optix_utils.h"
 
 using namespace optix;
 
@@ -12,9 +13,8 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx, const Shader
 
     std::string ptx_path = get_path_ptx("sample_camera.cu");
     optix::Program ray_gen_program = context->createProgramFromPTXFile( ptx_path, "sample_camera" );
-    entry_point = context->getEntryPointCount();
-    context->setEntryPointCount(entry_point + 1);
-    context->setRayGenerationProgram(entry_point , ray_gen_program);
+	
+    entry_point = add_entry_point(context, ray_gen_program);
     
     // We tell optix we "are doing stuff" in the context with these names --> otherwise compilation fails
     Buffer empty_buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT3, 1);

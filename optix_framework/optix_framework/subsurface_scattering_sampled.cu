@@ -244,7 +244,6 @@ __device__ __forceinline__ bool tangent_mis_king(const float3 & xo, const float3
 	int main_axis = choose_sampling_axis(t);
 	float* mis_weights_pdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
 	float3 top = axes[main_axis];
-
 	float3 t1 = axes[(main_axis + 1) % 3];
 	float3 t2 = axes[(main_axis + 2) % 3];
 	const float pdf_top = 0.5f;

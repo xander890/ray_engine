@@ -40,6 +40,11 @@ public:
 		return val;
 	}
 
+	template <typename T>
+	static T get_parameter(const std::string & tag, const std::string &  n, T default_value, const std::string & comment = "")
+	{
+		return get_parameter(tag.c_str(), n.c_str(), default_value, comment.c_str());
+	}
 protected:
 	ParameterParser(void);
 	~ParameterParser(void);

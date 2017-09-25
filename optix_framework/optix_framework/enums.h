@@ -2,14 +2,6 @@
 #include "host_device_common.h"
 #include <algorithm>
 #include <map>
-enum class CameraType { STANDARD_RT = 0, TONE_MAPPING = 1, DEBUG = 2, COUNT = 3 };
-
-template <typename E>
-auto as_integer(E const value)
--> typename std::underlying_type<E>::type
-{
-	return static_cast<typename std::underlying_type<E>::type>(value);
-}
 
 #define IMPROVED_ENUM_NAME Scene
 #define IMPROVED_ENUM_LIST ENUMITEM(OPTIX_ONLY) ENUMITEM(OPENGL_ONLY) ENUMITEM(HYBRID_SSBO) ENUMITEM(HYBRID_FIRST_PASS) 
@@ -27,7 +19,7 @@ auto as_integer(E const value)
 #define IMPROVED_ENUM_LIST ENUMITEM(RECURSIVE_RAY_TRACING) ENUMITEM(AMBIENT_OCCLUSION) ENUMITEM(PATH_TRACING)
 #include "improved_enum.h"
 
-#define IMPROVED_ENUM_NAME PinholeCameraDefinitionType
+#define IMPROVED_ENUM_NAME PinholeCameraType
 #define IMPROVED_ENUM_LIST ENUMITEM(INVERSE_CAMERA_MATRIX) ENUMITEM(EYE_LOOKAT_UP_VECTORS) 
 #include "improved_enum.h"
 

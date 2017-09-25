@@ -16,10 +16,6 @@ void EnvironmentMap::init(optix::Context & ctx)
 {
     MissProgram::init(ctx);
     context = ctx;
-    camera_1 = ctx->getEntryPointCount();
-    ctx->setEntryPointCount(camera_1 + 3);
-    camera_2 = camera_1 + 1;
-    camera_3 = camera_2 + 1;
     ctx["envmap_enabled"]->setInt(1);
 
     envmap_deltas = ParameterParser::get_parameter<float3>("light", "envmap_deltas", make_float3(0), "Rotation offsetof environment map.");
@@ -45,11 +41,13 @@ void EnvironmentMap::init(optix::Context & ctx)
     sampling_properties.conditional_cdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
     
     Program ray_gen_program_1 = ctx->createProgramFromPTXFile(ptx_path, "env_luminance_camera");
-    ctx->setRayGenerationProgram((camera_1), ray_gen_program_1);   
-    Program ray_gen_program_2 = ctx->createProgramFromPTXFile(ptx_path, "env_marginal_camera");
-    ctx->setRayGenerationProgram((camera_2), ray_gen_program_2);
-    Program ray_gen_program_3 = ctx->createProgramFromPTXFile(ptx_path, "env_pdf_camera");
-    ctx->setRayGenerationProgram((camera_3), ray_gen_program_3);    
+	camera_1 = add_entry_point(ctx, ray_gen_program_1);
+
+	Program ray_gen_program_2 = ctx->createProgramFromPTXFile(ptx_path, "env_marginal_camera");
+	camera_2 = add_entry_point(ctx, ray_gen_program_2);
+	
+	Program ray_gen_program_3 = ctx->createProgramFromPTXFile(ptx_path, "env_pdf_camera");
+	camera_3 = add_entry_point(ctx, ray_gen_program_3);
 
     property_buffer = create_and_initialize_buffer<EnvmapProperties>(context, properties);
     sampling_property_buffer = create_and_initialize_buffer<EnvmapImportanceSamplingData>(context, sampling_properties);

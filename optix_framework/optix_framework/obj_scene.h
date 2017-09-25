@@ -156,6 +156,9 @@ private:
 
 	void transform_changed();
 	bool mImportanceSampleAreaLights = true;
+
+	unsigned int tonemap_entry_point;
+	unsigned int debug_entry_point;
 };
 
 #endif // OBJSCENE_H

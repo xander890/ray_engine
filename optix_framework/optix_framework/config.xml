@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <ex:Optix_Framework_Parameters xmlns:ex="schemas.example.com/2008/">
   <bssrdf>
-    <property key="approximate_A" value="1 1 1 " comment="Approximate value A for approximate dipoles."/>
-    <property key="approximate_s" value="1 1 1 " comment="Approximate value A for approximate dipoles."/>
+    <property key="approximate_A" value="0.996 0.987 0.821 " comment="Approximate value A for approximate dipoles."/>
+    <property key="approximate_s" value="3.22 5.82 7.83 " comment="Approximate value A for approximate dipoles."/>
     <property key="bssrdf_model" value="DIRECTIONAL_DIPOLE_BSSRDF" comment="Selected dipole. Values: STANDARD_DIPOLE_BSSRDF DIRECTIONAL_DIPOLE_BSSRDF APPROX_STANDARD_DIPOLE_BSSRDF APPROX_DIRECTIONAL_DIPOLE_BSSRDF "/>
     <property key="bssrdf_sampling_mfp" value="MIN" comment="Value used in sampling as MFP. Can be X, Y, Z, MEAN, MIN, MAX"/>
   </bssrdf>

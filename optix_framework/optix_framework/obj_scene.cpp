@@ -367,7 +367,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 		MaterialHost::set_default_material(v[0]);
 	}
 
-    auto camera_type = PinholeCameraDefinitionType::String2Enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraDefinitionType::Enum2String(PinholeCameraDefinitionType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));
+    auto camera_type = PinholeCameraType::to_enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), std::string("Type of the camera. Types: ") + PinholeCameraType::get_full_string()));
     int camera_width = ParameterParser::get_parameter<int>("camera", "window_width", 512, "The width of the window");
     int camera_height = ParameterParser::get_parameter<int>("camera", "window_height", 512, "The height of the window");
     int downsampling = ParameterParser::get_parameter<int>("camera", "camera_downsampling", 1, "");
@@ -389,7 +389,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 		available_media.push_back(&kv.second);
 	}
 
-	current_miss_program = BackgroundType::String2Enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::Enum2String(BackgroundType::CONSTANT_BACKGROUND), "Default miss program."));
+	current_miss_program = BackgroundType::to_enum(ParameterParser::get_parameter<string>("config", "default_miss_type", BackgroundType::to_string(BackgroundType::CONSTANT_BACKGROUND), std::string("Miss program. ") + BackgroundType::get_full_string()));
 
     tonemap_exponent = ParameterParser::get_parameter<float>("tonemap", "tonemap_exponent", 1.8f, "Tonemap exponent");
     tonemap_multiplier = ParameterParser::get_parameter<float>("tonemap", "tonemap_multiplier", 1.f, "Tonemap multiplier");
@@ -423,7 +423,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	// We need the scene bounding box for placing the camera
 	Aabb bbox(make_float3(-1,-1,-1), make_float3(1,1,1));
 	
-    RenderingMethodType::EnumType t = RenderingMethodType::String2Enum(ParameterParser::get_parameter<string>("config", "rendering_type", RenderingMethodType::Enum2String(RenderingMethodType::RECURSIVE_RAY_TRACING), "Rendering method"));
+    RenderingMethodType::EnumType t = RenderingMethodType::to_enum(ParameterParser::get_parameter<string>("config", "rendering_type", RenderingMethodType::to_string(RenderingMethodType::RECURSIVE_RAY_TRACING), std::string("Rendering method. ") + RenderingMethodType::get_full_string()));
 	set_rendering_method(t);
 
 	// Load geometry from OBJ files into the group of scene objects
@@ -520,14 +520,13 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	// Set top level geometry in acceleration structure. 
 	// The default used by the ObjLoader is SBVH.
 
-	// Set up camera
-	
-    
+	// Set up cameras    
 	Program ray_gen_program_t = context->createProgramFromPTXFile(get_path_ptx("tonemap_camera.cu"), "tonemap_camera");
 	Program ray_gen_program_d = context->createProgramFromPTXFile(get_path_ptx("debug_camera.cu"), "debug_camera");
 
-	context->setRayGenerationProgram(as_integer(CameraType::TONE_MAPPING), ray_gen_program_t);
-	context->setRayGenerationProgram(as_integer(CameraType::DEBUG), ray_gen_program_d);
+	tonemap_entry_point = add_entry_point(context, ray_gen_program_t);
+	debug_entry_point = add_entry_point(context, ray_gen_program_d);
+
 	zoomed_area = make_uint4(camera_width / 2 - 5, camera_height / 2 - 5, 10, 10);
 	context["zoom_window"]->setUint(zoom_debug_window);
 	context["image_part_to_zoom"]->setUint(zoomed_area);
@@ -637,21 +636,21 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	unsigned int height = camera->get_height();
 	
 	t0 = currentTime();
-	context->launch(as_integer(CameraType::STANDARD_RT), width, height);
+	context->launch(camera->get_entry_point(), width, height);
 
 	t1 = currentTime();
 	update_timer(render_time_main, t1 - t0);
 	// cout << "Elapsed (ray tracing): " << (time1 - time) * 1000 << endl;
 	// Apply tone mapping
 	t0 = currentTime();
-	context->launch(as_integer(CameraType::TONE_MAPPING), width, height);
+	context->launch(tonemap_entry_point, width, height);
 
 	if (debug_mode_enabled == true)
 	{
 		context["zoom_window"]->setUint(zoom_debug_window);
 		context["image_part_to_zoom"]->setUint(zoomed_area);
 
-		context->launch(as_integer(CameraType::DEBUG), width, height);
+		context->launch(debug_entry_point, width, height);
 	}
 	t1 = currentTime();
 	update_timer(render_time_tonemap ,t1 - t0);
@@ -707,7 +706,7 @@ optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format,
 void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 {
 	Logger::info << "Adding light buffers to scene..." << endl;
-    LightTypes::EnumType default_light_type = LightTypes::String2Enum(ParameterParser::get_parameter<string>("light", "default_light_type", LightTypes::Enum2String(LightTypes::DIRECTIONAL_LIGHT), "Type of the default light"));
+    LightTypes::EnumType default_light_type = LightTypes::to_enum(ParameterParser::get_parameter<string>("light", "default_light_type", LightTypes::to_string(LightTypes::DIRECTIONAL_LIGHT), "Type of the default light"));
 
 	float3 light_dir = ParameterParser::get_parameter<float3>("light","default_directional_light_direction", make_float3(0.0f, -1.0f, 0.0f), "Direction of the default directional light");
 	float3 light_radiance = ParameterParser::get_parameter<float3>("light", "default_directional_light_intensity", make_float3(5.0f), "Intensity of the default directional light");
@@ -720,7 +719,7 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
     Buffer dir_light_buffer = create_buffer<SingularLightData>(context);
     Buffer area_light_buffer = create_buffer<TriangleLight>(context);
 
-    context["light_type"]->setInt(as_integer(default_light_type));
+    context["light_type"]->setInt(static_cast<unsigned int>(default_light_type));
 	switch (default_light_type)
 	{
 	case LightTypes::SKY_LIGHT:
@@ -975,7 +974,7 @@ void ObjScene::updateGlassObjects()
 
 void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 {
-    auto camera_type = PinholeCameraDefinitionType::String2Enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraDefinitionType::Enum2String(PinholeCameraDefinitionType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));  
+    auto camera_type = PinholeCameraType::to_enum(ParameterParser::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));  
 
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	float3 eye = m_scene_bounding_box.center();
@@ -1005,7 +1004,7 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 		camera_data = InitialCameraData(eye, lookat, up, hfov, vfov);
 	}
 
-	if (camera_type == PinholeCameraDefinitionType::INVERSE_CAMERA_MATRIX)
+	if (camera_type == PinholeCameraType::INVERSE_CAMERA_MATRIX)
 	{
 		camera_matrix = ParameterParser::get_parameter<Matrix3x3>("camera", "inv_camera_matrix", Matrix3x3::identity(), "The camera inverse calibration matrix K^-1 * R^-1");
 	}

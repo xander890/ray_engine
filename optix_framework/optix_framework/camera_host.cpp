@@ -5,18 +5,18 @@
 #include "folders.h"
 #include "shader_factory.h"
 #include "immediate_gui.h"
+#include "optix_utils.h"
 
 using namespace optix;
 using namespace std;
 
-Camera::Camera(optix::Context & context, PinholeCameraDefinitionType::EnumType camera_type, int width, int height, int downsampling, optix::int4 rendering_rect)
+Camera::Camera(optix::Context & context, PinholeCameraType::EnumType camera_type, int width, int height, int downsampling, optix::int4 rendering_rect)
 {
-    context->setEntryPointCount(as_integer(CameraType::COUNT));
     const string ptx_path = get_path_ptx("pinhole_camera.cu");
-    string camera_name = (camera_type == PinholeCameraDefinitionType::INVERSE_CAMERA_MATRIX) ? "pinhole_camera_w_matrix" : "pinhole_camera";
+    string camera_name = (camera_type == PinholeCameraType::INVERSE_CAMERA_MATRIX) ? "pinhole_camera_w_matrix" : "pinhole_camera";
     Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, camera_name);
-    context->setRayGenerationProgram(as_integer(CameraType::STANDARD_RT), ray_gen_program);
-    context->setExceptionProgram(as_integer(CameraType::STANDARD_RT), context->createProgramFromPTXFile(ptx_path, "exception"));
+	entry_point = add_entry_point(context, ray_gen_program);
+    context->setExceptionProgram(entry_point, context->createProgramFromPTXFile(ptx_path, "exception"));
 
     data = std::make_unique<CameraData>();
 	data->camera_size = make_uint2(width, height);

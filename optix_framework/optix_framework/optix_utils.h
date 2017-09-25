@@ -75,3 +75,11 @@ template<typename T> void set_texture_pixel(optix::Context & ctx, const T& elem,
 	memcpy(buf->map(), &elem , sizeof(T));
 	buf->unmap();
 }
+
+inline unsigned int add_entry_point(optix::Context & ctx, optix::Program & program)
+{
+	unsigned int current = ctx->getEntryPointCount();
+	ctx->setEntryPointCount(current + 1);
+	ctx->setRayGenerationProgram(current, program);
+	return current;
+}
