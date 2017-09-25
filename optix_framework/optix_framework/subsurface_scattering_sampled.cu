@@ -52,7 +52,7 @@ __device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, con
 {
 	PerRayData_normal_depth attribute_fetch_ray_payload = { make_float3(0.0f), RT_DEFAULT_MAX };
 	optix::Ray attribute_fetch_ray;
-	attribute_fetch_ray.ray_type = RAY_TYPE_ATTRIBUTE;
+	attribute_fetch_ray.ray_type =  RayType::ATTRIBUTE;
 	attribute_fetch_ray.tmin = scene_epsilon;
 	attribute_fetch_ray_payload.depth = t_max;
 	attribute_fetch_ray.tmax = t_max;
@@ -304,11 +304,11 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 {
 	switch (bssrdf_sampling_properties->sampling_method)
 	{
-	case BSSRDF_SAMPLING_CAMERA_BASED:				return camera_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
-	case BSSRDF_SAMPLING_TANGENT_PLANE:				return tangent_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
-	case BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES:	return tangent_no_offset(xo, no, wo, props, t, xi, ni, integration_factor);	break;
-	case BSSRDF_SAMPLING_MIS_AXIS:					return axis_mis(xo, no, wo, props, t, xi, ni, integration_factor);	break;
-	case BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES:		return axis_mis_probes(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_CAMERA_BASED:				return camera_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE:				return tangent_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES:	return tangent_no_offset(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS:					return axis_mis(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES:		return axis_mis_probes(xo, no, wo, props, t, xi, ni, integration_factor);	break;
 	}
 }
 
@@ -364,7 +364,7 @@ __device__ __forceinline__ void _shade()
 		float3 wt = recip_ior*(cos_theta_o*no - wo) - no*cos_theta_t;
 		PerRayData_radiance prd_refracted = prepare_new_pt_payload(prd_radiance);
 
-		Ray refracted(xo, wt, RAY_TYPE_RADIANCE, scene_epsilon);
+		Ray refracted(xo, wt,  RayType::RADIANCE, scene_epsilon);
 		rtTrace(top_object, refracted, prd_refracted);
 
 		prd_radiance.seed = prd_refracted.seed;
@@ -426,7 +426,7 @@ __device__ __forceinline__ void _shade()
 	{
 		float3 wr = 2.0f*cos_theta_o*no - wo;
 		PerRayData_radiance prd_reflected = prepare_new_pt_payload(prd_radiance);
-		Ray reflected(xo, wr, RAY_TYPE_RADIANCE, scene_epsilon);
+		Ray reflected(xo, wr,  RayType::RADIANCE, scene_epsilon);
 		rtTrace(top_object, reflected, prd_reflected);
 
 		prd_radiance.seed = prd_reflected.seed;

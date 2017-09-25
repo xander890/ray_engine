@@ -90,7 +90,7 @@ RT_PROGRAM void shade()
 		PerRayData_radiance prd_refracted = prepare_new_pt_payload(prd_radiance);
 		prd_refracted.seed = t;
 
-		Ray refracted(xo, wt, RAY_TYPE_RADIANCE, scene_epsilon);
+		Ray refracted(xo, wt,  RayType::RADIANCE, scene_epsilon);
 		rtTrace(top_object, refracted, prd_refracted);
 
 		t = prd_refracted.seed;
@@ -149,7 +149,7 @@ RT_PROGRAM void shade()
         float3 wr = 2.0f*cos_theta_o*no - wo;
         PerRayData_radiance prd_reflected = prepare_new_pt_payload(prd_radiance);
 		prd_reflected.seed = t;
-		Ray reflected(xo, wr, RAY_TYPE_RADIANCE, scene_epsilon);
+		Ray reflected(xo, wr,  RayType::RADIANCE, scene_epsilon);
         rtTrace(top_object, reflected, prd_reflected);
 
 		

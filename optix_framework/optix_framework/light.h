@@ -28,7 +28,7 @@ __forceinline__ __device__
 void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index)
 {
     SingularLightData l = singular_lights[light_index];
-    wi = (l.type == LIGHT_TYPE_POINT)? l.direction - hit_point  : -l.direction ;
+    wi = (l.type == LightType::POINT)? l.direction - hit_point  : -l.direction ;
     wi = normalize(wi);
 
     float V = 1.0f;
@@ -38,7 +38,7 @@ void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal
         V = trace_shadow_ray(hit_point, wi, scene_epsilon, RT_DEFAULT_MAX);
     }
 
-    float atten = (l.type == LIGHT_TYPE_POINT) ? dot(wi, wi) : 1.0f;
+    float atten = (l.type == LightType::POINT) ? dot(wi, wi) : 1.0f;
     radiance = V * l.emission / atten;
     casts_shadows = l.casts_shadow;
 }
@@ -131,11 +131,11 @@ __device__ __inline__ void evaluate_direct_light(const float3& hit_point, const 
 {
     switch (light_type)
     {
-    case LIGHT_TYPE_AREA:  evaluate_area_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index);  break;
+    case LightType::AREA:  evaluate_area_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index);  break;
     default:
-    case LIGHT_TYPE_SKY:
-    case LIGHT_TYPE_POINT: 
-    case LIGHT_TYPE_DIR:   evaluate_singular_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index); break;
+    case LightType::SKY:
+    case LightType::POINT:
+    case LightType::DIRECTIONAL:   evaluate_singular_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index); break;
     }
 }
 
@@ -145,11 +145,11 @@ __device__ __forceinline__ int light_size()
 {
     switch (light_type)
     {
-    case LIGHT_TYPE_AREA: return area_light_size();  break;
+    case LightType::AREA: return area_light_size();  break;
     default:
-    case LIGHT_TYPE_SKY:
-    case LIGHT_TYPE_POINT: 
-    case LIGHT_TYPE_DIR: return singular_light_size(); break;
+    case LightType::SKY:
+	case LightType::POINT: 
+    case LightType::DIRECTIONAL: return singular_light_size(); break;
     }
 }
 
@@ -166,7 +166,7 @@ __device__ __inline__ void sample_light(const float3& position, const float3 & n
 		prd.flags = RayFlags::USE_EMISSION;
 		prd.depth = ray_depth + 1;
 		prd.seed = seed;
-		optix::Ray ray = optix::make_Ray(position, wi, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+		optix::Ray ray = optix::make_Ray(position, wi,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 
 		rtTrace(top_object, ray, prd);
 		seed = prd.seed;

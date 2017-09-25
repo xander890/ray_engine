@@ -76,7 +76,7 @@ private:
     bool dirty = true;
 
     int mStandardMaterial;
-	SamplingMfpType::SamplingMfpTypeEnum mSamplingType;
+	SamplingMfpType::Type mSamplingType;
 
 	friend class cereal::access;
 	template<class Archive>

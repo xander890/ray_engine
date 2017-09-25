@@ -1,16 +1,19 @@
 #pragma once
 #include <optix_world.h>
-#define LIGHT_TYPE_DIR 0
-#define LIGHT_TYPE_POINT 1
-#define LIGHT_TYPE_SKY 2
-#define LIGHT_TYPE_AREA 3
-#define LIGHT_TYPE_COUNT 4
 
-#define RAY_TYPE_RADIANCE 0
-#define RAY_TYPE_SHADOW 1
-#define RAY_TYPE_DEPTH 2
-#define RAY_TYPE_ATTRIBUTE 3
-#define RAY_TYPE_COUNT 4
+#define IMPROVED_ENUM_NAME LightType
+#define IMPROVED_ENUM_LIST ENUMITEM(DIRECTIONAL) \
+						   ENUMITEM(POINT) \
+						   ENUMITEM(SKY) \
+						   ENUMITEM(AREA)  
+#include "improved_enum.h"
+
+#define IMPROVED_ENUM_NAME RayType
+#define IMPROVED_ENUM_LIST ENUMITEM(RADIANCE) \
+						   ENUMITEM(SHADOW) \
+						   ENUMITEM(DEPTH) \
+						   ENUMITEM(ATTRIBUTE)  
+#include "improved_enum.h"
 
 #ifdef __CUDACC__
 #define DEFAULT(x)

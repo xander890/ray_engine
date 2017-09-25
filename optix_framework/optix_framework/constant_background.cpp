@@ -28,7 +28,7 @@ bool ConstantBackground::on_draw()
 
 bool ConstantBackground::get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program)
 {
-    const char * prog = ray_type == RAY_TYPE_SHADOW ? "miss_shadow" : "miss";
+    const char * prog = ray_type ==  RayType::SHADOW ? "miss_shadow" : "miss";
     program = ctx->createProgramFromPTXFile(get_path_ptx("constant_background.cu"), prog);
     return true;
 }

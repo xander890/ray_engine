@@ -68,7 +68,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
     //  false: absorbed
     //
     ray.tmin = scene_epsilon;
-    ray.ray_type = RAY_TYPE_SHADOW;
+    ray.ray_type =  RayType::SHADOW;
     PerRayData_shadow prd_ray;
     prd_ray.attenuation = 1.0f;
 
@@ -216,12 +216,12 @@ RT_PROGRAM void shade()
 
         // Trace inside, i.e., reflect from inside or refract from outside
         float3 dir_inside = inside ? reflected_dir : refracted_dir;
-        Ray ray_inside(hit_pos, dir_inside, RAY_TYPE_SHADOW, scene_epsilon, RT_DEFAULT_MAX);
+        Ray ray_inside(hit_pos, dir_inside,  RayType::SHADOW, scene_epsilon, RT_DEFAULT_MAX);
 
         if (scatter_inside(ray_inside, colorband, t))
         {
             // Switch to radiance ray and intersect with boundary
-            ray_inside.ray_type = RAY_TYPE_RADIANCE;
+            ray_inside.ray_type =  RayType::RADIANCE;
             ray_inside.tmax = RT_DEFAULT_MAX;
             rtTrace(top_object, ray_inside, prd_radiance);
 
@@ -234,7 +234,7 @@ RT_PROGRAM void shade()
     {
         // Trace outside, i.e., refract from inside or reflect from outside
         float3 dir_outside = inside ? refracted_dir : reflected_dir;
-        Ray ray_outside(hit_pos, dir_outside, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+        Ray ray_outside(hit_pos, dir_outside,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
         rtTrace(top_object, ray_outside, prd_radiance);
         prd_radiance.result = beam_T * (prd_radiance.result);
 

@@ -6,11 +6,11 @@
 #define DIRECTIONAL_H
 
 #include <optix_math.h>
-
+#include "host_device_common.h"
 struct SingularLightData
 {
   optix::float3 direction;
-  int type;
+  LightType::Type type;
   optix::float3 emission;
   int casts_shadow; 
 };

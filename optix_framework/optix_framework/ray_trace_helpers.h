@@ -44,7 +44,7 @@ __inline__ __device__ float trace_shadow_ray(const optix::float3 & hit_pos, cons
 	PerRayData_shadow shadow_prd;
 	shadow_prd.attenuation = 1.0f;
 	shadow_prd.emission = optix::make_float3(0.0f);
-	optix::Ray shadow_ray = optix::make_Ray(hit_pos, direction, RAY_TYPE_SHADOW, tmin, tmax);
+	optix::Ray shadow_ray = optix::make_Ray(hit_pos, direction,  RayType::SHADOW, tmin, tmax);
 	optix::Ray ray = shadow_ray;
 
 	rtTrace(top_object, shadow_ray, shadow_prd);
@@ -81,10 +81,10 @@ __device__ __inline__ void get_glass_rays(const optix::float3& wo, const float i
 	R = sin_theta_t_sqr < 1.0f ? fresnel_R(cos_theta, cos_theta_t, eta) : 1.0f;
 
 	float3 refr_dir = recip_eta*wo + normal*(recip_eta*cos_theta - cos_theta_t);
-	refracted_ray = optix::make_Ray(hit_pos, refr_dir, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+	refracted_ray = optix::make_Ray(hit_pos, refr_dir,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 
 	float3 reflected_dir = reflect(wo, normal);
-	reflected_ray = optix::make_Ray(hit_pos, reflected_dir, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+	reflected_ray = optix::make_Ray(hit_pos, reflected_dir,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 }
 
 

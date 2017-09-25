@@ -118,7 +118,7 @@ bool ObjScene::keyPressed(int key, int action, int modifier)
 
 ObjScene::ObjScene(const std::vector<std::string>& obj_filenames, const std::string & shader_name, const std::string & config_file, optix::int4 rendering_r)
 	: context(m_context),
-	current_scene_type(Scene::OPTIX_ONLY), current_miss_program(), filenames(obj_filenames), method(nullptr), m_frame(0u),
+	current_miss_program(), filenames(obj_filenames), method(nullptr), m_frame(0u),
 	deforming(false),
 	config_file(config_file)
 {
@@ -130,7 +130,7 @@ ObjScene::ObjScene(const std::vector<std::string>& obj_filenames, const std::str
 
 ObjScene::ObjScene()
 	: context(m_context),
-	current_scene_type(Scene::OPTIX_ONLY), filenames(1, "test.obj"),
+     filenames(1, "test.obj"),
 	m_frame(0u),
 	deforming(false),
 	config_file("config.xml")
@@ -395,7 +395,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
     tonemap_multiplier = ConfigParameters::get_parameter<float>("tonemap", "tonemap_multiplier", 1.f, "Tonemap multiplier");
 
 	// Setup context
-	context->setRayTypeCount(RAY_TYPE_COUNT);
+	context->setRayTypeCount(RayType::count());
 	context->setStackSize(ConfigParameters::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
 	context["max_depth"]->setInt(ConfigParameters::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
@@ -706,7 +706,7 @@ optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format,
 void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 {
 	Logger::info << "Adding light buffers to scene..." << endl;
-    LightTypes::EnumType default_light_type = LightTypes::to_enum(ConfigParameters::get_parameter<string>("light", "default_light_type", LightTypes::to_string(LightTypes::DIRECTIONAL_LIGHT), "Type of the default light"));
+    LightType::Type default_light_type = LightType::to_enum(ConfigParameters::get_parameter<string>("light", "default_light_type", LightType::to_string(LightType::DIRECTIONAL), "Type of the default light"));
 
 	float3 light_dir = ConfigParameters::get_parameter<float3>("light","default_directional_light_direction", make_float3(0.0f, -1.0f, 0.0f), "Direction of the default directional light");
 	float3 light_radiance = ConfigParameters::get_parameter<float3>("light", "default_directional_light_intensity", make_float3(5.0f), "Intensity of the default directional light");
@@ -722,7 +722,7 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
     context["light_type"]->setInt(static_cast<unsigned int>(default_light_type));
 	switch (default_light_type)
 	{
-	case LightTypes::SKY_LIGHT:
+	case LightType::SKY:
 		{
 			SingularLightData light;
 			static_cast<SkyModel*>(miss_program.get())->get_directional_light(light);
@@ -730,21 +730,21 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
             dir_light_buffer->unmap();
 		}
 		break;
-	case LightTypes::DIRECTIONAL_LIGHT:
+	case LightType::DIRECTIONAL:
 		{
-            SingularLightData light = { normalize(light_dir), LIGHT_TYPE_DIR, light_radiance, shadows };
+            SingularLightData light = { normalize(light_dir), LightType::DIRECTIONAL, light_radiance, shadows };
             memcpy(dir_light_buffer->map(), &light, sizeof(SingularLightData));
             dir_light_buffer->unmap();
 		}
 		break;
-	case LightTypes::POINT_LIGHT:
+	case LightType::POINT:
 		{
-            SingularLightData light = { light_pos, LIGHT_TYPE_POINT, light_intensity, shadows };
+            SingularLightData light = { light_pos, LightType::POINT, light_intensity, shadows };
             memcpy(dir_light_buffer->map(), &light, sizeof(SingularLightData));
             dir_light_buffer->unmap();
 		}
 		break;
-	case LightTypes::AREA_LIGHT:
+	case LightType::AREA:
 		{
 			size_t size = area_lights.size();
 			if (size == 0)

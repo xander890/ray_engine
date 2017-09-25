@@ -39,7 +39,7 @@ RT_PROGRAM void shade()
 		PerRayData_radiance prd_new = prepare_new_pt_payload(prd_radiance);
 		float3 new_dir = reflect(ray.direction, normal);
 		prd_new.result = make_float3(0.0f);
-		optix::Ray new_ray(hit_pos, new_dir, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+		optix::Ray new_ray(hit_pos, new_dir,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 		rtTrace(top_object, new_ray, prd_new);
 		prd_radiance.result = prd_new.result; 
 		prd_radiance.seed = prd_new.seed;		

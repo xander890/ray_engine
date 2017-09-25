@@ -235,7 +235,7 @@ namespace IMPROVED_ENUM_NAME
 
 	//! Number of enum items:
 	//////////////////////////////////////////
-	STATIC_METHOD inline const int count()
+	constexpr STATIC_METHOD inline const int count()
 	{
 		return 0
 			//////////////////////////////////////////

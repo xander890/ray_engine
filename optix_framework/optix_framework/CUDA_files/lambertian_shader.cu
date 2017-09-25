@@ -155,7 +155,7 @@ RT_PROGRAM void shade()
 			prd.seed = t;
 			prd.colorband = prd_radiance.colorband;
 			
-			optix::Ray ray = optix::make_Ray(hit_pos, hemi_vec, RAY_TYPE_RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+			optix::Ray ray = optix::make_Ray(hit_pos, hemi_vec,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 
 			rtTrace(top_object, ray, prd);
 			indirect = prd.result / prob * M_PIf; // Cosine cancels out

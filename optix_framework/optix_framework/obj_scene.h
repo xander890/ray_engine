@@ -78,8 +78,6 @@ private:
 	optix::Context context;
 	bool debug_mode_enabled = true;
 
-	Scene::EnumType current_scene_type;
-
 	BackgroundType::EnumType current_miss_program;
 	bool collect_images = false;
 	bool show_difference_image = false;

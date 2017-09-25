@@ -2,12 +2,13 @@
 #include <optix_world.h>
 #include <host_device_common.h>
 
-#define BSSRDF_SAMPLING_CAMERA_BASED 0
-#define BSSRDF_SAMPLING_TANGENT_PLANE 1
-#define BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES 2
-#define BSSRDF_SAMPLING_MIS_AXIS 3
-#define BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES 4
-#define BSSRDF_SAMPLING_METHODS_COUNT 5
+#define IMPROVED_ENUM_NAME BssrdfSamplingType
+#define IMPROVED_ENUM_LIST ENUMITEM(BSSRDF_SAMPLING_CAMERA_BASED) \
+						   ENUMITEM(BSSRDF_SAMPLING_TANGENT_PLANE) \
+						   ENUMITEM(BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES) \
+						   ENUMITEM(BSSRDF_SAMPLING_MIS_AXIS) \
+						   ENUMITEM(BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES) 
+#include "improved_enum.h"
 
 #define BSSRDF_SHADERS_SHOW_ALL 0
 #define BSSRDF_SHADERS_SHOW_REFRACTION 1
@@ -16,7 +17,7 @@
 
 struct BSSRDFSamplingProperties
 {
-	int sampling_method				DEFAULT(BSSRDF_SAMPLING_TANGENT_PLANE);
+	BssrdfSamplingType::Type        sampling_method				DEFAULT(BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE);
 	int use_jacobian				DEFAULT(1);
 	float d_max						DEFAULT(1.0f);
 	float dot_no_ni_min				DEFAULT(0.001f);

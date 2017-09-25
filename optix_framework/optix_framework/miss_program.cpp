@@ -4,7 +4,7 @@
 void MissProgram::init(optix::Context & ctx)
 {
     optix::Program program;
-    for (int i = 0; i < RAY_TYPE_COUNT; i++)
+    for (int i = 0; i < RayType::count(); i++)
     {
         if (get_miss_program(i, ctx, program))
         {
