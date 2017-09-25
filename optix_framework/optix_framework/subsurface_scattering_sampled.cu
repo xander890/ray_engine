@@ -145,21 +145,15 @@ __device__ __forceinline__ bool tangent_mis_based_sampling(const float3 & xo, co
 	optix::float3 axes[3] = { no, bo, to };
 	float var = rnd(t);
 	int main_axis = 0;
-	float* mis_weights = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
+	float* mis_weights_cdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights_cdf);
+	float* mis_weights_pdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
 
-	if (var > mis_weights[0])
+	for (int i = 0; i < 4; i++)
 	{
-		if (var > mis_weights[0] + mis_weights[1])
-		{
-			// to on top
-			main_axis = 2;
-		}
-		else
-		{
-			// bo on top
-			main_axis = 1;
-		}
+		main_axis = var < mis_weights_cdf[i] ? i : main_axis;
 	}
+
+	optix_print("Selecting axis %d", main_axis);
 
 	float3 top = axes[main_axis];
 	float3 t1 = axes[(main_axis + 1) % 3];
@@ -167,8 +161,8 @@ __device__ __forceinline__ bool tangent_mis_based_sampling(const float3 & xo, co
 	float3 sample_on_tangent_plane = xo + t1*disc_sample.x + t2*disc_sample.y;
 	float3 sample_ray_origin = sample_on_tangent_plane + top * bssrdf_sampling_properties->d_max;
 	float3 sample_ray_dir = -top;
-	float t_max = RT_DEFAULT_MAX; //2.0f * bssrdf_sampling_properties->R_max;
-	integration_factor /= mis_weights[main_axis];
+	float t_max = bssrdf_sampling_properties->d_max;
+	integration_factor /= mis_weights_pdf[main_axis];
 
 	float depth;
 	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, t_max))
@@ -177,8 +171,9 @@ __device__ __forceinline__ bool tangent_mis_based_sampling(const float3 & xo, co
 
 	integration_factor *= r / pdf_disk;
 	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
+	float inv_jac = max(bssrdf_sampling_properties->dot_no_ni_min, dot(normalize(top), normalize(ni)));
+	integration_factor = inv_jac > 0.0f ? integration_factor / inv_jac : 0.0f;
 	return true;
-
 }
 
 __device__ __forceinline__ bool importance_sample_position(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
