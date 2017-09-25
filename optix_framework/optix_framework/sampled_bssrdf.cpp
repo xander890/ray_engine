@@ -41,12 +41,13 @@ void SampledBSSRDF::load_data()
 
 bool SampledBSSRDF::on_draw()
 {
-	std::vector<const char*> elems{ "Mertens et. al", "Hery et al." , "King et al." };
+	std::vector<const char*> elems{ "Camera based (Mertens et. al)", "Tangent plane (with distance)" , "Tangent plane (with probes)", "MIS axis (no probes)",  "MIS axis + probes (King et al.)" };
 	
+	assert(elems.size() == BSSRDF_SAMPLING_METHODS_COUNT);
+
 	mHasChanged |= ImmediateGUIDraw::Combo("Sampling technique", &properties->sampling_method, elems.data(), (int)elems.size(), (int)elems.size());
-	if(properties->sampling_method == BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
-		mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->correct_camera);
-	if (properties->sampling_method != BSSRDF_SAMPLING_CAMERA_BASED_MERTENS)
+	mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->use_jacobian);
+	if (properties->sampling_method == BSSRDF_SAMPLING_TANGENT_PLANE)
 	{
 		mHasChanged |= ImmediateGUIDraw::DragFloat("Distance from surface", &properties->d_max, 0.1f, 0.0f, 1.0f);
 		mHasChanged |= ImGui::InputFloat("Min no ni", &properties->dot_no_ni_min);
