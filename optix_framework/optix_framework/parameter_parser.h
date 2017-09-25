@@ -7,7 +7,7 @@
 #include <map>
 
 
-class ParameterParser
+class ConfigParameters
 {
 	struct NodeElem
 	{
@@ -41,8 +41,8 @@ public:
 	}
 
 protected:
-	ParameterParser(void);
-	~ParameterParser(void);
+	ConfigParameters(void);
+	~ConfigParameters(void);
 
 	static std::string document_file;
 

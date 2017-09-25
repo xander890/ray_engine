@@ -17,10 +17,10 @@ ScatteringMaterial::ScatteringMaterial(optix::float3 absorption, optix::float3 s
 	this->scattering = scattering;
 	this->asymmetry = meancosine;
 	mStandardMaterial = DefaultScatteringMaterial::Count; // Custom
-	properties.approx_property_A = ParameterParser::get_parameter<optix::float3>("bssrdf", "approximate_A", make_float3(1), "Approximate value A for approximate dipoles.");
-	properties.approx_property_s = ParameterParser::get_parameter<optix::float3>("bssrdf", "approximate_s", make_float3(1), "Approximate value A for approximate dipoles.");
-	properties.selected_bssrdf = ScatteringDipole::to_enum(ParameterParser::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
-	mSamplingType = SamplingMfpType::to_enum(ParameterParser::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
+	properties.approx_property_A = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_A", make_float3(1), "Approximate value A for approximate dipoles.");
+	properties.approx_property_s = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_s", make_float3(1), "Approximate value A for approximate dipoles.");
+	properties.selected_bssrdf = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
+	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
 	dirty = true;
 }
 
@@ -29,10 +29,10 @@ ScatteringMaterial::ScatteringMaterial(DefaultScatteringMaterial material, float
 	scale = prop_scale;
 	mStandardMaterial = static_cast<int>(material);
 	getDefaultMaterial(material);
-	properties.approx_property_A = ParameterParser::get_parameter<optix::float3>("bssrdf", "approximate_A", properties.approx_property_A, "Approximate value A for approximate dipoles.");
-	properties.approx_property_s = ParameterParser::get_parameter<optix::float3>("bssrdf", "approximate_s", properties.approx_property_s, "Approximate value A for approximate dipoles.");
-	properties.selected_bssrdf = ScatteringDipole::to_enum(ParameterParser::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
-	mSamplingType = SamplingMfpType::to_enum(ParameterParser::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
+	properties.approx_property_A = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_A", properties.approx_property_A, "Approximate value A for approximate dipoles.");
+	properties.approx_property_s = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_s", properties.approx_property_s, "Approximate value A for approximate dipoles.");
+	properties.selected_bssrdf = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
+	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + ScatteringDipole::get_enum_string()).c_str()));
 	dirty = true;
 }
 

@@ -4,7 +4,7 @@ using namespace optix;
 
 void AmbientOcclusion::init()
 {
-	unsigned int N = (unsigned int)ParameterParser::get_parameter<int>("config","N", 1, "Monte carlo samples.");
+	unsigned int N = (unsigned int)ConfigParameters::get_parameter<int>("config","N", 1, "Monte carlo samples.");
 	context["N"]->setUint(N);
 }
 

@@ -18,16 +18,16 @@ XERCES_CPP_NAMESPACE_USE
 static DOMDocument * document = nullptr;
 static XercesDOMParser * configParser = nullptr;
 
-string ParameterParser::document_file = string("");
-std::map<std::string, std::map<std::string, ParameterParser::NodeElem>>  ParameterParser::parameters;
-std::map<std::string, std::map<std::string, ParameterParser::NodeElem>>  ParameterParser::used_parameters;
+string ConfigParameters::document_file = string("");
+std::map<std::string, std::map<std::string, ConfigParameters::NodeElem>>  ConfigParameters::parameters;
+std::map<std::string, std::map<std::string, ConfigParameters::NodeElem>>  ConfigParameters::used_parameters;
 
-ParameterParser::ParameterParser(void)
+ConfigParameters::ConfigParameters(void)
 {
 }
 
 
-ParameterParser::~ParameterParser(void)
+ConfigParameters::~ConfigParameters(void)
 {
 	free();
 }
@@ -79,7 +79,7 @@ DOMDocument* read_from_file(const char * FullFilePath)
 	return doc;
 }
 
-void ParameterParser::parse_doc()
+void ConfigParameters::parse_doc()
 {
 	DOMElement* elementRoot = document->getDocumentElement();
 	if (elementRoot == nullptr || !elementRoot->hasChildNodes()) return;
@@ -173,7 +173,7 @@ DOMNode* find_tag(const char* tag)
 	return nullptr;
 }
 
-void ParameterParser::init(const std::string & document_f)
+void ConfigParameters::init(const std::string & document_f)
 {
 	XMLPlatformUtils::Initialize();
 	configParser = new XercesDOMParser;
@@ -183,7 +183,7 @@ void ParameterParser::init(const std::string & document_f)
 }
 
 
-void ParameterParser::free()
+void ConfigParameters::free()
 {
 	document->release();
 	XMLPlatformUtils::Terminate();
@@ -194,7 +194,7 @@ std::string tag(const std::string & s, bool is_end)
 	return std::string("<") + (is_end ? "/" : "") + s + ">";
 }
 
-void ParameterParser::dump_used_parameters(const std::string& document_f)
+void ConfigParameters::dump_used_parameters(const std::string& document_f)
 {
 	stringstream ss;
 	ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>" << std::endl;
@@ -221,7 +221,7 @@ void ParameterParser::dump_used_parameters(const std::string& document_f)
 }
 
 
-void ParameterParser::override_parameters(std::vector<std::string>& override_argv)
+void ConfigParameters::override_parameters(std::vector<std::string>& override_argv)
 {
 	for (int i = 0; i < override_argv.size(); i++)
 	{
