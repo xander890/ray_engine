@@ -242,7 +242,8 @@ void ConfigParameters::override_parameters(std::vector<std::string>& override_ar
 			}
 			else
 			{
-				Logger::warning << "Trying to override non existing parameter: " << elem << " (tag " << tag << ")" << std::endl;
+				Logger::warning << "Trying to override non existing parameter: " << elem << " (tag " << tag << ")" << a2 << std::endl;
+				parameters[tag][elem] = { a2 , ""};
 			}
 		}
 	}

@@ -23,5 +23,4 @@ struct BSSRDFSamplingProperties
 	optix::float3 mis_weights		DEFAULT(optix::make_float3(0.5f, 0.25f, 0.25f));
 	int show_mode					DEFAULT(BSSRDF_SHADERS_SHOW_ALL);
 	optix::float4 mis_weights_cdf	DEFAULT(optix::make_float4(0.0f, 0.5f, 0.75f, 1.0f));
-	int king_full_probe				DEFAULT(1);
 };

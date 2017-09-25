@@ -298,8 +298,8 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	ni = nis[axis];
 	xi = xis[axis];
 	integration_factor *= r / pdf_disk;
-	//if (bssrdf_sampling_properties->use_jacobian == 1)
-	//	integration_factor /= max(0.0f, abs(dot(normalize(ax), normalize(ni))));
+	if (bssrdf_sampling_properties->use_jacobian == 1)
+		integration_factor /= max(0.0f, abs(dot(normalize(ax), normalize(ni))));
 	return true;
 }
 

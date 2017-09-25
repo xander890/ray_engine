@@ -42,12 +42,12 @@ namespace SamplingMfpType
 		{ X, "X" },{ Y, "Y" },{ Z, "Z" },{ MIN, "MIN" },{ MAX, "MAX" },{ MEAN, "MEAN" }
 	};
 
-	inline std::string to_string(SamplingMfpTypeEnum e)
+	static __host__ std::string to_string(SamplingMfpTypeEnum e)
 	{
 		return info[e];
 	}
 
-	inline __host__ std::string get_enum_string()
+	static __host__ std::string get_enum_string()
 	{
 		std::string r;
 		for (int i = 0; i < SamplingMfpTypeEnum::COUNT; i++)
@@ -66,6 +66,7 @@ namespace SamplingMfpType
 		return COUNT;
 	}
 };
+
 
 
 //#define OVERRIDE_TRANSLUCENT_WITH_APPLE_JUICE
