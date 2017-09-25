@@ -114,7 +114,7 @@ public:
   virtual bool   mouseMoving(int x, int y) { return false; }
 
   virtual void postDrawCallBack() {};
-
+  virtual void sceneInitialized() {};
   // Accessor
   optix::Context& getContext() { return m_context; }
 

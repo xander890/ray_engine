@@ -65,7 +65,8 @@ public:
 	bool mousePressed(int x, int y,int button, int action, int mods) override;
 	bool mouseMoving(int x, int y) override;
 	void reset_renderer();
-	void start_render_task();
+	void start_render_task_on_scene_ready();
+	void sceneInitialized() override;
 
 	std::unique_ptr<RenderTask> current_render_task;
 
@@ -157,6 +158,8 @@ private:
 
 	unsigned int tonemap_entry_point;
 	unsigned int debug_entry_point;
+
+	bool start_render_task_when_ready = false;
 };
 
 #endif // OBJSCENE_H

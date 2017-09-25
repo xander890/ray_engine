@@ -170,7 +170,7 @@ int main( int argc, char** argv )
 			exit(2);
 		}
 		scene->set_render_task(task);
-		scene->start_render_task();
+		scene->start_render_task_on_scene_ready();
 	}
 	GLFWDisplay::run( "Optix Renderer", scene );
 

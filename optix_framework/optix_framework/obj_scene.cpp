@@ -684,9 +684,15 @@ void ObjScene::set_render_task(std::unique_ptr<RenderTask>& task)
 		Logger::error << "Wait of end of current task before setting a new one." << endl;
 }
 
-void ObjScene::start_render_task()
+void ObjScene::start_render_task_on_scene_ready()
 {
-	current_render_task->start();
+	start_render_task_when_ready = true;
+}
+
+void ObjScene::sceneInitialized()
+{
+	if (start_render_task_when_ready)
+		current_render_task->start();
 }
 
 void ObjScene::add_override_material_file(std::string mat)

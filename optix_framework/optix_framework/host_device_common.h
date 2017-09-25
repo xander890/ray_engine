@@ -2,17 +2,17 @@
 #include <optix_world.h>
 
 #define IMPROVED_ENUM_NAME LightType
-#define IMPROVED_ENUM_LIST ENUMITEM(DIRECTIONAL) \
-						   ENUMITEM(POINT) \
-						   ENUMITEM(SKY) \
-						   ENUMITEM(AREA)  
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(DIRECTIONAL,0) \
+						   ENUMITEM_VALUE(POINT,1) \
+						   ENUMITEM_VALUE(SKY,2) \
+						   ENUMITEM_VALUE(AREA,3)  
 #include "improved_enum.h"
 
 #define IMPROVED_ENUM_NAME RayType
-#define IMPROVED_ENUM_LIST ENUMITEM(RADIANCE) \
-						   ENUMITEM(SHADOW) \
-						   ENUMITEM(DEPTH) \
-						   ENUMITEM(ATTRIBUTE)  
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(RADIANCE,0) \
+						   ENUMITEM_VALUE(SHADOW,1) \
+						   ENUMITEM_VALUE(DEPTH,2) \
+						   ENUMITEM_VALUE(ATTRIBUTE,3)  
 #include "improved_enum.h"
 
 #ifdef __CUDACC__
