@@ -262,7 +262,7 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 				pdf[idx] = 0.0f;
 				continue;
 			}
-			pdf[idx] = optix::dot(nis[idx], top);
+			pdf[idx] = abs(optix::dot(nis[idx], top));
 			norm += pdf[idx];
 		}
 	}

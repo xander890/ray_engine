@@ -628,8 +628,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	if (deforming)
 		scene->getAcceleration()->markDirty();
 
-	t0 = currentTime();
-
     method->pre_trace();
     execute_on_scene_elements([=](Mesh & m)
     {
