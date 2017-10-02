@@ -34,7 +34,7 @@ public:
 
 	virtual ~ObjScene();
 
-	void cleanUp() override
+	void clean_up() override
 	{
 		context->destroy();
 		m_context = nullptr;

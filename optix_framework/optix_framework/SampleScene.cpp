@@ -60,7 +60,7 @@ SampleScene::InitialCameraData::InitialCameraData( const std::string &camstr)
   istr >> eye >> lookat >> up >> vfov;
 }
 
-void SampleScene::cleanUp()
+void SampleScene::clean_up()
 {
   m_context->destroy();
   m_context = 0;

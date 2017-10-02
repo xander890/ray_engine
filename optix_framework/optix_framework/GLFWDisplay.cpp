@@ -444,10 +444,10 @@ void GLFWDisplay::quit(int return_code)
   try {
     if(m_scene)
     {
-      m_scene->cleanUp();
-      if (m_scene->getContext().get() != 0)
+      m_scene->clean_up();
+      if (m_scene->get_context().get() != 0)
       {
-        Logger::error << ( "Derived scene class failed to call SampleScene::cleanUp()" );
+        Logger::error << ( "Derived scene class failed to call SampleScene::clean_up()" );
         exit(2);
       }
     }

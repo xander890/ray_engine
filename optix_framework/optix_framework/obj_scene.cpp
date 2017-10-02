@@ -147,7 +147,7 @@ ObjScene::ObjScene()
 inline ObjScene::~ObjScene()
 {
 	ConfigParameters::free();
-	ObjScene::cleanUp();
+	ObjScene::clean_up();
 }
 
 bool ObjScene::draw_gui()
