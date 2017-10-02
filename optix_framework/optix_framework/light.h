@@ -155,7 +155,7 @@ __device__ __forceinline__ int light_size()
 
 __device__ __inline__ void sample_light(const float3& position, const float3 & normal, const uint& ray_depth, uint& seed, float3 & wi, float3 & Li)
 {
-	if (importance_sample_area_lights == 0)
+	if (importance_sample_area_lights == 1)
 	{
 		float zeta1 = rnd(seed);
 		float zeta2 = rnd(seed);
