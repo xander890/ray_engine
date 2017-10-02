@@ -3,7 +3,6 @@
 // Copyright (c) DTU Informatics 2011
 
 #include <cereal/archives/json.hpp>
-#include <iostream>
 #include <fstream>
 #include <string>
 #include "obj_loader.h"
@@ -33,16 +32,20 @@
 #include "PerlinNoise.h"
 #include <algorithm>
 #include "optix_utils.h"
-#include "default_shader.h"
 #include <sampled_bssrdf.h>
 #include "render_task.h"
 #include "volume_path_tracer.h"
-#include "glfw\glfw3.h"
+#include "glfw/glfw3.h"
 #include "optix_serialize.h"
-#include "host_material.h"
 #include "scattering_material.h"
 #include "math_helpers.h"
 #include "cputimer.h"
+#include "rendering_method.h"
+#include "sky_model.h"
+#include "area_light.h"
+#include "immediate_gui.h"
+#include "camera_host.h"
+#include "structs.h"
 
 using namespace std;
 using namespace optix;
@@ -61,11 +64,11 @@ void ObjScene::execute_on_scene_elements(function<void(Mesh&)> operation)
     }
 }
 
-void ObjScene::collect_image(unsigned int frame)
+void ObjScene::collect_image(unsigned int frame) const
 {
 	if (!collect_images) return;
 
-	std::string name = std::string("rendering_") + to_string(frame) + ".raw";
+	const std::string name = std::string("rendering_") + to_string(frame) + ".raw";
 	export_raw(name, rendering_output_buffer, frame);
 }
 
@@ -74,7 +77,7 @@ void ObjScene::reset_renderer()
 	m_frame = 0;
 }
 
-bool ObjScene::keyPressed(int key, int action, int modifier)
+bool ObjScene::key_pressed(int key, int action, int modifier)
 {
 	if (key == GLFW_KEY_P)
 	{
@@ -92,7 +95,7 @@ bool ObjScene::keyPressed(int key, int action, int modifier)
 	{
 	case GLFW_KEY_E:
 	{
-		std::string res = std::string("result_optix.raw");
+		const std::string res = std::string("result_optix.raw");
 		return export_raw(res, rendering_output_buffer, m_frame);
 	}
 	case GLFW_KEY_G:
@@ -144,10 +147,10 @@ ObjScene::ObjScene()
 inline ObjScene::~ObjScene()
 {
 	ConfigParameters::free();
-	cleanUp();
+	ObjScene::cleanUp();
 }
 
-bool ObjScene::drawGUI()
+bool ObjScene::draw_gui()
 {
 	bool changed = false;
 	ImmediateGUIDraw::TextColored({ 255,0,0,1 }, "Rendering info ");
@@ -225,12 +228,12 @@ bool ObjScene::drawGUI()
 		uint2 debug_pixel = context["debug_index"]->getUint2();
 		if (ImmediateGUIDraw::InputInt2("Debug pixel", (int*)&debug_pixel))
 		{
-			setDebugPixel(debug_pixel.x, debug_pixel.y);
+			set_debug_pixel(debug_pixel.x, debug_pixel.y);
 		}
 
 		if (ImmediateGUIDraw::Button("Center debug pixel"))
 		{
-			setDebugPixel((int)(zoomed_area.x + zoomed_area.z / 2), (int)(zoomed_area.y + zoomed_area.w / 2));
+			set_debug_pixel((int)(zoomed_area.x + zoomed_area.z / 2), (int)(zoomed_area.y + zoomed_area.w / 2));
 		}
 
 		ImmediateGUIDraw::InputInt4("Zoom window", (int*)&zoom_debug_window);
@@ -348,7 +351,7 @@ void ObjScene::create_3d_noise(float frequency)
     context["noise_tex"]->setInt(sampler->getId());
 }
 
-void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_data)
+void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_camera_data)
 {
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(200);
@@ -546,7 +549,7 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	context["scene_epsilon"]->setFloat(scene_epsilon);
 	// Prepare to run 
 
-	gui = std::make_unique<ImmediateGUI>(window,"Ray tracing demo");
+	gui = std::make_unique<ImmediateGUI>(window);
 
 	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
 
@@ -577,7 +580,8 @@ void ObjScene::initScene(GLFWwindow * window, InitialCameraData& init_camera_dat
 	 //cereal::JSONOutputArchive archive(ss);
 	 //archive(*mMeshes[0]);
 	 //Logger::info << ss.str() << std::endl;
-	 
+	Logger::set_logger_output(console_log);
+
 }
 
 void update_timer(double & current, double n)
@@ -677,7 +681,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 
 }
 
-Buffer ObjScene::getOutputBuffer()
+Buffer ObjScene::get_output_buffer()
 {
 	return returned_buffer;
 }
@@ -695,7 +699,7 @@ void ObjScene::start_render_task_on_scene_ready()
 	start_render_task_when_ready = true;
 }
 
-void ObjScene::sceneInitialized()
+void ObjScene::scene_initialized()
 {
 	if (start_render_task_when_ready)
 		current_render_task->start();
@@ -866,43 +870,49 @@ bool ObjScene::export_raw(const string& raw_p, optix::Buffer out, int frames)
 	return true;
 }
 
-void ObjScene::doResize(unsigned int width, unsigned int height)
+void ObjScene::do_resize(unsigned int width, unsigned int height)
 {
 }
 
 void ObjScene::resize(unsigned int width, unsigned int height)
 {
-	doResize(width, height);
+	do_resize(width, height);
 }
 
-bool ObjScene::mouseMoving(int x, int y)
+bool ObjScene::mouse_moving(int x, int y)
 {
 	return gui->mouseMoving(x, y);
 }
 
-void ObjScene::postDrawCallBack()
+void ObjScene::post_draw_callback()
 {
 	gui->start_draw();
-	if (drawGUI())
+	gui->start_window("Ray tracing demo", 20, 20, 500, 600);
+	if (draw_gui())
 	{
 		reset_renderer();
 	}
+	gui->end_window();
+	static const int console_height = 300;
+	gui->start_window("Console", 20, camera->get_height() - console_height - 20 , camera->get_width() - 40 , console_height);
+	ImGui::Text("%s", console_log.str().c_str());
+	gui->end_window();
 	gui->end_draw();
 }
 
-void ObjScene::setDebugPixel(int i, int y)
+void ObjScene::set_debug_pixel(int i, int y)
 {
 	Logger::info <<"Setting debug pixel to " << to_string(i) << " << " << to_string(y) <<endl;
 	context->setPrintLaunchIndex(i, y);
 	context["debug_index"]->setUint(i, y);
 }
 
-bool ObjScene::mousePressed(int x, int y, int button, int action, int mods)
+bool ObjScene::mouse_pressed(int x, int y, int button, int action, int mods)
 {
 	y = camera->get_height() - y;
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && debug_mode_enabled)
 	{
-		setDebugPixel(x, y);
+		set_debug_pixel(x, y);
 		zoomed_area = make_uint4(x - (int)zoomed_area.z / 2, y - (int)zoomed_area.w / 2, zoomed_area.z, zoomed_area.w);
 		return true;
 	}
@@ -940,13 +950,13 @@ void ObjScene::set_rendering_method(RenderingMethodType::EnumType t)
 	switch (t)
 	{
 	case RenderingMethodType::RECURSIVE_RAY_TRACING:
-		method = new SimpleTracing(context);
+		method = std::make_unique<SimpleTracing>(context);
 		break;
 	case RenderingMethodType::AMBIENT_OCCLUSION:
-		method = new AmbientOcclusion(context);
+		method = std::make_unique<AmbientOcclusion>(context);
 		break;
 	case RenderingMethodType::PATH_TRACING:
-		method = new PathTracing(context);
+		method = std::make_unique<PathTracing>(context);
 		break;
 	default:
 		Logger::error<<"The selected rendering method is not valid or no longer supported."<< endl;

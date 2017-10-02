@@ -119,7 +119,7 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   try {
     // Set up scene
     SampleScene::InitialCameraData camera_data;
-    m_scene->initScene( m_window, camera_data );
+    m_scene->initialize_scene( m_window, camera_data );
 
     // Initialize camera according to scene params
     m_camera = new PinholeCamera( camera_data.eye,
@@ -129,7 +129,7 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
                                  camera_data.vfov,
                                  PinholeCamera::KeepVertical );
 
-    Buffer buffer = m_scene->getOutputBuffer();
+    Buffer buffer = m_scene->get_output_buffer();
     RTsize buffer_width_rts, buffer_height_rts;
     buffer->getSize( buffer_width_rts, buffer_height_rts );
     buffer_width  = static_cast<int>(buffer_width_rts);
@@ -156,7 +156,7 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   glfwSetCursorPosCallback(m_window, mouseMotion);
   glfwSetWindowSizeCallback(m_window, resize);
  
-  m_scene->sceneInitialized();
+  m_scene->scene_initialized();
   while (!glfwWindowShouldClose(m_window))
   {
 	  glfwPollEvents();
@@ -215,7 +215,7 @@ void GLFWDisplay::displayFrame()
   }
 
   // Draw the resulting image
-  Buffer buffer = m_scene->getOutputBuffer(); 
+  Buffer buffer = m_scene->get_output_buffer(); 
   RTsize buffer_width_rts, buffer_height_rts;
   buffer->getSize( buffer_width_rts, buffer_height_rts );
   int buffer_width  = static_cast<int>(buffer_width_rts);
@@ -372,7 +372,7 @@ void GLFWDisplay::display()
     Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }
-  m_scene->postDrawCallBack();
+  m_scene->post_draw_callback();
 
   std::string debug;
 
@@ -387,7 +387,7 @@ void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int act
 	if (action == GLFW_RELEASE)
 		return;
 	try {
-		if (m_scene->keyPressed(key, action, modifier)) {
+		if (m_scene->key_pressed(key, action, modifier)) {
 			return;
 		}
 	}
@@ -420,7 +420,7 @@ void GLFWDisplay::mouseButton(GLFWwindow * window, int button, int action, int m
 	glfwGetCursorPos(window, &xd, &yd);
 	int x = static_cast<int>(xd);
 	int y = static_cast<int>(yd);
-	if (!m_scene->mousePressed(x,y,button, action, modifiers))
+	if (!m_scene->mouse_pressed(x,y,button, action, modifiers))
 	{
 		m_mouse->handleMouseFunc(x,y,button, action, modifiers);
 		m_scene->signalCameraChanged();

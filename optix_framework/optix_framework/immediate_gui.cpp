@@ -5,9 +5,8 @@
 #include<glfw\glfw3.h>
 
 
-ImmediateGUI::ImmediateGUI(GLFWwindow * window, const char * name)
+ImmediateGUI::ImmediateGUI(GLFWwindow * window)
 {
-	this->name = name;
 	ImGui_ImplGlfwGL3_Init(window, false);
 }
 
@@ -56,14 +55,21 @@ void ImmediateGUI::start_draw() const
 	static bool show_test_window = false;
 	static bool show_another_window = false;
 	ImGui_ImplGlfwGL3_NewFrame();
+}
 
-	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(500, 600), ImGuiSetCond_Always);
-	ImGui::Begin(name.c_str(), (bool*)&visible, ImGuiWindowFlags_ShowBorders);
+void ImmediateGUI::start_window(const char * name, int x, int y, int w, int h) const
+{
+	ImGui::SetNextWindowPos(ImVec2((float)x, (float)y), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2((float)w, (float)h), ImGuiCond_Always);
+	ImGui::Begin(name, (bool*)&visible, ImGuiWindowFlags_ShowBorders);
 }
 
 void ImmediateGUI::end_draw() const
 {
-	ImGui::End();
 	ImGui::Render();
+}
+
+void ImmediateGUI::end_window() const
+{
+	ImGui::End();
 }

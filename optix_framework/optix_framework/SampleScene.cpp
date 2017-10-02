@@ -75,7 +75,7 @@ SampleScene::trace( const RayGenCameraData& camera_data, bool& display )
 void SampleScene::resize(unsigned int width, unsigned int height)
 {
   try {
-    Buffer buffer = getOutputBuffer();
+    Buffer buffer = get_output_buffer();
     buffer->setSize( width, height );
 
     if(m_use_vbo_buffer)
@@ -94,6 +94,6 @@ void SampleScene::resize(unsigned int width, unsigned int height)
   }
 
   // Let the user resize any other buffers
-  doResize( width, height );
+  do_resize( width, height );
 }
 

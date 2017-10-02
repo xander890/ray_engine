@@ -6,14 +6,14 @@
 						   ENUMITEM_VALUE(POINT,1) \
 						   ENUMITEM_VALUE(SKY,2) \
 						   ENUMITEM_VALUE(AREA,3)  
-#include "improved_enum.h"
+#include "improved_enum.def"
 
 #define IMPROVED_ENUM_NAME RayType
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(RADIANCE,0) \
 						   ENUMITEM_VALUE(SHADOW,1) \
 						   ENUMITEM_VALUE(DEPTH,2) \
 						   ENUMITEM_VALUE(ATTRIBUTE,3)  
-#include "improved_enum.h"
+#include "improved_enum.def"
 
 #ifdef __CUDACC__
 #define DEFAULT(x)

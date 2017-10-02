@@ -5,25 +5,25 @@
 #ifndef OBJSCENE_H
 #define OBJSCENE_H
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixpp_namespace.h>
 #include <SampleScene.h>
-#include "rendering_method.h"
-#include "parameter_parser.h"
-#include "sky_model.h"
-#include "area_light.h"
-#include "mesh.h"
 #include "enums.h"
-#include "immediate_gui.h"
-
-class RenderTask;
-
-#include "structs.h"
 #include <functional>
-#include "camera.h"
-#include "camera_host.h"
+
+class MissProgram;
+class ImmediateGUI;
+class RenderTask;
+struct TriangleLight;
+class Mesh;
+class MaterialHost;
+class RenderingMethod;
+class Camera;
+struct MPMLMedium;
+
 
 class ObjScene : public SampleScene
 {
@@ -34,39 +34,39 @@ public:
 
 	virtual ~ObjScene();
 
-	virtual void cleanUp()
+	void cleanUp() override
 	{
 		context->destroy();
-		m_context = 0;
+		m_context = nullptr;
 	}
 
-	bool drawGUI();
+	bool draw_gui();
 
     void create_3d_noise(float frequency);
     float noise_frequency = 25;
 	int use_heterogenous_materials = 0;
 
-	virtual void initScene(GLFWwindow * window,InitialCameraData& camera_data) override;
-	virtual void trace(const RayGenCameraData& camera_data, bool& display) override;
+	void initialize_scene(GLFWwindow * window,InitialCameraData& camera_data) override;
+	void trace(const RayGenCameraData& camera_data, bool& display) override;
 
-	virtual void trace(const RayGenCameraData& camera_data) override
+	void trace(const RayGenCameraData& camera_data) override
 	{
 		bool display = true;
 		trace(camera_data, display);
 	}
 
-	void collect_image(unsigned int frame);
-	virtual bool keyPressed(int key, int x, int y) override;
-	virtual optix::Buffer getOutputBuffer() override;
-	virtual void doResize(unsigned int width, unsigned int height) override;
-	virtual void resize(unsigned int width, unsigned int height) override;
-	void postDrawCallBack() override;
-	void setDebugPixel(int i, int y);
-	bool mousePressed(int x, int y,int button, int action, int mods) override;
-	bool mouseMoving(int x, int y) override;
+	void collect_image(unsigned int frame) const;
+	bool key_pressed(int key, int x, int y) override;
+	optix::Buffer get_output_buffer() override;
+	void do_resize(unsigned int width, unsigned int height) override;
+	void resize(unsigned int width, unsigned int height) override;
+	void post_draw_callback() override;
+	void set_debug_pixel(int i, int y);
+	bool mouse_pressed(int x, int y,int button, int action, int mods) override;
+	bool mouse_moving(int x, int y) override;
 	void reset_renderer();
 	void start_render_task_on_scene_ready();
-	void sceneInitialized() override;
+	void scene_initialized() override;
 
 	std::unique_ptr<RenderTask> current_render_task;
 
@@ -99,7 +99,7 @@ private:
 
 	optix::Group scene;
 	//std::vector<optix::uint2> lights;
-	RenderingMethod* method;
+	std::unique_ptr<RenderingMethod> method;
 
 	unsigned int m_frame;
 	bool deforming;
@@ -160,6 +160,7 @@ private:
 	unsigned int debug_entry_point;
 
 	bool start_render_task_when_ready = false;
+	std::stringstream console_log;
 };
 
 #endif // OBJSCENE_H

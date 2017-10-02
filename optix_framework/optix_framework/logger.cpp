@@ -12,3 +12,16 @@ Logger Logger::info = Logger(std::cout, BLUE, "info");
 Logger Logger::error = Logger(std::cout, RED, "error");
 Logger Logger::warning = Logger(std::cout, YELLOW, "warning");
 Logger Logger::debug = Logger(std::cout, GREEN, "debug");
+
+void Logger::set_logger_output(std::ostream& out)
+{
+	Logger::info.set_output(out);
+	Logger::error.set_output(out);
+	Logger::warning.set_output(out);
+	Logger::debug.set_output(out);
+}
+
+void Logger::set_output(std::ostream& out)
+{
+	this->out = &out;
+}

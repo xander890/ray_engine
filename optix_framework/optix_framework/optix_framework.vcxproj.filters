@@ -311,9 +311,6 @@
     <ClInclude Include="brdf_utils.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="improved_enum.h">
-      <Filter>Header Files\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="distribution1d.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
@@ -516,6 +513,9 @@
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="transform.h" />
+    <ClInclude Include="improved_enum.def">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

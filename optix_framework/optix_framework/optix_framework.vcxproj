@@ -722,7 +722,7 @@ echo Done.</Command>
     <ClInclude Include="folders.h" />
     <ClInclude Include="glossy.h" />
     <ClInclude Include="math_helpers.h" />
-    <ClInclude Include="improved_enum.h" />
+    <ClInclude Include="improved_enum.def" />
     <ClInclude Include="intersection_refinement.h" />
     <ClInclude Include="device_common_data.h" />
     <ClInclude Include="material_library.h" />

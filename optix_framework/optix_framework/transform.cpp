@@ -14,13 +14,13 @@ struct Transform::Implementation
 
 Transform::Transform() {
 	static int id = 0;
-	impl = std::make_unique<Transform::Implementation>();
+	impl = std::make_unique<Implementation>();
 	impl->id = id++;
 }
 
 Transform::~Transform() = default;
-Transform::Transform(Transform&&) = default;
-Transform& Transform::operator=(Transform&&) = default;
+Transform::Transform(Transform&&) noexcept = default;
+Transform& Transform::operator=(Transform&&) noexcept = default;
 
 optix::Matrix4x4 Transform::get_matrix()
 {
@@ -48,7 +48,7 @@ bool Transform::on_draw()
 	return impl->mHasChanged;
 }
 
-bool Transform::has_changed()
+bool Transform::has_changed() const
 {
 	return impl->mHasChanged;
 }

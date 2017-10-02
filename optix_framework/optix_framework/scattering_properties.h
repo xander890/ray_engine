@@ -7,7 +7,7 @@
 							ENUMITEM_VALUE(DIRECTIONAL_DIPOLE_BSSRDF,1) \
 							ENUMITEM_VALUE(APPROX_STANDARD_DIPOLE_BSSRDF,2) \
 							ENUMITEM_VALUE(APPROX_DIRECTIONAL_DIPOLE_BSSRDF,3) 
-#include "improved_enum.h"
+#include "improved_enum.def"
 
 struct ScatteringMaterialProperties
 {

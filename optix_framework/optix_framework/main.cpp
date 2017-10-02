@@ -10,6 +10,9 @@
 #include "obj_scene.h"
 #include "render_task.h"
 #include "scattering_material.h"
+#include "sky_model.h"
+#include "immediate_gui.h"
+
 
 namespace
 {

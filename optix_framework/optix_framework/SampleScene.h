@@ -78,7 +78,7 @@ public:
   //----------------------------------------------------------------------------
 
   // Create the optix scene and return initial viewing parameters
-  virtual void   initScene(GLFWwindow * window, InitialCameraData& camera_data )=0;
+  virtual void   initialize_scene(GLFWwindow * window, InitialCameraData& camera_data )=0;
   
   // Update camera shader with new viewing params and then trace
   virtual void   trace( const RayGenCameraData& camera_data )=0;
@@ -87,36 +87,36 @@ public:
   virtual void   trace( const RayGenCameraData& camera_data, bool& display );
  
   // Return the output buffer to be displayed
-  virtual optix::Buffer getOutputBuffer()=0;
+  virtual optix::Buffer get_output_buffer()=0;
  
   //----------------------------------------------------------------------------
   // Optional virtual interface
   //----------------------------------------------------------------------------
   
   // This cleans up the Context.  If you override it, you should call
-  // SampleScene::cleanUp() explicitly.
-  virtual void   cleanUp();
+  // SampleScene::clean_up() explicitly.
+  virtual void   clean_up();
 
-  // Will resize the output buffer (which might use a VBO) then call doResize.
+  // Will resize the output buffer (which might use a VBO) then call do_resize.
   // Override this if you want to handle ALL buffer resizes yourself.
   virtual void   resize(unsigned int width, unsigned int height);
 
   // Where derived classes should handle resizing all buffers except outputBuffer.
-  virtual void   doResize(unsigned int width, unsigned int height) {}
+  virtual void   do_resize(unsigned int width, unsigned int height) {}
 
   // Use this to add additional keys. Some are already handled but
   // can be overridden.  Should return true if key was handled, false otherwise.
-  virtual bool   keyPressed(int key, int action, int modifier) { return false; }
+  virtual bool   key_pressed(int key, int action, int modifier) { return false; }
 
   // Use this to add additional keys. Some are already handled but
   // can be overridden.  Should return true if key was handled, false otherwise.
-  virtual bool   mousePressed(int x, int y, int button, int action, int mods) { return false;  }
-  virtual bool   mouseMoving(int x, int y) { return false; }
+  virtual bool   mouse_pressed(int x, int y, int button, int action, int mods) { return false;  }
+  virtual bool   mouse_moving(int x, int y) { return false; }
 
-  virtual void postDrawCallBack() {};
-  virtual void sceneInitialized() {};
+  virtual void post_draw_callback() {};
+  virtual void scene_initialized() {};
   // Accessor
-  optix::Context& getContext() { return m_context; }
+  optix::Context& get_context() { return m_context; }
 
 protected:
   optix::Context m_context;

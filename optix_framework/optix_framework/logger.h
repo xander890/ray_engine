@@ -7,7 +7,7 @@
 class Logger {
 
 public:
-	explicit Logger(std::ostream& _out, const char * _color_symbol, const char * _color_string) : out(_out), color_symbol(_color_symbol), color_string(_color_string) {}
+	explicit Logger(std::ostream& _out, const char * _color_symbol, const char * _color_string) : out(&_out), color_symbol(_color_symbol), color_string(_color_string) {}
 
 	template<typename T>
 	std::string get_str(const T&  v) { return std::to_string(v); }
@@ -18,15 +18,16 @@ public:
 	template<typename T>
 	Logger& operator<<(const T v)  
 	{ 
+		
 		if (start_of_line)
 		{
 			std::string color = is_color_enabled ? color_symbol : "";
 			std::string color_end = is_color_enabled ? RESET : "";
-			out << color << "[" << color_string << "] " << color_end;
+			*out << color << "[" << color_string << "] " << color_end;
 			start_of_line = false;
 		}
 		std::string a = get_str<T>(v);
-		out << a;
+		*out << a;
 		if (a.back() == '\n')
 			start_of_line = true;
 		return *this; 
@@ -38,7 +39,8 @@ public:
 	}
 
 
-	Logger& operator<<(std::ostream& (*F)(std::ostream&)) { F(out); start_of_line = true;  return *this; }
+	Logger& operator<<(std::ostream& (*F)(std::ostream&)) { F(*out); start_of_line = true;  return *this; }
+
 
 	static Logger info;
 	static Logger debug;
@@ -46,8 +48,10 @@ public:
 	static Logger warning;
 	static bool is_color_enabled;
 
+	static void set_logger_output(std::ostream& out);
+
 protected:
-	std::ostream& out;
+	std::ostream * out;
 	std::string color_symbol;
 	std::string color_string;
 
@@ -60,6 +64,7 @@ private:
 	static const char * GREEN;
 	static const char * RESET; 
 	static const char * YELLOW;
+	void set_output(std::ostream & out);
 };
 
 
