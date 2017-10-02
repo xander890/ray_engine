@@ -85,17 +85,21 @@ __device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float
 	return true;
 }
 
+__device__ __forceinline__ int linear_sample_cdf(float * cdf, int cdf_size, float xi)
+{
+	int c = 0;
+	for (int i = 0; i < cdf_size; i++)
+	{
+		c = xi > cdf[i] ? i : c;
+	}
+	return c;
+}
+
 __device__ __forceinline__ int choose_sampling_axis(uint & t)
 {
 	float var = rnd(t);
-	int main_axis = 0;
 	float* mis_weights_cdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights_cdf);
-
-	for (int i = 0; i < 4; i++)
-	{
-		main_axis = var > mis_weights_cdf[i] ? i : main_axis;
-	}
-	return main_axis;
+	return linear_sample_cdf(mis_weights_cdf, 4, var);
 }
 
 __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
@@ -210,16 +214,19 @@ __device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, c
 
 	optix_print("Selecting axis %d", main_axis);
 
-	float3 top = axes[main_axis];
-	float3 t1 = axes[(main_axis + 1) % 3];
-	float3 t2 = axes[(main_axis + 2) % 3];
-	integration_factor /= mis_weights_pdf[main_axis];
+	float verse_mult[2] = { 1, -1 };
+	float verse_offset[2] = { scene_epsilon, -scene_epsilon * 3.0f };
+	int v = rnd(t) > 0.5f? 0 : 1;
+
+	float3 top = verse_mult[v] * axes[main_axis];
+	integration_factor /= mis_weights_pdf[main_axis] * 2.0f;
+	float3 t1, t2;
+	create_onb(top, t1, t2);
 
 	if (!sample_xi_ni_from_tangent_hemisphere(xo, top, t1, t2, disc_sample, t, xi, ni, -bssrdf_sampling_properties->d_max))
 		return false;
 
 	integration_factor *= r / pdf_disk;
-	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
 	float inv_jac = max(0.0f, dot(normalize(top), normalize(ni)));
 	
 	// No jacobian, it may give singularities.
