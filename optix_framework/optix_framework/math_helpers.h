@@ -35,6 +35,16 @@ static __device__ __inline__ optix::uchar4 make_color(const optix::float3& c)
 }
 #endif
 
+__host__ __device__ __inline__ float deg2rad(float deg)
+{
+	return deg * M_PIf / 180.0f;
+}
+
+__host__ __device__ __inline__ float rad2deg(float rad)
+{
+	return rad * 180.0f / M_PIf;
+}
+
 __host__ __device__ __inline__ void rotate_to_normal(const optix::float3& normal, optix::float3& v)
 {
 	if(normal.z < -0.999999f)

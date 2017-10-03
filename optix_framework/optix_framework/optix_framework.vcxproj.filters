@@ -79,6 +79,9 @@
     <CudaCompile Include="debug_camera.cu">
       <Filter>CUDA_files\Cameras</Filter>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\reference_bssrdf.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="obj_scene.cpp">
@@ -514,6 +517,9 @@
     </ClInclude>
     <ClInclude Include="transform.h" />
     <ClInclude Include="improved_enum.def">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="phase_function.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>

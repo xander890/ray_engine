@@ -512,6 +512,7 @@ echo Done.</Command>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\reference_bssrdf.cu" />
     <CudaCompile Include="CUDA_files\sample_camera.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
@@ -707,6 +708,7 @@ echo Done.</Command>
     <ClInclude Include="optix_serialize.h" />
     <ClInclude Include="optix_utils.h" />
     <ClInclude Include="PerlinNoise.h" />
+    <ClInclude Include="phase_function.h" />
     <ClInclude Include="PPMLoader.h" />
     <ClInclude Include="procedural_mesh.h" />
     <ClInclude Include="color_helpers.h" />

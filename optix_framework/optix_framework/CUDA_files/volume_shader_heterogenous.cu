@@ -7,6 +7,7 @@
 #include "scattering_properties.h"
 #include "light.h"
 #include <material_device.h>
+#include "phase_function.h"
 
 using namespace optix;
 

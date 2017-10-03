@@ -1,7 +1,5 @@
 #pragma once
-
 #include <optix_world.h>
-#include <optix.h>
 #include "math_helpers.h"
 #include "random.h"
 
@@ -128,44 +126,6 @@ static __host__ __device__ __inline__ optix::float3 sample_point_triangle(float 
 	return (1-zeta1) * v0 + zeta1 * (1-zeta2) * v1 + zeta1 * zeta2 * v2;
 }
 
-__inline__ __device__ optix::float3 sample_HG(optix::float3& forward, optix::uint& t)
-{
-    float xi = rnd(t);
-    float cos_theta = 1.0f - 2.0f*xi;
-    float phi = 2.0f*M_PIf*rnd(t);
-    float sin_theta = sqrtf(1.0f - cos_theta*cos_theta);
-    optix::float3 v = optix::make_float3(sin_theta*cosf(phi), sin_theta*sinf(phi), cos_theta);
-
-    // Rotate from z-axis to actual normal and return
-    rotate_to_normal(forward, v);
-    return v;
-}
-
-__inline__ __device__ optix::float3 sample_HG(optix::float3& forward, float g, optix::uint& t)
-{
-    float xi = rnd(t);
-    float cos_theta;
-    if (fabs(g) < 1.0e-3f)
-        cos_theta = 1.0f - 2.0f*xi;
-    else
-    {
-        float two_g = 2.0f*g;
-        float g_sqr = g*g;
-        float tmp = (1.0f - g_sqr) / (1.0f - g + two_g*xi);
-        cos_theta = 1.0f / two_g*(1.0f + g_sqr - tmp*tmp);
-    }
-    float phi = 2.0f*M_PIf*rnd(t);
-
-    // Calculate new direction as if the z-axis were the forward direction
-    float sin_theta = sqrtf(1.0f - cos_theta*cos_theta);
-    optix::float3 v = optix::make_float3(sin_theta*cosf(phi), sin_theta*sinf(phi), cos_theta);
-
-    // Rotate from z-axis to actual normal and return
-    rotate_to_normal(forward, v);
-    return v;
-}
-
-
 static __inline__ __device__ optix::float3 sample_hemisphere_uniform(const optix::float2 & sample, const optix::float3 & normal)
 {
 	optix::float3 p;
@@ -195,7 +155,7 @@ static __inline__ __device__ optix::float2 sample_disk_exponential(optix::uint &
 	phi = 2.0f * M_PIf * sample.y;
 	p.x = r * cos(phi);
 	p.y = r * sin(phi);
-	pdf = sigma * sample.x / (2.0f* M_PIf);
+	pdf = sigma * sample.x / (2.0f* M_PIf); 
 	return p;
 }
 
