@@ -217,6 +217,7 @@ echo Done.</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="RawLoader.cpp" />
+    <ClCompile Include="reference_bssrdf.cpp" />
     <ClCompile Include="rendering_method.cpp" />
     <ClCompile Include="render_task.cpp" />
     <ClCompile Include="sampled_bssrdf.cpp" />
@@ -714,6 +715,7 @@ echo Done.</Command>
     <ClInclude Include="color_helpers.h" />
     <ClInclude Include="directional_dipole.h" />
     <ClInclude Include="RawLoader.h" />
+    <ClInclude Include="reference_bssrdf.h" />
     <ClInclude Include="render_task.h" />
     <ClInclude Include="sampled_bssrdf.h" />
     <ClInclude Include="SampleScene.h" />

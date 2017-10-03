@@ -46,6 +46,7 @@
 #include "immediate_gui.h"
 #include "camera_host.h"
 #include "structs.h"
+#include "reference_bssrdf.h"
 
 using namespace std;
 using namespace optix;
@@ -386,6 +387,10 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	
 	ShaderInfo info2 = { "subsurface_scattering_sampled.cu", "Sampled BSSRDF", 14 };
 	ShaderFactory::add_shader<SampledBSSRDF>(info2);
+
+	ShaderInfo info4 = { "empty.cu", "Reference BSSRDF", 20 };
+	ShaderFactory::add_shader<ReferenceBSSRDF>(info4);
+
 
     for (auto& kv : MaterialLibrary::media)
 	{

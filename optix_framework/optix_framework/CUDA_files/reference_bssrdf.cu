@@ -14,19 +14,8 @@
 #include "phase_function.h"
 
 using namespace optix;
-#define DIRLIGHT
-#define USE_SHADOW_RAYS
-// Triangle mesh data
-rtBuffer<float3> sampling_vertex_buffer;
-rtBuffer<float3> sampling_normal_buffer;
-rtBuffer<int3>   sampling_vindex_buffer;
-rtBuffer<int3>   sampling_nindex_buffer;
-rtBuffer<float>  area_cdf;
-rtDeclareVariable(float, total_area, , );
-
 // Window variables
-//rtBuffer<PositionSample> sampling_output_buffer;
-#define SAMPLES 50
+rtBuffer<float,2> resulting_flux;
 
 __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_origin, const optix::float3 & plane_normal, const optix::Ray & ray, float & intersection_distance)
 {
@@ -40,6 +29,9 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_orig
 // Assumes an infinite plane with normal (0,0,1)
 __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::float3& wi, const float incident_power, const float r, const float theta_s, const float n1_over_n2, const float sigma_a, const float sigma_s, const float g, optix::uint & t)
 {
+	const int theta_bins = resulting_flux.size().y;
+	const int phi_bins = resulting_flux.size().x;
+	
 	// Geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);
@@ -96,6 +88,10 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 				const float phi_o = phi_21 + M_PIf > 2.0f * M_PIf ? phi_21 - M_PIf : phi_21 + M_PIf;
 				const float theta_o = acosf(cos_theta_o);
 				float flux_E = flux_t * albedo * eval_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len)*F_t;
+				int bin_theta_o = int(theta_o * M_1_PIf * theta_bins);
+				int bin_phi_o = int(phi_o * 0.5f * M_1_PIf * phi_bins);
+				atomicAdd(&resulting_flux[make_uint2(bin_phi_o, bin_theta_o)], flux_E);
+
 			}
 
 			if (rnd(t) > albedo)
@@ -136,7 +132,6 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 RT_PROGRAM void reference_bssrdf_camera()
 {
 	uint idx = launch_index.x;
-	uint elements = SAMPLES;
 	const float theta_i = 20.0f;
 	optix::uint t = tea<16>(idx, frame);
 

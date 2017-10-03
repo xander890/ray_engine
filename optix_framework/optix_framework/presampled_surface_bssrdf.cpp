@@ -25,7 +25,7 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx, const Shader
     context["sampling_vindex_buffer"]->setBuffer(empty_bufferi3);
     context["sampling_nindex_buffer"]->setBuffer(empty_bufferi3);
 
-    mSampleBuffer = context->createBuffer(RT_BUFFER_OUTPUT);
+    mSampleBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
     mSampleBuffer->setFormat(RT_FORMAT_USER);
     mSampleBuffer->setElementSize(sizeof(PositionSample));
     mSampleBuffer->setSize(mSamples);
