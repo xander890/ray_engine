@@ -10,12 +10,12 @@ rtDeclareVariable(rtObject, top_shadower, , );
 rtDeclareVariable(rtObject, top_object, , );
 
 // Ray generation variables
-rtDeclareVariable(uint, frame, , );
-rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
-rtDeclareVariable(uint2, launch_dim, rtLaunchDim, );
-rtDeclareVariable(uint2, debug_index, , );
+rtDeclareVariable(optix::uint, frame, , );
+rtDeclareVariable(optix::uint2, launch_index, rtLaunchIndex, );
+rtDeclareVariable(optix::uint2, launch_dim, rtLaunchDim, );
+rtDeclareVariable(optix::uint2, debug_index, , );
 // Exception and debugging variables
-rtDeclareVariable(float3, bad_color, , );
+rtDeclareVariable(optix::float3, bad_color, , );
 
 // Current ray information
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
@@ -35,8 +35,13 @@ static __device__ __inline__ void shadow_hit(PerRayData_shadow & shadow_payload,
 	rtTerminateRay();
 }
 
+#ifdef NDEBUG
+#define optix_print 
+#define optix_assert(x) 
+#else
 #define optix_print rtPrintf
-
+#define optix_assert(x) if(!(x)) optix_print("Assertion " #x " failed. File: %s, Line %d\n", __FILE__, __LINE__); 
+#endif
 
 
 #endif // light_common_h__
