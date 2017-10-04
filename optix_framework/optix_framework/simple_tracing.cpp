@@ -6,8 +6,3 @@ void SimpleTracing::init()
 {
 
 }
-
-void SimpleTracing::pre_trace()
-{
-
-}

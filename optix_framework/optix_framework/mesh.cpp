@@ -263,3 +263,8 @@ void Mesh::pre_trace()
 {
 	mShader->pre_trace_mesh(*this);
 }
+
+void Mesh::post_trace()
+{
+	mShader->post_trace_mesh(*this);
+}

@@ -8,7 +8,6 @@ class SimpleTracing : public RenderingMethod
 public:
     SimpleTracing(optix::Context & context) : RenderingMethod(context) {}
 	virtual void init();
-	virtual void pre_trace();
 };
 
 

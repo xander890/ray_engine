@@ -355,8 +355,8 @@ void ObjScene::create_3d_noise(float frequency)
 void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_camera_data)
 {
 	Logger::info << "Initializing scene." << endl;
-	context->setPrintBufferSize(200);
-	setDebugEnabled(false);
+	context->setPrintBufferSize(2000);
+	setDebugEnabled(true);
 	context->setPrintLaunchIndex(0, 0);
 	ConfigParameters::init(config_file);
 	ConfigParameters::override_parameters(parameters_override);
@@ -379,17 +379,17 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 
     ShaderFactory::init(context);
 	ShaderInfo info = { "volume_shader.cu", "Volume path tracer", 12 };
-	ShaderFactory::add_shader<VolumePathTracer>(info);
+	ShaderFactory::add_shader(std::make_unique<VolumePathTracer>(info));
 
 	ShaderInfo info3 = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
-    ShaderFactory::add_shader<VolumePathTracer>(info3);
+	ShaderFactory::add_shader(std::make_unique<VolumePathTracer>(info3));
 
 	
 	ShaderInfo info2 = { "subsurface_scattering_sampled.cu", "Sampled BSSRDF", 14 };
-	ShaderFactory::add_shader<SampledBSSRDF>(info2);
+	ShaderFactory::add_shader(std::make_unique<SampledBSSRDF>(info2));
 
 	ShaderInfo info4 = { "empty.cu", "Reference BSSRDF", 20 };
-	ShaderFactory::add_shader<ReferenceBSSRDF>(info4);
+	ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDF>(info4));
 
 
     for (auto& kv : MaterialLibrary::media)
@@ -457,7 +457,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 
 	    m_scene_bounding_box.include(loader->getSceneBBox());
 		loader->getAreaLights(lights);
- 
+		Logger::info << to_string(lights.size()) << std::endl;
 		// Set material shaders
 
 		// Add geometry group to the group of scene objects
@@ -658,6 +658,14 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	t0 = currentTime();
 
 	context->launch(tonemap_entry_point, width, height);
+
+
+	method->post_trace();
+	execute_on_scene_elements([=](Mesh & m)
+	{
+		m.post_trace();
+	});
+
 
 	if (debug_mode_enabled == true)
 	{

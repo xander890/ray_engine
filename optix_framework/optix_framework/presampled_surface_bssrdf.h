@@ -7,9 +7,9 @@
 class PresampledSurfaceBssrdf : public Shader 
 {
 public:
-    PresampledSurfaceBssrdf() : Shader(), entry_point(0) { }
+    PresampledSurfaceBssrdf(const ShaderInfo& shader_info) : Shader(shader_info), entry_point(0) { }
 
-    void initialize_shader(optix::Context, const ShaderInfo& shader_info) override;
+    void initialize_shader(optix::Context) override;
     void initialize_mesh(Mesh& object) override;
     void pre_trace_mesh(Mesh& object) override;
 	bool on_draw() override;

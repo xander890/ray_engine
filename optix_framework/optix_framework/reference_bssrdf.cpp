@@ -2,15 +2,20 @@
 #include "immediate_gui.h"
 #include "optix_utils.h"
 
-void ReferenceBSSRDF::initialize_shader(optix::Context ctx, const ShaderInfo& shader_info)
+void ReferenceBSSRDF::initialize_shader(optix::Context ctx)
 {
-	 Shader::initialize_shader(ctx, shader_info);
+	 Shader::initialize_shader(ctx);
 	 //in static constructor
 
 	 std::string ptx_path = get_path_ptx("reference_bssrdf.cu");
 	 optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
 
 	 entry_point = add_entry_point(context, ray_gen_program);
+
+	 std::string ptx_path_output = get_path_ptx("render_reference_bssrdf.cu");
+	 optix::Program ray_gen_program_output = context->createProgramFromPTXFile(ptx_path_output, "render_ref");
+
+	 entry_point_output = add_entry_point(context, ray_gen_program_output);
 
 	 mBSSRDFBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
 	 mBSSRDFBuffer->setFormat(RT_FORMAT_USER);
@@ -34,6 +39,11 @@ void ReferenceBSSRDF::pre_trace_mesh(Mesh& object)
 	context->setPrintLaunchIndex(0, -1, -1);
 	context->launch(entry_point, mSamples);
 	context->setPrintLaunchIndex(c.x, c.y, c.z);
+}
+
+void ReferenceBSSRDF::post_trace_mesh(Mesh & object)
+{
+	context->launch(entry_point_output, mHemisphereSize.x, mHemisphereSize.y);
 }
 
 bool ReferenceBSSRDF::on_draw()

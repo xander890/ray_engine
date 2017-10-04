@@ -3,7 +3,7 @@
 #include "immediate_gui.h"
 #include "scattering_material.h"
 
-SampledBSSRDF::SampledBSSRDF() : Shader()
+SampledBSSRDF::SampledBSSRDF(const ShaderInfo& shader_info) : Shader(shader_info)
 {
 	properties = std::make_unique<BSSRDFSamplingProperties>();
 }
@@ -15,9 +15,9 @@ SampledBSSRDF::SampledBSSRDF(const SampledBSSRDF & cp) : Shader(cp)
 	*properties = *cp.properties;
 }
 
-void SampledBSSRDF::initialize_shader(optix::Context ctx, const ShaderInfo& shader_info)
+void SampledBSSRDF::initialize_shader(optix::Context ctx)
 {
-	Shader::initialize_shader(ctx, shader_info);
+	Shader::initialize_shader(ctx);
 	mPropertyBuffer = create_buffer<BSSRDFSamplingProperties>(context);
 	properties->sampling_method = BssrdfSamplingType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "sampling_method", BssrdfSamplingType::to_string(properties->sampling_method), "Sampling method for illum 14. Available : " + BssrdfSamplingType::get_full_string()));
 	Logger::info << "Using enum " << BssrdfSamplingType::to_string(properties->sampling_method) << std::endl;

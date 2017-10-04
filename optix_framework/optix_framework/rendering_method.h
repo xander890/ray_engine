@@ -12,7 +12,8 @@ public:
     virtual ~RenderingMethod() = default;
     RenderingMethod(optix::Context & context);
 	virtual void init() = 0;
-	virtual void pre_trace() = 0;
+	virtual void pre_trace() {}
+	virtual void post_trace() {}
 
 protected:
     optix::Context& context;

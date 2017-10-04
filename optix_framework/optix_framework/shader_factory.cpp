@@ -90,19 +90,30 @@ optix::Program ShaderFactory::createProgram(std::string file, std::string progra
     return result;
 }
 
+void ShaderFactory::add_shader(std::unique_ptr<Shader> shader)
+{
+	if (get_shader_map().count(shader->illum) != 0)
+	{
+		Logger::warning << "Replacing shader! Be careful to know what you are doing!" << std::endl;
+	}
+	std::shared_ptr<Shader> s = std::move(shader);
+	s->initialize_shader(context);
+	get_shader_map()[s->illum] = s;
+}
+
 void ShaderFactory::init(optix::Context& ctx)
 {
     context = ctx;
     load_normalized_CIE_functions(context);
 
     ShaderInfo glossy = {"glossy_shader.cu", "Glossy", 2};
-    add_shader<GlossyShader>(glossy);
+    add_shader(std::make_unique<GlossyShader>(glossy));
     ShaderInfo bssrdf = { "subsurface_scattering_shader.cu", "Point cloud BSSRDF", 17 };
-    add_shader<PresampledSurfaceBssrdf>(bssrdf);
+	add_shader(std::make_unique<PresampledSurfaceBssrdf>(bssrdf));
 
     for (const ShaderInfo& n: DefaultShader::default_shaders)
     {
-        add_shader<DefaultShader>(n);
+        add_shader(std::make_unique<DefaultShader>(n));
     }
 }
 

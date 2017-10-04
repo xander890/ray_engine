@@ -47,6 +47,7 @@ public:
 
 	bool on_draw();
 	void pre_trace();
+	void post_trace();
 
 	optix::GeometryInstance get_geometry_instance() { return mGeometryInstance;  }
 	optix::GeometryGroup get_static_handle() { return mGeometryGroup; }

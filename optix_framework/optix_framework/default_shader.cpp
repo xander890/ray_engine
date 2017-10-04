@@ -12,9 +12,9 @@ std::vector<ShaderInfo> DefaultShader::default_shaders =
     {"metal_shader.cu", "Metal" ,11}
 };
 
-void DefaultShader::initialize_shader(optix::Context ctx, const ShaderInfo& shader_info)
+void DefaultShader::initialize_shader(optix::Context ctx)
 {
-    Shader::initialize_shader(ctx, shader_info);
+    Shader::initialize_shader(ctx);
 }
 
 void DefaultShader::initialize_mesh(Mesh& object)

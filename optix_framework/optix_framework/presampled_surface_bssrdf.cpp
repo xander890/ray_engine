@@ -6,9 +6,9 @@
 
 using namespace optix;
 
-void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx, const ShaderInfo& shader_info)
+void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
 {
-    Shader::initialize_shader(ctx, shader_info);
+    Shader::initialize_shader(ctx);
     //in static constructor
 
     std::string ptx_path = get_path_ptx("sample_camera.cu");

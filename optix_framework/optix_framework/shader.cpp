@@ -43,12 +43,14 @@ void Shader::pre_trace_mesh(Mesh & object)
     return;
 }
 
-void Shader::initialize_shader(optix::Context context, const ShaderInfo& shader_info)
+void Shader::post_trace_mesh(Mesh & object)
+{
+	return;
+}
+
+void Shader::initialize_shader(optix::Context context)
 {
     this->context = context;
-    illum = shader_info.illum;
-    shader_path = shader_info.cuda_shader_path;
-    shader_name = shader_info.name;
 }
 
 bool Shader::on_draw()

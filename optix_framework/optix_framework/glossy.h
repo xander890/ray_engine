@@ -13,10 +13,10 @@ class GlossyShader : public Shader
 {
 public:
     virtual ~GlossyShader() = default;
-    GlossyShader() : Shader() {}
+    GlossyShader(const ShaderInfo& shader_info) : Shader(shader_info) {}
 	GlossyShader(const GlossyShader &) = default;
 
-    void initialize_shader(optix::Context context, const ShaderInfo& shader_info) override;
+    void initialize_shader(optix::Context context) override;
     
     void initialize_mesh(Mesh & object) override;
     void pre_trace_mesh(Mesh & object) override;
