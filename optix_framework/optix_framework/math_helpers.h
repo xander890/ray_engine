@@ -35,6 +35,11 @@ static __device__ __inline__ optix::uchar4 make_color(const optix::float3& c)
 }
 #endif
 
+__host__ __device__ __inline__ float normalize_angle(float deg)
+{
+	return deg - 2 * M_PIf * std::floor(deg / (2 * M_PIf));
+}
+
 __host__ __device__ __inline__ float deg2rad(float deg)
 {
 	return deg * M_PIf / 180.0f;

@@ -77,7 +77,7 @@ public:
 	void add_override_parameters(std::vector<std::string> & params);
 private:
 	optix::Context context;
-	bool debug_mode_enabled = true;
+	bool debug_mode_enabled = false;
 
 	BackgroundType::EnumType current_miss_program;
 	bool collect_images = false;

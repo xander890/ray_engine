@@ -672,6 +672,7 @@ echo Done.</Command>
     <ClInclude Include="bssrdf_sampling_properties.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="camera_host.h" />
+    <ClInclude Include="colormap.h" />
     <ClInclude Include="constant_background.h" />
     <ClInclude Include="cputimer.h" />
     <ClInclude Include="default_shader.h" />

@@ -39,11 +39,13 @@ void ReferenceBSSRDF::pre_trace_mesh(Mesh& object)
 	context->setPrintLaunchIndex(0, -1, -1);
 	context->launch(entry_point, mSamples);
 	context->setPrintLaunchIndex(c.x, c.y, c.z);
+	mRenderedFrames++;
 }
 
 void ReferenceBSSRDF::post_trace_mesh(Mesh & object)
 {
-	context->launch(entry_point_output, mHemisphereSize.x, mHemisphereSize.y);
+	context["reference_bssrdf_samples_per_frame"]->setInt(mSamples * mRenderedFrames);
+	context->launch(entry_point_output, mCameraWidth, mCameraHeight);
 }
 
 bool ReferenceBSSRDF::on_draw()

@@ -356,7 +356,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 {
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(2000);
-	setDebugEnabled(true);
+	setDebugEnabled(debug_mode_enabled);
 	context->setPrintLaunchIndex(0, 0);
 	ConfigParameters::init(config_file);
 	ConfigParameters::override_parameters(parameters_override);
@@ -383,13 +383,12 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 
 	ShaderInfo info3 = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
 	ShaderFactory::add_shader(std::make_unique<VolumePathTracer>(info3));
-
 	
 	ShaderInfo info2 = { "subsurface_scattering_sampled.cu", "Sampled BSSRDF", 14 };
 	ShaderFactory::add_shader(std::make_unique<SampledBSSRDF>(info2));
 
 	ShaderInfo info4 = { "empty.cu", "Reference BSSRDF", 20 };
-	ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDF>(info4));
+	ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDF>(info4, camera_width, camera_height));
 
 
     for (auto& kv : MaterialLibrary::media)

@@ -6,7 +6,7 @@
 class ReferenceBSSRDF : public Shader
 {
 public:
-	ReferenceBSSRDF(const ShaderInfo& shader_info) : Shader(shader_info), entry_point(0) { }
+	ReferenceBSSRDF(const ShaderInfo& shader_info, int camera_width, int camera_height) : Shader(shader_info), entry_point(0), mCameraWidth(camera_width), mCameraHeight(camera_height) { }
 
 	void initialize_shader(optix::Context) override;
 	void initialize_mesh(Mesh& object) override;
@@ -20,6 +20,9 @@ private:
 	int entry_point_output;
 	optix::Buffer mBSSRDFBuffer;
 	unsigned int mSamples = 1000;
-	optix::uint2 mHemisphereSize = optix::make_uint2(180, 90);
+	optix::uint2 mHemisphereSize = optix::make_uint2(360, 90) * 4;
+	int mCameraWidth;
+	int mCameraHeight;
+	int mRenderedFrames = 0;
 };
 

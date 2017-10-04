@@ -29,6 +29,7 @@ __inline__ __device__ optix::float3 sample_HG(optix::float3& forward, float g, o
 
 __inline__ __device__ float eval_HG(float cos_alpha, float g)
 {
+	float g_sqr = g*g;
 	float den = rsqrtf(1 + g * g - 2 * g * cos_alpha);
-	return 0.25f * M_1_PIf * den * den * den;
+	return 0.25f * M_1_PIf * (1.0f - g_sqr) * den * den * den;
 }
