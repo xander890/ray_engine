@@ -59,8 +59,8 @@ void ImmediateGUI::start_draw() const
 
 void ImmediateGUI::start_window(const char * name, int x, int y, int w, int h) const
 {
-	ImGui::SetNextWindowPos(ImVec2((float)x, (float)y), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2((float)w, (float)h), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2((float)x, (float)y), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2((float)w, (float)h), ImGuiCond_FirstUseEver);
 	ImGui::Begin(name, (bool*)&visible, ImGuiWindowFlags_ShowBorders);
 }
 

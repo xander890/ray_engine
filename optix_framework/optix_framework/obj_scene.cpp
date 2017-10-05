@@ -898,6 +898,8 @@ bool ObjScene::mouse_moving(int x, int y)
 
 void ObjScene::post_draw_callback()
 {
+	if (!gui->isVisible())
+		return;
 	gui->start_draw();
 	gui->start_window("Ray tracing demo", 20, 20, 500, 600);
 	if (draw_gui())
