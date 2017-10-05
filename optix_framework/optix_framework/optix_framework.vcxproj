@@ -712,6 +712,8 @@ echo Done.</Command>
     <ClInclude Include="optix_utils.h" />
     <ClInclude Include="PerlinNoise.h" />
     <ClInclude Include="phase_function.h" />
+    <ClInclude Include="photon_trace_reference_bssrdf.h" />
+    <ClInclude Include="photon_trace_structs.h" />
     <ClInclude Include="PPMLoader.h" />
     <ClInclude Include="procedural_mesh.h" />
     <ClInclude Include="color_helpers.h" />

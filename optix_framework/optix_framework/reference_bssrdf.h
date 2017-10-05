@@ -19,10 +19,12 @@ private:
 	int entry_point;
 	int entry_point_output;
 	optix::Buffer mBSSRDFBuffer;
-	unsigned int mSamples = 1000;
-	optix::uint2 mHemisphereSize = optix::make_uint2(360, 90) * 4;
+	unsigned int mSamples = 10000;
+	optix::uint2 mHemisphereSize = optix::make_uint2(360, 90);
 	int mCameraWidth;
 	int mCameraHeight;
 	int mRenderedFrames = 0;
+
+	float mScaleMultiplier = 2 * 1000000.0f;
 };
 

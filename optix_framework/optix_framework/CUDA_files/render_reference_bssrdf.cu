@@ -10,6 +10,7 @@ using namespace optix;
 rtBuffer<float4, 2> output_buffer;
 rtBuffer<float, 2> resulting_flux;
 rtDeclareVariable(int, reference_bssrdf_samples_per_frame, , );
+rtDeclareVariable(float, reference_scale_multiplier, , );
 
 RT_PROGRAM void render_ref()
 {
@@ -28,5 +29,5 @@ RT_PROGRAM void render_ref()
 	if (l >= 1)
 		output_buffer[launch_index] = make_float4(0);
 	else
-		output_buffer[launch_index] = make_float4(jet(8 * 1000000.0f * resulting_flux[coords_idx] / (reference_bssrdf_samples_per_frame)), 1);
+		output_buffer[launch_index] = make_float4(jet(reference_scale_multiplier * resulting_flux[coords_idx] / (reference_bssrdf_samples_per_frame)), 1);
 }

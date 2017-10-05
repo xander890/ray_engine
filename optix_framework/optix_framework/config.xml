@@ -15,7 +15,7 @@
     <property key="camera_up" value="0 1 0" comment="The camera initial up"/>
     <property key="use_auto_camera" value="false" comment="Use a automatic placed camera or use the current data."/>
     <property key="window_height" value="1024" comment="The height of the window"/>
-    <property key="window_width" value="1280" comment="The width of the window"/>
+    <property key="window_width" value="1024" comment="The width of the window"/>
   </camera>
   <config>
     <property key="N" value="1" comment="Monte carlo samples."/>

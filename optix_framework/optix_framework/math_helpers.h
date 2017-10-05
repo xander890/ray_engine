@@ -173,6 +173,12 @@ static __host__ __device__ __inline__ optix::float3 pow(const optix::float3 &val
 	return optix::make_float3(powf(value1.x, exp), powf(value1.y, exp), powf(value1.z, exp));
 }
 
+static __host__ __device__ __inline__ bool isnan(const optix::float3 &value1)
+{
+	return isnan(value1.x) || isnan(value1.y) || isnan(value1.z);
+}
+
+
 static __host__ __device__ __inline__ float step(const float &edge, const float &x)
 {
 	  return (x < edge)? 0.0f : 1.0f;

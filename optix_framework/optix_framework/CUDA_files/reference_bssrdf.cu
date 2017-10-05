@@ -3,28 +3,12 @@
 // Copyright (c) DTU Informatics 2011
 
 #include <device_common_data.h>
-#include <random.h>
-#include <sampling_helpers.h>
-#include <environment_map.h>
-#include "light.h"
-#include "device_environment_map.h"
-#include "optical_helper.h"
-#include "phase_function.h"
+#include <photon_trace_reference_bssrdf.h>
 
 using namespace optix;
-// Window variables
-rtBuffer<float,2> resulting_flux;
-#define MAX_ITERATIONS 1e5
-//#define REMOVE_SINGLE_SCATTERING
+rtBuffer<float, 2> resulting_flux;
 
-__forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_origin, const optix::float3 & plane_normal, const optix::Ray & ray, float & intersection_distance)
-{
-	float denom = optix::dot(plane_normal, ray.direction);
-	if (abs(denom) < 1e-6)
-		return false; // Parallel: none or all points of the line lie in the plane.
-	intersection_distance = optix::dot((plane_origin - ray.origin), plane_normal) / denom;
-	return intersection_distance > ray.tmin && intersection_distance < ray.tmax;
-}
+// Window variables
 
 // Assumes an infinite plane with normal (0,0,1)
 __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::float3& wi, const float incident_power, const float r, const float theta_s, const float n1_over_n2, const float albedo, const float extinction, const float g, optix::uint & t)
@@ -39,10 +23,6 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	float3 n = (xo - xi);
 	optix_print("wi: %f %f %f, xo-xi: %f %f %f", wi.x, wi.y, wi.z, n.x, n.y, n.z);
 
-	// Optical properties
-	const float critical_angle = asinf(n1_over_n2);
-	const float n2_over_n1 = 1.0f / n1_over_n2;
-
 	// Refraction
 	const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f);
 	const float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
@@ -52,112 +32,11 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	float flux_t = incident_power;
 	optix::float3 xp = xi;
 	optix::float3 wp = w12;
-	int i;
-	for(i = 0; i < MAX_ITERATIONS; i++)
+
+	if (!scatter_photon(xp, wp, flux_t, resulting_flux, xo,  n1_over_n2, albedo, extinction, g, t))
 	{
-		float rand = 1.0f - rnd(t); // Avoids zero thus infinity.
-		float d = -log(rand) / extinction;
-		float intersection_distance;
-		optix::Ray ray = optix::make_Ray(xp, wp, 0, scene_epsilon, d);
-		optix_assert(xp.z < 1e-6); 
-		optix_assert(xp.z > -INFINITY);
-
-		if (!intersect_plane(xi, ni, ray, intersection_distance))
-		{
-			// Still within the medium...
-			xp = xp + wp * d;
-			optix::float3 d_vec = xo - xp;
-			const float d_vec_len = optix::length(d_vec);
-			d_vec = d_vec / d_vec_len; // Normalizing
-
-			optix_assert(optix::dot(d_vec, no) > 0.0f);
-
-			const float cos_theta_21 = optix::max(optix::dot(d_vec, no), 0.0f); // This should be positive
-			const float cos_theta_21_sqr = cos_theta_21*cos_theta_21;
-
-			// Note: we flip the relative ior because we are going outside from inside
-			const float sin_theta_o_sqr = n2_over_n1*n2_over_n1*(1.0f - cos_theta_21_sqr);
-			optix_print("(%d) - pos %f %f dir %f %f\n", i, xp.x, xp.y, d_vec.x, d_vec.y);
-
-			if (sin_theta_o_sqr >= 1.0f) // Total internal reflection, no accumulation
-			{
-				continue;
-			}
-			else
-			{
-				float cos_theta_o = sqrt(1.0f - sin_theta_o_sqr);
-				const float F_t = 1.0f - fresnel_R(cos_theta_21, n2_over_n1); // assert F_t < 1
-				float phi_21 = atan2f(d_vec.y, d_vec.x);
-
-				optix_assert(F_t < 1.0f);
-
-				// Store atomically in appropriate spot.
-
-				float flux_E = flux_t * albedo * eval_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len) * F_t;
-				
-				float phi_o = phi_21; // 
-				float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
-				const float theta_o_normalized = acosf(cos_theta_o) / (M_PIf * 0.5f);
-
-
-				optix_assert(theta_o_normalized >= 0.0f && theta_o_normalized < 1.0f);
-				optix_assert(phi_o_normalized < 1.0f);
-				optix_assert(phi_o_normalized >= 0.0f);
-
-				float2 coords = make_float2(phi_o_normalized, theta_o_normalized);
-				uint2 idxs = make_uint2(coords * make_float2(bins));
-#ifdef REMOVE_SINGLE_SCATTERING
-				if (i > 0)
-					atomicAdd(&resulting_flux[idxs], flux_E);
-#else
-				atomicAdd(&resulting_flux[idxs], flux_E);
-#endif
-
-
-
-				optix_assert(flux_E >= 0.0f);
-				optix_print("Scattering. (%d %d) %f\n", idxs.x, idxs.y, flux_E);
-			}
-
-			float absorption_prob = rnd(t);
-			if (absorption_prob > albedo)
-			{
-				optix_print("(%d) Absorption.\n",i);
-				break;
-			}
-			// We scatter, so we choose a new direction sampling the phase function
-			wp = sample_HG(wp, g, t);
-		}
-		else
-		{
-			// We are going out!
-			const optix::float3 surface_point = xp + wp * intersection_distance;
-			optix_assert(optix::dot(wp, no) > 0);
-			const float cos_theta_p = optix::max(optix::dot(wp, no), 0.0f); 
-			const float cos_theta_p_sqr = cos_theta_p*cos_theta_p;
-
-			const float sin_theta_o_sqr = n2_over_n1*n2_over_n1*(1.0f - cos_theta_p_sqr);
-
-			if (sin_theta_o_sqr >= 1.0f) // Total internal reflection,
-			{
-				xp = surface_point;
-				wp = reflect(wp, -no); // Reflect and turn to face inside.
-				const float cos_theta_o = sqrt(1.0f - sin_theta_o_sqr);
-				const float F_t = 1.0f - fresnel_R(cos_theta_o, n1_over_n2); // assert F_t < 1
-				flux_t *= F_t;
-				optix_print("(%d) Interally refracting.\n", i);
-			}
-			else
-			{
-				optix_print("(%d) Going out of the medium.\n", i);
-				// We are outside
-				break;
-			}
-		}
+		optix_print("Max iterations reached. Distance %f (%f mfps)\n", length(xp - xo), length(xp - xo) / r);
 	}
-	if (i == MAX_ITERATIONS)
-		optix_print("Max iterations reached. Distance %f (%f times ||xo-xi||)\n", length(xp - xo), length(xp - xo)/ length(xi - xo));
-
 }
 
 #define MILK 0
@@ -166,6 +45,7 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 #define B 3
 #define C 4
 #define D 5
+#define E 6
 #define MATERIAL B
 
 RT_PROGRAM void reference_bssrdf_camera()
@@ -227,6 +107,14 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float extinction = 1.0f;
 	const float g = 0.0f;
 	const float n1_over_n2 = 1.0f / 1.2f;
+#elif MATERIAL==E
+	const float theta_i = 80.0f;
+	const float theta_s = 165.0f;
+	const float r = 2.0f;
+	const float albedo = 0.8f;
+	const float extinction = 1.0f;
+	const float g = -0.3f;
+	const float n1_over_n2 = 1.0f / 1.3f;
 #endif
 	const float theta_i_rad = deg2rad(theta_i);
 	const float theta_s_rad = deg2rad(-theta_s);

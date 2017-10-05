@@ -45,10 +45,12 @@ void ReferenceBSSRDF::pre_trace_mesh(Mesh& object)
 void ReferenceBSSRDF::post_trace_mesh(Mesh & object)
 {
 	context["reference_bssrdf_samples_per_frame"]->setInt(mSamples * mRenderedFrames);
+	context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
 	context->launch(entry_point_output, mCameraWidth, mCameraHeight);
 }
 
 bool ReferenceBSSRDF::on_draw()
 {
+	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
 	return false;
 }

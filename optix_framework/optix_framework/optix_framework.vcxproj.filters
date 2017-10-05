@@ -534,6 +534,12 @@
     <ClInclude Include="colormap.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="photon_trace_reference_bssrdf.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="photon_trace_structs.h">
+      <Filter>Header Files\Materials</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">
