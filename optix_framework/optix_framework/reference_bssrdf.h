@@ -26,14 +26,14 @@ protected:
 	int entry_point;
 	int entry_point_output;
 	optix::Buffer mBSSRDFBuffer;
-	unsigned int mSamples = 10000;
+	unsigned int mSamples = (int)1e7;
 	optix::uint2 mHemisphereSize = optix::make_uint2(360, 90) * 4;
 	int mCameraWidth;
 	int mCameraHeight;
 	int mRenderedFrames = 0;
 
 	float mScaleMultiplier = 2 * 1000000.0f;
-	unsigned int mMaxIterations = (int)1e6;
+	unsigned int mMaxIterations = (int)1e5;
 	virtual void reset();
 	int mShowFalseColors = 1;
 };
