@@ -21,7 +21,7 @@
  */
 
 #include <optix_world.h>
-
+#include "math_helpers.h"
 template<unsigned int N>
 static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsigned int val1 )
 {
@@ -48,70 +48,29 @@ static __host__ __device__ __inline__ unsigned int lcg(unsigned int &prev)
   return prev & 0x00FFFFFF;
 }
 
-static __host__ __device__ __inline__ unsigned int lcg2(unsigned int &prev)
-{
-  prev = (prev*8121 + 28411)  % 134456;
-  return prev;
-}
-
 // Generate random float in [0, 1)
 static __host__ __device__ __inline__ float rnd(unsigned int &prev)
 {
   return ((float) lcg(prev) / (float) 0x01000000);
 }
 
-// Multiply with carry
-static __host__ __inline__ unsigned int mwc()
+static __host__ __device__ __inline__ float hash(const optix::float3 idx, float grid_scale, int hash_num)
 {
-  static unsigned long long r[4];
-  static unsigned long long carry;
-  static bool init = false;
-  if( !init ) {
-    init = true;
-    unsigned int seed = 7654321u, seed0, seed1, seed2, seed3;
-    r[0] = seed0 = lcg2(seed);
-    r[1] = seed1 = lcg2(seed0);
-    r[2] = seed2 = lcg2(seed1);
-    r[3] = seed3 = lcg2(seed2);
-    carry = lcg2(seed3);
-  }
+	// use the same procedure as GPURnd
+	optix::float4 n = optix::make_float4(idx, grid_scale * 0.5f) * 4194304.0f / grid_scale;
 
-  unsigned long long sum = 2111111111ull * r[3] +
-                           1492ull       * r[2] +
-                           1776ull       * r[1] +
-                           5115ull       * r[0] +
-                           1ull          * carry;
-  r[3]   = r[2];
-  r[2]   = r[1];
-  r[1]   = r[0];
-  r[0]   = static_cast<unsigned int>(sum);        // lower half
-  carry  = static_cast<unsigned int>(sum >> 32);  // upper half
-  return static_cast<unsigned int>(r[0]);
+	const optix::float4 q = optix::make_float4(1225.0f, 1585.0f, 2457.0f, 2098.0f);
+	const optix::float4 r = optix::make_float4(1112.0f, 367.0f, 92.0f, 265.0f);
+	const optix::float4 a = optix::make_float4(3423.0f, 2646.0f, 1707.0f, 1999.0f);
+	const optix::float4 m = optix::make_float4(4194287.0f, 4194277.0f, 4194191.0f, 4194167.0f);
+
+	optix::float4 beta = floor(n / q);
+	optix::float4 p = a * (n - beta * q) - beta * r;
+	beta = (signf(-p) + optix::make_float4(1.0f)) * optix::make_float4(0.5f) * m;
+	n = (p + beta);
+
+	return floor(fracf(dot(n / m, optix::make_float4(1.0f, -1.0f, 1.0f, -1.0f))) * hash_num);
 }
 
-static __host__ __inline__ unsigned int random1u()
-{
-#if 0
-  return rand();
-#else
-  return mwc();
-#endif
-}
-
-static __host__ __inline__ optix::uint2 random2u()
-{
-  return optix::make_uint2(random1u(), random1u());
-}
-
-static __host__ __inline__ void fillRandBuffer( unsigned int *seeds, unsigned int N )
-{
-  for( unsigned int i=0; i<N; ++i ) 
-    seeds[i] = mwc();
-}
-
-static __host__ __device__ __inline__ unsigned int rot_seed( unsigned int seed, unsigned int frame )
-{
-    return seed ^ frame;
-}
 
 #endif

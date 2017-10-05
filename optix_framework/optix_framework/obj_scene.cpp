@@ -1029,7 +1029,7 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 	float vfov = ConfigParameters::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
 
 	float ratio = camera->get_width() / (float)camera->get_height();
-	float hfov = RtoD(2.0f*atanf(ratio*tanf(DtoR(0.5f*(vfov)))));
+	float hfov = rad2deg(2.0f*atanf(ratio*tanf(deg2rad(0.5f*(vfov)))));
 
     if (use_auto_camera)
 	{

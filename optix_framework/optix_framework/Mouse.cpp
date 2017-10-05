@@ -463,7 +463,7 @@ void PinholeCamera::setAspectRatio(float ratio)
     break;
   }
 
-  *outputAngle = RtoD(2.0f*atanf(realRatio*tanf(DtoR(0.5f*(*inputAngle)))));
+  *outputAngle = rad2deg(2.0f*atanf(realRatio*tanf(deg2rad(0.5f*(*inputAngle)))));
 
   setup();
 }
@@ -487,9 +487,9 @@ void PinholeCamera::setup()
   up = assignWithCheck( up, normalize(up));
   camera_u = assignWithCheck( camera_u, normalize( cross(lookdir, up) ) );
   camera_v = assignWithCheck( camera_v, normalize( cross(camera_u, lookdir) ) );
-  float ulen = lookdir_len * tanf(DtoR(hfov*0.5f));
+  float ulen = lookdir_len * tanf(deg2rad(hfov*0.5f));
   camera_u = assignWithCheck( camera_u, camera_u * ulen );
-  float vlen = lookdir_len * tanf(DtoR(vfov*0.5f));
+  float vlen = lookdir_len * tanf(deg2rad(vfov*0.5f));
   camera_v = assignWithCheck( camera_v, camera_v * vlen );
 }
 
@@ -514,9 +514,9 @@ void PinholeCamera::scaleFOV(float scale)
 {
   const float fov_min = 0.0f;
   const float fov_max = 120.0f;
-  float hfov_new = RtoD(2*atanf(scale*tanf(DtoR(hfov*0.5f))));
+  float hfov_new = rad2deg(2*atanf(scale*tanf(deg2rad(hfov*0.5f))));
   hfov_new = Clamp(hfov_new, fov_min, fov_max);
-  float vfov_new = RtoD(2*atanf(scale*tanf(DtoR(vfov*0.5f))));
+  float vfov_new = rad2deg(2*atanf(scale*tanf(deg2rad(vfov*0.5f))));
   vfov_new = Clamp(vfov_new, fov_min, fov_max);
 
   hfov = assignWithCheck( hfov, hfov_new );
