@@ -47,6 +47,7 @@
 #include "camera_host.h"
 #include "structs.h"
 #include "reference_bssrdf.h"
+#include "reference_bssrdf_gpu.h"
 
 using namespace std;
 using namespace optix;
@@ -389,6 +390,9 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 
 	ShaderInfo info4 = { "empty.cu", "Reference BSSRDF", 20 };
 	ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDF>(info4, camera_width, camera_height));
+
+	ShaderInfo info5 = { "empty.cu", "Reference BSSRDF - GPU", 21 };
+	ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDFGPU>(info5, camera_width, camera_height));
 
 
     for (auto& kv : MaterialLibrary::media)

@@ -1,13 +1,18 @@
 #pragma once
 #include "optix_world.h"
 
+template<typename T> optix::Buffer create_buffer(optix::Context & ctx, int size)
+{
+	optix::Buffer buf = ctx->createBuffer(RT_BUFFER_INPUT);
+	buf->setFormat(RT_FORMAT_USER);
+	buf->setElementSize(sizeof(T));
+	buf->setSize(size);
+	return buf;
+}
+
 template<typename T> optix::Buffer create_buffer(optix::Context & ctx)
 {
-    optix::Buffer buf = ctx->createBuffer(RT_BUFFER_INPUT);
-    buf->setFormat(RT_FORMAT_USER);
-    buf->setElementSize(sizeof(T));
-    buf->setSize(1);
-    return buf;
+	return create_buffer<T>(ctx, 1);
 }
 
 template<typename T> void initialize_buffer(optix::Buffer & buf, std::vector<T>& data)
@@ -26,12 +31,12 @@ template<typename T> void initialize_buffer(optix::Buffer & buf, std::initialize
     buf->unmap();
 }
 
-template<typename T> void initialize_buffer(optix::Buffer & buf, T& data)
+template<typename T> void initialize_buffer(optix::Buffer & buf, const T& data)
 {
     initialize_buffer<T>(buf, { data });
 }
 
-template<typename T> optix::Buffer create_and_initialize_buffer(optix::Context & ctx, T& obj)
+template<typename T> optix::Buffer create_and_initialize_buffer(optix::Context & ctx, const T& obj)
 {
     optix::Buffer buf = create_buffer<T>(ctx);
     initialize_buffer(buf, obj);

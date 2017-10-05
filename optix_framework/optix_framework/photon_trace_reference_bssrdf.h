@@ -30,7 +30,7 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 	const float n2_over_n1 = 1.0f / n1_over_n2;
 
 	int i;
-	for (i = starting_it; i < executions; i++)
+	for (i = starting_it; i < starting_it + executions; i++)
 	{
 		float rand = 1.0f - rnd(t); // Avoids zero thus infinity.
 		float d = -log(rand) / extinction;

@@ -2,6 +2,23 @@
 #include "immediate_gui.h"
 #include "optix_utils.h"
 
+void ReferenceBSSRDF::init_output()
+{
+	std::string ptx_path_output = get_path_ptx("render_reference_bssrdf.cu");
+	optix::Program ray_gen_program_output = context->createProgramFromPTXFile(ptx_path_output, "render_ref");
+
+	entry_point_output = add_entry_point(context, ray_gen_program_output);
+
+	mBSSRDFBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
+	mBSSRDFBuffer->setFormat(RT_FORMAT_USER);
+	mBSSRDFBuffer->setElementSize(sizeof(float));
+	mBSSRDFBuffer->setSize(mHemisphereSize.x, mHemisphereSize.y);
+
+	float* buff =reinterpret_cast<float*>(mBSSRDFBuffer->map());
+	memset(buff, 0, mHemisphereSize.x*mHemisphereSize.y * sizeof(float));
+	mBSSRDFBuffer->unmap();
+}
+
 void ReferenceBSSRDF::initialize_shader(optix::Context ctx)
 {
 	 Shader::initialize_shader(ctx);
@@ -12,19 +29,7 @@ void ReferenceBSSRDF::initialize_shader(optix::Context ctx)
 
 	 entry_point = add_entry_point(context, ray_gen_program);
 
-	 std::string ptx_path_output = get_path_ptx("render_reference_bssrdf.cu");
-	 optix::Program ray_gen_program_output = context->createProgramFromPTXFile(ptx_path_output, "render_ref");
-
-	 entry_point_output = add_entry_point(context, ray_gen_program_output);
-
-	 mBSSRDFBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
-	 mBSSRDFBuffer->setFormat(RT_FORMAT_USER);
-	 mBSSRDFBuffer->setElementSize(sizeof(float));
-	 mBSSRDFBuffer->setSize(mHemisphereSize.x, mHemisphereSize.y);
-
-	 float* buff =reinterpret_cast<float*>(mBSSRDFBuffer->map());
-	 memset(buff, 0, mHemisphereSize.x*mHemisphereSize.y * sizeof(float));
-	 mBSSRDFBuffer->unmap();
+	 init_output();
 
 	 context["resulting_flux"]->setBuffer(mBSSRDFBuffer);
 }

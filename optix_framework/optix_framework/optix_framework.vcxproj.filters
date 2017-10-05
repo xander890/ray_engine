@@ -85,6 +85,9 @@
     <CudaCompile Include="CUDA_files\render_reference_bssrdf.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="obj_scene.cpp">
@@ -246,6 +249,9 @@
     </ClCompile>
     <ClCompile Include="transform.cpp" />
     <ClCompile Include="reference_bssrdf.cpp">
+      <Filter>Source Files\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="reference_bssrdf_gpu.cpp">
       <Filter>Source Files\Shaders</Filter>
     </ClCompile>
   </ItemGroup>
@@ -539,6 +545,9 @@
     </ClInclude>
     <ClInclude Include="photon_trace_structs.h">
       <Filter>Header Files\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="reference_bssrdf_gpu.h">
+      <Filter>Header Files\Shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

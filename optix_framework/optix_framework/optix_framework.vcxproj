@@ -218,6 +218,7 @@ echo Done.</Command>
     </ClCompile>
     <ClCompile Include="RawLoader.cpp" />
     <ClCompile Include="reference_bssrdf.cpp" />
+    <ClCompile Include="reference_bssrdf_gpu.cpp" />
     <ClCompile Include="rendering_method.cpp" />
     <ClCompile Include="render_task.cpp" />
     <ClCompile Include="sampled_bssrdf.cpp" />
@@ -514,6 +515,7 @@ echo Done.</Command>
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\reference_bssrdf.cu" />
+    <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu" />
     <CudaCompile Include="CUDA_files\render_reference_bssrdf.cu" />
     <CudaCompile Include="CUDA_files\sample_camera.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
@@ -720,6 +722,7 @@ echo Done.</Command>
     <ClInclude Include="directional_dipole.h" />
     <ClInclude Include="RawLoader.h" />
     <ClInclude Include="reference_bssrdf.h" />
+    <ClInclude Include="reference_bssrdf_gpu.h" />
     <ClInclude Include="render_task.h" />
     <ClInclude Include="sampled_bssrdf.h" />
     <ClInclude Include="SampleScene.h" />
