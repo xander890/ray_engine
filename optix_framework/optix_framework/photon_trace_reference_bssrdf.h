@@ -43,7 +43,7 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 //	optix_print("\nDoing %d iterations. wp = %f %f %f - %d (%d to %d) optical %f %f %f %f flux %f,\n", executions, wp.x, wp.y, wp.z, t, starting_it, executions, albedo, extinction, g, n1_over_n2, flux_t);
 //	optix_print("xp %f %f %f xo %f %f %f\n", xp.x, xp.y, xp.z, xo.x, xo.y, xo.z);
 
-	const optix::size_t2 bins = resulting_flux.size();
+	
 	// Geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);
@@ -120,18 +120,23 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 			const float cos_theta_p_sqr = cos_theta_p*cos_theta_p;
 
 			const float sin_theta_o_sqr = n2_over_n1*n2_over_n1*(1.0f - cos_theta_p_sqr);
-
+			const float cos_theta_o = sqrt(1.0f - sin_theta_o_sqr);
+			const float F_r = fresnel_R(cos_theta_o, n2_over_n1); // assert F_t < 1
 			if (sin_theta_o_sqr >= 1.0f) // Total internal reflection,
 			{
 				xp = surface_point;
 				wp = reflect(wp, -no); // Reflect and turn to face inside.
-				const float cos_theta_o = sqrt(1.0f - sin_theta_o_sqr);
-				const float F_t = 1.0f - fresnel_R(cos_theta_o, n1_over_n2); // assert F_t < 1
-				flux_t *= F_t;
+				
+				optix_assert(F_r < 1.0f);
+				flux_t *= F_r;
 				optix_print("(%d) Interally refracting.\n", i);
 			}
 			else
 			{
+				const float F_t = 1.0f - F_r;
+				flux_t *= F_t;
+				float phi_o = atan2f(wp.y, wp.x);
+				//store_values_in_buffer(cos_theta_o, phi_o, flux_t, resulting_flux);
 				optix_print("(%d) Going out of the medium.\n", i);
 				// We are outside
 				return true;
