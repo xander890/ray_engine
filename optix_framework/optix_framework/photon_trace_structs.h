@@ -14,3 +14,15 @@ struct PhotonSample
 	int status;
 	optix::int2 pad;
 };
+
+__host__ __device__ __forceinline__ PhotonSample get_empty_photon()
+{
+	PhotonSample p;
+	p.xp = optix::make_float3(0);
+	p.wp = optix::make_float3(0,0,-1);
+	p.i = 0;
+	p.t = 0;
+	p.flux = 0;
+	p.status = PHOTON_STATUS_NEW;
+	return p;
+}

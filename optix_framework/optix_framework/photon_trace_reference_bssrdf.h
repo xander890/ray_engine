@@ -8,8 +8,6 @@
 #include "optical_helper.h"
 #include "phase_function.h"
 
-#define MAX_ITERATIONS 1e3
-
 __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_origin, const optix::float3 & plane_normal, const optix::Ray & ray, float & intersection_distance)
 {
 	float denom = optix::dot(plane_normal, ray.direction);
@@ -20,8 +18,11 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_orig
 }
 
 // Returns true if the photon has been absorbed or has exited the medium, false otherwise
-__forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3& wp, float & flux_t, optix::buffer<float,2> & resulting_flux, const float3& xo, const float n1_over_n2, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it = 0, int executions = MAX_ITERATIONS)
+__forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3& wp, float & flux_t, optix::buffer<float,2> & resulting_flux, const float3& xo, const float n1_over_n2, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
 {
+//	optix_print("\nDoing %d iterations. wp = %f %f %f - %d (%d to %d) optical %f %f %f %f flux %f,\n", executions, wp.x, wp.y, wp.z, t, starting_it, executions, albedo, extinction, g, n1_over_n2, flux_t);
+//	optix_print("xp %f %f %f xo %f %f %f\n", xp.x, xp.y, xp.z, xo.x, xo.y, xo.z);
+
 	const optix::size_t2 bins = resulting_flux.size();
 	// Geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
@@ -54,7 +55,7 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 
 			// Note: we flip the relative ior because we are going outside from inside
 			const float sin_theta_o_sqr = n2_over_n1*n2_over_n1*(1.0f - cos_theta_21_sqr);
-			optix_print("(%d) - pos %f %f dir %f %f\n", i, xp.x, xp.y, d_vec.x, d_vec.y);
+			//optix_print("(%d) - pos %f %f dir %f %f\n", i, xp.x, xp.y, d_vec.x, d_vec.y);
 
 			if (sin_theta_o_sqr >= 1.0f) // Total internal reflection, no accumulation
 			{
@@ -86,12 +87,13 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 				if (i > 0)
 					atomicAdd(&resulting_flux[idxs], flux_E);
 #else
-				atomicAdd(&resulting_flux[idxs], flux_E);
+				if(!isnan(flux_E))
+					atomicAdd(&resulting_flux[idxs], flux_E);
 #endif
 
 				optix_assert(flux_E >= 0.0f);
 				optix_assert(!isnan(flux_E));
-				optix_print("Scattering. (%d %d) %f\n", idxs.x, idxs.y, flux_E);
+				optix_print("(%d) Scattering. (%d %d) %f\n",i,  idxs.x, idxs.y, flux_E);
 			}
 
 			float absorption_prob = rnd(t);

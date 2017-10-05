@@ -9,9 +9,9 @@ using namespace optix;
 // Window variables
 rtBuffer<float4, 2> output_buffer;
 rtBuffer<float, 2> resulting_flux;
-rtDeclareVariable(int, reference_bssrdf_samples_per_frame, , );
-rtDeclareVariable(unsigned int, show_false_colors, , );
+rtBuffer<int, 1>  photon_counter;
 rtDeclareVariable(float, reference_scale_multiplier, , );
+rtDeclareVariable(unsigned int, show_false_colors, , );
 
 RT_PROGRAM void render_ref()
 {
@@ -28,14 +28,14 @@ RT_PROGRAM void render_ref()
 	float2 coords = make_float2(phi_o_normalized, theta_o_normalized);
 	uint2 coords_idx = make_uint2(coords * make_float2(resulting_flux.size()));
 	if (l >= 1)
-	{
 		output_buffer[launch_index] = make_float4(0);
-	}
 	else
 	{
-		if(show_false_colors == 1)
-			output_buffer[launch_index] = make_float4(jet(reference_scale_multiplier * resulting_flux[coords_idx] / (reference_bssrdf_samples_per_frame)), 1);
+		if (show_false_colors == 1)
+			output_buffer[launch_index] = make_float4(jet(reference_scale_multiplier * resulting_flux[coords_idx] / ((float)photon_counter[0])), 1);
 		else
-			output_buffer[launch_index] = make_float4(reference_scale_multiplier * resulting_flux[coords_idx] / (reference_bssrdf_samples_per_frame));
+			output_buffer[launch_index] = make_float4(reference_scale_multiplier * resulting_flux[coords_idx] / ((float)photon_counter[0]));
+
 	}
+
 }

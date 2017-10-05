@@ -1,6 +1,7 @@
 #include "reference_bssrdf_gpu.h"
 #include "optix_utils.h"
 #include "photon_trace_structs.h"
+#include "immediate_gui.h"
 
 void ReferenceBSSRDFGPU::load_data()
 {
@@ -16,14 +17,16 @@ void ReferenceBSSRDFGPU::initialize_shader(optix::Context ctx)
 
 	entry_point = add_entry_point(context, ray_gen_program);
 
-	init_output();
-
+	init_output("render_reference_bssrdf_gpu.cu");
 	context["resulting_flux"]->setBuffer(mBSSRDFBuffer);
 
-	mAtomicPhotonCounterBuffer = create_and_initialize_buffer<int>(ctx, 0);
-
+	mAtomicPhotonCounterBuffer = create_buffer<int>(ctx,1);
 	mPhotonBuffer = create_buffer<PhotonSample>(ctx, mSamples);
 
+	context["photon_counter"]->setBuffer(mAtomicPhotonCounterBuffer);
+	context["photon_buffer"]->setBuffer(mPhotonBuffer);
+
+	reset();
 }
 
 void ReferenceBSSRDFGPU::initialize_mesh(Mesh& object)
@@ -32,6 +35,9 @@ void ReferenceBSSRDFGPU::initialize_mesh(Mesh& object)
 
 void ReferenceBSSRDFGPU::pre_trace_mesh(Mesh& object)
 {
+	context["show_false_colors"]->setUint(mShowFalseColors);
+	context["maximum_iterations"]->setUint(mMaxIterations);
+	context["batch_iterations"]->setUint(mBatchIterations);
 	const optix::int3 c = context->getPrintLaunchIndex();
 	context->setPrintLaunchIndex(0, -1, -1);
 	context->launch(entry_point, mSamples);
@@ -46,7 +52,25 @@ void ReferenceBSSRDFGPU::post_trace_mesh(Mesh& object)
 
 bool ReferenceBSSRDFGPU::on_draw()
 {
-	return ReferenceBSSRDF::on_draw();
+	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
+	if (ImmediateGUIDraw::InputInt("Samples", (int*)&mSamples))
+	{
+		mPhotonBuffer->setSize(mSamples);
+		reset();
+	}
+	
+	if (ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&mMaxIterations))
+	{
+		reset();
+	}
+
+	if (ImmediateGUIDraw::InputInt("Batch iterations", (int*)&mBatchIterations))
+	{
+		reset();
+	}
+	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors);
+
+	return false;
 }
 
 Shader* ReferenceBSSRDFGPU::clone()
@@ -56,4 +80,17 @@ Shader* ReferenceBSSRDFGPU::clone()
 
 ReferenceBSSRDFGPU::~ReferenceBSSRDFGPU()
 {
+}
+
+void ReferenceBSSRDFGPU::reset()
+{
+	ReferenceBSSRDF::reset();
+	PhotonSample * buf = reinterpret_cast<PhotonSample*>(mPhotonBuffer->map());
+	PhotonSample start = get_empty_photon();
+	for (unsigned int i = 0; i < mSamples; i++)
+	{
+		buf[i] = start;
+	}
+	mPhotonBuffer->unmap();
+	initialize_buffer<int>(mAtomicPhotonCounterBuffer, 0);
 }

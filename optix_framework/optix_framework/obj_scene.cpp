@@ -163,7 +163,7 @@ bool ObjScene::draw_gui()
 	ss << "Time (render):      " << to_string(render_time_main * 1000) << " ms (" << to_string(1.0 / render_time_main) << " FPS)" << std::endl;
 	ss << "Time (tonemap/dbg): " << to_string(render_time_tonemap * 1000) << " ms (" << to_string(1.0 / render_time_tonemap) << " FPS)";
 	ImmediateGUIDraw::Text(ss.str().c_str());
-	static bool debug = false;
+	static bool debug = debug_mode_enabled;
 	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImmediateGUIDraw::Checkbox("Debug mode", &debug))
@@ -865,6 +865,7 @@ bool ObjScene::export_raw(const string& raw_p, optix::Buffer out, int frames)
 	RTsize size_image = w * h * 3;
 	float* converted = new float[size_image];
 	float average = 0.0f;
+	float maxi = -INFINITY;
 	for (int i = 0; i < size_image / 3; ++i)
 	{
 		for (int j = 0; j < 3; ++j)
@@ -874,6 +875,7 @@ bool ObjScene::export_raw(const string& raw_p, optix::Buffer out, int frames)
 			}
 			converted[i * 3 + j] = mapped[i * 4 + j];
 			average += mapped[i * 4 + j];
+			maxi = max(maxi, mapped[i * 4 + j]);
 		}
 	}
 	average /= size_image * 3;
@@ -881,7 +883,7 @@ bool ObjScene::export_raw(const string& raw_p, optix::Buffer out, int frames)
 	ofs_image.write(reinterpret_cast<const char*>(converted), size_image * sizeof(float));
 	ofs_image.close();
 	delete[] converted;
-	Logger::info <<"Exported buffer to " << raw_path << " (avg: " << to_string(average) << ")" <<endl;
+	Logger::info <<"Exported buffer to " << raw_path << " (avg: " << to_string(average) << ", max: "<< to_string(maxi) <<")" <<endl;
 
 	return true;
 }

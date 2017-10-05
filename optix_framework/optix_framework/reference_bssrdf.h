@@ -22,16 +22,19 @@ public:
 	Shader* clone() override { return new ReferenceBSSRDF(*this); }
 
 protected:
-	void init_output();
+	void init_output(const char * function);
 	int entry_point;
 	int entry_point_output;
 	optix::Buffer mBSSRDFBuffer;
 	unsigned int mSamples = 10000;
-	optix::uint2 mHemisphereSize = optix::make_uint2(360, 90);
+	optix::uint2 mHemisphereSize = optix::make_uint2(360, 90) * 4;
 	int mCameraWidth;
 	int mCameraHeight;
 	int mRenderedFrames = 0;
 
 	float mScaleMultiplier = 2 * 1000000.0f;
+	unsigned int mMaxIterations = (int)1e6;
+	virtual void reset();
+	int mShowFalseColors = 1;
 };
 

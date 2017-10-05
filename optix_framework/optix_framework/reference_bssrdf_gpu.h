@@ -20,5 +20,7 @@ public:
 	
 	optix::Buffer mAtomicPhotonCounterBuffer;
 	optix::Buffer mPhotonBuffer;
+	void reset() override;
+	unsigned int mBatchIterations = (int)1e5;
 };
 

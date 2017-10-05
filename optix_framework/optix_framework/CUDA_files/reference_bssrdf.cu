@@ -7,6 +7,7 @@
 
 using namespace optix;
 rtBuffer<float, 2> resulting_flux;
+rtDeclareVariable(unsigned int, maximum_iterations, , );
 
 // Window variables
 
@@ -33,7 +34,7 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	optix::float3 xp = xi;
 	optix::float3 wp = w12;
 
-	if (!scatter_photon(xp, wp, flux_t, resulting_flux, xo,  n1_over_n2, albedo, extinction, g, t))
+	if (!scatter_photon(xp, wp, flux_t, resulting_flux, xo,  n1_over_n2, albedo, extinction, g, t, 0, maximum_iterations))
 	{
 		optix_print("Max iterations reached. Distance %f (%f mfps)\n", length(xp - xo), length(xp - xo) / r);
 	}
@@ -51,7 +52,7 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 RT_PROGRAM void reference_bssrdf_camera()
 {
 	uint idx = launch_index.x;
-	optix::uint t = tea<16>(idx, frame + 38);
+	optix::uint t = tea<16>(idx, frame);
 
 	const float incident_power = 1.0f;
 

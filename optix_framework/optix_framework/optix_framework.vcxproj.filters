@@ -88,6 +88,9 @@
     <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\render_reference_bssrdf_gpu.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="obj_scene.cpp">
