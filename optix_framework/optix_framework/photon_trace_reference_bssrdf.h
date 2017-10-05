@@ -17,6 +17,26 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_orig
 	return intersection_distance > ray.tmin && intersection_distance < ray.tmax;
 }
 
+__forceinline__ __device__ void store_values_in_buffer(const float cos_theta_o, const float phi_o, const float flux_E, optix::buffer<float, 2> & resulting_flux)
+{
+	const optix::size_t2 bins = resulting_flux.size();
+	float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
+	const float theta_o_normalized = acosf(cos_theta_o) / (M_PIf * 0.5f);
+
+	optix_assert(theta_o_normalized >= 0.0f && theta_o_normalized < 1.0f);
+	optix_assert(phi_o_normalized < 1.0f);
+	optix_assert(phi_o_normalized >= 0.0f);
+
+	optix::float2 coords = make_float2(phi_o_normalized, theta_o_normalized);
+	optix::uint2 idxs = make_uint2(coords * make_float2(bins));
+	optix_assert(flux_E >= 0.0f);
+	optix_assert(!isnan(flux_E));
+
+
+	if (!isnan(flux_E))
+		atomicAdd(&resulting_flux[idxs], flux_E);
+}
+
 // Returns true if the photon has been absorbed or has exited the medium, false otherwise
 __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3& wp, float & flux_t, optix::buffer<float,2> & resulting_flux, const float3& xo, const float n1_over_n2, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
 {
@@ -72,28 +92,14 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 				// Store atomically in appropriate spot.
 
 				float flux_E = flux_t * albedo* eval_HG(optix::dot(d_vec, wp), g) *expf(-extinction*d_vec_len) * F_t;
-
 				float phi_o = phi_21; // 
-				float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
-				const float theta_o_normalized = acosf(cos_theta_o) / (M_PIf * 0.5f);
 
-				optix_assert(theta_o_normalized >= 0.0f && theta_o_normalized < 1.0f);
-				optix_assert(phi_o_normalized < 1.0f);
-				optix_assert(phi_o_normalized >= 0.0f);
-
-				optix::float2 coords = make_float2(phi_o_normalized, theta_o_normalized);
-				optix::uint2 idxs = make_uint2(coords * make_float2(bins));
-#ifdef REMOVE_SINGLE_SCATTERING
 				if (i > 0)
-					atomicAdd(&resulting_flux[idxs], flux_E);
-#else
-				if(!isnan(flux_E))
-					atomicAdd(&resulting_flux[idxs], flux_E);
-#endif
-
-				optix_assert(flux_E >= 0.0f);
-				optix_assert(!isnan(flux_E));
-				optix_print("(%d) Scattering. (%d %d) %f\n",i,  idxs.x, idxs.y, flux_E);
+				{
+					store_values_in_buffer(cos_theta_o, phi_o, flux_E, resulting_flux);
+				}
+				optix_print("(%d) Scattering.  %f\n", i, flux_E);
+				
 			}
 
 			float absorption_prob = rnd(t);
