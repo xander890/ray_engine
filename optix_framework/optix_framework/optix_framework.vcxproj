@@ -700,6 +700,7 @@ echo Done.</Command>
     <ClInclude Include="light_host.h" />
     <ClInclude Include="material.h" />
     <ClInclude Include="material_device.h" />
+    <ClInclude Include="md5.h" />
     <ClInclude Include="merl_common.h" />
     <ClInclude Include="brdf_utils.h" />
     <ClInclude Include="chull.h" />
