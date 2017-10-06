@@ -4,10 +4,12 @@
 
 #include <device_common_data.h>
 #include <photon_trace_reference_bssrdf.h>
-
+#include <md5.h>
 using namespace optix;
 rtBuffer<float, 2> resulting_flux;
 rtDeclareVariable(unsigned int, maximum_iterations, , );
+rtDeclareVariable(unsigned int, ref_frame_number, , );
+rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
 
 // Window variables
 
@@ -22,7 +24,7 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	const optix::float3 no = ni;
 
 	float3 n = (xo - xi);
-	optix_print("wi: %f %f %f, xo-xi: %f %f %f", wi.x, wi.y, wi.z, n.x, n.y, n.z);
+	optix_print("wi: %f %f %f, xo-xi: %f %f %f\n", wi.x, wi.y, wi.z, n.x, n.y, n.z);
 
 	// Refraction
 	const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f);
@@ -30,7 +32,7 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	const float sin_theta_t_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_i_sqr);
 	const float cos_theta_t_i = sqrt(1.0f - sin_theta_t_sqr);
 	const optix::float3 w12 = n1_over_n2*(cos_theta_i*ni - wi) - ni*cos_theta_t_i;
-	float flux_t = incident_power;
+	float flux_t = incident_power / ((float)reference_bssrdf_samples_per_frame);
 	optix::float3 xp = xi;
 	optix::float3 wp = w12;
 
@@ -52,7 +54,9 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 RT_PROGRAM void reference_bssrdf_camera()
 {
 	uint idx = launch_index.x;
-	optix::uint t = tea<16>(idx, frame);
+	optix::uint t = tea<16>(ref_frame_number * launch_dim.x + idx, 100);
+	//t = rand_md5(t, idx).x;
+	optix_print("%d %d %d\n", idx, ref_frame_number, launch_dim.x);
 
 	const float incident_power = 1.0f;
 

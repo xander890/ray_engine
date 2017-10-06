@@ -20,14 +20,14 @@ public:
 	void post_trace_mesh(Mesh& object) override;
 	bool on_draw() override;
 	Shader* clone() override { return new ReferenceBSSRDF(*this); }
+	void load_data() override;
 
 protected:
 	void init_output(const char * function);
 	int entry_point;
 	int entry_point_output;
-	optix::Buffer mBSSRDFBuffer;
-	unsigned int mSamples = (int)1e7;
-	optix::uint2 mHemisphereSize = optix::make_uint2(360, 90) * 4;
+	unsigned int mSamples = (int)1e5;
+	optix::uint2 mHemisphereSize = optix::make_uint2(160, 40);
 	int mCameraWidth;
 	int mCameraHeight;
 	int mRenderedFrames = 0;
@@ -36,5 +36,8 @@ protected:
 	unsigned int mMaxIterations = (int)1e5;
 	virtual void reset();
 	int mShowFalseColors = 1;
+	optix::Buffer mBSSRDFBuffer;
+	optix::Buffer mBSSRDFBuffer2;
+	optix::TextureSampler mBSSRDFBufferTex;
 };
 

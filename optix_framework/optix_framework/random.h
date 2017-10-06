@@ -22,6 +22,8 @@
 
 #include <optix_world.h>
 #include "math_helpers.h"
+
+// TEA algorithm https://www.csee.umbc.edu/~olano/class/635-11-2/lsebald1.pdf
 template<unsigned int N>
 static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsigned int val1 )
 {
@@ -54,6 +56,7 @@ static __host__ __device__ __inline__ float rnd(unsigned int &prev)
   return ((float) lcg(prev) / (float) 0x01000000);
 }
 
+// Hash hack http://www.ci.i.u-tokyo.ac.jp/~hachisuka/tdf2015.pdf
 static __host__ __device__ __inline__ float hash(const optix::float3 idx, float grid_scale, int hash_num)
 {
 	// use the same procedure as GPURnd

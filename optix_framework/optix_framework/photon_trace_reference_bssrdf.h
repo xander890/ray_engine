@@ -17,21 +17,26 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_orig
 	return intersection_distance > ray.tmin && intersection_distance < ray.tmax;
 }
 
+__forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(float theta_o, float phi_o)
+{
+	float cos_theta_o = cosf(theta_o);
+	float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
+	const float theta_o_normalized = theta_o / (M_PIf * 0.5f);
+	optix_assert(theta_o_normalized >= 0.0f);
+	optix_assert(theta_o_normalized < 1.0f);
+	optix_assert(phi_o_normalized < 1.0f);
+	optix_assert(phi_o_normalized >= 0.0f);
+	return make_float2(phi_o_normalized, theta_o_normalized);
+}
+
 __forceinline__ __device__ void store_values_in_buffer(const float cos_theta_o, const float phi_o, const float flux_E, optix::buffer<float, 2> & resulting_flux)
 {
 	const optix::size_t2 bins = resulting_flux.size();
-	float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
-	const float theta_o_normalized = acosf(cos_theta_o) / (M_PIf * 0.5f);
 
-	optix_assert(theta_o_normalized >= 0.0f && theta_o_normalized < 1.0f);
-	optix_assert(phi_o_normalized < 1.0f);
-	optix_assert(phi_o_normalized >= 0.0f);
-
-	optix::float2 coords = make_float2(phi_o_normalized, theta_o_normalized);
+	optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(acosf(cos_theta_o), phi_o);
 	optix::uint2 idxs = make_uint2(coords * make_float2(bins));
 	optix_assert(flux_E >= 0.0f);
 	optix_assert(!isnan(flux_E));
-
 
 	if (!isnan(flux_E))
 		atomicAdd(&resulting_flux[idxs], flux_E);

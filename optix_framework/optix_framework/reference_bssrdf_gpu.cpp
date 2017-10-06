@@ -18,7 +18,6 @@ void ReferenceBSSRDFGPU::initialize_shader(optix::Context ctx)
 	entry_point = add_entry_point(context, ray_gen_program);
 
 	init_output("render_reference_bssrdf_gpu.cu");
-	context["resulting_flux"]->setBuffer(mBSSRDFBuffer);
 
 	mAtomicPhotonCounterBuffer = create_buffer<int>(ctx,1);
 	mPhotonBuffer = create_buffer<PhotonSample>(ctx, mSamples);
@@ -35,8 +34,6 @@ void ReferenceBSSRDFGPU::initialize_mesh(Mesh& object)
 
 void ReferenceBSSRDFGPU::pre_trace_mesh(Mesh& object)
 {
-	context["show_false_colors"]->setUint(mShowFalseColors);
-	context["maximum_iterations"]->setUint(mMaxIterations);
 	context["batch_iterations"]->setUint(mBatchIterations);
 	const optix::int3 c = context->getPrintLaunchIndex();
 	context->setPrintLaunchIndex(0, -1, -1);

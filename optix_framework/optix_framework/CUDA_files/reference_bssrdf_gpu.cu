@@ -12,6 +12,8 @@ rtBuffer<PhotonSample, 1> photon_buffer;
 rtBuffer<int, 1>  photon_counter;
 rtDeclareVariable(unsigned int, maximum_iterations, , );
 rtDeclareVariable(unsigned int, batch_iterations, , );
+rtDeclareVariable(unsigned int, ref_frame_number, , );
+
 
 #define MILK 0
 #define WAX 1
@@ -101,7 +103,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	if (p.status == PHOTON_STATUS_NEW)
 	{
 		optix_print("New photon.\n");
-		p.t = tea<16>(idx, frame);
+		p.t = tea<16>(idx, ref_frame_number);
 		const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f);
 		const float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
 		const float sin_theta_t_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_i_sqr);
