@@ -75,9 +75,9 @@ std::vector<ScatteringMaterial> ScatteringMaterial::defaultMaterials;
 
 void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
 {
-  float3& sigma_a = absorption;
-  float3& sigma_s = scattering;
-  float3& g = asymmetry;
+  optix::float3& sigma_a = absorption;
+  optix::float3& sigma_s = scattering;
+  optix::float3& g = asymmetry;
   sigma_a = make_float3(0.0f);
   sigma_s = make_float3(0.0f);
   g = make_float3(0.0f);

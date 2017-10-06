@@ -8,6 +8,8 @@
 #include "optical_helper.h"
 #include "phase_function.h"
 
+#define RND_FUNC rnd_accurate
+
 // Simple util to do plane ray intersection.
 __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_origin, const optix::float3 & plane_normal, const optix::Ray & ray, float & intersection_distance)
 {
@@ -21,7 +23,7 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_orig
 __forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(float theta_o, float phi_o)
 {
 	const float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
-	const float theta_o_normalized = cosf(theta_o);//theta_o / (M_PIf * 0.5f);
+	const float theta_o_normalized = cosf(theta_o); //theta_o / (M_PIf * 0.5f);
 	optix_assert(theta_o_normalized >= 0.0f);
 	optix_assert(theta_o_normalized < 1.0f);
 	optix_assert(phi_o_normalized < 1.0f);
@@ -59,7 +61,7 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 		if (flux_t < 1e-12)
 			return true;
 
-		const float rand = 1.0f - rnd(t); // rnd(t) in [0, 1). Avoids infinity when sampling exponential distribution.
+		const float rand = 1.0f - RND_FUNC(t); // RND_FUNC(t) in [0, 1). Avoids infinity when sampling exponential distribution.
 
 		// Sampling new distance for photon, testing if it intersects the interface
 		const float d = -log(rand) / extinction;
@@ -72,7 +74,7 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 		{
 			// We are still within the medium.
 			// Russian roulette to check for absorption.
-			float absorption_prob = rnd(t);
+			float absorption_prob = RND_FUNC(t);
 			if (absorption_prob > albedo)
 			{
 				optix_print("(%d) Absorption.\n", i);
@@ -116,7 +118,8 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 			}
 
 			// We choose a new direction sampling the phase function
-			wp = optix::normalize(sample_HG(wp, g, t));
+			optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+			wp = optix::normalize(sample_HG(wp, g, smpl));
 		}
 		else
 		{

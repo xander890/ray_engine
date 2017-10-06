@@ -68,7 +68,7 @@ __device__ __forceinline__ void __md5Hash(unsigned char* data, uint32_t length, 
 
 	uint32_t vals[14] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
-	int i = 0;
+	unsigned int i = 0;
 	for (i = 0; i < length; i++) {
 		vals[i / 4] |= data[i] << ((i % 4) * 8);
 	}
@@ -198,9 +198,6 @@ __device__ __forceinline__ void __md5Hash(unsigned char* data, uint32_t length, 
 	*c1 = c;
 	*d1 = d;
 }
-
-//__md5Hash(unsigned char* data, uint32_t length, uint32_t *a1, uint32_t *b1, uint32_t *c1, uint32_t *d1)
-#include "device_common_data.h"
 
 __device__ __forceinline__ float int_to_float01(uint32_t t)
 {

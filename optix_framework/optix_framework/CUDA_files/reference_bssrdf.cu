@@ -5,12 +5,13 @@
 #include <device_common_data.h>
 #include <photon_trace_reference_bssrdf.h>
 #include <md5.h>
+#include <material.h>
 using namespace optix;
 rtBuffer<float, 2> resulting_flux;
 rtDeclareVariable(unsigned int, maximum_iterations, , );
 rtDeclareVariable(unsigned int, ref_frame_number, , );
 rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
-
+rtDeclareVariable(MaterialDataCommon, reference_rendering_material, , );
 // Window variables
 
 // Assumes an infinite plane with normal (0,0,1)
@@ -50,14 +51,14 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 #define C 4
 #define D 5
 #define E 6
-#define MATERIAL B
+#define MATERIAL E
 
 RT_PROGRAM void reference_bssrdf_camera()
 {
 	uint idx = launch_index.x;
-	optix::uint t = tea<16>(ref_frame_number * launch_dim.x + idx, 100);
-	//t = rand_md5(t, idx).x;
-	optix_print("%d %d %d\n", idx, ref_frame_number, launch_dim.x);
+	optix::uint t = ref_frame_number * launch_dim.x + idx;
+	hash(t);
+	optix_print("%d %d %d\n", idx, ref_frame_number, t);
 
 	const float incident_power = 1.0f;
 
@@ -123,6 +124,15 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float n2_over_n1 = 1.3f;
 #endif
 
+#ifdef NEW_MATS
+	const float theta_i = 60.0f;
+	const float theta_s = 60;
+	const float r = 0.8f;
+	const float n2_over_n1 = reference_rendering_material.relative_ior;
+	const float albedo = reference_rendering_material.scattering_properties.albedo.x;
+	const float extinction = reference_rendering_material.scattering_properties.extinction.x;
+	const float g = reference_rendering_material.scattering_properties.meancosine.x;
+#endif
 	const float theta_i_rad = deg2rad(theta_i);
 	const float theta_s_rad = deg2rad(-theta_s);
 	const optix::float3 wi = normalize(optix::make_float3(-sinf(theta_i_rad), 0, cosf(theta_i_rad)));

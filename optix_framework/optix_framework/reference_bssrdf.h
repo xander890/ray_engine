@@ -35,9 +35,9 @@ protected:
 	float mScaleMultiplier = 2 * 1000000.0f;
 	unsigned int mMaxIterations = (int)1e5;
 	virtual void reset();
-	int mShowFalseColors = 1;
+	int mShowFalseColors = 0;
 	optix::Buffer mBSSRDFBuffer;
-	optix::Buffer mBSSRDFBuffer2;
-	optix::TextureSampler mBSSRDFBufferTex;
+	optix::Buffer mBSSRDFBufferTexture;
+	optix::TextureSampler mBSSRDFHemisphereTex;
 };
 

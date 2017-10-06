@@ -56,7 +56,8 @@ void ReferenceBSSRDF::initialize_mesh(Mesh& object)
 }
 
 void ReferenceBSSRDF::pre_trace_mesh(Mesh& object)
-{
+{	
+	context["reference_rendering_material"]->setUserData(sizeof(MaterialDataCommon), &object.get_main_material()->get_data());
 	const optix::int3 c = context->getPrintLaunchIndex();
 	context->setPrintLaunchIndex(0, -1, -1);
 	context->launch(entry_point, mSamples);

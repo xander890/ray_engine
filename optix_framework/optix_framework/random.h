@@ -22,8 +22,9 @@
 
 #include <optix_world.h>
 #include "math_helpers.h"
+#include "md5.h"
 
-// TEA algorithm https://www.csee.umbc.edu/~olano/class/635-11-2/lsebald1.pdf
+ // TEA algorithm https://www.csee.umbc.edu/~olano/class/635-11-2/lsebald1.pdf
 template<unsigned int N>
 static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsigned int val1 )
 {
@@ -75,5 +76,17 @@ static __host__ __device__ __inline__ float hash(const optix::float3 idx, float 
 	return floor(fracf(dot(n / m, optix::make_float4(1.0f, -1.0f, 1.0f, -1.0f))) * hash_num);
 }
 
+
+static __host__ __device__ __inline__ unsigned int hash(unsigned int &prev)
+{
+	optix::uint4 md5 = rand_md5(prev, 0);
+	prev = md5.x;
+	return prev & 0x7FFFFFFF;
+}
+
+static __host__ __device__ __inline__ float rnd_accurate(unsigned int &prev)
+{
+	return ((float)hash(prev) / (float)0x80000000);
+}
 
 #endif
