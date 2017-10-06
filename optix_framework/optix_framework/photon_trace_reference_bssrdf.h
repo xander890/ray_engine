@@ -118,34 +118,16 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 		}
 		else
 		{
-			// We are going out!
+			// We are trying to go out
 			const optix::float3 surface_point = xp + wp * intersection_distance;
 			optix_assert(optix::dot(wp, no) > 0);
 			const float cos_theta_p = optix::max(optix::dot(wp, no), 0.0f);
-			const float cos_theta_p_sqr = cos_theta_p*cos_theta_p;
-
-			const float sin_theta_o_sqr = n2_over_n1*n2_over_n1*(1.0f - cos_theta_p_sqr);
-			const float cos_theta_o = sqrt(1.0f - sin_theta_o_sqr);
-			const float F_r = fresnel_R(cos_theta_o, n2_over_n1); // assert F_t < 1
-			if (sin_theta_o_sqr >= 1.0f) // Total internal reflection,
-			{
-				xp = surface_point;
-				wp = reflect(wp, -no); // Reflect and turn to face inside.
-				
-				optix_assert(F_r < 1.0f);
-				flux_t *= F_r;
-				optix_print("(%d) Interally refracting.\n", i);
-			}
-			else
-			{
-				const float F_t = 1.0f - F_r;
-				flux_t *= F_t;
-				float phi_o = atan2f(wp.y, wp.x);
-				//store_values_in_buffer(cos_theta_o, phi_o, flux_t, resulting_flux);
-				optix_print("(%d) Going out of the medium.\n", i);
-				// We are outside
-				return true;
-			}
+			const float F_r = fresnel_R(cos_theta_p, n2_over_n1); // assert F_t < 1
+			optix_print("(%d) Reached surface %f.\n", i, F_r);
+			// Reflect and turn to face inside.
+			flux_t *= F_r;
+			xp = surface_point;
+			wp = reflect(wp, -no);
 		}
 	}
 	return false;
