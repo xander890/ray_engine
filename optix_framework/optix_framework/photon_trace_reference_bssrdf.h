@@ -58,6 +58,8 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 	int i;
 	for (i = starting_it; i < starting_it + executions; i++)
 	{
+		if (flux_t < 1e-12)
+			return true;
 		float rand = 1.0f - rnd(t); // Avoids zero thus infinity.
 		float d = -log(rand) / extinction;
 		float intersection_distance;
