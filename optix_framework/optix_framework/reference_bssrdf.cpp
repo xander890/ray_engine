@@ -14,17 +14,17 @@ void ReferenceBSSRDF::init_output(const char * file)
 	mBSSRDFBuffer->setFormat(RT_FORMAT_FLOAT);
 	mBSSRDFBuffer->setSize(mHemisphereSize.x, mHemisphereSize.y);
 
-	mBSSRDFBuffer2 = context->createBuffer(RT_BUFFER_INPUT);
-	mBSSRDFBuffer2->setFormat(RT_FORMAT_FLOAT);
-	mBSSRDFBuffer2->setSize(mHemisphereSize.x, mHemisphereSize.y);
+	mBSSRDFBufferTexture = context->createBuffer(RT_BUFFER_INPUT);
+	mBSSRDFBufferTexture->setFormat(RT_FORMAT_FLOAT);
+	mBSSRDFBufferTexture->setSize(mHemisphereSize.x, mHemisphereSize.y);
 
-	mBSSRDFBufferTex = context->createTextureSampler();
-	mBSSRDFBufferTex->setFilteringModes(RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE);
-	mBSSRDFBufferTex->setIndexingMode(RT_TEXTURE_INDEX_NORMALIZED_COORDINATES);
-	mBSSRDFBufferTex->setReadMode(RT_TEXTURE_READ_ELEMENT_TYPE);
-	mBSSRDFBufferTex->setBuffer(mBSSRDFBuffer2);
-	mBSSRDFBufferTex->setWrapMode(0, RT_WRAP_CLAMP_TO_EDGE);
-	mBSSRDFBufferTex->setWrapMode(1, RT_WRAP_CLAMP_TO_EDGE);
+	mBSSRDFHemisphereTex = context->createTextureSampler();
+	mBSSRDFHemisphereTex->setFilteringModes(RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE);
+	mBSSRDFHemisphereTex->setIndexingMode(RT_TEXTURE_INDEX_NORMALIZED_COORDINATES);
+	mBSSRDFHemisphereTex->setReadMode(RT_TEXTURE_READ_ELEMENT_TYPE);
+	mBSSRDFHemisphereTex->setBuffer(mBSSRDFBufferTexture);
+	mBSSRDFHemisphereTex->setWrapMode(0, RT_WRAP_CLAMP_TO_EDGE);
+	mBSSRDFHemisphereTex->setWrapMode(1, RT_WRAP_CLAMP_TO_EDGE);
 }
 
 void ReferenceBSSRDF::reset()
@@ -64,10 +64,10 @@ void ReferenceBSSRDF::pre_trace_mesh(Mesh& object)
 	mRenderedFrames++;
 
 	void* source = mBSSRDFBuffer->map();
-	void* dest = mBSSRDFBuffer2->map();
+	void* dest = mBSSRDFBufferTexture->map();
 	memcpy(dest, source, mHemisphereSize.x*mHemisphereSize.y * sizeof(float));
 	mBSSRDFBuffer->unmap();
-	mBSSRDFBuffer2->unmap();
+	mBSSRDFBufferTexture->unmap();
 }
 
 void ReferenceBSSRDF::post_trace_mesh(Mesh & object)
@@ -89,7 +89,7 @@ bool ReferenceBSSRDF::on_draw()
 
 void ReferenceBSSRDF::load_data()
 {
-	int s = mBSSRDFBufferTex->getId();
+	int s = mBSSRDFHemisphereTex->getId();
 	context["resulting_flux"]->setBuffer(mBSSRDFBuffer);
 	context["resulting_flux_tex"]->setUserData(sizeof(TexPtr),&(s));
 	context["maximum_iterations"]->setUint(mMaxIterations);

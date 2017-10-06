@@ -33,7 +33,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float sigma_a = 0.0007f;
 	const float sigma_s = 1.165;
 	const float g = 0.7f;
-	const float n1_over_n2 = 1.0f / 1.35f;
+	const float n2_over_n1 = 1.35f;
 	const float r = 1.5f;
 	const float theta_s = 0;
 	const float albedo = sigma_s / (sigma_s + sigma_a);
@@ -43,7 +43,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float sigma_a = 0.5f;
 	const float sigma_s = 1.0f;
 	const float g = 0.0f;
-	const float n1_over_n2 = 1.0f / 1.4f;
+	const float n2_over_n1 = 1.4f;
 	const float r = 0.5f;
 	const float theta_s = 90;
 	const float albedo = sigma_s / (sigma_s + sigma_a);
@@ -53,7 +53,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float albedo = 0.6f;
 	const float extinction = 1.0f;
 	const float g = 0.0f;
-	const float n1_over_n2 = 1.0f / 1.3f;
+	const float n2_over_n1 = 1.3f;
 	const float r = 4.0f;
 	const float theta_s = 0;
 #elif MATERIAL==B
@@ -63,7 +63,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float albedo = 0.99f;
 	const float extinction = 1.0f;
 	const float g = -0.3f;
-	const float n1_over_n2 = 1.0f / 1.4f;
+	const float n2_over_n1 = 1.4f;
 #elif MATERIAL==C
 	const float theta_i = 70.0f;
 	const float theta_s = 60;
@@ -71,7 +71,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float albedo = 0.3f;
 	const float extinction = 1.0f;
 	const float g = 0.9f;
-	const float n1_over_n2 = 1.0f / 1.4f;
+	const float n2_over_n1 = 1.4f;
 #elif MATERIAL==D
 	const float theta_i = 0.0f;
 	const float theta_s = 105.0f;
@@ -79,7 +79,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float albedo = 0.5f;
 	const float extinction = 1.0f;
 	const float g = 0.0f;
-	const float n1_over_n2 = 1.0f / 1.2f;
+	const float n2_over_n1 = 1.2f;
 #elif MATERIAL==E
 	const float theta_i = 80.0f;
 	const float theta_s = 165.0f;
@@ -87,7 +87,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float albedo = 0.8f;
 	const float extinction = 1.0f;
 	const float g = -0.3f;
-	const float n1_over_n2 = 1.0f / 1.3f;
+	const float n2_over_n1 = 1.3f;
 #endif
 	const float theta_i_rad = deg2rad(theta_i);
 	const float theta_s_rad = deg2rad(-theta_s);
@@ -104,6 +104,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	{
 		optix_print("New photon.\n");
 		p.t = tea<16>(idx, ref_frame_number);
+		const float n1_over_n2 = 1.0f / n2_over_n1;
 		const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f);
 		const float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
 		const float sin_theta_t_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_i_sqr);
@@ -117,7 +118,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 		atomicAdd(&photon_counter[0], 1);
 	}
 
-	if (scatter_photon(p.xp, p.wp, p.flux, resulting_flux, xo, n1_over_n2, albedo, extinction, g, p.t, p.i, batch_iterations))
+	if (scatter_photon(p.xp, p.wp, p.flux, resulting_flux, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
 	{
 		photon_buffer[idx].status = PHOTON_STATUS_NEW;
 	}
