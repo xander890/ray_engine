@@ -84,7 +84,7 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 
 			if (sin_theta_o_sqr >= 1.0f) // Total internal reflection, no accumulation
 			{
-				optix_print("(%d) Internal refr.\n", i);
+				//optix_print("(%d) Internal refr.\n", i);
 			}
 			else
 			{
