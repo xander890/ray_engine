@@ -14,6 +14,8 @@ rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
 rtDeclareVariable(MaterialDataCommon, reference_rendering_material, , );
 // Window variables
 
+#define USE_HARDCODED_MATERIALS
+
 // Assumes an infinite plane with normal (0,0,1)
 __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::float3& wi, const float incident_power, const float r, const float theta_s, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t)
 {
@@ -44,15 +46,6 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	}
 }
 
-#define MILK 0
-#define WAX 1
-#define A 2
-#define B 3
-#define C 4
-#define D 5
-#define E 6
-#define MATERIAL E
-
 RT_PROGRAM void reference_bssrdf_camera()
 {
 	uint idx = launch_index.x;
@@ -62,76 +55,18 @@ RT_PROGRAM void reference_bssrdf_camera()
 
 	const float incident_power = 1.0f;
 
-#if MATERIAL==MILK
-	const float theta_i = 20.0f;
-	const float sigma_a = 0.0007f;
-	const float sigma_s = 1.165;
-	const float g = 0.7f;
-	const float n2_over_n1 = 1.35f;
-	const float r = 1.5f;
-	const float theta_s = 0;
-	const float albedo = sigma_s / (sigma_s + sigma_a);
-	const float extinction = sigma_s + sigma_a;
-#elif MATERIAL==WAX
-	const float theta_i = 20.0f;
-	const float sigma_a = 0.5f;
-	const float sigma_s = 1.0f;
-	const float g = 0.0f;
-	const float n2_over_n1 = 1.4f;
-	const float r = 0.5f;
-	const float theta_s = 90;
-	const float albedo = sigma_s / (sigma_s + sigma_a);
-	const float extinction = sigma_s + sigma_a;
-#elif MATERIAL==A
-	const float theta_i = 30.0f;
-	const float albedo = 0.6f;
-	const float extinction = 1.0f;
-	const float g = 0.0f;
-	const float n2_over_n1 = 1.3f;
-	const float r = 4.0f;
-	const float theta_s = 0;
-#elif MATERIAL==B
-	const float theta_i = 60.0f;
-	const float theta_s = 60;
-	const float r = 0.8f;
-	const float albedo = 0.99f;
-	const float extinction = 1.0f;
-	const float g = -0.3f;
-	const float n2_over_n1 = 1.4f;
-#elif MATERIAL==C
-	const float theta_i = 70.0f;
-	const float theta_s = 60;
-	const float r = 1.0f;
-	const float albedo = 0.3f;
-	const float extinction = 1.0f;
-	const float g = 0.9f;
-	const float n2_over_n1 = 1.4f;
-#elif MATERIAL==D
-	const float theta_i = 0.0f;
-	const float theta_s = 105.0f;
-	const float r = 4.0f;
-	const float albedo = 0.5f;
-	const float extinction = 1.0f;
-	const float g = 0.0f;
-	const float n2_over_n1 = 1.2f;
-#elif MATERIAL==E
-	const float theta_i = 80.0f;
-	const float theta_s = 165.0f;
-	const float r = 2.0f;
-	const float albedo = 0.8f;
-	const float extinction = 1.0f;
-	const float g = -0.3f;
-	const float n2_over_n1 = 1.3f;
-#endif
+	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
 
-#ifdef NEW_MATS
-	const float theta_i = 60.0f;
-	const float theta_s = 60;
-	const float r = 0.8f;
-	const float n2_over_n1 = reference_rendering_material.relative_ior;
-	const float albedo = reference_rendering_material.scattering_properties.albedo.x;
-	const float extinction = reference_rendering_material.scattering_properties.extinction.x;
-	const float g = reference_rendering_material.scattering_properties.meancosine.x;
+#ifdef USE_HARDCODED_MATERIALS
+	get_default_material(theta_i, r, theta_s, albedo, extinction, g, n2_over_n1);
+#else
+	theta_i = 60.0f;
+	theta_s = 60;
+	r = 0.8f;
+	n2_over_n1 = reference_rendering_material.relative_ior;
+	albedo = reference_rendering_material.scattering_properties.albedo.x;
+	extinction = reference_rendering_material.scattering_properties.extinction.x;
+	g = reference_rendering_material.scattering_properties.meancosine.x;
 #endif
 	const float theta_i_rad = deg2rad(theta_i);
 	const float theta_s_rad = deg2rad(-theta_s);

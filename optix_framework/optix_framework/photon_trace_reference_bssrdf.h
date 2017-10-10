@@ -140,3 +140,77 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 	}
 	return false;
 }
+
+#define REF_MAT_MILK 0
+#define REF_MAT_WAX 1
+#define REF_MAT_A 2
+#define REF_MAT_B 3
+#define REF_MAT_C 4
+#define REF_MAT_D 5
+#define REF_MAT_E 6
+#define MATERIAL REF_MAT_E
+
+__forceinline__ __device__ void get_default_material(float & theta_i, float & r, float & theta_s, float & albedo, float & extinction, float & g, float & n2_over_n1)
+{
+#if MATERIAL==REF_MAT_MILK
+	theta_i = 20.0f;
+	const float sigma_a = 0.0007f;
+	const float sigma_s = 1.165;
+	g = 0.7f;
+	n2_over_n1 = 1.35f;
+	r = 1.5f;
+	theta_s = 0;
+	albedo = sigma_s / (sigma_s + sigma_a);
+	extinction = sigma_s + sigma_a;
+#elif MATERIAL==REF_MAT_WAX
+	theta_i = 20.0f;
+	const float sigma_a = 0.5f;
+	const float sigma_s = 1.0f;
+	g = 0.0f;
+	n2_over_n1 = 1.4f;
+	r = 0.5f;
+	theta_s = 90;
+	albedo = sigma_s / (sigma_s + sigma_a);
+	extinction = sigma_s + sigma_a;
+#elif MATERIAL==REF_MAT_A
+	theta_i = 30.0f;
+	albedo = 0.6f;
+	extinction = 1.0f;
+	g = 0.0f;
+	n2_over_n1 = 1.3f;
+	r = 4.0f;
+	theta_s = 0;
+#elif MATERIAL==REF_MAT_B
+	theta_i = 60.0f;
+	theta_s = 60;
+	r = 0.8f;
+	albedo = 0.99f;
+	extinction = 1.0f;
+	g = -0.3f;
+	n2_over_n1 = 1.4f;
+#elif MATERIAL==REF_MAT_C
+	theta_i = 70.0f;
+	theta_s = 60;
+	r = 1.0f;
+	albedo = 0.3f;
+	extinction = 1.0f;
+	g = 0.9f;
+	n2_over_n1 = 1.4f;
+#elif MATERIAL==REF_MAT_D
+	theta_i = 0.0f;
+	theta_s = 105.0f;
+	r = 4.0f;
+	albedo = 0.5f;
+	extinction = 1.0f;
+	g = 0.0f;
+	n2_over_n1 = 1.2f;
+#elif MATERIAL==REF_MAT_E
+	theta_i = 80.0f;
+	theta_s = 165.0f;
+	r = 2.0f;
+	albedo = 0.8f;
+	extinction = 1.0f;
+	g = -0.3f;
+	n2_over_n1 = 1.3f;
+#endif
+}
