@@ -85,7 +85,7 @@ public:
 	HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader &);
 
 protected:
-	void init_output(const char * function);
+	void init_output();
 	virtual void reset();
 
 
