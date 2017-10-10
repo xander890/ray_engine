@@ -103,9 +103,9 @@ HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader & other) :
 	initialize_shader(other.context);
 }
 
-void HemisphereBSSRDFShader::init_output(const char * file)
+void HemisphereBSSRDFShader::init_output()
 {
-	std::string ptx_path_output = get_path_ptx(file);
+	std::string ptx_path_output = get_path_ptx("render_bssrdf_hemisphere.cu");
 	optix::Program ray_gen_program_output = context->createProgramFromPTXFile(ptx_path_output, "render_ref");
 
 	if(entry_point_output == -1)
@@ -140,7 +140,7 @@ void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
 		 ref_impl->init();
 	 }
 
-	 init_output("render_reference_bssrdf.cu");
+	 init_output();
 
 	 reset();
 
