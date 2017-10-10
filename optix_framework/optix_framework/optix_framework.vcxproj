@@ -514,6 +514,7 @@ echo Done.</Command>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\planar_bssrdf.cu" />
     <CudaCompile Include="CUDA_files\reference_bssrdf.cu" />
     <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu" />
     <CudaCompile Include="CUDA_files\render_bssrdf_hemisphere.cu" />

@@ -15,57 +15,6 @@ static __host__ __device__ __inline__ optix::float3 refract2(const optix::float3
 	return refract2(in,n,eta);
 }
 
-static __host__ __device__ __inline__ optix::float2 fresnelAmplitudeReflectance(const optix::float3 &in, const optix::float3 &n, float nin, float ntr)
-{
-    float cosin = optix::dot(in,n);
-    optix::float3 refr = refract2(in,n,nin,ntr);
-    float costr = optix::dot(refr,-n);
-
-    float r_s = (nin * cosin - ntr * costr) / (nin * cosin + ntr * costr);
-    float r_p = (nin * costr - ntr * cosin) / (nin * costr + ntr * cosin);
-    //std::cout << abs(r_s) << " ¤ " << abs(r_p) << std::endl;
-    return optix::make_float2(r_s,r_p);
-}
-
-
-static __host__ __device__ __inline__ optix::float2 fresnelPowerReflectance(const optix::float3 &in, const optix::float3 &n, float n1, float n2)
-{
-    optix::float2 r = fresnelAmplitudeReflectance(in,n,n1,n2);
-    return r * r;
-}
-
-
-static __host__ __device__ __inline__ optix::float2 fresnelAmplitudeTransmittance(const optix::float3 &in, const optix::float3 &n, float n1, float n2)
-{
-    float cosin = optix::dot(in,n);
-    optix::float3 refr = refract2(in,n,n1,n2);
-    float costr = optix::dot(refr,-n);
-    //std::cout << n1 *  sqrt(1 - cosin * cosin) << " = " << n2 * sqrt(1 - costr * costr) << std::endl;
-    float t_s = (2 * n1 * cosin) / (n1 * cosin + n2 * costr);
-    float t_p = (2 * n1 * cosin) / (n1 * costr + n2 * cosin);
-    //std::cout << abs(t_s) << " # " << abs(t_p) << std::endl;
-    return optix::make_float2(t_s,t_p);
-}
-
-
-static __host__ __device__ __inline__ optix::float2 fresnelPowerTransmittance(const optix::float3 &in, const optix::float3 &n, float n1, float n2)
-{
-    float cosin = optix::dot(in,n);
-    optix::float3 refr = refract2(in,n,n1,n2);
-    float costr = optix::dot(refr,-n);
-
-    optix::float2 t = fresnelAmplitudeTransmittance(in,n,n1,n2);
-
-    return ((n2 * costr) / (n1 * cosin)) * (t * t);
-}
-
-static __host__ __device__ __inline__ float fresnel_R(const optix::float3& in, const optix::float3& n, float n1, float n2)
-{
-    optix::float2 R = fresnelPowerReflectance(in,n,n1,n2);
-	float RR = 0.5f * (R.x + R.y);
-    return RR;
-}
-
 static __host__ __device__ __inline__ optix::float3 fresnel_complex_R(float cos_theta, const optix::float3& eta_sq, const optix::float3& kappa_sq)
 {
 	if (cos_theta < 1e-6)
@@ -113,14 +62,7 @@ __host__ __device__ __inline__ float fresnel_R(float cos_theta, float eta)
   return fresnel_R(cos_theta, cos_theta_t, eta);
 }
 
-static __host__ __device__ __inline__ float fresnel_T(const optix::float3& in, const optix::float3& n, float n1, float n2)
-{
-    optix::float2 T = fresnelPowerTransmittance(in,n,n1,n2);
-    float TT = 0.5f * (T.x + T.y);
-    return TT;
-}
-
-static __host__ float C_1(float ni)
+static __host__ __device__ float C_1(float ni)
 {
     float ni_sqr = ni*ni;
     float ni_p4 = ni_sqr*ni_sqr;
@@ -146,14 +88,14 @@ static __host__ float C_1(float ni)
     return c * 0.5f;
 }
 
-static __host__ float C_phi(float ni)
+static __host__ __device__  float C_phi(float ni)
 {
 
     return 0.25f * (1.0f - 2.0f * C_1(ni));
 }
 
 
-static __host__ float C_2(float ni)
+static __host__ __device__ float C_2(float ni)
 {
     float ni_sqr = ni*ni;
     float ni_p4 = ni_sqr*ni_sqr;
@@ -182,7 +124,7 @@ static __host__ float C_2(float ni)
     return c * (1.0f/3.0f);
 }
 
-static __host__ float C_E(float ni)
+static __host__ __device__ float C_E(float ni)
 {
     return 0.5f * (1.0f - 3.0f * C_2(ni));
 }

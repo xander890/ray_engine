@@ -88,3 +88,18 @@ inline unsigned int add_entry_point(optix::Context & ctx, optix::Program & progr
 	ctx->setRayGenerationProgram(current, program);
 	return current;
 }
+
+inline void clear_buffer(optix::Buffer & buf)
+{
+	RTsize element_size = buf->getElementSize();
+	unsigned int dimensionality = buf->getDimensionality();
+	RTsize dims[3];
+	buf->getSize(dimensionality, &dims[0]);
+	RTsize size = 1;
+	for (unsigned int i = 0; i < dimensionality; i++)
+		size *= dims[i];
+
+	float* buff = reinterpret_cast<float*>(buf->map());
+	memset(buff, 0, size * element_size);
+	buf->unmap();
+}

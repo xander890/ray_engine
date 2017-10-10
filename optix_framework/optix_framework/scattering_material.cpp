@@ -308,31 +308,8 @@ float computeSamplingMfp(SamplingMfpType::Type e, const optix::float3& t)
 
 void ScatteringMaterial::computeCoefficients(float ior)
 {
-	properties.absorption = max(absorption, make_float3(1.0e-8f)) * scale;
-	properties.scattering = scattering * scale;
-	properties.meancosine = asymmetry;
-	properties.deltaEddExtinction = properties.scattering*(1.0f - properties.meancosine*properties.meancosine) + properties.absorption;
+	fill_scattering_parameters(properties, scale, ior, absorption, scattering, asymmetry);
 
-	auto reducedScattering = properties.scattering * (make_float3(1.0f) - properties.meancosine);
-	properties.reducedExtinction = reducedScattering + properties.absorption;
-	properties.D = make_float3(1.0f) / (3.f * properties.reducedExtinction);
-	properties.transport = sqrt(3*properties.absorption*properties.reducedExtinction);
-	properties.C_phi = C_phi(ior);
-	properties.C_phi_inv = C_phi(1.0f/ior);
-	properties.C_E = C_E(ior);
-	properties.reducedAlbedo = reducedScattering / properties.reducedExtinction;
-	properties.de = 2.131f * properties.D / sqrt(properties.reducedAlbedo);
-	properties.A = (1.0f - properties.C_E) / (2.0f * properties.C_phi);
-	properties.extinction = properties.scattering + properties.absorption;
-	properties.three_D = 3 * properties.D;
-	properties.rev_D = (3.f * properties.reducedExtinction);
-	properties.two_a_de = 2.0f * properties.A * properties.de;
-	properties.global_coeff = 1.0f/(4.0f * properties.C_phi_inv) * 1.0f/(4.0f * M_PIf * M_PIf);
-	properties.one_over_three_ext = make_float3(1.0) / (3.0f * properties.extinction);
-	properties.albedo = properties.scattering / properties.extinction;
-	//properties.two_de = 2.0f * properties.de;
-	//properties.de_sqr = properties.de * properties.de;
-	//properties.iorsq = ior * ior;
 	Logger::info << "Will sample using MFP: " << SamplingMfpType::to_string(mSamplingType) << std::endl;
 	properties.sampling_mfp_tr = computeSamplingMfp(mSamplingType, properties.transport);
 	properties.sampling_mfp_s = computeSamplingMfp(mSamplingType, properties.approx_property_s);

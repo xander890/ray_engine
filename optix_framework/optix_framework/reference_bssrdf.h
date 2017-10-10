@@ -34,13 +34,13 @@ public:
 
 protected:
 	// OptiX stuff
-	static int entry_point;
-	static int entry_point_post;
+	int entry_point = -1;
+	int entry_point_post = -1;
 	unsigned int mSamples;
 	optix::uint2 mHemisphereSize;
 	optix::Context context = nullptr;
 
-	unsigned int mMaxIterations = (int)1e5;
+	unsigned int mMaxIterations = (int)1e6;
 	unsigned int mRenderedFrames = 0;
 	optix::Buffer mBSSRDFBufferIntermediate = nullptr;
 	optix::Buffer mBSSRDFBuffer = nullptr;
@@ -49,6 +49,7 @@ protected:
 	float mThetas = 0.0f;
 	float mRadius = 0.8f;
 	// Scattering properties
+	ScatteringMaterialProperties mProperties;
 	float mAlbedo = 0.9f;
 	float mExtinction = 1.0f;
 	float mAsymmetry = 0.0f;
@@ -57,7 +58,11 @@ protected:
 
 class PlanarBSSRDF : public ReferenceBSSRDF
 {
+public:
+	PlanarBSSRDF(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : ReferenceBSSRDF(ctx, hemisphere, samples) {}
 
+	void init() override;
+	void render() override;
 };
 
 class HemisphereBSSRDFShader : public Shader
@@ -101,6 +106,6 @@ protected:
 	optix::Buffer mBSSRDFBufferTexture;
 	optix::TextureSampler mBSSRDFHemisphereTex;
 
-	std::unique_ptr<ReferenceBSSRDF> ref_impl;
+	std::unique_ptr<PlanarBSSRDF> ref_impl;
 };
 

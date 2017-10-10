@@ -91,6 +91,9 @@
     <CudaCompile Include="CUDA_files\render_bssrdf_hemisphere.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\planar_bssrdf.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="obj_scene.cpp">

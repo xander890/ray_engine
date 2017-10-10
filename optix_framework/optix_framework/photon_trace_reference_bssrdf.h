@@ -31,6 +31,13 @@ __forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordi
 	return optix::make_float2(phi_o_normalized, theta_o_normalized);
 }
 
+__forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(float theta_o_normalized, float phi_o_normalized)
+{
+	const float phi_o = phi_o_normalized * (2.0f * M_PIf);
+	const float theta_o = acosf(theta_o_normalized); //theta_o / (M_PIf * 0.5f);
+	return optix::make_float2(phi_o, theta_o);
+}
+
 __forceinline__ __device__ void store_values_in_buffer(const float cos_theta_o, const float phi_o, const float flux_E, optix::buffer<float, 2> & resulting_flux)
 {
 	const optix::size_t2 bins = resulting_flux.size();

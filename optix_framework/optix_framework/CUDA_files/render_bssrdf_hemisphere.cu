@@ -31,6 +31,7 @@ RT_PROGRAM void render_ref()
 	else
 	{
 		float val = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, coords.x, coords.y).x;
+		
 		if(show_false_colors == 1)
 			output_buffer[launch_index] = make_float4(jet(val), 1);
 		else
