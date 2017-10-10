@@ -26,27 +26,35 @@ inline std::string stringize(std::initializer_list<T> nums)
 }
 
 template<typename T>
+inline std::string tostring(T p) {return std::to_string(p);}
+
+template<typename T>
 inline std::string stringize(T* nums, std::size_t size)
 {
 	std::stringstream ss;
 	for (int i = 0; i < size; i++)
-		ss << nums[i] << " ";
+		ss << tostring(nums[i]) << " ";
 	return ss.str();
 }
 
 template<typename T>
-inline std::string tostring(T p) {return std::to_string(p);}
+inline std::string tostring(std::vector<T> p) { return stringize(p.data(), p.size()); }
 
 // One dimensional
 template<>
 inline std::string tostring(bool p) {return std::string(p? "true" : "false");}
 template<>
-inline std::string tostring(std::string p) {return p;}
+inline std::string tostring(const std::string & p) {return std::string(p);}
+template<>
+inline std::string tostring(std::string p) { return p; }
 template<>
 inline std::string tostring(const char * p) { return std::string(p); }
 
+
+
 template<typename T>
-inline T tovalue(std::string p) {return (T)p;} //unsafe
+inline T tovalue(std::string p) {return static_cast<T>(p);} //unsafe
+
 template<>
 inline const char* tovalue(std::string p) { return p.c_str(); }
 template<>
@@ -196,6 +204,35 @@ inline optix::Matrix4x4 tovalue(std::string p) {
 	// It will be copied in the Matrix, so we unsafely use stack data 
 	return optix::Matrix4x4(&tokens[0]);
 }
+
+template<>
+inline std::vector<float> tovalue(std::string p) {
+	std::vector<float> tokens;
+	std::stringstream ss(p);
+	float a;
+	while (ss >> a) tokens.push_back(a);
+	return tokens;
+}
+
+template<>
+inline std::vector<int> tovalue(std::string p) {
+	std::vector<int> tokens;
+	std::stringstream ss(p);
+	int a;
+	while (ss >> a) tokens.push_back(a);
+	return tokens;
+}
+
+
+template<>
+inline std::vector<unsigned int> tovalue(std::string p) {
+	std::vector<unsigned int> tokens;
+	std::stringstream ss(p);
+	unsigned int a;
+	while (ss >> a) tokens.push_back(a);
+	return tokens;
+}
+
 
 
 #endif // stringhelpers_h__
