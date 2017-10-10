@@ -100,7 +100,7 @@ void Mesh::load_shader()
 		mShader->initialize_mesh(*this);
 		mReloadShader = false;
 	}
-	mShader->load_data();
+	mShader->load_data(*this);
 }
 
 void Mesh::load_transform()

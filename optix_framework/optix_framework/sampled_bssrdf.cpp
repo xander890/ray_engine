@@ -31,7 +31,7 @@ void SampledBSSRDF::initialize_mesh(Mesh& object)
 
 }
 
-void SampledBSSRDF::load_data()
+void SampledBSSRDF::load_data(Mesh & object)
 {
 	if (mHasChanged)
 	{

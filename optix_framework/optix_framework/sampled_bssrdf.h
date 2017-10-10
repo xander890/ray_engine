@@ -16,7 +16,7 @@ public:
 	void pre_trace_mesh(Mesh & object) override {}
 	
 	virtual bool on_draw() override;
-	virtual void load_data() override;
+	virtual void load_data(Mesh & object) override;
 	virtual Shader* clone() override { return new SampledBSSRDF(*this); }
 
 	std::unique_ptr<BSSRDFSamplingProperties> properties = nullptr;

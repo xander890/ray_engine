@@ -9,7 +9,7 @@ public:
 	{
 	}
 
-	void load_data() override;
+	void load_data(Mesh & object) override;
 	void initialize_shader(optix::Context) override;
 	void initialize_mesh(Mesh& object) override;
 	void pre_trace_mesh(Mesh& object) override;

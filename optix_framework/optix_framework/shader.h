@@ -30,7 +30,7 @@ public:
     virtual void initialize_mesh(Mesh & object);
     virtual void pre_trace_mesh(Mesh & object);  
 	virtual void post_trace_mesh(Mesh & object);
-	virtual void load_data() {}
+	virtual void load_data(Mesh & object) {}
 
     virtual void initialize_shader(optix::Context context);
     void set_method(RenderingMethodType::EnumType m) { method = m; }

@@ -3,7 +3,7 @@
 #include "photon_trace_structs.h"
 #include "immediate_gui.h"
 
-void ReferenceBSSRDFGPU::load_data()
+void ReferenceBSSRDFGPU::load_data(Mesh & object)
 {
 }
 
