@@ -106,9 +106,9 @@ void ShaderFactory::init(optix::Context& ctx)
     context = ctx;
     load_normalized_CIE_functions(context);
 
-    ShaderInfo glossy = {"glossy_shader.cu", "Glossy", 2};
+    ShaderInfo glossy = ShaderInfo(2, "glossy_shader.cu", "Glossy");
     add_shader(std::make_unique<GlossyShader>(glossy));
-    ShaderInfo bssrdf = { "subsurface_scattering_shader.cu", "Point cloud BSSRDF", 17 };
+    ShaderInfo bssrdf = ShaderInfo(17, "subsurface_scattering_shader.cu", "Point cloud BSSRDF"); 
 	add_shader(std::make_unique<PresampledSurfaceBssrdf>(bssrdf));
 
     for (const ShaderInfo& n: DefaultShader::default_shaders)

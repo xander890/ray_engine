@@ -9,6 +9,7 @@ class Mesh;
 
 struct ShaderInfo
 {
+	ShaderInfo(int illum, std::string path, std::string n) : illum(illum), cuda_shader_path(path), name(n) {}
     std::string cuda_shader_path;
     std::string name;
     int illum;

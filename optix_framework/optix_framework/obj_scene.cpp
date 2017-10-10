@@ -379,20 +379,20 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
     camera = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
 
     ShaderFactory::init(context);
-	ShaderInfo info = { "volume_shader.cu", "Volume path tracer", 12 };
+	ShaderInfo info = ShaderInfo(12, "volume_shader.cu", "Volume path tracer");
 	ShaderFactory::add_shader(std::make_unique<VolumePathTracer>(info));
 
-	ShaderInfo info3 = {"volume_shader_heterogenous.cu", "Volume path tracer (het.)", 13};
+	ShaderInfo info3 = ShaderInfo(13, "volume_shader_heterogenous.cu", "Volume path tracer (het.)"); 
 	ShaderFactory::add_shader(std::make_unique<VolumePathTracer>(info3));
 	
-	ShaderInfo info2 = { "subsurface_scattering_sampled.cu", "Sampled BSSRDF", 14 };
+	ShaderInfo info2 = ShaderInfo(14, "subsurface_scattering_sampled.cu", "Sampled BSSRDF"); 
 	ShaderFactory::add_shader(std::make_unique<SampledBSSRDF>(info2));
 
-	ShaderInfo info4 = { "empty.cu", "Reference BSSRDF", 20 };
-	ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDF>(info4, camera_width, camera_height));
+	ShaderInfo info4 = ShaderInfo(20, "empty.cu", "Reference BSSRDF"); 
+	ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDFShader>(info4, camera_width, camera_height));
 
-	ShaderInfo info5 = { "empty.cu", "Reference BSSRDF - GPU", 21 };
-	ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDFGPU>(info5, camera_width, camera_height));
+	//ShaderInfo info5 = { "empty.cu", "Reference BSSRDF - GPU", 21 };
+	//ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDFGPU>(info5, camera_width, camera_height));
 
 
     for (auto& kv : MaterialLibrary::media)

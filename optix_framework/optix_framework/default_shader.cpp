@@ -2,14 +2,14 @@
 
 std::vector<ShaderInfo> DefaultShader::default_shaders = 
 {
-    {"constant_shader.cu" , "Constant" ,0},
-    {"lambertian_shader.cu", "Lambertian" ,1},
-    {"mirror_shader.cu", "Mirror" ,3},
-    {"glass_shader.cu", "Glass" ,4},
-	{ "normal_shader.cu", "Normals" ,5 },
-	// {"dispersion_shader.cu", "Dispersion" ,6},
-   // {"absorbing_glass.cu", "Absorption glass" ,7},
-    {"metal_shader.cu", "Metal" ,11}
+	ShaderInfo(0, "constant_shader.cu", "Constant"),
+	ShaderInfo(1, "lambertian_shader.cu", "Lambertian"),
+	ShaderInfo(3, "mirror_shader.cu", "Mirror"),
+	ShaderInfo(4, "glass_shader.cu", "Glass"),
+	ShaderInfo(5, "normal_shader.cu", "Normals"),
+	//ShaderInfo(6, "dispersion_shader.cu", "Dispersion"),
+	//ShaderInfo(7, "absorbing_glass.cu", "Absorption glass"),
+	ShaderInfo(11, "metal_shader.cu", "Metal")
 };
 
 void DefaultShader::initialize_shader(optix::Context ctx)
