@@ -207,6 +207,7 @@ void Mesh::add_material(std::shared_ptr<MaterialHost> material)
 
 bool Mesh::on_draw()
 {
+	ImmediateGUIDraw::PushItemWidth(200);
 	bool changed = false;
 	if (ImmediateGUIDraw::TreeNode((mMeshName + " ID: " + std::to_string(mMeshID)).c_str()))
 	{
@@ -239,6 +240,7 @@ bool Mesh::on_draw()
 				changed = true;
 				set_shader(illummap[selected]);
 			}
+
 
 			changed |= mShader->on_draw();
 			ImmediateGUIDraw::TreePop();

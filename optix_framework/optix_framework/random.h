@@ -58,7 +58,7 @@ static __host__ __device__ __inline__ float rnd(unsigned int &prev)
 }
 
 // Hash hack http://www.ci.i.u-tokyo.ac.jp/~hachisuka/tdf2015.pdf
-static __host__ __device__ __inline__ float hash(const optix::float3 idx, float grid_scale, int hash_num)
+static __host__ __device__ __inline__ float hash_tdf(const optix::float3 idx, float grid_scale, int hash_num)
 {
 	// use the same procedure as GPURnd
 	optix::float4 n = optix::make_float4(idx, grid_scale * 0.5f) * 4194304.0f / grid_scale;

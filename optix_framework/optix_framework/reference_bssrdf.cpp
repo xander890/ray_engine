@@ -57,7 +57,10 @@ void ReferenceBSSRDF::initialize_mesh(Mesh& object)
 
 void ReferenceBSSRDF::pre_trace_mesh(Mesh& object)
 {	
-	context["reference_rendering_material"]->setUserData(sizeof(MaterialDataCommon), &object.get_main_material()->get_data());
+	context["reference_bssrdf_g"]->setFloat(object.get_main_material()->get_data().scattering_properties.meancosine.x);
+	context["reference_bssrdf_albedo"]->setFloat(object.get_main_material()->get_data().scattering_properties.albedo.x);
+	context["reference_bssrdf_extinction"]->setFloat(object.get_main_material()->get_data().scattering_properties.extinction.x);
+	context["reference_bssrdf_rel_ior"]->setFloat(object.get_main_material()->get_data().relative_ior);
 	const optix::int3 c = context->getPrintLaunchIndex();
 	context->setPrintLaunchIndex(0, -1, -1);
 	context->launch(entry_point, mSamples);
@@ -79,12 +82,27 @@ void ReferenceBSSRDF::post_trace_mesh(Mesh & object)
 
 bool ReferenceBSSRDF::on_draw()
 {
-	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
+	if (ImmediateGUIDraw::SliderFloat("Incoming light angle (deg.)", &mThetai, 0, 90))
+		reset();
+	if (ImmediateGUIDraw::InputFloat("Radius", &mRadius))
+		reset();
+	if (ImmediateGUIDraw::SliderFloat("Angle on plane", &mThetas, 0, 360))
+		reset();
 	if (ImmediateGUIDraw::InputInt("Samples", (int*)&mSamples))
 		reset();
 	if (ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&mMaxIterations))
 		reset();
+	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
 	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors);
+
+	std::stringstream ss;
+	ss << "Currently used material properties:" << std::endl;
+	ss << "Albedo: " << context["reference_bssrdf_albedo"]->getFloat() << std::endl;
+	ss << "Extinction: " << context["reference_bssrdf_extinction"]->getFloat() << std::endl;
+	ss << "Asymmetry: " << context["reference_bssrdf_g"]->getFloat() << std::endl;
+	ss << "IOR: " << context["reference_bssrdf_rel_ior"]->getFloat() << std::endl;
+	ImmediateGUIDraw::Text(ss.str().c_str());
+
 	return false;
 }
 
@@ -98,4 +116,7 @@ void ReferenceBSSRDF::load_data()
 	context["ref_frame_number"]->setUint(mRenderedFrames);
 	context["reference_bssrdf_samples_per_frame"]->setUint(mSamples);
 	context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
+	context["reference_bssrdf_theta_i"]->setFloat(mThetai);
+	context["reference_bssrdf_theta_s"]->setFloat(mThetas);
+	context["reference_bssrdf_radius"]->setFloat(mRadius);
 }

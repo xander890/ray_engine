@@ -24,20 +24,31 @@ public:
 
 protected:
 	void init_output(const char * function);
-	int entry_point;
-	int entry_point_output;
+	virtual void reset();
+
+	// Geometric properties
+	float mThetai = 60.0f;
+	float mThetas = 0.0f;
+	float mRadius = 0.8f;
+
+	// Data for the simulation
 	unsigned int mSamples = (int)1e5;
 	optix::uint2 mHemisphereSize = optix::make_uint2(160, 40);
 	int mCameraWidth;
 	int mCameraHeight;
 	int mRenderedFrames = 0;
-
-	float mScaleMultiplier = 2 * 1000000.0f;
 	unsigned int mMaxIterations = (int)1e5;
-	virtual void reset();
+
+	// Gui
+	float mScaleMultiplier = 2 * 1000000.0f;
 	int mShowFalseColors = 0;
+
+	// OptiX stuff
+	int entry_point;
+	int entry_point_output;
 	optix::Buffer mBSSRDFBuffer;
 	optix::Buffer mBSSRDFBufferTexture;
 	optix::TextureSampler mBSSRDFHemisphereTex;
+
 };
 

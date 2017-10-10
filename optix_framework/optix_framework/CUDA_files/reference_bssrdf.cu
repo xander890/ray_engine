@@ -11,23 +11,26 @@ rtBuffer<float, 2> resulting_flux;
 rtDeclareVariable(unsigned int, maximum_iterations, , );
 rtDeclareVariable(unsigned int, ref_frame_number, , );
 rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
-rtDeclareVariable(MaterialDataCommon, reference_rendering_material, , );
 // Window variables
 
-#define USE_HARDCODED_MATERIALS
+rtDeclareVariable(float, reference_bssrdf_theta_i, , );
+rtDeclareVariable(float, reference_bssrdf_theta_s, , );
+rtDeclareVariable(float, reference_bssrdf_radius, , );
+rtDeclareVariable(float, reference_bssrdf_albedo, , );
+rtDeclareVariable(float, reference_bssrdf_extinction, , );
+rtDeclareVariable(float, reference_bssrdf_g, , );
+rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
+
+//#define USE_HARDCODED_MATERIALS
 
 // Assumes an infinite plane with normal (0,0,1)
 __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::float3& wi, const float incident_power, const float r, const float theta_s, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t)
 {
-	const size_t2 bins = resulting_flux.size();
 	// Geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);
 	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
 	const optix::float3 no = ni;
-
-	float3 n = (xo - xi);
-	optix_print("wi: %f %f %f, xo-xi: %f %f %f\n", wi.x, wi.y, wi.z, n.x, n.y, n.z);
 
 	// Refraction
 	const float n1_over_n2 = 1.0f / n2_over_n1;
@@ -36,6 +39,7 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	const float sin_theta_t_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_i_sqr);
 	const float cos_theta_t_i = sqrt(1.0f - sin_theta_t_sqr);
 	const optix::float3 w12 = n1_over_n2*(cos_theta_i*ni - wi) - ni*cos_theta_t_i;
+
 	float flux_t = incident_power / ((float)reference_bssrdf_samples_per_frame);
 	optix::float3 xp = xi;
 	optix::float3 wp = w12;
@@ -51,23 +55,22 @@ RT_PROGRAM void reference_bssrdf_camera()
 	uint idx = launch_index.x;
 	optix::uint t = ref_frame_number * launch_dim.x + idx;
 	hash(t);
-	optix_print("%d %d %d\n", idx, ref_frame_number, t);
 
 	const float incident_power = 1.0f;
-
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
 
 #ifdef USE_HARDCODED_MATERIALS
 	get_default_material(theta_i, r, theta_s, albedo, extinction, g, n2_over_n1);
 #else
-	theta_i = 60.0f;
-	theta_s = 60;
-	r = 0.8f;
-	n2_over_n1 = reference_rendering_material.relative_ior;
-	albedo = reference_rendering_material.scattering_properties.albedo.x;
-	extinction = reference_rendering_material.scattering_properties.extinction.x;
-	g = reference_rendering_material.scattering_properties.meancosine.x;
+	theta_i = reference_bssrdf_theta_i;
+	theta_s = reference_bssrdf_theta_s;
+	r = reference_bssrdf_radius;
+	n2_over_n1 = reference_bssrdf_rel_ior;
+	albedo = reference_bssrdf_albedo;
+	extinction = reference_bssrdf_extinction;
+	g = reference_bssrdf_g;
 #endif
+
 	const float theta_i_rad = deg2rad(theta_i);
 	const float theta_s_rad = deg2rad(-theta_s);
 	const optix::float3 wi = normalize(optix::make_float3(-sinf(theta_i_rad), 0, cosf(theta_i_rad)));
