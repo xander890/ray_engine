@@ -7,7 +7,10 @@
 #include <md5.h>
 #include <material.h>
 using namespace optix;
+
 rtBuffer<float, 2> resulting_flux;
+rtBuffer<float, 2> resulting_flux_intermediate;
+
 rtDeclareVariable(unsigned int, maximum_iterations, , );
 rtDeclareVariable(unsigned int, ref_frame_number, , );
 rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
@@ -44,7 +47,7 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	optix::float3 xp = xi;
 	optix::float3 wp = w12;
 
-	if (!scatter_photon(xp, wp, flux_t, resulting_flux, xo,  n2_over_n1, albedo, extinction, g, t, 0, maximum_iterations))
+	if (!scatter_photon(xp, wp, flux_t, resulting_flux_intermediate, xo,  n2_over_n1, albedo, extinction, g, t, 0, maximum_iterations))
 	{
 		optix_print("Max iterations reached. Distance %f (%f mfps)\n", length(xp - xo), length(xp - xo) / r);
 	}
@@ -77,3 +80,8 @@ RT_PROGRAM void reference_bssrdf_camera()
 	infinite_plane_scatter_searchlight(wi, incident_power, r, theta_s_rad, n2_over_n1, albedo, extinction, g, t);
 }
 
+RT_PROGRAM void post_process_bssrdf()
+{
+	optix_print("----%f\n", resulting_flux_intermediate[launch_index]);
+	resulting_flux[launch_index] = resulting_flux_intermediate[launch_index] / ((float)(ref_frame_number + 1));
+}

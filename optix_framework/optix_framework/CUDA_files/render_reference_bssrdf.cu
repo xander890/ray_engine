@@ -12,7 +12,6 @@ rtBuffer<float4, 2> output_buffer;
 rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
 rtDeclareVariable(unsigned int, show_false_colors, , );
 rtDeclareVariable(float, reference_scale_multiplier, , );
-rtDeclareVariable(unsigned int, ref_frame_number, , );
 rtDeclareVariable(TexPtr, resulting_flux_tex, , );
 
 RT_PROGRAM void render_ref()
@@ -31,7 +30,7 @@ RT_PROGRAM void render_ref()
 	}
 	else
 	{
-		float val = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, coords.x, coords.y).x / ((float)ref_frame_number);
+		float val = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, coords.x, coords.y).x;
 		if(show_false_colors == 1)
 			output_buffer[launch_index] = make_float4(jet(val), 1);
 		else

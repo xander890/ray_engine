@@ -15,32 +15,34 @@ public:
 		mRadius = r;
 	}
 
-	void load_data();
+	virtual void load_data();
 	void set_material_parameters(float albedo, float extinction, float g, float eta);
 
 	void set_samples(int samples);
 	void set_max_iterations(int max_iter);
 	// Data for the simulation
 
-	void reset();
-	void init();
-	void render();
+	virtual void reset();
+	virtual void init();
+	virtual void render();
 
 	optix::Buffer get_output_buffer() { return mBSSRDFBuffer; }
 	optix::uint2 get_hemisphere_size() { return mHemisphereSize; }
 
-	void on_draw(bool show_material_params);
+	virtual void on_draw(bool show_material_params);
 
 
-private:
+protected:
 	// OptiX stuff
-	int entry_point;
+	static int entry_point;
+	static int entry_point_post;
 	unsigned int mSamples;
 	optix::uint2 mHemisphereSize;
 	optix::Context context = nullptr;
 
 	unsigned int mMaxIterations = (int)1e5;
 	unsigned int mRenderedFrames = 0;
+	optix::Buffer mBSSRDFBufferIntermediate = nullptr;
 	optix::Buffer mBSSRDFBuffer = nullptr;
 	// Geometric properties
 	float mThetai = 60.0f;
@@ -53,10 +55,15 @@ private:
 	float mIor = 1.3f;
 };
 
-class ReferenceBSSRDFShader : public Shader
+class PlanarBSSRDF : public ReferenceBSSRDF
+{
+
+};
+
+class HemisphereBSSRDFShader : public Shader
 {
 public:
-	ReferenceBSSRDFShader(const ShaderInfo& shader_info, int camera_width, int camera_height) : Shader(shader_info),
+	HemisphereBSSRDFShader(const ShaderInfo& shader_info, int camera_width, int camera_height) : Shader(shader_info),
 	                                                                                      mCameraWidth(camera_width),
 	                                                                                      mCameraHeight(camera_height)
 	{
@@ -67,7 +74,7 @@ public:
 	void pre_trace_mesh(Mesh& object) override;
 	void post_trace_mesh(Mesh& object) override;
 	bool on_draw() override;
-	Shader* clone() override { return new ReferenceBSSRDFShader(*this); }
+	Shader* clone() override { return new HemisphereBSSRDFShader(*this); }
 	void load_data(Mesh & object) override;
 	
 	void set_use_mesh_parameters(bool val)
@@ -75,7 +82,7 @@ public:
 		mUseMeshParameters = val;
 	}
 
-	ReferenceBSSRDFShader::ReferenceBSSRDFShader(ReferenceBSSRDFShader &);
+	HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader &);
 
 protected:
 	void init_output(const char * function);

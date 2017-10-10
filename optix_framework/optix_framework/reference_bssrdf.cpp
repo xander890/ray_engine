@@ -3,9 +3,12 @@
 #include "optix_utils.h"
 #include "GL\glew.h"
 
+int ReferenceBSSRDF::entry_point = -1;
+int ReferenceBSSRDF::entry_point_post = -1;
 
 void ReferenceBSSRDF::load_data()
 {
+	context["resulting_flux_intermediate"]->setBuffer(mBSSRDFBufferIntermediate);
 	context["resulting_flux"]->setBuffer(mBSSRDFBuffer);
 	context["maximum_iterations"]->setUint(mMaxIterations);
 	context["ref_frame_number"]->setUint(mRenderedFrames);
@@ -47,7 +50,17 @@ void ReferenceBSSRDF::init()
 {
 	std::string ptx_path = get_path_ptx("reference_bssrdf.cu");
 	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
-	entry_point = add_entry_point(context, ray_gen_program);
+	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
+
+	if(entry_point == -1)
+		entry_point = add_entry_point(context, ray_gen_program);
+	if (entry_point_post == -1)
+		entry_point_post = add_entry_point(context, ray_gen_program_post);
+
+	mBSSRDFBufferIntermediate = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
+	mBSSRDFBufferIntermediate->setFormat(RT_FORMAT_FLOAT);
+	mBSSRDFBufferIntermediate->setSize(mHemisphereSize.x, mHemisphereSize.y);
+
 	mBSSRDFBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
 	mBSSRDFBuffer->setFormat(RT_FORMAT_FLOAT);
 	mBSSRDFBuffer->setSize(mHemisphereSize.x, mHemisphereSize.y);
@@ -56,6 +69,7 @@ void ReferenceBSSRDF::init()
 void ReferenceBSSRDF::render()
 {
 	context->launch(entry_point, mSamples);
+	context->launch(entry_point_post, mHemisphereSize.x, mHemisphereSize.y);
 	mRenderedFrames++;
 }
 
@@ -77,12 +91,11 @@ void ReferenceBSSRDF::on_draw(bool show_material_params)
 	changed |= ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&mMaxIterations);
 	if (changed)
 		reset();
-	
 }
 
-int ReferenceBSSRDFShader::entry_point_output = -1;
+int HemisphereBSSRDFShader::entry_point_output = -1;
 
-ReferenceBSSRDFShader::ReferenceBSSRDFShader(ReferenceBSSRDFShader & other) : Shader(ShaderInfo(other.illum, other.shader_path, other.shader_name))
+HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader & other) : Shader(ShaderInfo(other.illum, other.shader_path, other.shader_name))
 {
 	mCameraWidth = other.mCameraWidth;
 	mCameraHeight = other.mCameraHeight;
@@ -90,7 +103,7 @@ ReferenceBSSRDFShader::ReferenceBSSRDFShader(ReferenceBSSRDFShader & other) : Sh
 	initialize_shader(other.context);
 }
 
-void ReferenceBSSRDFShader::init_output(const char * file)
+void HemisphereBSSRDFShader::init_output(const char * file)
 {
 	std::string ptx_path_output = get_path_ptx(file);
 	optix::Program ray_gen_program_output = context->createProgramFromPTXFile(ptx_path_output, "render_ref");
@@ -111,12 +124,12 @@ void ReferenceBSSRDFShader::init_output(const char * file)
 	mBSSRDFHemisphereTex->setWrapMode(1, RT_WRAP_CLAMP_TO_EDGE);
 }
 
-void ReferenceBSSRDFShader::reset()
+void HemisphereBSSRDFShader::reset()
 {
 	ref_impl->reset();
 }
 
-void ReferenceBSSRDFShader::initialize_shader(optix::Context ctx)
+void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
 {
 	 Shader::initialize_shader(ctx);
 	 //in static constructor
@@ -133,12 +146,12 @@ void ReferenceBSSRDFShader::initialize_shader(optix::Context ctx)
 
 }
 
-void ReferenceBSSRDFShader::initialize_mesh(Mesh& object)
+void HemisphereBSSRDFShader::initialize_mesh(Mesh& object)
 {
 
 }
 
-void ReferenceBSSRDFShader::pre_trace_mesh(Mesh& object)
+void HemisphereBSSRDFShader::pre_trace_mesh(Mesh& object)
 {	
 	const optix::int3 c = context->getPrintLaunchIndex();
 	context->setPrintLaunchIndex(0, -1, -1);
@@ -151,12 +164,12 @@ void ReferenceBSSRDFShader::pre_trace_mesh(Mesh& object)
 	mBSSRDFBufferTexture->unmap();
 }
 
-void ReferenceBSSRDFShader::post_trace_mesh(Mesh & object)
+void HemisphereBSSRDFShader::post_trace_mesh(Mesh & object)
 {
 	context->launch(entry_point_output, mCameraWidth, mCameraHeight);
 }
 
-bool ReferenceBSSRDFShader::on_draw()
+bool HemisphereBSSRDFShader::on_draw()
 {
 	
 	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
@@ -170,7 +183,7 @@ bool ReferenceBSSRDFShader::on_draw()
 	return false;
 }
 
-void ReferenceBSSRDFShader::load_data(Mesh & object)
+void HemisphereBSSRDFShader::load_data(Mesh & object)
 {
 	int s = mBSSRDFHemisphereTex->getId();
 	context["resulting_flux_tex"]->setUserData(sizeof(TexPtr),&(s));

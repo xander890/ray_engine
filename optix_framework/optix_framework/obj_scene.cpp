@@ -389,7 +389,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	ShaderFactory::add_shader(std::make_unique<SampledBSSRDF>(info2));
 
 	ShaderInfo info4 = ShaderInfo(20, "empty.cu", "Reference BSSRDF"); 
-	ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDFShader>(info4, camera_width, camera_height));
+	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info4, camera_width, camera_height));
 
 	//ShaderInfo info5 = { "empty.cu", "Reference BSSRDF - GPU", 21 };
 	//ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDFGPU>(info5, camera_width, camera_height));
