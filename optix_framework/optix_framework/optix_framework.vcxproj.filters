@@ -558,6 +558,12 @@
     <ClInclude Include="md5.h">
       <Filter>Header Files\Optix</Filter>
     </ClInclude>
+    <ClInclude Include="quantized_diffusion.h">
+      <Filter>Header Files\Materials\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="photon_beam_diffusion.h">
+      <Filter>Header Files\Materials\Dipoles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

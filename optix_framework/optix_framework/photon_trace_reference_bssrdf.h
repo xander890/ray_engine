@@ -8,7 +8,7 @@
 #include "optical_helper.h"
 #include "phase_function.h"
 
-#define RND_FUNC rnd_accurate
+#define RND_FUNC rnd_tea
 
 // Simple util to do plane ray intersection.
 __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_origin, const optix::float3 & plane_normal, const optix::Ray & ray, float & intersection_distance)
@@ -114,7 +114,7 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 				// w_12 points *towards* the surface, and the outgoing w_o points *away *from the surface.
 				const float phi_o = phi_21;
 
-				const float flux_E = flux_t * albedo * eval_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len) * F_t;
+				const float flux_E = flux_t * albedo * phase_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len) * F_t;
 				
 				// Not including single scattering, so i == 0 is not considered.
 				if (i > 0)
@@ -155,7 +155,7 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 #define REF_MAT_C 4
 #define REF_MAT_D 5
 #define REF_MAT_E 6
-#define MATERIAL REF_MAT_E
+#define MATERIAL REF_MAT_C
 
 __forceinline__ __device__ void get_default_material(float & theta_i, float & r, float & theta_s, float & albedo, float & extinction, float & g, float & n2_over_n1)
 {

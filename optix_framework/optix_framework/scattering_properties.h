@@ -5,8 +5,10 @@
 #define IMPROVED_ENUM_NAME ScatteringDipole
 #define IMPROVED_ENUM_LIST	ENUMITEM_VALUE(STANDARD_DIPOLE_BSSRDF,0) \
 							ENUMITEM_VALUE(DIRECTIONAL_DIPOLE_BSSRDF,1) \
-							ENUMITEM_VALUE(APPROX_STANDARD_DIPOLE_BSSRDF,2) \
-							ENUMITEM_VALUE(APPROX_DIRECTIONAL_DIPOLE_BSSRDF,3) 
+							ENUMITEM_VALUE(QUANTIZED_DIFFUSION_BSSRDF,2) \
+							ENUMITEM_VALUE(PHOTON_BEAM_DIFFUSION_BSSRDF,3) \
+							ENUMITEM_VALUE(APPROX_STANDARD_DIPOLE_BSSRDF,4) \
+							ENUMITEM_VALUE(APPROX_DIRECTIONAL_DIPOLE_BSSRDF,5) 
 #include "improved_enum.def"
 
 #include "optical_helper.h"
@@ -27,7 +29,7 @@ struct ScatteringMaterialProperties
     optix::float3 transport;
     float C_phi;
     optix::float3 reducedAlbedo;
-    float C_phi_inv;
+    float C_phi_inv; // C_phi(1 / eta)
     optix::float3 de;
     float C_E;
     optix::float3 three_D;
@@ -37,7 +39,7 @@ struct ScatteringMaterialProperties
     optix::float3 two_a_de;
     float sampling_mfp_tr;
     optix::float3 one_over_three_ext;
-	int pad;
+	float C_phi_norm; // 1 / (4 * C_phi(1 / eta)) = 1 / (1 - 2 * C1(1/eta)) 
 	optix::float3 deltaEddExtinction;
 
 	optix::float3 approx_property_A		DEFAULT(optix::make_float3(1));
@@ -48,6 +50,7 @@ struct ScatteringMaterialProperties
 
 __host__ __device__ __forceinline__ void fill_scattering_parameters(ScatteringMaterialProperties & properties, const float scale, const float ior, const optix::float3 & absorption, const optix::float3 & scattering, const optix::float3 & asymmetry)
 {
+	const float inverse_relative_ior = 1.0f / ior;
 	properties.absorption = max(absorption, optix::make_float3(1.0e-8f)) * scale;
 	properties.scattering = scattering * scale;
 	properties.meancosine = asymmetry;
@@ -58,7 +61,8 @@ __host__ __device__ __forceinline__ void fill_scattering_parameters(ScatteringMa
 	properties.D = optix::make_float3(1.0f) / (3.f * properties.reducedExtinction);
 	properties.transport = sqrt(3 * properties.absorption*properties.reducedExtinction);
 	properties.C_phi = C_phi(ior);
-	properties.C_phi_inv = C_phi(1.0f / ior);
+	properties.C_phi_inv = C_phi(inverse_relative_ior);
+	properties.C_phi_norm = 1.0f/(1.0f - 2.0f * C_1(inverse_relative_ior));
 	properties.C_E = C_E(ior);
 	properties.reducedAlbedo = reducedScattering / properties.reducedExtinction;
 	properties.de = 2.131f * properties.D / sqrt(properties.reducedAlbedo);

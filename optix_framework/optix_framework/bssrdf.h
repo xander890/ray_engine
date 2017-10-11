@@ -6,6 +6,8 @@
 #include <approximate_directional_dipole.h>
 #include <approximate_standard_dipole.h>
 #include <bssrdf_sampling_properties.h>
+#include <quantized_diffusion.h>
+#include <photon_beam_diffusion.h>
 
 using optix::float3;
 
@@ -21,6 +23,10 @@ __forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, c
 		return directional_dipole_bssrdf(_xi, _ni, _w12, _xo, _no, properties);
 	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
 		return approximate_standard_dipole_bssrdf(length(_xo - _xi), properties);
+	case ScatteringDipole::QUANTIZED_DIFFUSION_BSSRDF:
+		return quantized_diffusion_bssrdf(length(_xo - _xi), properties);
+	case ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF:
+		return photon_beam_diffusion_bssrdf(_xo - _xi, _ni, _w12, _no, properties);
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
 	default:
 		return standard_dipole_bssrdf(length(_xo - _xi), properties);
@@ -36,6 +42,8 @@ __forceinline__ __device__ float3 get_beam_transmittance(const float depth, cons
 		return exp(-depth*properties.deltaEddExtinction);
 	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
+	case ScatteringDipole::QUANTIZED_DIFFUSION_BSSRDF:
+	case ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF:
 	default:
 		return exp(-depth*properties.extinction);
 	}
@@ -50,6 +58,8 @@ __forceinline__ __device__ float get_sampling_mfp(const ScatteringMaterialProper
 		return properties.sampling_mfp_s;
 	case ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF:
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
+	case ScatteringDipole::QUANTIZED_DIFFUSION_BSSRDF:
+	case ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF:
 	default:
 		return properties.sampling_mfp_tr;
 	}
