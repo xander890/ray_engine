@@ -516,7 +516,9 @@ echo Done.</Command>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\planar_bssrdf.cu" />
     <CudaCompile Include="CUDA_files\reference_bssrdf.cu" />
-    <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu" />
+    <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
     <CudaCompile Include="CUDA_files\render_bssrdf_hemisphere.cu" />
     <CudaCompile Include="CUDA_files\render_reference_bssrdf_gpu.cu" />
     <CudaCompile Include="CUDA_files\sample_camera.cu">
