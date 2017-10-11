@@ -94,6 +94,9 @@
     <CudaCompile Include="CUDA_files\planar_bssrdf.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\bssrdf_plane_visualizer.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="obj_scene.cpp">
@@ -260,6 +263,7 @@
     <ClCompile Include="reference_bssrdf_gpu.cpp">
       <Filter>Source Files\Shaders</Filter>
     </ClCompile>
+    <ClCompile Include="bssrdf_visualizer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -564,6 +568,7 @@
     <ClInclude Include="photon_beam_diffusion.h">
       <Filter>Header Files\Materials\Dipoles</Filter>
     </ClInclude>
+    <ClInclude Include="bssrdf_visualizer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

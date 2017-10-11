@@ -26,7 +26,6 @@ __forceinline__ __device__ float3 approximate_directional_dipole_bssrdf(const fl
 	const float3& _xo, const float3& _no, const float3 & _w21,
 	const ScatteringMaterialProperties& properties)
 {
-	float3 w21 = -_w21;
 	float3 x = _xo - _xi;	
-	return approx_bssrdf(x, _w12, w21, properties); 
+	return approx_bssrdf(x, _w12, _w21, properties);
 }

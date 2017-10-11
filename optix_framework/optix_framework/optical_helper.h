@@ -3,18 +3,6 @@
 #include <optix_world.h>
 #include "math_helpers.h"
 
-static __host__ __device__ __inline__ optix::float3 refract2(const optix::float3 &in, const optix::float3 & n, float eta)
-{
-    float c = optix::dot(in, n);
-    return eta * (c * n - in) - n * sqrt(1 - eta * eta * (1 - c * c));
-}
-
-static __host__ __device__ __inline__ optix::float3 refract2(const optix::float3 &in, const optix::float3 & n, float n1, float n2)
-{
-    float eta = n1/n2;
-	return refract2(in,n,eta);
-}
-
 static __host__ __device__ __inline__ optix::float3 fresnel_complex_R(float cos_theta, const optix::float3& eta_sq, const optix::float3& kappa_sq)
 {
 	if (cos_theta < 1e-6)
@@ -61,6 +49,43 @@ __host__ __device__ __inline__ float fresnel_R(float cos_theta, float eta)
   float cos_theta_t = sqrt(1.0f - sin_theta_t_sqr);
   return fresnel_R(cos_theta, cos_theta_t, eta);
 }
+
+// Note: n2 is the ior of the medium into which we refract to.
+__host__ __device__ __inline__ bool _refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & cos_theta_i, float & cos_theta_t)
+{
+	cos_theta_i = optix::fmaxf(0.0f,optix::dot(i, n));
+	float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
+	float sin_theta_t_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_i_sqr);
+	if (sin_theta_t_sqr >= 1.0f)
+	{
+		// Total internal refraction
+		return false;
+	}
+	cos_theta_t = sqrt(1.0f - sin_theta_t_sqr);
+	refracted = n1_over_n2*(cos_theta_i*n - i) - n*cos_theta_t;
+	return true;
+}
+
+__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float eta, optix::float3 & refracted, float & F_r, float & cos_theta_i, float & cos_theta_t)
+{
+	bool pass = _refract(i, n, eta, refracted, cos_theta_i, cos_theta_t);
+	F_r = !pass ? 1.0f : fresnel_R(cos_theta_i, cos_theta_t, eta);
+	return pass;
+}
+
+__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float eta, optix::float3 & refracted, float & F_r)
+{
+	float cos_theta_i, cos_theta_t;
+	return refract(i, n, eta, refracted, F_r, cos_theta_i, cos_theta_t);
+}
+
+
+__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float eta, optix::float3 & refracted)
+{
+	float cos_theta_i, cos_theta_t;
+	return _refract(i, n, eta, refracted, cos_theta_i, cos_theta_t);
+}
+
 
 static __host__ __device__ float C_1(float ni)
 {

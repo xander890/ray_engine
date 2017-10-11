@@ -48,6 +48,7 @@
 #include "structs.h"
 #include "reference_bssrdf.h"
 #include "reference_bssrdf_gpu.h"
+#include "bssrdf_visualizer.h"
 
 using namespace std;
 using namespace optix;
@@ -161,6 +162,7 @@ bool ObjScene::draw_gui()
 	ss << "Time (load):        " << to_string(render_time_load * 1000) << " ms (" << to_string(1.0 / render_time_load) << " FPS)"<< std::endl;
 	ss << "Time (pre trace):   " << to_string(render_time_pre_trace * 1000) << " ms (" << to_string(1.0 / render_time_pre_trace) << " FPS)" << std::endl;
 	ss << "Time (render):      " << to_string(render_time_main * 1000) << " ms (" << to_string(1.0 / render_time_main) << " FPS)" << std::endl;
+	ss << "Time (post trace):      " << to_string(render_time_post * 1000) << " ms (" << to_string(1.0 / render_time_post) << " FPS)" << std::endl;
 	ss << "Time (tonemap/dbg): " << to_string(render_time_tonemap * 1000) << " ms (" << to_string(1.0 / render_time_tonemap) << " FPS)";
 	ImmediateGUIDraw::Text(ss.str().c_str());
 	static bool debug = debug_mode_enabled;
@@ -396,9 +398,8 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	std::unique_ptr<BSSRDFCreator> c2 = std::make_unique<PlanarBSSRDF>(context);
 	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info5, c2, camera_width, camera_height));
 
-	//ShaderInfo info5 = { "empty.cu", "Reference BSSRDF - GPU", 21 };
-	//ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDFGPU>(info5, camera_width, camera_height));
-
+	ShaderInfo info6 = ShaderInfo(22, "empty.cu", "BSSRDF Visualizer");
+	ShaderFactory::add_shader(std::make_unique<BSSRDFVisualizer>(info6, camera_width, camera_height));
 
     for (auto& kv : MaterialLibrary::media)
 	{
@@ -667,15 +668,18 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	// Apply tone mapping
 	t0 = currentTime();
 
-	context->launch(tonemap_entry_point, width, height);
-
 
 	method->post_trace();
 	execute_on_scene_elements([=](Mesh & m)
 	{
 		m.post_trace();
 	});
+	t1 = currentTime();
+	update_timer(render_time_post, t1 - t0);
 
+
+	t0 = currentTime();
+	context->launch(tonemap_entry_point, width, height);
 
 	if (debug_mode_enabled == true)
 	{

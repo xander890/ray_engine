@@ -97,7 +97,6 @@ void ShaderFactory::add_shader(std::unique_ptr<Shader> shader)
 		Logger::warning << "Replacing shader! Be careful to know what you are doing!" << std::endl;
 	}
 	std::shared_ptr<Shader> s = std::move(shader);
-	s->initialize_shader(context);
 	get_shader_map()[s->illum] = s;
 }
 
@@ -122,6 +121,7 @@ std::unique_ptr<Shader> ShaderFactory::get_shader(int illum)
     std::string shader;
     if (mShaderMap.count(illum) != 0)
     {
+		mShaderMap[illum]->initialize_shader(context);
         return std::unique_ptr<Shader>(mShaderMap[illum]->clone());
     }
     Logger::error << "Shader for illum " << illum << " not found" << std::endl;

@@ -31,10 +31,10 @@ void BSSRDFCreator::load_data()
 
 void BSSRDFCreator::set_material_parameters(float albedo, float extinction, float g, float eta)
 {
-	//mAlbedo = albedo;
-	//mExtinction = extinction;
-	//mAsymmetry = g;
-	//mIor = eta;
+	mAlbedo = albedo;
+	mExtinction = extinction;
+	mAsymmetry = g;
+	mIor = eta;
 }
 
 void BSSRDFCreator::reset()

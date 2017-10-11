@@ -38,3 +38,12 @@ __host__ __device__ __inline__ optix::float3 jet(float v, float vmin = 0.0f, flo
 
 	return(c);
 }
+
+__host__ __device__ __inline__ optix::float3 hsv2rgb(float h, float s, float v) {
+  float h6 = h*6.0;
+  float frac = h6 - floor(h6);
+  optix::float4 ell = v * optix::make_float4(1.0 - s, 1.0 - s*frac, 1.0 - s*(1.0 - frac), 1.0);
+  return h6 < 1.0 ? optix::make_float3(ell.w, ell.z, ell.x) : (h6 < 2.0 ? optix::make_float3(ell.y, ell.w, ell.x) : 
+	  (h6 < 3.0 ? optix::make_float3(ell.x, ell.w, ell.z) : (h6 < 4.0 ? optix::make_float3(ell.x, ell.y, ell.w) : 
+	  (h6 < 5.0 ? optix::make_float3(ell.z, ell.x, ell.w) : optix::make_float3(ell.w, ell.x, ell.y)))));
+}
