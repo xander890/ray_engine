@@ -213,14 +213,37 @@ void ScatteringMaterial::set_asymmetry(float asymm)
 	dirty = true;
 }
 
+// Prettifies an enum string. TEST_MY_STRING becomes Test my string.
+std::string prettify(const std::string & s)
+{
+	std::string res = s;
+	for (unsigned int i = 0; i <= s.length(); i++)
+	{
+		if (s[i] == '_')
+		{
+			res[i] = ' ';
+			continue;
+		}
+		res[i] = i > 0 ? tolower(s[i]) : toupper(s[i]);
+	}
+	return res;
+}
+
 
 bool ScatteringMaterial::on_draw(std::string id)
 {
 	ImGui::Separator();
 	ImGui::Text("Scattering properties:");
-	const char * dips[ScatteringDipole::count()] = { "Standard dipole" , "Directional dipole", "Approximate Standard (Burley)", "Approximate Directional (Frisvad)" };
+	std::string dipoles = "";
+	ScatteringDipole::Type t = ScatteringDipole::first();
+	do
+	{
+		dipoles += prettify(ScatteringDipole::to_string(t)) + '\0';
+		t = ScatteringDipole::next(t);
+	} while (t != ScatteringDipole::NotValidEnumItem);
+
 	#define ID_STRING(x,id) (std::string(x) + "##" + id + x).c_str()
-	if (ImmediateGUIDraw::Combo(ID_STRING("Dipole", id), (int*)&properties.selected_bssrdf, dips, ScatteringDipole::count(), ScatteringDipole::count()))
+	if (ImmediateGUIDraw::Combo(ID_STRING("Dipole", id), (int*)&properties.selected_bssrdf, dipoles.c_str(), ScatteringDipole::count()))
 	{
 		dirty = true;
 	}
