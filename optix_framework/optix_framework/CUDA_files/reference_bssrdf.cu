@@ -8,8 +8,8 @@
 #include <material.h>
 using namespace optix;
 
-rtBuffer<float, 2> resulting_flux;
-rtBuffer<float, 2> resulting_flux_intermediate;
+rtDeclareVariable(BufPtr2D<float>, resulting_flux, , );
+rtDeclareVariable(BufPtr2D<float>, resulting_flux_intermediate, , );
 
 rtDeclareVariable(unsigned int, maximum_iterations, , );
 rtDeclareVariable(unsigned int, ref_frame_number, , );

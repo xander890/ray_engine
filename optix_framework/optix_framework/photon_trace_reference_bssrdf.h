@@ -38,7 +38,7 @@ __forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles
 	return optix::make_float2(phi_o, theta_o);
 }
 
-__forceinline__ __device__ void store_values_in_buffer(const float cos_theta_o, const float phi_o, const float flux_E, optix::buffer<float, 2> & resulting_flux)
+__forceinline__ __device__ void store_values_in_buffer(const float cos_theta_o, const float phi_o, const float flux_E, BufPtr2D<float> & resulting_flux)
 {
 	const optix::size_t2 bins = resulting_flux.size();
 	optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(acosf(cos_theta_o), phi_o);
@@ -52,7 +52,7 @@ __forceinline__ __device__ void store_values_in_buffer(const float cos_theta_o, 
 }
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3& wp, float & flux_t, optix::buffer<float,2> & resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
+__forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
 {
 	// Defining geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);

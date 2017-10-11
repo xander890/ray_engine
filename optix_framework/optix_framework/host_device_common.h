@@ -39,7 +39,6 @@ struct BufPtr
 
 template <typename T>
 struct BufPtr<T,1> {
-    //__device__ BufPtr() : buf(-1) {}
     rtBufferId<T, 1> buf;
     __device__ T& operator*() { return buf[0]; }
     __device__ T* operator->() { return &buf[0]; }
@@ -53,8 +52,7 @@ struct BufPtr<T,1> {
 };
 
 template <typename T>
-struct BufPtr<T, 2> {
-    //__device__ BufPtr() : buf(-1) {}
+struct BufPtr<T,2> {
     rtBufferId<T, 2> buf;
     __device__ T& operator*() { return buf[0]; }
     __device__ T* operator->() { return &buf[0]; }
@@ -62,7 +60,6 @@ struct BufPtr<T, 2> {
 #ifndef __CUDACC__
     __host__ explicit BufPtr(rtBufferId<T, 2> id) : buf(id) {}
     __host__ explicit BufPtr() : buf(-1) {}
-
 #endif
     __device__ T& operator[](const optix::uint2 & idx) { return buf[idx]; }
     __device__ T& operator[](const optix::int2 & idx) { return buf[idx]; }
@@ -70,7 +67,6 @@ struct BufPtr<T, 2> {
 
 template <typename T>
 struct BufPtr<T, 3> {
-    //__device__ BufPtr() : buf(-1) {}
     rtBufferId<T, 3> buf;
     __device__ T& operator*() { return buf[0]; }
     __device__ T* operator->() { return &buf[0]; }
@@ -82,3 +78,8 @@ struct BufPtr<T, 3> {
     __device__ T& operator[](const optix::uint3 & idx) { return buf[idx]; }
     __device__ T& operator[](const optix::int3 & idx) { return buf[idx]; }
 };
+
+template <typename T>
+using BufPtr2D = BufPtr<T, 2>;
+template <typename T>
+using BufPtr3D = BufPtr<T, 3>;

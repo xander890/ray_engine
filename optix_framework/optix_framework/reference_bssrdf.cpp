@@ -18,8 +18,10 @@ void BSSRDFCreator::load_data()
 	*cc = c;
 	mProperties->unmap();
 
-	context["resulting_flux_intermediate"]->setBuffer(mBSSRDFBufferIntermediate);
-	context["resulting_flux"]->setBuffer(mBSSRDFBuffer);
+	BufPtr2D<float> ptr = BufPtr2D<float>(mBSSRDFBufferIntermediate->getId());
+	context["resulting_flux_intermediate"]->setUserData(sizeof(BufPtr2D<float>), &ptr);
+	BufPtr2D<float> ptr2 = BufPtr2D<float>(mBSSRDFBuffer->getId());
+	context["resulting_flux"]->setUserData(sizeof(BufPtr2D<float>), &ptr2);
 	context["ref_frame_number"]->setUint(mRenderedFrames);
 	context["reference_bssrdf_theta_i"]->setFloat(mThetai);
 	context["reference_bssrdf_theta_s"]->setFloat(mThetas);

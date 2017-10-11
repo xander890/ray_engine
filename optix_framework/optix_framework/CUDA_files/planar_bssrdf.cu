@@ -10,8 +10,8 @@
 #include <bssrdf.h>
 using namespace optix;
 
-rtDeclareVariable(BufPtr<float, 2>, resulting_flux, , );
-rtDeclareVariable(BufPtr<float, 2>, resulting_flux_intermediate, , );
+rtDeclareVariable(BufPtr2D<float>, resulting_flux, , );
+rtDeclareVariable(BufPtr2D<float>, resulting_flux_intermediate, , );
 
 rtDeclareVariable(unsigned int, maximum_iterations, , );
 rtDeclareVariable(unsigned int, ref_frame_number, , );
@@ -72,7 +72,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	float T21 = 1.0f - fresnel_R(cos_theta_o, cos_theta_t_o, n1_over_n2);
 
 	optix::float3 S = T12 * bssrdf(xi, ni, w12, xo, no, w21, *planar_bssrdf_material_params) * T21;
-	resulting_flux_intermediate[launch_index] = T21;
+	resulting_flux_intermediate[launch_index] = S.x;
 }
 
 RT_PROGRAM void post_process_bssrdf()
