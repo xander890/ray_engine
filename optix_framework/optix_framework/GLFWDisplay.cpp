@@ -369,7 +369,7 @@ void GLFWDisplay::display()
       displayFrame();
     }
   } catch( Exception& e ){
-    Logger::error << ( e.getErrorString().c_str() );
+    std::cout << ( e.getErrorString().c_str() );
     exit(2);
   }
   m_scene->post_draw_callback();

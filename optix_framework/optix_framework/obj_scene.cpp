@@ -388,8 +388,13 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	ShaderInfo info2 = ShaderInfo(14, "subsurface_scattering_sampled.cu", "Sampled BSSRDF"); 
 	ShaderFactory::add_shader(std::make_unique<SampledBSSRDF>(info2));
 
-	ShaderInfo info4 = ShaderInfo(20, "empty.cu", "Reference BSSRDF"); 
-	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info4, camera_width, camera_height));
+	ShaderInfo info4 = ShaderInfo(20, "empty.cu", "Plane BSSRDF (Reference)"); 
+	std::unique_ptr<BSSRDFCreator> c = std::make_unique<ReferenceBSSRDF>(context);
+	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info4, c, camera_width, camera_height));
+
+	ShaderInfo info5 = ShaderInfo(21, "empty.cu", "Plane BSSRDF (Dipole)");
+	std::unique_ptr<BSSRDFCreator> c2 = std::make_unique<PlanarBSSRDF>(context);
+	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info5, c2, camera_width, camera_height));
 
 	//ShaderInfo info5 = { "empty.cu", "Reference BSSRDF - GPU", 21 };
 	//ShaderFactory::add_shader(std::make_unique<ReferenceBSSRDFGPU>(info5, camera_width, camera_height));
@@ -992,12 +997,12 @@ void ObjScene::setDebugEnabled(bool var)
 	if (var)
 	{
 		context->setPrintEnabled(true);
-		//context->setExceptionEnabled(RT_EXCEPTION_ALL, true);
+		context->setExceptionEnabled(RT_EXCEPTION_ALL, true);
 	}
 	else
 	{
 		context->setPrintEnabled(false);
-	//	context->setExceptionEnabled(RT_EXCEPTION_ALL, false);
+		context->setExceptionEnabled(RT_EXCEPTION_ALL, false);
 	}
 }
 

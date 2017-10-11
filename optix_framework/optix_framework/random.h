@@ -89,4 +89,16 @@ static __host__ __device__ __inline__ float rnd_accurate(unsigned int &prev)
 	return ((float)hash(prev) / (float)0x80000000);
 }
 
+static __host__ __device__ __inline__ unsigned int tea_hash(unsigned int &prev)
+{
+	prev = tea<16>(prev, 100);
+	return prev & 0x7FFFFFFF;
+}
+
+static __host__ __device__ __inline__ float rnd_tea(unsigned int &prev)
+{
+	return ((float)tea_hash(prev) / (float)0x80000000);
+}
+
+
 #endif

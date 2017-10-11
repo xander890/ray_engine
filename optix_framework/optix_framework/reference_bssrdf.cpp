@@ -3,83 +3,77 @@
 #include "optix_utils.h"
 #include "GL\glew.h"
 
-void ReferenceBSSRDF::load_data()
+inline void BSSRDFCreator::set_geometry_parameters(float theta_i, float theta_s, float r)
 {
+	mThetai = theta_i;
+	mThetas = theta_s;
+	mRadius = r;
+}
+
+void BSSRDFCreator::load_data()
+{
+	ScatteringMaterialProperties c;
+	fill_scattering_parameters_alternative(c, 1, mIor, make_float3(mAlbedo), make_float3(mExtinction), make_float3(mAsymmetry));
+	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());
+	*cc = c;
+	mProperties->unmap();
+
 	context["resulting_flux_intermediate"]->setBuffer(mBSSRDFBufferIntermediate);
 	context["resulting_flux"]->setBuffer(mBSSRDFBuffer);
-	context["maximum_iterations"]->setUint(mMaxIterations);
 	context["ref_frame_number"]->setUint(mRenderedFrames);
-	context["reference_bssrdf_samples_per_frame"]->setUint(mSamples);
 	context["reference_bssrdf_theta_i"]->setFloat(mThetai);
 	context["reference_bssrdf_theta_s"]->setFloat(mThetas);
 	context["reference_bssrdf_radius"]->setFloat(mRadius);
-	context["reference_bssrdf_material_params"]->setUserData(sizeof(ScatteringMaterialProperties), &mProperties);
 	context["reference_bssrdf_rel_ior"]->setFloat(mIor);
 }
 
-void ReferenceBSSRDF::set_material_parameters(float albedo, float extinction, float g, float eta)
+void BSSRDFCreator::set_material_parameters(float albedo, float extinction, float g, float eta)
 {
-	mAlbedo = albedo;
-	mExtinction = extinction;
-	mAsymmetry = g;
-	mIor = eta;
+	//mAlbedo = albedo;
+	//mExtinction = extinction;
+	//mAsymmetry = g;
+	//mIor = eta;
 }
 
-void ReferenceBSSRDF::set_samples(int samples)
-{
-	mSamples = samples; 
-	reset();
-}
-
-void ReferenceBSSRDF::set_max_iterations(int max_iter)
-{
-	mMaxIterations = max_iter;
-	reset();
-}
-
-void ReferenceBSSRDF::reset()
+void BSSRDFCreator::reset()
 {
 	clear_buffer(mBSSRDFBuffer);
 	clear_buffer(mBSSRDFBufferIntermediate);
 	mRenderedFrames = 0;
-	fill_scattering_parameters_alternative(mProperties, 1, mIor, make_float3(mAlbedo), make_float3(mExtinction), make_float3(mAsymmetry));
-	mProperties.selected_bssrdf = ScatteringDipole::STANDARD_DIPOLE_BSSRDF;
+	
 }
 
-void ReferenceBSSRDF::init()
+void BSSRDFCreator::init()
 {
-	std::string ptx_path = get_path_ptx("reference_bssrdf.cu");
-	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
-	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
+	if (mBSSRDFBufferIntermediate.get() == nullptr)
+	{
+		mBSSRDFBufferIntermediate = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
+		mBSSRDFBufferIntermediate->setFormat(RT_FORMAT_FLOAT);
+		mBSSRDFBufferIntermediate->setSize(mHemisphereSize.x, mHemisphereSize.y);
+	}
 
-	if(entry_point == -1)
-		entry_point = add_entry_point(context, ray_gen_program);
-	if (entry_point_post == -1)
-		entry_point_post = add_entry_point(context, ray_gen_program_post);
+	if (mBSSRDFBuffer.get() == nullptr)
+	{
+		mBSSRDFBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
+		mBSSRDFBuffer->setFormat(RT_FORMAT_FLOAT);
+		mBSSRDFBuffer->setSize(mHemisphereSize.x, mHemisphereSize.y);
+	}
 
-	mBSSRDFBufferIntermediate = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
-	mBSSRDFBufferIntermediate->setFormat(RT_FORMAT_FLOAT);
-	mBSSRDFBufferIntermediate->setSize(mHemisphereSize.x, mHemisphereSize.y);
+	if (mProperties.get() == nullptr)
+	{
+		mProperties = context->createBuffer(RT_BUFFER_INPUT);
+		mProperties->setFormat(RT_FORMAT_USER);
+		mProperties->setElementSize(sizeof(ScatteringMaterialProperties));
+		mProperties->setSize(1);
+	}
 
-	mBSSRDFBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
-	mBSSRDFBuffer->setFormat(RT_FORMAT_FLOAT);
-	mBSSRDFBuffer->setSize(mHemisphereSize.x, mHemisphereSize.y);
+
 
 	reset();
 }
 
-void ReferenceBSSRDF::render()
+bool BSSRDFCreator::on_draw(bool show_material_params)
 {
-	context->launch(entry_point, mSamples);
-	context->launch(entry_point_post, mHemisphereSize.x, mHemisphereSize.y);
-	mRenderedFrames++;
-}
-
-void ReferenceBSSRDF::on_draw(bool show_material_params)
-{
-	std::stringstream ss;
-	ss << "Rendered: " << mRenderedFrames << " frames, " << mRenderedFrames*mSamples << " samples" << std::endl;
-	ImmediateGUIDraw::Text(ss.str().c_str());
 	bool changed = false;
 	changed |= ImmediateGUIDraw::SliderFloat("Incoming light angle (deg.)", &mThetai, 0, 90);
 	changed |= ImmediateGUIDraw::InputFloat("Radius", &mRadius);
@@ -91,11 +85,7 @@ void ReferenceBSSRDF::on_draw(bool show_material_params)
 		changed |= ImmediateGUIDraw::InputFloat("G##RefAsymmetry", &mAsymmetry);
 		changed |= ImmediateGUIDraw::InputFloat("Relative IOR##RefRelIOR", &mIor);
 	}
-
-	changed |= ImmediateGUIDraw::InputInt("Samples", (int*)&mSamples);
-	changed |= ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&mMaxIterations);
-	if (changed)
-		reset();
+	return changed;
 }
 
 int HemisphereBSSRDFShader::entry_point_output = -1;
@@ -104,7 +94,7 @@ HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader & other) :
 {
 	mCameraWidth = other.mCameraWidth;
 	mCameraHeight = other.mCameraHeight;
-	ref_impl = nullptr;
+	ref_impl = other.ref_impl;
 	initialize_shader(other.context);
 }
 
@@ -134,6 +124,16 @@ void HemisphereBSSRDFShader::reset()
 	ref_impl->reset();
 }
 
+HemisphereBSSRDFShader::HemisphereBSSRDFShader(const ShaderInfo & shader_info, std::unique_ptr<BSSRDFCreator>& creator, int camera_width, int camera_height) : Shader(shader_info),
+mCameraWidth(camera_width),
+mCameraHeight(camera_height)
+{
+	if (creator != nullptr)
+		ref_impl = std::move(creator);
+	else
+		ref_impl = std::make_unique<ReferenceBSSRDF>(context);
+}
+
 void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
 {
 	 Shader::initialize_shader(ctx);
@@ -142,7 +142,7 @@ void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
 	 if (ref_impl == nullptr)
 	 {
 		 ref_impl = std::make_unique<PlanarBSSRDF>(context);
-		 ref_impl->init();
+
 	 }
 
 	 init_output();
@@ -200,6 +200,7 @@ void HemisphereBSSRDFShader::load_data(Mesh & object)
 			object.get_main_material()->get_data().scattering_properties.extinction.x,
 			object.get_main_material()->get_data().scattering_properties.meancosine.x,
 			object.get_main_material()->get_data().relative_ior);
+
 	}
 
 	ref_impl->load_data();
@@ -207,6 +208,7 @@ void HemisphereBSSRDFShader::load_data(Mesh & object)
 
 void PlanarBSSRDF::init()
 {
+	BSSRDFCreator::init();
 	std::string ptx_path = get_path_ptx("planar_bssrdf.cu");
 	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
 	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
@@ -216,13 +218,8 @@ void PlanarBSSRDF::init()
 	if (entry_point_post == -1)
 		entry_point_post = add_entry_point(context, ray_gen_program_post);
 
-	mBSSRDFBufferIntermediate = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
-	mBSSRDFBufferIntermediate->setFormat(RT_FORMAT_FLOAT);
-	mBSSRDFBufferIntermediate->setSize(mHemisphereSize.x, mHemisphereSize.y);
-
-	mBSSRDFBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
-	mBSSRDFBuffer->setFormat(RT_FORMAT_FLOAT);
-	mBSSRDFBuffer->setSize(mHemisphereSize.x, mHemisphereSize.y);
+	BufPtr<ScatteringMaterialProperties> id = BufPtr<ScatteringMaterialProperties>(mProperties->getId());
+	context["planar_bssrdf_material_params"]->setUserData(sizeof(BufPtr<ScatteringMaterialProperties>), &id);
 }
 
 void PlanarBSSRDF::render()
@@ -233,4 +230,76 @@ void PlanarBSSRDF::render()
 	context->launch(entry_point_post, mHemisphereSize.x, mHemisphereSize.y);
 	context->setPrintLaunchIndex(c.x, c.y, c.z);
 	mRenderedFrames++;
+}
+
+bool PlanarBSSRDF::on_draw(bool show_material_params)
+{
+	if (BSSRDFCreator::on_draw(show_material_params))
+		reset();
+	return false;
+}
+
+void PlanarBSSRDF::load_data()
+{
+	BSSRDFCreator::load_data();
+	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());
+	cc->selected_bssrdf = mScatteringDipole;
+	mProperties->unmap();
+}
+
+void ReferenceBSSRDF::init()
+{
+	BSSRDFCreator::init();
+	std::string ptx_path = get_path_ptx("reference_bssrdf.cu");
+	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
+	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
+
+	if (entry_point == -1)
+		entry_point = add_entry_point(context, ray_gen_program);
+	if (entry_point_post == -1)
+		entry_point_post = add_entry_point(context, ray_gen_program_post);
+
+	BufPtr<ScatteringMaterialProperties> id = BufPtr<ScatteringMaterialProperties>(mProperties->getId());
+	context["reference_bssrdf_material_params"]->setUserData(sizeof(BufPtr<ScatteringMaterialProperties>), &id);
+
+}
+
+void ReferenceBSSRDF::render()
+{
+	context->launch(entry_point, mSamples);
+	context->launch(entry_point_post, mHemisphereSize.x, mHemisphereSize.y);
+	mRenderedFrames++;
+}
+
+void ReferenceBSSRDF::load_data()
+{
+	BSSRDFCreator::load_data();
+	context["maximum_iterations"]->setUint(mMaxIterations);
+	context["reference_bssrdf_samples_per_frame"]->setUint(mSamples);
+
+}
+
+bool ReferenceBSSRDF::on_draw(bool show_material_params)
+{
+	std::stringstream ss;
+	ss << "Rendered: " << mRenderedFrames << " frames, " << mRenderedFrames*mSamples << " samples" << std::endl;
+	ImmediateGUIDraw::Text(ss.str().c_str());
+	bool changed = BSSRDFCreator::on_draw(show_material_params);
+	changed |= ImmediateGUIDraw::InputInt("Samples", (int*)&mSamples);
+	changed |= ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&mMaxIterations);
+	if (changed)
+		reset();
+	return false;
+}
+
+void ReferenceBSSRDF::set_samples(int samples)
+{
+	mSamples = samples;
+	reset();
+}
+
+void ReferenceBSSRDF::set_max_iterations(int max_iter)
+{
+	mMaxIterations = max_iter;
+	reset();
 }

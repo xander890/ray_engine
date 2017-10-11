@@ -167,7 +167,6 @@ inline optix::uint4 tovalue(std::string p) {
 	return optix::make_uint4((unsigned int)std::stoi(tokens[0]), (unsigned int)std::stoi(tokens[1]), (unsigned int)std::stoi(tokens[2]), (unsigned int)std::stoi(tokens[3]));
 }
 
-
 template<>
 inline optix::Matrix2x2 tovalue(std::string p) {
 	std::vector<float> tokens;

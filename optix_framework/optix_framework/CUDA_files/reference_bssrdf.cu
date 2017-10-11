@@ -19,7 +19,7 @@ rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
 rtDeclareVariable(float, reference_bssrdf_theta_i, , );
 rtDeclareVariable(float, reference_bssrdf_theta_s, , );
 rtDeclareVariable(float, reference_bssrdf_radius, , );
-rtDeclareVariable(ScatteringMaterialProperties, reference_bssrdf_material_params, , );
+rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, reference_bssrdf_material_params, , );
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
 
 //#define USE_HARDCODED_MATERIALS
@@ -67,9 +67,9 @@ RT_PROGRAM void reference_bssrdf_camera()
 	theta_s = reference_bssrdf_theta_s;
 	r = reference_bssrdf_radius;
 	n2_over_n1 = reference_bssrdf_rel_ior;
-	albedo = reference_bssrdf_material_params.albedo.x;
-	extinction = reference_bssrdf_material_params.extinction.x;
-	g = reference_bssrdf_material_params.meancosine.x;
+	albedo = reference_bssrdf_material_params->albedo.x;
+	extinction = reference_bssrdf_material_params->extinction.x;
+	g = reference_bssrdf_material_params->meancosine.x;
 #endif
 
 	const float theta_i_rad = deg2rad(theta_i);
@@ -82,3 +82,4 @@ RT_PROGRAM void post_process_bssrdf()
 {
 	resulting_flux[launch_index] = resulting_flux_intermediate[launch_index] / ((float)(ref_frame_number + 1));
 }
+
