@@ -585,6 +585,8 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 
 	context->validate();
 
+	Logger::info << "Compiling context and creating bvhs..." << endl;
+
 	RayGenCameraData dummy;
 	trace(dummy);
 	reset_renderer();

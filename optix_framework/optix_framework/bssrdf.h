@@ -24,7 +24,7 @@ __forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, c
 	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
 		return approximate_standard_dipole_bssrdf(length(_xo - _xi), properties);
 	case ScatteringDipole::QUANTIZED_DIFFUSION_BSSRDF:
-		return quantized_diffusion_bssrdf(length(_xo - _xi), properties);
+		return quantized_diffusion_bssrdf(_xi, _ni, _w12, _xo, _no, properties);
 	case ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF:
 		return photon_beam_diffusion_bssrdf(_xo - _xi, _ni, _w12, _no, properties);
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
