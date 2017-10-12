@@ -10,5 +10,5 @@ void read_all_brdfs(std::map<std::string, std::vector<float>*>& brdfs);
 void read_all_brdfs(const char * merl_folder, const char * merl_database, std::map<std::string, std::vector<float>*>& brdfs);
 void get_merl_brdf_list(const char* merl_database, std::vector<std::string>& brdfs);
 void read_brdf_f(const std::string& merl_folder, const std::string& name, std::vector<float> & brdf_f);
-
+ 
 #endif // !BRDF_UTILS_H
