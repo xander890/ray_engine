@@ -2,6 +2,7 @@
 #include "mesh.h"
 #include "immediate_gui.h"
 #include "scattering_material.h"
+#include "parameter_parser.h"
 
 SampledBSSRDF::SampledBSSRDF(const ShaderInfo& shader_info) : Shader(shader_info)
 {

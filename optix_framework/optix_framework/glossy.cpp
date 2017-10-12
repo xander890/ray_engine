@@ -8,38 +8,6 @@
 #include "host_material.h"
 #include "scattering_material.h"
 
-optix::TextureSampler createOneElementSampler(optix::Context context, const optix::float3& default_color)
-{
-    optix::TextureSampler sampler = context->createTextureSampler();
-    sampler->setWrapMode(0, RT_WRAP_REPEAT);
-    sampler->setWrapMode(1, RT_WRAP_REPEAT);
-    sampler->setWrapMode(2, RT_WRAP_REPEAT);
-    sampler->setIndexingMode(RT_TEXTURE_INDEX_NORMALIZED_COORDINATES);
-    sampler->setReadMode(RT_TEXTURE_READ_ELEMENT_TYPE);
-    sampler->setMaxAnisotropy(1.0f);
-    sampler->setMipLevelCount(1u);
-    sampler->setArraySize(1u);
-
-    // Create buffer with single texel set to default_color
-    optix::Buffer buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT4, 1u, 1u);
-    float* buffer_data = static_cast<float*>(buffer->map());
-    buffer_data[0] = default_color.x;
-    buffer_data[1] = default_color.y;
-    buffer_data[2] = default_color.z;
-    buffer_data[3] = 1.0f;
-    buffer->unmap();
-
-    sampler->setBuffer(0u, 0u, buffer);
-    // Although it would be possible to use nearest filtering here, we chose linear
-    // to be consistent with the textures that have been loaded from a file. This
-    // allows OptiX to perform some optimizations.
-
-    sampler->setFilteringModes(RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE);
-
-    return sampler;
-}
-
-
 void GlossyShader::initialize_shader(optix::Context context)
 {
     Shader::initialize_shader(context);
@@ -48,7 +16,7 @@ void GlossyShader::initialize_shader(optix::Context context)
     x_axis_anisotropic = ConfigParameters::get_parameter<optix::float3>("glossy", "x_axis_anisotropic", optix::make_float3(1.0f, 0.0f, 0.0f));
     get_merl_brdf_list(Folders::merl_database_file.c_str(), brdf_names);
     merl_folder = Folders::merl_folder;
-    merl_correction = ConfigParameters::get_parameter<float3>("glossy", "merl_multiplier", make_float3(1.0f), "Multiplication factor for MERL materials. Premultiplied on sampling the brdf.");
+    merl_correction = ConfigParameters::get_parameter<optix::float3>("glossy", "merl_multiplier", optix::make_float3(1.0f), "Multiplication factor for MERL materials. Premultiplied on sampling the brdf.");
     Logger::debug << "Merl correction factor: " << std::to_string(merl_correction.x) << " " << std::to_string(merl_correction.y) << " " << std::to_string(merl_correction.z) << std::endl;
     use_merl_brdf = ConfigParameters::get_parameter<bool>("config", "use_merl_brdf", false, "configure the ray tracer to try to use the MERL brdf database whenever possible.");
 }
@@ -88,7 +56,7 @@ void GlossyShader::initialize_mesh(Mesh& object)
     auto optix_mat = object.mMaterial;
 
     uint has_merl = mat == nullptr ? 0 : 1;
-    float3 reflectance = mat == nullptr ? make_float3(0) : mat->reflectance;
+	optix::float3 reflectance = mat == nullptr ? optix::make_float3(0) : mat->reflectance;
     size_t buffer_size = mat == nullptr ? 1 : mat->data.size();
 
 

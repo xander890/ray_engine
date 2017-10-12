@@ -178,7 +178,7 @@ static __host__ __inline__ optix::float3 integrate_brdf(std::vector<float>& brdf
 	optix::float3 norm = optix::make_float3(0.0f, 0.0f, 1.0f);
 	unsigned int seed = tea<16>(3, 17);
 
-	optix::float3 last = make_float3(0.0f);
+	optix::float3 last = optix::make_float3(0.0f);
 	int i;
 	for (i = 0; i < N; i++)
 	{

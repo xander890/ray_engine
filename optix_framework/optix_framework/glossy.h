@@ -26,14 +26,14 @@ private:
     void set_data(Mesh& object);
 	// FIXME proper struct & copy constructor
 	float blinn_exponent;
-    float2 anisotropic_exp;
-    float3 x_axis_anisotropic;
+    optix::float2 anisotropic_exp;
+	optix::float3 x_axis_anisotropic;
 
 	// FIXME move me somewhere elses
 	std::vector<std::string> brdf_names;
 	std::string merl_folder;
 	std::map<std::string, MERLBrdf> merl_database;
-    float3 merl_correction;
+	optix::float3 merl_correction;
     bool use_merl_brdf;
 };
 

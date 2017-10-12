@@ -1,5 +1,6 @@
 #include "folders.h"
 #include "logger.h"
+#include "parameter_parser.h"
 
 std::string Folders::mpml_file = std::string("");
 std::string Folders::merl_folder = std::string("");

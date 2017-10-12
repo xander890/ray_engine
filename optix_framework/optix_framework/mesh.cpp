@@ -21,12 +21,12 @@ void Mesh::init(const char* name, MeshData meshdata, std::shared_ptr<MaterialHos
     mMaterialData[0] = material;
     // Load triangle_mesh programs
     if (!mIntersectProgram.get()) {
-        std::string path = std::string(PATH_TO_MY_PTX_FILES) + "/triangle_mesh.cu.ptx";
+        std::string path = get_path_ptx("triangle_mesh.cu");
         mIntersectProgram = mContext->createProgramFromPTXFile(path, "mesh_intersect");
     }
 
     if (!mBoundingboxProgram.get()) {
-        std::string path = std::string(PATH_TO_MY_PTX_FILES) + "/triangle_mesh.cu.ptx";
+        std::string path = get_path_ptx("triangle_mesh.cu");
         mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "mesh_bounds");
     }
 

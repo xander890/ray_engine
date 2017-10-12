@@ -9,6 +9,7 @@
 #include "ImageLoader.h"
 #include "optix_utils.h"
 #include "dialogs.h"
+#include "parameter_parser.h"
 
 #pragma warning(disable:4996) 
 using namespace optix;

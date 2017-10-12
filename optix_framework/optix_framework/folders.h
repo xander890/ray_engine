@@ -1,9 +1,6 @@
 #ifndef  __FOLDERS_H__
 #define  __FOLDERS_H__
 #include <string>
-#include "parameter_parser.h"
-#define PATH_TO_MY_PTX_FILES  "PTX_files" 
-
 
 class Folders
 {
@@ -23,9 +20,6 @@ static const char* const get_path_ptx(const std::string& base)
 	path = Folders::ptx_path + "/" + base + ".ptx";
 	return path.c_str();
 }
-
-#define DEFAULT_TEXTURE_FOLDER std::string("./images/")
-
 
 #endif /* __FOLDERS_H__ */
 

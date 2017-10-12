@@ -13,7 +13,7 @@ inline void BSSRDFCreator::set_geometry_parameters(float theta_i, float theta_s,
 void BSSRDFCreator::load_data()
 {
 	ScatteringMaterialProperties c;
-	fill_scattering_parameters_alternative(c, 1, mIor, make_float3(mAlbedo), make_float3(mExtinction), make_float3(mAsymmetry));
+	fill_scattering_parameters_alternative(c, 1, mIor, optix::make_float3(mAlbedo), optix::make_float3(mExtinction), optix::make_float3(mAsymmetry));
 	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());
 	*cc = c;
 	mProperties->unmap();
