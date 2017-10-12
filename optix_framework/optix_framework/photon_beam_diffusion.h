@@ -7,13 +7,6 @@
 
 using namespace optix;
 
-#ifndef M_4PIf
-#define M_4PIf 4.0*M_PIf
-#endif
-#ifndef M_1_4PIf
-#define M_1_4PIf 1.0 / M_4PIf
-#endif
-
 __device__ __forceinline__ float bdp_bssrdf(float d_r, float z_r, optix::float4 props, optix::float4 C) { // Better dipole if z_r = 1/sigma_t_p and d_r = sqrt(z_r^2 + r^2)
 	float sigma_s = props.x, sigma_a = props.y, g = props.z, A = C.w;
 	float sigma_t = sigma_s + sigma_a;
@@ -105,7 +98,7 @@ __device__ __forceinline__ float3 photon_beam_diffusion_bssrdf(const float3& xi,
 	for (int k = 0; k < 3; k++)
 	{
 		optix::float4 props = optix::make_float4(optix::get_channel(k, properties.scattering), optix::get_channel(k, properties.absorption), optix::get_channel(k, properties.meancosine), 1.0f);	
-		optix::get_channel(k, res) = pbd_bssrdf(xi, ni, w12, xo, no, props, C) / (2.0f * M_PIf);
+		optix::get_channel(k, res) = pbd_bssrdf(xi, ni, w12, xo, no, props, C);
 	}
 	return res;
 }

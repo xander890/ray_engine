@@ -9,7 +9,7 @@
 #include <bssrdf.h>
 #include "optical_helper.h"
 
-using namespace optix;
+using namespace optix; 
 
 // Window variables
 rtBuffer<float4, 2> output_buffer;
@@ -18,6 +18,7 @@ rtDeclareVariable(float, reference_bssrdf_theta_i, , );
 rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, planar_bssrdf_material_params, , );
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
 rtDeclareVariable(unsigned int, show_false_colors, , );
+rtDeclareVariable(unsigned int, channel_to_show, , );
 rtDeclareVariable(float, scale_multiplier, , );
 
 RT_PROGRAM void render()
@@ -43,12 +44,15 @@ RT_PROGRAM void render()
 	float T12 = 1.0f - R12;
 	float fresnel_integral = planar_bssrdf_material_params->C_phi * 4 * M_PIf;
 	 
-	float S = T12 * fresnel_integral * bssrdf(xi, ni, w12, xo, no, w12, *planar_bssrdf_material_params).x;
-	 
-	float t = clamp((log(S * scale_multiplier + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);
+	optix_assert(channel_to_show >= 0 && channel_to_show < 3);
+
+	float3 S = T12 * fresnel_integral * bssrdf(xi, ni, w12, xo, no, w12, *planar_bssrdf_material_params);
+	float S_shown = optix::get_channel(channel_to_show, S) * scale_multiplier;
+
+	float t = clamp((log(S_shown + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);
 	float h = clamp((1.0 - t)*2.0f, 0.0f, 0.65f); 
 	 
-	optix::float4 res = make_float4(S * scale_multiplier);
+	optix::float4 res = make_float4(S_shown);
 	if(show_false_colors)
 		res = optix::make_float4(hsv2rgb(h, 1.0, 1.0), 1.0);
 	output_buffer[launch_index] = res;

@@ -6,19 +6,6 @@
 
 using optix::float3;
 
-#ifndef M_4PIf
-#define M_4PIf 4.0*M_PIf
-#endif
-#ifndef M_1_4PIf
-#define M_1_4PIf 1.0 / M_4PIf
-#endif
-#ifndef M_1_4PIPIf
-#define M_1_4PIPIf M_1_4PIf*M_1_PIf
-#endif
-#ifndef M_2PIf
-#define M_2PIf 2.0*M_PIf
-#endif
-
 __device__ __forceinline__ float erf_approx(float x) {
 	const float a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
 	float t = 1.0 / (1.0 + p*abs(x));

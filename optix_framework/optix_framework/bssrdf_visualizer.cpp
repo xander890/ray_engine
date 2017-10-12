@@ -55,9 +55,10 @@ void BSSRDFVisualizer::post_trace_mesh(Mesh & object)
 
 bool BSSRDFVisualizer::on_draw()
 {
-	ImmediateGUIDraw::InputFloat("Angle of incoming light", &mAngle);
+	ImmediateGUIDraw::SliderInt("Angle of incoming light", &mAngle, -89, 89);
 	ImmediateGUIDraw::InputFloat("Scalar multiplier", &mMult);
 	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors);
+	ImmediateGUIDraw::Combo("Channel to render", (int*)&mChannel, "R\0G\0B", 3);
 	return false;
 }
 
@@ -68,6 +69,7 @@ void BSSRDFVisualizer::load_data(Mesh & object)
 	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mParameters->map());
 	*cc = object.get_main_material()->get_data().scattering_properties;
 	mParameters->unmap();
-	context["reference_bssrdf_theta_i"]->setFloat(mAngle);
+	context["reference_bssrdf_theta_i"]->setFloat(static_cast<float>(mAngle));
 	context["reference_bssrdf_rel_ior"]->setFloat(object.get_main_material()->get_data().relative_ior);		
+	context["channel_to_show"]->setUint(mChannel);
 }

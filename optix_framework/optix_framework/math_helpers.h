@@ -24,16 +24,20 @@
 #include <optix_world.h>
 #include <optix.h>
 
-// Convert a float3 in [0,1)^3 to a uchar4 in [0,255]^4 -- 4th channel is set to 255
-#ifdef __CUDACC__
-static __device__ __inline__ optix::uchar4 make_color(const optix::float3& c)
-{
-    return optix::make_uchar4( static_cast<unsigned char>(__saturatef(c.z)*255.99f),  /* B */
-                               static_cast<unsigned char>(__saturatef(c.y)*255.99f),  /* G */
-                               static_cast<unsigned char>(__saturatef(c.x)*255.99f),  /* R */
-                               255u);                                                 /* A */
-}
+// Constants
+#ifndef M_4PIf
+#define M_4PIf		12.5663706143591729538f
 #endif
+#ifndef M_1_4PIf
+#define M_1_4PIf	0.07957747154594766788f
+#endif
+#ifndef M_1_4PIPIf
+#define M_1_4PIPIf	0.02533029591058444286f
+#endif
+#ifndef M_2PIf
+#define M_2PIf		6.28318530717958647692f
+#endif
+
 
 __host__ __device__ __inline__ float normalize_angle(float deg)
 {

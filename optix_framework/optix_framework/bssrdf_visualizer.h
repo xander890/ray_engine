@@ -24,9 +24,10 @@ protected:
 	int mCameraHeight;
 
 	// Gui
-	int mShowFalseColors = 0;
-	float mAngle = 30.0f;
+	int mShowFalseColors = 1;
+	int mAngle = 45;
 	float mMult = 1.0f;
+	unsigned int mChannel = 0;
 
 	static int entry_point_output;
 	optix::Buffer mParameters;
