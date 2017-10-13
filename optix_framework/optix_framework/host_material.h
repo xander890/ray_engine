@@ -40,6 +40,7 @@ private:
 	optix::float4 ka_gui = optix::make_float4(0, 0, 0, 1);
 	optix::float4 kd_gui = optix::make_float4(0, 0, 0, 1);
 	optix::float4 ks_gui = optix::make_float4(0, 0, 0, 1);
+	optix::Buffer mBSSRDFPrecomputed;
 };
 
 

@@ -34,4 +34,3 @@ __device__ __forceinline__ MaterialDataCommon get_material()
     float3 hit_pos = ray.origin + t_hit * ray.direction;
     return get_material(hit_pos);
 }
-

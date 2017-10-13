@@ -49,6 +49,8 @@ struct BufPtr<T,1> {
 #endif
     __device__ T& operator[](const unsigned int & idx) { return buf[idx]; }
     __device__ T& operator[](const int & idx) { return buf[idx]; }
+	__device__ const T& operator[](const unsigned int & idx) const { return buf[idx]; }
+	__device__ const T& operator[](const int & idx) const { return buf[idx]; }
 };
 
 template <typename T>
@@ -63,6 +65,8 @@ struct BufPtr<T,2> {
 #endif
     __device__ T& operator[](const optix::uint2 & idx) { return buf[idx]; }
     __device__ T& operator[](const optix::int2 & idx) { return buf[idx]; }
+	__device__ const T& operator[](const optix::uint2 & idx) const { return buf[idx]; }
+	__device__ const T& operator[](const optix::int2 & idx) const { return buf[idx]; }
 };
 
 template <typename T>
@@ -77,8 +81,12 @@ struct BufPtr<T, 3> {
 #endif
     __device__ T& operator[](const optix::uint3 & idx) { return buf[idx]; }
     __device__ T& operator[](const optix::int3 & idx) { return buf[idx]; }
+	__device__ const T& operator[](const optix::uint3 & idx) const { return buf[idx]; }
+	__device__ const T& operator[](const optix::int3 & idx) const { return buf[idx]; }
 };
 
+template <typename T>
+using BufPtr1D = BufPtr<T, 1>;
 template <typename T>
 using BufPtr2D = BufPtr<T, 2>;
 template <typename T>

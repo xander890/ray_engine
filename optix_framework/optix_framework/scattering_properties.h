@@ -46,6 +46,10 @@ struct ScatteringMaterialProperties
 	int pad0;
 	optix::float3 approx_property_s		DEFAULT(optix::make_float3(1));
 	float sampling_mfp_s;
+	BufPtr1D<optix::float3> precomputed_bssrdf;
+	float max_dist_bssrdf;
+	int precomputed_bssrdf_size;
+	int use_precomputed_qd;
 };
 
 __host__ __device__ __forceinline__ void fill_scattering_parameters(ScatteringMaterialProperties & properties, const float scale, const float ior, const optix::float3 & absorption, const optix::float3 & scattering, const optix::float3 & asymmetry)

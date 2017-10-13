@@ -6,6 +6,8 @@
 #include <fstream>
 #include "parameter_parser.h"
 #include "folders.h"
+#include "dialogs.h"
+
 
 FullBSSRDFGenerator::FullBSSRDFGenerator(const char * config ) : config_file(config)
 {
@@ -22,7 +24,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 {
 	//m_context->setPrintEnabled(true);
 	m_context->setPrintBufferSize(200);
-	m_context->setPrintLaunchIndex(0,0,0);
+	m_context->setPrintLaunchIndex(0, 0, 0);
 	ConfigParameters::init(config_file);
 	Folders::init();
 	m_context["scene_epsilon"]->setFloat(1e-3f);
@@ -33,7 +35,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["top_object"]->set(top_node);
 	m_context["frame"]->setInt(0);
 
-	m_context["debug_index"]->setUint(optix::make_uint2(0,0));
+	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
 	creator = std::make_unique<ReferenceBSSRDF>(m_context, optix::make_uint2(160, 40), (int)10e5);
@@ -89,6 +91,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	{
 		mCurrentHemisphereData = new float[creator->get_storage_size()];
 	}
+
 }
 
 
@@ -127,8 +130,8 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 	void* dest = mBSSRDFBufferTexture->map();
 
 	memcpy(mCurrentHemisphereData, source, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
-	normalize(mCurrentHemisphereData, (int)creator->get_storage_size());
 	memcpy(dest, mCurrentHemisphereData, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
+	normalize((float*)dest, (int)creator->get_storage_size());
 	creator->get_output_buffer()->unmap();
 	mBSSRDFBufferTexture->unmap();
 

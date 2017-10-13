@@ -21,6 +21,7 @@ ScatteringMaterial::ScatteringMaterial(optix::float3 absorption, optix::float3 s
 	properties.approx_property_A = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_A", make_float3(1), "Approximate value A for approximate dipoles.");
 	properties.approx_property_s = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_s", make_float3(1), "Approximate value A for approximate dipoles.");
 	properties.selected_bssrdf = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_full_string()).c_str()));
+	properties.use_precomputed_qd = 1;
 	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + ScatteringDipole::get_full_string()).c_str()));
 	dirty = true;
 }
@@ -33,6 +34,7 @@ ScatteringMaterial::ScatteringMaterial(DefaultScatteringMaterial material, float
 	properties.approx_property_A = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_A", properties.approx_property_A, "Approximate value A for approximate dipoles.");
 	properties.approx_property_s = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_s", properties.approx_property_s, "Approximate value A for approximate dipoles.");
 	properties.selected_bssrdf = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_full_string()).c_str()));
+	properties.use_precomputed_qd = 1;
 	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + SamplingMfpType::get_full_string()).c_str()));
 	dirty = true;
 }
@@ -231,6 +233,8 @@ bool ScatteringMaterial::on_draw(std::string id)
 	{
 		dirty = true;
 	}
+
+	dirty |= ImmediateGUIDraw::Checkbox(ID_STRING("Use quantized", id), (bool*)&properties.use_precomputed_qd);
 
 	std::vector<std::string> vv;
 	for (int i = 0; i < defaultMaterials.size(); i++)

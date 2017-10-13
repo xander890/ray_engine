@@ -8,6 +8,9 @@
 
 #include "optical_helper.h"
 #include "optix_utils.h"
+#pragma warning (disable : 4244)
+#pragma warning (disable : 4305)
+#include <quantized_diffusion_helpers.h>
 
 using optix::float3;
 
@@ -156,6 +159,8 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 		}
 	}
 
+	mBSSRDFPrecomputed = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT3, 1024);
+	
 }
 
 MaterialHost::~MaterialHost() = default;
@@ -168,6 +173,15 @@ const MaterialDataCommon& MaterialHost::get_data()
 		scattering_material->computeCoefficients(mMaterialData.relative_ior);
 		mHasChanged = false;
 		mMaterialData.scattering_properties = scattering_material->get_data();
+		
+		float3 * buf = reinterpret_cast<float3*>(mBSSRDFPrecomputed->map());
+		RTsize w;
+		mBSSRDFPrecomputed->getSize(w);
+		precompute_quantized_diffusion(buf, w, 10.0f ,mMaterialData.scattering_properties);
+		mMaterialData.scattering_properties.precomputed_bssrdf = BufPtr<float3>(mBSSRDFPrecomputed->getId());
+		mMaterialData.scattering_properties.max_dist_bssrdf = 10.0f;
+		mMaterialData.scattering_properties.precomputed_bssrdf_size = (int)w;
+		mBSSRDFPrecomputed->unmap();
 	}
     return mMaterialData;
 }

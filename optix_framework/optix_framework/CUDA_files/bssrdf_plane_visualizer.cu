@@ -11,7 +11,7 @@
 
 using namespace optix; 
 
-// Window variables
+// Window variables  
 rtBuffer<float4, 2> output_buffer;
 
 rtDeclareVariable(float, reference_bssrdf_theta_i, , );
@@ -34,7 +34,6 @@ RT_PROGRAM void render()
 
 	const optix::float3 w21 = no;
 
-	 
 	const float theta_i_rad = deg2rad(reference_bssrdf_theta_i);
 	const optix::float3 wi = normalize(optix::make_float3(sinf(theta_i_rad), 0, cosf(theta_i_rad)));
 

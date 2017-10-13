@@ -68,12 +68,12 @@ namespace optix {
         return m;
     }
 
-	__device__ __forceinline__ const float& get_channel(int C, const optix::float3 & elem)
+	__host__ __device__ __forceinline__ const float& get_channel(int C, const optix::float3 & elem)
 	{
 		return reinterpret_cast<const float*>(&elem)[C];
 	}
 
-	__device__ __forceinline__ float& get_channel(int C, optix::float3 & elem)
+	__host__ __device__ __forceinline__ float& get_channel(int C, optix::float3 & elem)
 	{
 		return reinterpret_cast<float*>(&elem)[C];
 	}

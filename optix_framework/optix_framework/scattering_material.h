@@ -72,6 +72,7 @@ private:
     optix::float3 asymmetry = optix::make_float3(0);
     optix::float3 absorption = optix::make_float3(1);
 
+
     const char* name;
     bool dirty = true;
 

@@ -586,6 +586,9 @@
     <ClInclude Include="string_utils.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="quantized_diffusion_helpers.h">
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">
