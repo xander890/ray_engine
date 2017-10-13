@@ -6,6 +6,7 @@
 #include "parameter_parser.h"
 #include <algorithm>
 #include "enums.h"
+#include "string_utils.h"
 
 using namespace optix;
 
@@ -32,7 +33,7 @@ ScatteringMaterial::ScatteringMaterial(DefaultScatteringMaterial material, float
 	properties.approx_property_A = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_A", properties.approx_property_A, "Approximate value A for approximate dipoles.");
 	properties.approx_property_s = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_s", properties.approx_property_s, "Approximate value A for approximate dipoles.");
 	properties.selected_bssrdf = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_full_string()).c_str()));
-	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + ScatteringDipole::get_full_string()).c_str()));
+	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + SamplingMfpType::get_full_string()).c_str()));
 	dirty = true;
 }
 
@@ -212,23 +213,6 @@ void ScatteringMaterial::set_asymmetry(float asymm)
 	asymmetry = make_float3(asymm);
 	dirty = true;
 }
-
-// Prettifies an enum string. TEST_MY_STRING becomes Test my string.
-std::string prettify(const std::string & s)
-{
-	std::string res = s;
-	for (unsigned int i = 0; i <= s.length(); i++)
-	{
-		if (s[i] == '_')
-		{
-			res[i] = ' ';
-			continue;
-		}
-		res[i] = i > 0 ? tolower(s[i]) : toupper(s[i]);
-	}
-	return res;
-}
-
 
 bool ScatteringMaterial::on_draw(std::string id)
 {

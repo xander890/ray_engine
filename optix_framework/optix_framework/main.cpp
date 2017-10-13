@@ -12,7 +12,7 @@
 #include "scattering_material.h"
 #include "sky_model.h"
 #include "immediate_gui.h"
-
+#include "full_bssrdf_generator.h"
 
 namespace
 {
@@ -151,6 +151,11 @@ int main( int argc, char** argv )
 	
 	try 
 	{
+
+#define NEW_SCENE
+#ifdef NEW_SCENE
+	FullBSSRDFGenerator * scene = new FullBSSRDFGenerator(config_file.c_str());
+#else
 	ObjScene * scene = new ObjScene( filenames, shadername, config_file, rendering_rect );
 	if(material_override_mtl.size() > 0)
 		scene->add_override_material_file(material_override_mtl);
@@ -175,6 +180,7 @@ int main( int argc, char** argv )
 		scene->set_render_task(task);
 		scene->start_render_task_on_scene_ready();
 	}
+#endif
 	GLFWDisplay::run( "Optix Renderer", scene );
 
 	} 

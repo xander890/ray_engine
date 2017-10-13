@@ -266,6 +266,10 @@
     <ClCompile Include="bssrdf_visualizer.cpp">
       <Filter>Source Files\Shaders</Filter>
     </ClCompile>
+    <ClCompile Include="full_bssrdf_generator.cpp" />
+    <ClCompile Include="bssrdf_creator.cpp">
+      <Filter>Source Files\BSSRDF</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -458,9 +462,6 @@
     <ClInclude Include="optix_utils.h">
       <Filter>Header Files\Optix</Filter>
     </ClInclude>
-    <ClInclude Include="bssrdf.h">
-      <Filter>Header Files\Materials</Filter>
-    </ClInclude>
     <ClInclude Include="sampled_bssrdf.h">
       <Filter>Header Files\Shaders</Filter>
     </ClInclude>
@@ -489,16 +490,16 @@
       <Filter>Header Files\GUI\imgui</Filter>
     </ClInclude>
     <ClInclude Include="directional_dipole.h">
-      <Filter>Header Files\Materials\Dipoles</Filter>
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
     <ClInclude Include="standard_dipole.h">
-      <Filter>Header Files\Materials\Dipoles</Filter>
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
     <ClInclude Include="approximate_standard_dipole.h">
-      <Filter>Header Files\Materials\Dipoles</Filter>
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
     <ClInclude Include="approximate_directional_dipole.h">
-      <Filter>Header Files\Materials\Dipoles</Filter>
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
     <ClInclude Include="render_task.h">
       <Filter>Header Files\Utils</Filter>
@@ -552,12 +553,6 @@
     <ClInclude Include="colormap.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="photon_trace_reference_bssrdf.h">
-      <Filter>Header Files\Materials</Filter>
-    </ClInclude>
-    <ClInclude Include="photon_trace_structs.h">
-      <Filter>Header Files\Materials</Filter>
-    </ClInclude>
     <ClInclude Include="reference_bssrdf_gpu.h">
       <Filter>Header Files\Shaders</Filter>
     </ClInclude>
@@ -565,13 +560,31 @@
       <Filter>Header Files\Optix</Filter>
     </ClInclude>
     <ClInclude Include="quantized_diffusion.h">
-      <Filter>Header Files\Materials\Dipoles</Filter>
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
     <ClInclude Include="photon_beam_diffusion.h">
-      <Filter>Header Files\Materials\Dipoles</Filter>
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
     <ClInclude Include="bssrdf_visualizer.h">
       <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="full_bssrdf_generator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bssrdf.h">
+      <Filter>Header Files\BSSRDFs</Filter>
+    </ClInclude>
+    <ClInclude Include="photon_trace_reference_bssrdf.h">
+      <Filter>Header Files\BSSRDFs</Filter>
+    </ClInclude>
+    <ClInclude Include="photon_trace_structs.h">
+      <Filter>Header Files\BSSRDFs</Filter>
+    </ClInclude>
+    <ClInclude Include="bssrdf_creator.h">
+      <Filter>Header Files\BSSRDFs</Filter>
+    </ClInclude>
+    <ClInclude Include="string_utils.h">
+      <Filter>Header Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -692,14 +705,20 @@
     <Filter Include="Legacy">
       <UniqueIdentifier>{a0c731e9-6497-4524-bc5e-268efba27f6f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Materials\Dipoles">
-      <UniqueIdentifier>{14016807-5211-43cb-927a-10f8652e8b6d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Display">
       <UniqueIdentifier>{207aae66-3c20-4781-88c4-84cf11f7ef5e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Display">
       <UniqueIdentifier>{00ef0901-712c-4015-af5a-433f0c64dda9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\BSSRDFs">
+      <UniqueIdentifier>{8dfe1de3-5377-47a2-9863-377576e83ed6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\BSSRDFs\Dipoles">
+      <UniqueIdentifier>{14016807-5211-43cb-927a-10f8652e8b6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\BSSRDF">
+      <UniqueIdentifier>{3549d03c-40bc-4a66-9645-d9cfc6a6ef3f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

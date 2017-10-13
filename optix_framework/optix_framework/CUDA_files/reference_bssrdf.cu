@@ -8,11 +8,11 @@
 #include <material.h>
 using namespace optix;
 
-rtDeclareVariable(BufPtr2D<float>, resulting_flux, , );
-rtDeclareVariable(BufPtr2D<float>, resulting_flux_intermediate, , );
+rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux, , );
+rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux_intermediate, , );
 
-rtDeclareVariable(unsigned int, maximum_iterations, , );
-rtDeclareVariable(unsigned int, ref_frame_number, , );
+rtDeclareVariable(unsigned int, maximum_iterations, , ) = 1e5;
+rtDeclareVariable(unsigned int, ref_frame_number, , ) = 1e5;
 rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
 // Window variables
 
@@ -33,7 +33,7 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
 	const optix::float3 no = ni;
 
-	// Refraction
+	// Refraction 
 	const float n1_over_n2 = 1.0f / n2_over_n1;
 	const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f);
 	const float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
@@ -45,7 +45,7 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 	optix::float3 xp = xi;
 	optix::float3 wp = w12;
 
-	if (!scatter_photon(xp, wp, flux_t, resulting_flux_intermediate, xo,  n2_over_n1, albedo, extinction, g, t, 0, maximum_iterations))
+	if (!scatter_photon(xp, wp, flux_t, reference_resulting_flux_intermediate, xo,  n2_over_n1, albedo, extinction, g, t, 0, maximum_iterations))
 	{
 		optix_print("Max iterations reached. Distance %f (%f mfps)\n", length(xp - xo), length(xp - xo) / r);
 	}
@@ -54,12 +54,12 @@ __forceinline__ __device__ void infinite_plane_scatter_searchlight(const optix::
 RT_PROGRAM void reference_bssrdf_camera()
 {
 	uint idx = launch_index.x;
-	optix::uint t = ref_frame_number * launch_dim.x + idx;
+	optix::uint t = ref_frame_number * launch_dim.x + idx; 
 	hash(t);
-
+	 
 	const float incident_power = 1.0f;
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
-
+	 
 #ifdef USE_HARDCODED_MATERIALS
 	get_default_material(theta_i, r, theta_s, albedo, extinction, g, n2_over_n1);
 #else
@@ -71,8 +71,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	extinction = reference_bssrdf_material_params->extinction.x;
 	g = reference_bssrdf_material_params->meancosine.x;
 #endif
-
-	const float theta_i_rad = deg2rad(theta_i);
+	const float theta_i_rad = deg2rad(theta_i); 
 	const float theta_s_rad = deg2rad(-theta_s);
 	const optix::float3 wi = normalize(optix::make_float3(-sinf(theta_i_rad), 0, cosf(theta_i_rad)));
 	infinite_plane_scatter_searchlight(wi, incident_power, r, theta_s_rad, n2_over_n1, albedo, extinction, g, t);
@@ -80,6 +79,6 @@ RT_PROGRAM void reference_bssrdf_camera()
 
 RT_PROGRAM void post_process_bssrdf()
 {
-	resulting_flux[launch_index] = resulting_flux_intermediate[launch_index] / ((float)(ref_frame_number + 1));
+	reference_resulting_flux[launch_index] = reference_resulting_flux_intermediate[launch_index] / ((float)(ref_frame_number + 1));
 }
 

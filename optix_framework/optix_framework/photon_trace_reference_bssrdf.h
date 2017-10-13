@@ -155,7 +155,7 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 #define REF_MAT_C 4
 #define REF_MAT_D 5
 #define REF_MAT_E 6
-#define MATERIAL REF_MAT_C
+#define MATERIAL REF_MAT_E
 
 __forceinline__ __device__ void get_default_material(float & theta_i, float & r, float & theta_s, float & albedo, float & extinction, float & g, float & n2_over_n1)
 {

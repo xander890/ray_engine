@@ -178,6 +178,7 @@ echo Done.</Command>
     <ClCompile Include="apple_juice.cpp" />
     <ClCompile Include="box.cpp" />
     <ClCompile Include="brdf_utils.cpp" />
+    <ClCompile Include="bssrdf_creator.cpp" />
     <ClCompile Include="bssrdf_visualizer.cpp" />
     <ClCompile Include="camera_host.cpp" />
     <ClCompile Include="chull.cpp" />
@@ -187,6 +188,7 @@ echo Done.</Command>
     <ClCompile Include="dialogs.cpp" />
     <ClCompile Include="environment_map_background.cpp" />
     <ClCompile Include="folders.cpp" />
+    <ClCompile Include="full_bssrdf_generator.cpp" />
     <ClCompile Include="glm.cpp" />
     <ClCompile Include="GLFWDisplay.cpp" />
     <ClCompile Include="HDRLoader.cpp" />
@@ -678,6 +680,7 @@ echo Done.</Command>
     <ClInclude Include="area_light.h" />
     <ClInclude Include="box.h" />
     <ClInclude Include="bssrdf.h" />
+    <ClInclude Include="bssrdf_creator.h" />
     <ClInclude Include="bssrdf_sampling_properties.h" />
     <ClInclude Include="bssrdf_visualizer.h" />
     <ClInclude Include="camera.h" />
@@ -689,6 +692,7 @@ echo Done.</Command>
     <ClInclude Include="device_environment_map.h" />
     <ClInclude Include="device_mesh_data.h" />
     <ClInclude Include="environment_map_background.h" />
+    <ClInclude Include="full_bssrdf_generator.h" />
     <ClInclude Include="glm.h" />
     <ClInclude Include="GLFWDisplay.h" />
     <ClInclude Include="HDRLoader.h" />
@@ -770,6 +774,7 @@ echo Done.</Command>
     <ClInclude Include="sphere.h" />
     <ClInclude Include="parserstringhelpers.h" />
     <ClInclude Include="standard_dipole.h" />
+    <ClInclude Include="string_utils.h" />
     <ClInclude Include="structs.h" />
     <ClInclude Include="structs_device.h" />
     <ClInclude Include="transform.h" />

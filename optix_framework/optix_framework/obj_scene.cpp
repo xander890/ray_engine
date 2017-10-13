@@ -49,6 +49,7 @@
 #include "reference_bssrdf.h"
 #include "reference_bssrdf_gpu.h"
 #include "bssrdf_visualizer.h"
+#include "bssrdf_creator.h"
 
 using namespace std;
 using namespace optix;
@@ -391,11 +392,11 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	ShaderFactory::add_shader(std::make_unique<SampledBSSRDF>(info2));
 
 	ShaderInfo info4 = ShaderInfo(20, "empty.cu", "Plane BSSRDF (Reference)"); 
-	std::unique_ptr<BSSRDFCreator> c = std::make_unique<ReferenceBSSRDF>(context);
+	std::unique_ptr<EmpiricalBSSRDFCreator> c = std::make_unique<ReferenceBSSRDF>(context);
 	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info4, c, camera_width, camera_height));
 
 	ShaderInfo info5 = ShaderInfo(21, "empty.cu", "Plane BSSRDF (Dipole)");
-	std::unique_ptr<BSSRDFCreator> c2 = std::make_unique<PlanarBSSRDF>(context);
+	std::unique_ptr<EmpiricalBSSRDFCreator> c2 = std::make_unique<PlanarBSSRDF>(context);
 	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info5, c2, camera_width, camera_height));
 
 	ShaderInfo info6 = ShaderInfo(22, "empty.cu", "BSSRDF Visualizer");
@@ -611,9 +612,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	display = true;
 	if (mbPaused)
 		return;
-	//context["comparison_image_weight"]->setFloat(comparison_image_weight);
-	//context["show_difference_image"]->setInt(show_difference_image);
-	//context["comparison_texture"]->setInt(comparison_image->getId());
+
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
 
 	//Logger::debug({ "Merl correction factor: ", to_string(merl_correction.x), " ", to_string(merl_correction.y), " ", to_string(merl_correction.z) });
