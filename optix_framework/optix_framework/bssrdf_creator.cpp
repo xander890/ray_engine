@@ -73,15 +73,23 @@ void EmpiricalBSSRDFCreator::init()
 bool EmpiricalBSSRDFCreator::on_draw(bool show_material_params)
 {
 	bool changed = false;
+
+	float backup_theta_i = mThetai;
+	float backup_theta_s = mThetas;
+
 	changed |= ImmediateGUIDraw::SliderFloat("Incoming light angle (deg.)", &mThetai, 0, 90);
-	changed |= ImmediateGUIDraw::InputFloat("Radius", &mRadius);
+	changed |= ImmediateGUIDraw::InputFloat("Radius", &mRadius, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
 	changed |= ImmediateGUIDraw::SliderFloat("Angle on plane", &mThetas, 0, 360);
+
+	mThetai = mIsReadOnly ? backup_theta_i : mThetai;
+	mThetas = mIsReadOnly ? backup_theta_s : mThetas;
+
 	if (show_material_params)
 	{
-		changed |= ImmediateGUIDraw::InputFloat("Albedo##RefAlbedo", &mAlbedo);
-		changed |= ImmediateGUIDraw::InputFloat("Extinction##RefExtinction", &mExtinction);
-		changed |= ImmediateGUIDraw::InputFloat("G##RefAsymmetry", &mAsymmetry);
-		changed |= ImmediateGUIDraw::InputFloat("Relative IOR##RefRelIOR", &mIor);
+		changed |= ImmediateGUIDraw::InputFloat("Albedo##RefAlbedo", &mAlbedo, 0, 0, -1, mIsReadOnly? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::InputFloat("Extinction##RefExtinction", &mExtinction, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::InputFloat("G##RefAsymmetry", &mAsymmetry, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::InputFloat("Relative IOR##RefRelIOR", &mIor, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
 	}
 
 	if (changed)
@@ -182,8 +190,9 @@ bool ReferenceBSSRDF::on_draw(bool show_material_params)
 	ss << "Rendered: " << mRenderedFrames << " frames, " << mRenderedFrames*mSamples << " samples" << std::endl;
 	ImmediateGUIDraw::Text(ss.str().c_str());
 	bool changed = EmpiricalBSSRDFCreator::on_draw(show_material_params);
-	changed |= ImmediateGUIDraw::InputInt("Samples", (int*)&mSamples);
-	changed |= ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&mMaxIterations);
+	changed |= ImmediateGUIDraw::InputInt("Samples", (int*)&mSamples, 1, 100, mIsReadOnly? ImGuiInputTextFlags_ReadOnly : 0);
+	changed |= ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&mMaxIterations, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+
 	if (changed)
 		reset();
 	return false;

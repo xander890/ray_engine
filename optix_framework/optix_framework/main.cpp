@@ -152,7 +152,7 @@ int main( int argc, char** argv )
 	try 
 	{
 
-//#define NEW_SCENE
+#define NEW_SCENE
 #ifdef NEW_SCENE
 	FullBSSRDFGenerator * scene = new FullBSSRDFGenerator(config_file.c_str());
 #else

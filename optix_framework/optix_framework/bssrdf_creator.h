@@ -26,6 +26,8 @@ public:
 
 	virtual bool on_draw(bool show_material_params);
 
+	void set_read_only(bool is_read_only) { mIsReadOnly = is_read_only;  }
+	
 protected:
 	int entry_point = -1;
 	int entry_point_post = -1;
@@ -49,6 +51,7 @@ protected:
 	float mExtinction = 1.0f;
 	float mAsymmetry = 0.0f;
 	float mIor = 1.3f;
+	bool mIsReadOnly = false;
 };
 
 class ReferenceBSSRDF : public EmpiricalBSSRDFCreator

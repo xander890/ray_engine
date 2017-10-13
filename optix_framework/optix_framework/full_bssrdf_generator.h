@@ -122,6 +122,7 @@ public:
 
 	void start_rendering();
 	void update_rendering();
+	void end_rendering();
 
 	bool key_pressed(int key, int x, int y) override;
 	bool mouse_pressed(int x, int y, int button, int action, int mods) override;
@@ -145,7 +146,14 @@ private:
 
 	FullBSSRDFParameters mParameters;
 	ParameterState mState;
+	int mSimulationCurrentFrame = 0;
+
 	std::string mFilePath = "test.bssrdf";
+
+	int mSimulationSamplesPerFrame = (int)1e7;
+	int mSimulationFrames = 2;
+	int mSimulationMaxIterations = (int)1e4;
+
 	float * mCurrentHemisphereData = nullptr;
 };
 

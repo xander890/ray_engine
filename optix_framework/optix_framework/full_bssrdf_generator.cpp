@@ -7,14 +7,20 @@
 #include "parameter_parser.h"
 #include "folders.h"
 #include "dialogs.h"
+#include <sstream>
 
+std::string gui_string(std::vector<float> & data)
+{
+	std::stringstream ss;
+	ss.precision(2);
+	ss << std::fixed;
+	for (auto c : data) ss << c << " ";
+	return ss.str();
+}
 
 FullBSSRDFGenerator::FullBSSRDFGenerator(const char * config ) : config_file(config)
 {
 }
-
-
-
 
 FullBSSRDFGenerator::~FullBSSRDFGenerator()
 {
@@ -148,6 +154,19 @@ optix::Buffer FullBSSRDFGenerator::get_output_buffer()
 	return result_buffer;
 }
 
+bool vector_gui(const char * name, std::vector<float> & vec, std::string & storage)
+{	
+	if (ImGui::InputText(name, &storage[0], storage.size()))
+	{
+		std::vector<float> c = tovalue<std::vector<float>>(storage);
+		storage = gui_string(vec);
+		vec.clear();
+		vec.insert(vec.begin(), c.begin(), c.end());
+		return true;
+	}
+	return false;
+}
+
 
 void FullBSSRDFGenerator::post_draw_callback()
 {
@@ -160,17 +179,47 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 	creator->on_draw(true);
 
-	static std::string theta_i_s = tostring(mParameters.theta_i_v);
-	if (ImGui::InputText("Theta i", &theta_i_s[0], theta_i_s.size()))
+	if (ImmediateGUIDraw::CollapsingHeader("Parameter Range"))
 	{
-		std::vector<float> c = tovalue<std::vector<float>>(theta_i_s);
-		mParameters.theta_i_v.clear();
-		mParameters.theta_i_v.insert(mParameters.theta_i_v.begin(), c.begin(), c.end());
+		static std::string theta_i_s = gui_string(mParameters.theta_i_v);
+		vector_gui("Simulated Theta i ", mParameters.theta_i_v, theta_i_s);
+		static std::string r_s = gui_string(mParameters.r_v);
+		vector_gui("Simulated r", mParameters.r_v, r_s);
+		static std::string theta_s_s = gui_string(mParameters.theta_s_v);
+		vector_gui("Simulated Theta s", mParameters.theta_s_v, theta_s_s);
+		static std::string albedo_s = gui_string(mParameters.albedo_v);
+		vector_gui("Simulated Albedo", mParameters.albedo_v, albedo_s);
+		static std::string g_s = gui_string(mParameters.g_v);
+		vector_gui("Simulated G", mParameters.g_v, g_s);
+		static std::string eta_s = gui_string(mParameters.eta_v);
+		vector_gui("Simulated Eta", mParameters.eta_v, eta_s);
 	}
 
-	if (ImmediateGUIDraw::Button("Start Simulation"))
+	if (ImmediateGUIDraw::CollapsingHeader("Simulation Parameters"))
+	{
+		ImmediateGUIDraw::InputText("Path", &mFilePath[0], mFilePath.size(), ImGuiInputTextFlags_ReadOnly);
+
+		std::string filePath;
+		if (ImmediateGUIDraw::Button("Choose bssrdf path..."))
+		{
+			std::string filePath;
+			if (Dialogs::saveFileDialog(filePath))
+			{
+				mFilePath = filePath;
+			}
+		}
+		ImmediateGUIDraw::InputInt("Simulation Samples per frame", &mSimulationSamplesPerFrame);
+		ImmediateGUIDraw::InputInt("Simulation Frames", &mSimulationFrames);
+		ImmediateGUIDraw::InputInt("Simulation Maximum Iterations", &mSimulationMaxIterations);
+	}
+
+	if (!is_rendering && ImmediateGUIDraw::Button("Start Simulation"))
 	{
 		start_rendering();
+	}
+	if (is_rendering && ImmediateGUIDraw::Button("End Simulation"))
+	{
+		end_rendering();
 	}
 
 	gui->end_window();
@@ -191,7 +240,10 @@ void FullBSSRDFGenerator::start_rendering()
 	of.close();
 
 	mState = ParameterState(0,0,0,0,0,0);
-	creator->set_samples((int)1e8);
+	creator->set_samples(mSimulationSamplesPerFrame);
+	creator->set_max_iterations(mSimulationMaxIterations);
+	mSimulationCurrentFrame = 0;
+	creator->set_read_only(true);
 }
 
 
@@ -200,23 +252,38 @@ void FullBSSRDFGenerator::update_rendering()
 {
 	if (is_rendering)
 	{
-		Logger::info << mState.tostring() << std::endl;
-		float extinction = 1.0f;
-		float theta_i; float r; float theta_s; float albedo;  float g; float eta;
-		mParameters.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
-
-		creator->set_geometry_parameters(theta_i, r, theta_s);
-		creator->set_material_parameters(albedo, extinction, g, eta);
-
-		
-		write_hemisphere(mFilePath, mParameters.flatten(mState), mCurrentHemisphereData, creator->get_storage_size() * sizeof(float));
-
-		mState = mParameters.next(mState);
-		if (!mParameters.is_valid(mState))
+		if (mSimulationCurrentFrame == mSimulationFrames - 1)
 		{
-			is_rendering = false;
+			Logger::info << "Simulation frame complete. " << creator->get_samples() << " samples." << std::endl;
+			float extinction = 1.0f;
+			float theta_i; float r; float theta_s; float albedo;  float g; float eta;
+			mParameters.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
+
+			creator->set_geometry_parameters(theta_i, r, theta_s);
+			creator->set_material_parameters(albedo, extinction, g, eta);
+
+			write_hemisphere(mFilePath, mParameters.flatten(mState), mCurrentHemisphereData, creator->get_storage_size() * sizeof(float));
+
+			mState = mParameters.next(mState);
+			mSimulationCurrentFrame = 0;
+
+			if (!mParameters.is_valid(mState))
+			{
+				end_rendering();
+			}
+
+		}
+		else
+		{
+			mSimulationCurrentFrame++;
 		}
 	}
+}
+
+void FullBSSRDFGenerator::end_rendering()
+{
+	is_rendering = false;
+	creator->set_read_only(false);
 }
 
 bool FullBSSRDFGenerator::key_pressed(int key, int x, int y)
