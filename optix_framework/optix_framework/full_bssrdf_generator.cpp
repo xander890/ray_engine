@@ -8,6 +8,7 @@
 #include "folders.h"
 #include "dialogs.h"
 #include <sstream>
+#include "reference_bssrdf_gpu.h"
 
 std::string gui_string(std::vector<float> & data)
 {
@@ -44,7 +45,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
-	creator = std::make_unique<ReferenceBSSRDF>(m_context, optix::make_uint2(160, 40), (int)10e5);
+	creator = std::make_unique<ReferenceBSSRDFGPU>(m_context, optix::make_uint2(160, 40), (int)10e5);
 	creator->init();
 
 	std::string ptx_path_output = get_path_ptx("render_bssrdf_hemisphere.cu");
@@ -117,36 +118,40 @@ void normalize(float * data, int size)
 void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 {
 	static int frame = 0;
-	m_context["frame"]->setInt(frame);
 
-
-	creator->load_data();
-
-	creator->render();
-
-	m_context["show_false_colors"]->setUint(mShowFalseColors);
-	m_context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
-
-	if (is_rendering)
+	if (!mPaused)
 	{
-		int i = 0;
+		m_context["frame"]->setInt(frame);
+
+
+		creator->load_data();
+
+		creator->render();
+
+		m_context["show_false_colors"]->setUint(mShowFalseColors);
+		m_context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
+
+		if (is_rendering)
+		{
+			int i = 0;
+		}
+
+		void* source = creator->get_output_buffer()->map();
+		void* dest = mBSSRDFBufferTexture->map();
+
+		memcpy(mCurrentHemisphereData, source, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
+		memcpy(dest, mCurrentHemisphereData, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
+		normalize((float*)dest, (int)creator->get_storage_size());
+		creator->get_output_buffer()->unmap();
+		mBSSRDFBufferTexture->unmap();
+
+		RTsize w, h;
+		result_buffer->getSize(w, h);
+		m_context->launch(entry_point_output, w, h);
+
+		frame++;
+		update_rendering();
 	}
-
-	void* source = creator->get_output_buffer()->map();
-	void* dest = mBSSRDFBufferTexture->map();
-
-	memcpy(mCurrentHemisphereData, source, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
-	memcpy(dest, mCurrentHemisphereData, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
-	normalize((float*)dest, (int)creator->get_storage_size());
-	creator->get_output_buffer()->unmap();
-	mBSSRDFBufferTexture->unmap();
-
-	RTsize w, h;
-	result_buffer->getSize(w, h);
-	m_context->launch(entry_point_output, w, h);
-	
-	frame++;
-	update_rendering();
 }
 
 optix::Buffer FullBSSRDFGenerator::get_output_buffer()
@@ -175,7 +180,8 @@ void FullBSSRDFGenerator::post_draw_callback()
 	
 	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
 
-	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors);
+	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors); ImmediateGUIDraw::SameLine();
+	ImmediateGUIDraw::Checkbox("Pause", (bool*)&mPaused);
 
 	creator->on_draw(true);
 

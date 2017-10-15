@@ -155,5 +155,6 @@ private:
 	int mSimulationMaxIterations = (int)1e4;
 
 	float * mCurrentHemisphereData = nullptr;
+	bool mPaused = false;
 };
 

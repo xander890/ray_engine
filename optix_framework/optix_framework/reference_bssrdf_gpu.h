@@ -1,26 +1,27 @@
-//#pragma once
-//#include "reference_bssrdf.h"
-//
-//class ReferenceBSSRDFGPU : public ReferenceBSSRDFShader
-//{
-//public:
-//	ReferenceBSSRDFGPU(const ShaderInfo& shader_info, int camera_width, int camera_height)
-//		: ReferenceBSSRDFShader(shader_info, camera_width, camera_height)
-//	{
-//	}
-//
-//	void load_data(Mesh & object) override;
-//	void initialize_shader(optix::Context) override;
-//	void initialize_mesh(Mesh& object) override;
-//	void pre_trace_mesh(Mesh& object) override;
-//	void post_trace_mesh(Mesh& object) override;
-//	bool on_draw() override;
-//	Shader* clone() override;
-//	~ReferenceBSSRDFGPU();
-//	
-//	optix::Buffer mAtomicPhotonCounterBuffer;
-//	optix::Buffer mPhotonBuffer;
-//	void reset() override;
-//	unsigned int mBatchIterations = (int)1e5;
-//};
-//
+#pragma once
+#include "reference_bssrdf.h"
+#include "bssrdf_creator.h"
+
+class ReferenceBSSRDFGPU : public ReferenceBSSRDF
+{
+public:
+	ReferenceBSSRDFGPU(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : ReferenceBSSRDF(ctx, hemisphere,samples)
+	{
+	}
+
+	void init() override;
+	void render() override;
+	void load_data() override;
+	void set_samples(int samples) override;
+	bool on_draw(bool show_material_params) override;
+
+	size_t get_samples() override;
+	
+	optix::Buffer mAtomicPhotonCounterBuffer = nullptr;
+	optix::Buffer mPhotonBuffer = nullptr;
+	void reset() override;
+	unsigned int mBatchIterations = (int)1e5;
+	unsigned int mMaxFrames = 100;
+	size_t mPhotons = 0;
+};
+

@@ -52,6 +52,7 @@ protected:
 	float mAsymmetry = 0.0f;
 	float mIor = 1.3f;
 	bool mIsReadOnly = false;
+	bool mInitialized = false;
 };
 
 class ReferenceBSSRDF : public EmpiricalBSSRDFCreator
@@ -59,19 +60,19 @@ class ReferenceBSSRDF : public EmpiricalBSSRDFCreator
 public:
 	ReferenceBSSRDF(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : EmpiricalBSSRDFCreator(ctx, hemisphere), mSamples(samples)
 	{
-		init();
 	}
 
 	void init() override;
 	void render() override;
 	void load_data() override;
 	bool on_draw(bool show_material_params) override;
-	void set_samples(int samples);
-	void set_max_iterations(int max_iter);
+	virtual void set_samples(int samples);
+	virtual void set_max_iterations(int max_iter);
 	size_t get_samples() override { return mSamples * mRenderedFrames; }
 protected:
 	unsigned int mSamples;
 	unsigned int mMaxIterations = (int)1e4;
+
 };
 
 class PlanarBSSRDF : public EmpiricalBSSRDFCreator
@@ -80,7 +81,6 @@ public:
 	PlanarBSSRDF(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : EmpiricalBSSRDFCreator(ctx, hemisphere)
 	{
 		mScatteringDipole = dipole;
-		init();
 	}
 
 	void init() override;

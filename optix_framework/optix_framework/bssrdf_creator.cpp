@@ -15,6 +15,8 @@ void EmpiricalBSSRDFCreator::set_geometry_parameters(float theta_i, float r, flo
 
 void EmpiricalBSSRDFCreator::load_data()
 {
+	if (!mInitialized)
+		init();
 	context["ref_frame_number"]->setUint(mRenderedFrames);
 	context["reference_bssrdf_theta_i"]->setFloat(mThetai);
 	context["reference_bssrdf_theta_s"]->setFloat(mThetas);
@@ -33,6 +35,8 @@ void EmpiricalBSSRDFCreator::set_material_parameters(float albedo, float extinct
 
 void EmpiricalBSSRDFCreator::reset()
 {
+	if (!mInitialized)
+		init();
 	clear_buffer(mBSSRDFBuffer);
 	clear_buffer(mBSSRDFBufferIntermediate);
 	mRenderedFrames = 0;
@@ -45,6 +49,7 @@ void EmpiricalBSSRDFCreator::reset()
 
 void EmpiricalBSSRDFCreator::init()
 {
+	mInitialized = true;
 	if (mBSSRDFBufferIntermediate.get() == nullptr)
 	{
 		mBSSRDFBufferIntermediate = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
@@ -124,6 +129,8 @@ void PlanarBSSRDF::init()
 
 void PlanarBSSRDF::render()
 {
+	if (!mInitialized)
+		init();
 	const optix::int3 c = context->getPrintLaunchIndex();
 	context->setPrintLaunchIndex(20, 20, -1);
 	context->launch(entry_point, mHemisphereSize.x, mHemisphereSize.y);
@@ -171,6 +178,8 @@ void ReferenceBSSRDF::init()
 
 void ReferenceBSSRDF::render()
 {
+	if (!mInitialized)
+		init();
 	context->launch(entry_point, mSamples);
 	context->launch(entry_point_post, mHemisphereSize.x, mHemisphereSize.y);
 	mRenderedFrames++;
@@ -190,8 +199,18 @@ bool ReferenceBSSRDF::on_draw(bool show_material_params)
 	ss << "Rendered: " << mRenderedFrames << " frames, " << mRenderedFrames*mSamples << " samples" << std::endl;
 	ImmediateGUIDraw::Text(ss.str().c_str());
 	bool changed = EmpiricalBSSRDFCreator::on_draw(show_material_params);
-	changed |= ImmediateGUIDraw::InputInt("Samples", (int*)&mSamples, 1, 100, mIsReadOnly? ImGuiInputTextFlags_ReadOnly : 0);
-	changed |= ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&mMaxIterations, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+
+	static int smpl = mSamples;
+	if (ImmediateGUIDraw::InputInt("Samples", (int*)&smpl, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0))
+	{
+		set_samples(smpl);
+	}
+
+	static int iter = mMaxIterations;
+	if (ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&iter, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0))
+	{
+		set_max_iterations(iter);
+	}
 
 	if (changed)
 		reset();

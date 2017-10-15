@@ -3,107 +3,73 @@
 // Copyright (c) DTU Informatics 2011
 
 #include <device_common_data.h>
-#include <photon_trace_structs.h>
 #include <photon_trace_reference_bssrdf.h>
-
+#include <md5.h>
+#include <material.h>
+#include <photon_trace_structs.h>
 using namespace optix;
-rtBuffer<float, 2> resulting_flux;
-rtBuffer<PhotonSample, 1> photon_buffer;
-rtBuffer<int, 1>  photon_counter;
-rtDeclareVariable(unsigned int, maximum_iterations, , );
-rtDeclareVariable(unsigned int, batch_iterations, , );
-rtDeclareVariable(unsigned int, ref_frame_number, , );
+
+rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux, , );
+rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux_intermediate, , );
+
+rtDeclareVariable(BufPtr1D<PhotonSample>, photon_buffer, , );
+rtDeclareVariable(BufPtr1D<int>, photon_counter, , );
 
 
-#define MILK 0
-#define WAX 1
-#define A 2
-#define B 3
-#define C 4
-#define D 5
-#define E 6
-#define MATERIAL B
+rtDeclareVariable(unsigned int, maximum_iterations, , ) = 1e5;
+rtDeclareVariable(unsigned int, batch_iterations, , ) = 1e3;
+rtDeclareVariable(unsigned int, ref_frame_number, , ) = 1e5;
+rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
+// Window variables
 
-RT_PROGRAM void reference_bssrdf_camera()
+rtDeclareVariable(float, reference_bssrdf_theta_i, , );
+rtDeclareVariable(float, reference_bssrdf_theta_s, , );
+rtDeclareVariable(float, reference_bssrdf_radius, , );
+rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, reference_bssrdf_material_params, , );
+rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
+
+//#define USE_HARDCODED_MATERIALS
+
+RT_PROGRAM void reference_bssrdf_gpu()
 {
+	optix_print("Welcome.\n");
 	uint idx = launch_index.x;
+	optix::uint t = ref_frame_number * launch_dim.x + idx;
+	hash(t);
 
-#if MATERIAL==MILK
-	const float theta_i = 20.0f;
-	const float sigma_a = 0.0007f;
-	const float sigma_s = 1.165;
-	const float g = 0.7f;
-	const float n2_over_n1 = 1.35f;
-	const float r = 1.5f;
-	const float theta_s = 0;
-	const float albedo = sigma_s / (sigma_s + sigma_a);
-	const float extinction = sigma_s + sigma_a;
-#elif MATERIAL==WAX
-	const float theta_i = 20.0f;
-	const float sigma_a = 0.5f;
-	const float sigma_s = 1.0f;
-	const float g = 0.0f;
-	const float n2_over_n1 = 1.4f;
-	const float r = 0.5f;
-	const float theta_s = 90;
-	const float albedo = sigma_s / (sigma_s + sigma_a);
-	const float extinction = sigma_s + sigma_a;
-#elif MATERIAL==A
-	const float theta_i = 30.0f;
-	const float albedo = 0.6f;
-	const float extinction = 1.0f;
-	const float g = 0.0f;
-	const float n2_over_n1 = 1.3f;
-	const float r = 4.0f;
-	const float theta_s = 0;
-#elif MATERIAL==B
-	const float theta_i = 60.0f;
-	const float theta_s = 60;
-	const float r = 0.8f;
-	const float albedo = 0.99f;
-	const float extinction = 1.0f;
-	const float g = -0.3f;
-	const float n2_over_n1 = 1.4f;
-#elif MATERIAL==C
-	const float theta_i = 70.0f;
-	const float theta_s = 60;
-	const float r = 1.0f;
-	const float albedo = 0.3f;
-	const float extinction = 1.0f;
-	const float g = 0.9f;
-	const float n2_over_n1 = 1.4f;
-#elif MATERIAL==D
-	const float theta_i = 0.0f;
-	const float theta_s = 105.0f;
-	const float r = 4.0f;
-	const float albedo = 0.5f;
-	const float extinction = 1.0f;
-	const float g = 0.0f;
-	const float n2_over_n1 = 1.2f;
-#elif MATERIAL==E
-	const float theta_i = 80.0f;
-	const float theta_s = 165.0f;
-	const float r = 2.0f;
-	const float albedo = 0.8f;
-	const float extinction = 1.0f;
-	const float g = -0.3f;
-	const float n2_over_n1 = 1.3f;
+	const float incident_power = 1.0f;
+	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
+
+#ifdef USE_HARDCODED_MATERIALS
+	get_default_material(theta_i, r, theta_s, albedo, extinction, g, n2_over_n1);
+#else
+	theta_i = reference_bssrdf_theta_i;
+	theta_s = reference_bssrdf_theta_s;
+	r = reference_bssrdf_radius;
+	n2_over_n1 = reference_bssrdf_rel_ior;
+	albedo = reference_bssrdf_material_params->albedo.x;
+	extinction = reference_bssrdf_material_params->extinction.x;
+	g = reference_bssrdf_material_params->meancosine.x;
 #endif
 	const float theta_i_rad = deg2rad(theta_i);
 	const float theta_s_rad = deg2rad(-theta_s);
 	const optix::float3 wi = normalize(optix::make_float3(-sinf(theta_i_rad), 0, cosf(theta_i_rad)));
 
+	// Geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);
-	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s_rad), sin(theta_s_rad), 0);
+	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
 	const optix::float3 no = ni;
-	const float incident_power = 1.0f;
+
 
 	PhotonSample p = photon_buffer[idx];
+
 	if (p.status == PHOTON_STATUS_NEW)
 	{
 		optix_print("New photon.\n");
-		p.t = tea<16>(idx, ref_frame_number);
+		p.t = ref_frame_number * launch_dim.x + idx;
+		hash(p.t);
+		// Refraction 
 		const float n1_over_n2 = 1.0f / n2_over_n1;
 		const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f);
 		const float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
@@ -118,7 +84,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 		atomicAdd(&photon_counter[0], 1);
 	}
 
-	if (scatter_photon(p.xp, p.wp, p.flux, resulting_flux, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
+	if (scatter_photon(p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
 	{
 		photon_buffer[idx].status = PHOTON_STATUS_NEW;
 	}
@@ -136,5 +102,18 @@ RT_PROGRAM void reference_bssrdf_camera()
 			photon_buffer[idx] = p;
 		}
 	}
+
 }
+
+RT_PROGRAM void reference_bssrdf_gpu_post()
+{
+	float photons = 0.0f;
+	for (int i = 0; i < photon_counter.buf.size(); i++)
+	{
+		photons += photon_counter[i];
+	}
+	reference_resulting_flux[launch_index] = reference_resulting_flux_intermediate[launch_index] / photons;
+}
+
+
 
