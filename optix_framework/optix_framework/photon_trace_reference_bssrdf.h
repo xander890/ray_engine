@@ -9,6 +9,8 @@
 #include "phase_function.h"
 
 #define RND_FUNC rnd_tea
+#define EXTINCTION_DISTANCE_RR
+//#define INCLUDE_SINGLE_SCATTERING
 
 // Simple util to do plane ray intersection.
 __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_origin, const optix::float3 & plane_normal, const optix::Ray & ray, float & intersection_distance)
@@ -114,16 +116,27 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 				// w_12 points *towards* the surface, and the outgoing w_o points *away *from the surface.
 				const float phi_o = phi_21;
 
+#ifdef EXTINCTION_DISTANCE_RR
+				if (RND_FUNC(t) < 1.0f - expf(-extinction*d_vec_len))
+					return true;
+
+				// The two exponentials cancel out when dividing out by the pdf, the extinction term remains.
+				const float flux_E = flux_t * albedo * phase_HG(optix::dot(d_vec, wp), g)  * F_t / extinction; 
+#else
 				const float flux_E = flux_t * albedo * phase_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len) * F_t;
-				
+#endif
 				// Not including single scattering, so i == 0 is not considered.
+
+#ifdef INCLUDE_SINGLE_SCATTERING
+				store_values_in_buffer(cos_theta_o, phi_o, flux_E, resulting_flux);
+#else				
 				if (i > 0)
 				{
 					store_values_in_buffer(cos_theta_o, phi_o, flux_E, resulting_flux);
 				}
-				optix_print("(%d) Scattering.  %f\n", i, flux_E);			
+#endif
+				optix_print("(%d) Scattering.  %f\n", i, flux_E);
 			}
-
 			// We choose a new direction sampling the phase function
 			optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
 			wp = optix::normalize(sample_HG(wp, g, smpl));
