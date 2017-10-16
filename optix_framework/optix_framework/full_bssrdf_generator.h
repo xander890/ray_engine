@@ -3,104 +3,132 @@
 #include <memory>
 #include <bssrdf_creator.h>
 #include <bssrdf_loader.h>
+#include <map>
+#include "string_utils.h"
+#include "logger.h"
 
+#define INVALID_INDEX ((size_t)(-1))
 class ImmediateGUI;
 
 struct ParameterState
 {
 	ParameterState() {}
-	ParameterState(size_t theta_i_idx, size_t r_idx, size_t theta_s_idx, size_t albedo_idx, size_t g_idx, size_t eta_idx) :
-		theta_i_idx(theta_i_idx), r_idx(r_idx), theta_s_idx(theta_s_idx), albedo_idx(albedo_idx), g_idx(g_idx), eta_idx(eta_idx) {}
+	ParameterState(const std::vector<size_t>& data) : mData(data)  {}
 	
 	std::string tostring()
 	{
-		return std::string("(") + std::to_string(theta_i_idx) + "," + std::to_string(r_idx) + "," + std::to_string(theta_s_idx) + ","
-			+ std::to_string(albedo_idx) + "," + std::to_string(g_idx) + "," + std::to_string(eta_idx) + ")";
+		std::string res = "(";
+		for (int i = 0; i < mData.size(); i++)
+		{
+			res += std::to_string(mData[i]) + ((i == mData.size() - 1) ? "" : " ");
+		}
+		return res + ")";
 	}
 
-	size_t theta_i_idx = 0, r_idx = 0, theta_s_idx = 0, albedo_idx = 0, g_idx = 0, eta_idx = 0;
+	const size_t& operator[](const size_t & idx) const 
+	{		
+		if (idx >= 8)
+			Logger::error << "Out of bounds!" << std::endl;
+		return mData[idx];
+	}
+
+	size_t& operator[](const size_t & idx) 
+	{
+		if (idx >= mData.size())
+			Logger::error << "Out of bounds!" << std::endl;
+		return mData[idx];
+	}
+
+	bool operator==(const ParameterState &b) const
+	{
+		bool equal = true;
+		for (int i = 0; i < mData.size(); i++)
+		{
+			equal &= b.mData[i] == mData[i];
+		}
+		return equal;
+	}
+
+	std::vector<size_t> mData;
 };
 
 class FullBSSRDFParameters
 {
 public:
-	//std::vector<float> theta_i =	{0, 15, 30, 45, 60, 70, 80, 88};
-	//std::vector<float> r =			{ 0.01f, 0.05f, 0.1f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 4.0f, 8.0f, 10.0f };
-	//std::vector<float> theta_s =	{ 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 };
-	//std::vector<float> albedo =		{ 0.01f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 0.99f };
-	//std::vector<float> g =			{ -0.9f, -0.7f, -0.5f, -0.3f, 0.0f, 0.3f, 0.5f, 0.7f, 0.9f, 0.95f, 0.99f };
-	//std::vector<float> eta =		{ 1.0f, 1.1f, 1.2f, 1.3f, 1.4f };
 
-	std::vector<float> theta_i_v = { 0, 15, 30, 45, 60, 70, 80, 88 };
-	std::vector<float> r_v = { 0.01f, 0.05f, 0.1f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 4.0f, 8.0f, 10.0f };
-	std::vector<float> theta_s_v = { 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 };
-	std::vector<float> albedo_v = { 0.9f };
-	std::vector<float> g_v = { 0.3f };
-	std::vector<float> eta_v = { 1.0f };
+	//std::map<size_t, std::vector<float>> parameters = {
+	//	{ theta_i_index,		{ 0, 15, 30, 45, 60, 70, 80, 88 } },
+	//	{ r_index,				{ 0.01f, 0.05f, 0.1f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 4.0f, 8.0f, 10.0f } },
+	//	{ theta_s_index,		{ 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 } },
+	//	{ albedo_index,			{ 0.01f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 0.99f } },
+	//	{ g_index,				{ -0.9f, -0.7f, -0.5f, -0.3f, 0.0f, 0.3f, 0.5f, 0.7f, 0.9f, 0.95f, 0.99f } },
+	//	{ eta_index,			{1.0f, 1.1f, 1.2f, 1.3f, 1.4f } }
+	//};
 
-	//std::vector<float> theta_i_v = { 70 };
-	//std::vector<float> r_v = { 0.1f };
-	//std::vector<float> theta_s_v = { 45 };
-	//std::vector<float> albedo_v = { 0.9f };
-	//std::vector<float> g_v = { 0.3f };
-	//std::vector<float> eta_v = { 1.0f };
+	std::map<size_t, std::vector<float>> parameters = {
+		{ theta_i_index,	{ 0, 15, 30, 45, 60, 70, 80, 88 } },
+		{ r_index,			{ 0.01f, 0.05f, 0.1f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 4.0f, 8.0f, 10.0f } },
+		{ theta_s_index,	{ 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 } },
+		{ albedo_index,		{ 0.9f } },
+		{ g_index,			{ 0.3f } },
+		{ eta_index,		{ 1.0f } }
+	};
 
-	size_t flatten(size_t theta_i_idx, size_t r_idx, size_t theta_s_idx)
-	{
-		size_t idx;
-		idx = theta_s_idx * r_v.size() + r_idx;
-		idx = idx * theta_i_v.size() + theta_i_idx;
-		return idx;
-	}
-
-	size_t flatten(size_t theta_i_idx, size_t r_idx, size_t theta_s_idx, size_t albedo_idx, size_t g_idx, size_t eta_idx)
-	{
-		size_t idx;
-		idx = g_idx * eta_v.size() + eta_idx;
-		idx = idx *   albedo_v.size() + albedo_idx;
-		idx = idx *   theta_s_v.size() + theta_s_idx;
-		idx = idx *   r_v.size() + r_idx;
-		idx = idx *   theta_i_v.size() + theta_i_idx;
-		return idx;
-	}
-
-	size_t flatten(const ParameterState & state)
-	{
-		return flatten(state.theta_i_idx, state.r_idx, state.theta_s_idx, state.albedo_idx, state.g_idx, state.eta_idx);
-	}
+#define stringify_pair(x) x, prettify(#x)
+	std::map<size_t, std::string> parameter_names = {
+		{ stringify_pair(theta_i_index) },
+		{ stringify_pair(r_index) },
+		{ stringify_pair(theta_s_index) },
+		{ stringify_pair(albedo_index) },
+		{ stringify_pair(g_index) },
+		{ stringify_pair(eta_index) }
+	};
+#undef stringify_pair
 
 	size_t size()
 	{
-		return eta_v.size()* g_v.size()*albedo_v.size()*theta_s_v.size()*r_v.size()*theta_i_v.size();
+		std::vector<size_t> dims = get_dimensions();
+		size_t res = 1;
+		for (const size_t& i : dims)
+			res *= i;
+		return res;
 	}
 
 	void get_parameters(const ParameterState & state, float & theta_i, float & r, float & theta_s, float & albedo, float & g, float & eta)
 	{
-		theta_i = theta_i_v[state.theta_i_idx];
-		r = r_v[state.r_idx];
-		theta_s = theta_s_v[state.theta_s_idx];
-		albedo = albedo_v[state.albedo_idx];
-		g = g_v[state.g_idx];
-		eta = eta_v[state.eta_idx];
+		theta_i = parameters[theta_i_index][state[theta_i_index]];
+		r = parameters[r_index][state[r_index]];
+		theta_s = parameters[theta_s_index][state[theta_s_index]];
+		albedo = parameters[albedo_index][state[albedo_index]];
+		g = parameters[g_index][state[g_index]];
+		eta = parameters[eta_index][state[eta_index]];
 	}
-
 
 	ParameterState next(const ParameterState & state)
 	{
 		ParameterState val = state;
-		if (increment(state.theta_i_idx, theta_i_v.size(), val.theta_i_idx))
-			if (increment(state.r_idx, r_v.size(), val.r_idx))
-				if (increment(state.theta_s_idx, theta_s_v.size(), val.theta_s_idx))
-					if (increment(state.albedo_idx, albedo_v.size(), val.albedo_idx))
-						if (increment(state.g_idx, g_v.size(), val.g_idx))
-							if (increment(state.eta_idx, eta_v.size(), val.eta_idx))
-								return invalid_index;
+		std::vector<size_t> dims = get_dimensions();
+		size_t i;
+		for (i = dims.size() - 1; i > 0; i--)
+		{
+			// increment returns true if overflow, so we keep adding.
+			if (!increment(state[i], dims[i], val[i]))
+			{
+				break;
+			}
+		}
+
+		// When the last index overflows.
+		if (i == 0)
+		{
+			return invalid_index;
+		}
 		return val;
 	}
 
 	bool is_valid(const ParameterState & state)
 	{
-		return !(state.theta_i_idx == ((size_t)-1) && state.r_idx == ((size_t)-1) && state.theta_s_idx == ((size_t)-1) && state.albedo_idx == ((size_t)-1) && state.g_idx == ((size_t)-1) && state.eta_idx == ((size_t)-1));
+		return !(state == invalid_index);
 	}
 
 	std::vector<size_t> get_dimensions();
@@ -111,7 +139,8 @@ private:
 		dst = (src + 1) % size;
 		return ((src + 1) / size) >= 1;
 	}
-	const ParameterState invalid_index = ParameterState(-1,-1,-1,-1,-1,-1);
+
+	const ParameterState invalid_index = ParameterState({ INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX });
 };
 
 

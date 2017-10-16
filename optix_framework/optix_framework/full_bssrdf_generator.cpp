@@ -162,9 +162,9 @@ optix::Buffer FullBSSRDFGenerator::get_output_buffer()
 	return result_buffer;
 }
 
-bool vector_gui(const char * name, std::vector<float> & vec, std::string & storage)
+bool vector_gui(const std::string & name, std::vector<float> & vec, std::string & storage)
 {	
-	if (ImGui::InputText(name, &storage[0], storage.size()))
+	if (ImGui::InputText(name.c_str(), &storage[0], storage.size()))
 	{
 		std::vector<float> c = tovalue<std::vector<float>>(storage);
 		storage = gui_string(vec);
@@ -218,18 +218,11 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 	if (ImmediateGUIDraw::CollapsingHeader("Parameter Range"))
 	{
-		static std::string theta_i_s = gui_string(mParameters.theta_i_v);
-		vector_gui("Simulated Theta i ", mParameters.theta_i_v, theta_i_s);
-		static std::string r_s = gui_string(mParameters.r_v);
-		vector_gui("Simulated r", mParameters.r_v, r_s);
-		static std::string theta_s_s = gui_string(mParameters.theta_s_v);
-		vector_gui("Simulated Theta s", mParameters.theta_s_v, theta_s_s);
-		static std::string albedo_s = gui_string(mParameters.albedo_v);
-		vector_gui("Simulated Albedo", mParameters.albedo_v, albedo_s);
-		static std::string g_s = gui_string(mParameters.g_v);
-		vector_gui("Simulated G", mParameters.g_v, g_s);
-		static std::string eta_s = gui_string(mParameters.eta_v);
-		vector_gui("Simulated Eta", mParameters.eta_v, eta_s);
+		for (int i = 0; i < mParameters.parameters.size(); i++)
+		{
+			static std::string s = gui_string(mParameters.parameters[i]);
+			vector_gui(std::string("Simulated") + mParameters.parameter_names[i], mParameters.parameters[i], s);
+		}
 	}
 
 	if (ImmediateGUIDraw::CollapsingHeader("Simulation Parameters"))
@@ -274,7 +267,7 @@ void FullBSSRDFGenerator::start_rendering()
 	dims.push_back(creator->get_hemisphere_size().y);
 	mExporter = std::make_unique<BSSRDFExporter>(mFilePath, dims);
 	
-	mState = ParameterState(0,0,0,0,0,0);
+	mState = ParameterState({ 0,0,0,0,0,0 });
 	creator->set_samples(mSimulationSamplesPerFrame);
 	creator->set_max_iterations(mSimulationMaxIterations);
 	mSimulationCurrentFrame = 0;
@@ -293,7 +286,7 @@ void FullBSSRDFGenerator::update_rendering()
 	{
 		if (mSimulationCurrentFrame == mSimulationFrames - 1)
 		{
-			Logger::info << "Simulation frame complete. " << creator->get_samples() << " samples." << std::endl;
+			Logger::info << "Simulation frame "<< mState.tostring() <<" complete. " << creator->get_samples() << " samples." << std::endl;
 			float extinction = 1.0f;
 			float theta_i; float r; float theta_s; float albedo;  float g; float eta;
 			mParameters.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
@@ -301,7 +294,7 @@ void FullBSSRDFGenerator::update_rendering()
 			creator->set_geometry_parameters(theta_i, r, theta_s);
 			creator->set_material_parameters(albedo, extinction, g, eta);
 
-			mExporter->set_hemisphere(mCurrentHemisphereData, {mState.eta_idx, mState.g_idx, mState.albedo_idx, mState.theta_s_idx, mState.r_idx, mState.theta_i_idx});
+			mExporter->set_hemisphere(mCurrentHemisphereData, mState.mData);
 
 			mState = mParameters.next(mState);
 			mSimulationCurrentFrame = 0;
@@ -372,5 +365,8 @@ void FullBSSRDFGenerator::set_render_mode(RenderMode toapply)
 
 std::vector<size_t> FullBSSRDFParameters::get_dimensions()
 {
-	return{ eta_v.size(), g_v.size(), albedo_v.size(), theta_s_v.size(), r_v.size(), theta_i_v.size() };
+	std::vector<size_t> dims(parameters.size());
+	for (int i = 0; i < dims.size(); i++)
+		dims[i] = parameters[i].size();
+	return dims;
 }
