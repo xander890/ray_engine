@@ -99,10 +99,12 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 		mCurrentHemisphereData = new float[creator->get_storage_size()];
 	}
 
+	mExternalBSSRDFBuffer = m_context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, 1);
+
 }
 
 
-void normalize(float * data, int size)
+void normalize(float * data, size_t size)
 {
 	float max_elem = 0.0f;
 	for (int i = 0; i < size; i++)
@@ -183,12 +185,32 @@ void FullBSSRDFGenerator::post_draw_callback()
 	ImmediateGUIDraw::Checkbox("Pause", (bool*)&mPaused);
 
 	const char * comboelements[2] = { "Render BSSRDF", "Show Existing BSSRDF" };
+	if (ImmediateGUIDraw::Combo("Select Render mode", (int*)&mCurrentRenderMode, comboelements, 2, 2))
+	{
+		set_render_mode(mCurrentRenderMode);
+	}
 
 	creator->on_draw(true);
 
 	if (ImmediateGUIDraw::CollapsingHeader("Load existing BSSRDF"))
 	{
+		ImmediateGUIDraw::InputText("Path##BSSRDFExtPath", &mExternalFilePath[0], mExternalFilePath.size(), ImGuiInputTextFlags_ReadOnly);
 
+		std::string filePath;
+		if (ImmediateGUIDraw::Button("Choose bssrdf path...##BSSRDFExtPathButton"))
+		{
+			std::string filePath;
+			if (Dialogs::saveFileDialog(filePath))
+			{
+				mExternalFilePath = filePath;
+			}
+		}
+
+		if (ImmediateGUIDraw::Button("Load BSSRDF"))
+		{
+			set_external_bssrdf(mExternalFilePath);
+			set_render_mode(RenderMode::SHOW_EXISTING_BSSRDF);
+		}
 	}
 
 	if (ImmediateGUIDraw::CollapsingHeader("Parameter Range"))
@@ -271,7 +293,6 @@ void FullBSSRDFGenerator::update_rendering()
 			creator->set_material_parameters(albedo, extinction, g, eta);
 
 			mExporter->set_hemisphere(mCurrentHemisphereData, {mState.eta_idx, mState.g_idx, mState.albedo_idx, mState.theta_s_idx, mState.r_idx, mState.theta_i_idx});
-			//write_hemisphere(mFilePath, mParameters.flatten(mState), mCurrentHemisphereData, creator->get_storage_size() * sizeof(float));
 
 			mState = mParameters.next(mState);
 			mSimulationCurrentFrame = 0;
@@ -310,19 +331,34 @@ bool FullBSSRDFGenerator::mouse_moving(int x, int y)
 	return gui->mouseMoving(x, y);
 }
 
-void FullBSSRDFGenerator::write_hemisphere(std::string file, size_t flattened_index, float * hemisphere, size_t hemisphere_size_bytes)
-{
-	size_t pos = flattened_index * hemisphere_size_bytes;
-	std::ofstream of;
-	of.open(file, std::ofstream::out | std::ofstream::in | std::ofstream::binary);
-	of.seekp(pos);
-	of.write(reinterpret_cast<char*>(hemisphere), hemisphere_size_bytes);
-	of.close();
-}
-
 void FullBSSRDFGenerator::clean_up()
 {
 	delete[] mCurrentHemisphereData;
+}
+
+void FullBSSRDFGenerator::set_external_bssrdf(const std::string & file)
+{
+	BSSRDFLoader loader(file);
+	std::vector<size_t> dims;
+	loader.get_dimensions(dims);
+	mExternalBSSRDFBuffer->setSize(dims[phi_o_index], dims[theta_o_index]);
+	float * data = (float*)mExternalBSSRDFBuffer->map();
+	loader.load_hemisphere(data, {0,0,0,0,0,0});
+	normalize(data, dims[phi_o_index] * dims[theta_o_index]);
+	mExternalBSSRDFBuffer->unmap();
+}
+
+void FullBSSRDFGenerator::set_render_mode(RenderMode toapply)
+{
+	mCurrentRenderMode = toapply;
+	if (mCurrentRenderMode == RenderMode::RENDER_BSSRDF)
+	{
+		mBSSRDFHemisphereTex->setBuffer(mBSSRDFBufferTexture);
+	}
+	else if (mCurrentRenderMode == RenderMode::SHOW_EXISTING_BSSRDF)
+	{
+		mBSSRDFHemisphereTex->setBuffer(mExternalBSSRDFBuffer);
+	}
 }
 
 std::vector<size_t> FullBSSRDFParameters::get_dimensions()

@@ -141,10 +141,12 @@ public:
 	bool mouse_pressed(int x, int y, int button, int action, int mods) override;
 	bool mouse_moving(int x, int y) override;
 
-	void write_hemisphere(std::string file, size_t index, float* hemisphere, size_t size);
-
 	void clean_up() override;
+
 private:
+
+	void set_external_bssrdf(const std::string & file);
+
 	optix::Buffer result_buffer;
 	std::unique_ptr<ReferenceBSSRDF> creator;
 	std::string config_file;
@@ -171,5 +173,11 @@ private:
 	bool mPaused = false;
 	RenderMode mCurrentRenderMode = RENDER_BSSRDF;
 	std::unique_ptr<BSSRDFExporter> mExporter = nullptr;
+
+	optix::Buffer mExternalBSSRDFBuffer;
+	std::string mExternalFilePath = "test.bssrdf";
+
+	void set_render_mode(RenderMode toapply);
+
 };
 

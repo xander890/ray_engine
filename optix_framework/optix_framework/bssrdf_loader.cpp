@@ -25,7 +25,7 @@ size_t BSSRDFLoader::get_material_slice_size()
 
 size_t BSSRDFLoader::get_hemisphere_size()
 {
-	return mDimensions[phi_o_index] * mDimensions[theta_o_index] * sizeof(float);
+	return mDimensions[phi_o_index] * mDimensions[theta_o_index];
 }
 
 void BSSRDFLoader::load_material_slice(float * bssrdf_data, const std::vector<size_t>& idx)
@@ -36,7 +36,7 @@ void BSSRDFLoader::load_material_slice(float * bssrdf_data, const std::vector<si
 	std::ifstream ifs;
 	ifs.open(mFileName, std::ofstream::in | std::ofstream::binary);
 	ifs.seekg(pos + mBSSRDFStart);
-	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_material_slice_size());
+	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_material_slice_size() * sizeof(float));
 	ifs.close();
 }
 
@@ -48,7 +48,7 @@ void BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t
 	std::ifstream ifs;
 	ifs.open(mFileName, std::ofstream::in | std::ofstream::binary);
 	ifs.seekg(pos + mBSSRDFStart);
-	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_hemisphere_size());
+	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_hemisphere_size() * sizeof(float));
 	ifs.close();
 }
 	
@@ -121,7 +121,7 @@ size_t BSSRDFExporter::get_material_slice_size()
 
 size_t BSSRDFExporter::get_hemisphere_size()
 {
-	return mDimensions[phi_o_index] * mDimensions[theta_o_index] * sizeof(float);
+	return mDimensions[phi_o_index] * mDimensions[theta_o_index];
 }
 
 void BSSRDFExporter::set_material_slice(const float * bssrdf_data, const std::vector<size_t>& idx)
@@ -132,7 +132,7 @@ void BSSRDFExporter::set_material_slice(const float * bssrdf_data, const std::ve
 	std::ofstream ofs;
 	ofs.open(mFileName, std::ofstream::in | std::ofstream::out | std::ofstream::binary);
 	ofs.seekp(pos + mBSSRDFStart);
-	ofs.write(reinterpret_cast<const char*>(bssrdf_data), get_material_slice_size());
+	ofs.write(reinterpret_cast<const char*>(bssrdf_data), get_material_slice_size() * sizeof(float));
 	ofs.close();
 }
 
@@ -144,7 +144,7 @@ void BSSRDFExporter::set_hemisphere(const float * bssrdf_data, const std::vector
 	std::ofstream ofs;
 	ofs.open(mFileName, std::ofstream::in | std::ofstream::out | std::ofstream::binary);
 	ofs.seekp(pos + mBSSRDFStart);
-	ofs.write(reinterpret_cast<const char*>(bssrdf_data), get_hemisphere_size());
+	ofs.write(reinterpret_cast<const char*>(bssrdf_data), get_hemisphere_size() * sizeof(float));
 	ofs.close();
 }
 
