@@ -100,7 +100,7 @@ bool BSSRDFLoader::parse_header()
 size_t flatten_index(const std::vector<size_t>& idx, const std::vector<size_t>& size)
 {
 	size_t id = idx[eta_index];
-	for (int i = 1; i < 8; i++)
+	for (int i = 1; i < size.size(); i++)
 	{
 		id = id * size[i] + idx[i];
 	}

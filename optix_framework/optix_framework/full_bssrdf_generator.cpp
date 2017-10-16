@@ -293,7 +293,7 @@ void FullBSSRDFGenerator::update_rendering()
 	{
 		if (mSimulationCurrentFrame == mSimulationFrames - 1)
 		{
-			Logger::info << "Simulation frame "<< mState.tostring() <<" complete. " << creator->get_samples() << " samples." << std::endl;
+			Logger::info << "Simulation frame "<< mState.tostring() <<" complete. ("<< flatten_index(mState.mData, mParameters.get_dimensions()) <<"/"<< mParameters.get_size() <<") " << creator->get_samples() << " samples. " << std::endl;
 			float extinction = 1.0f;
 			float theta_i; float r; float theta_s; float albedo;  float g; float eta;
 			mParameters.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
