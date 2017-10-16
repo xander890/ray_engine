@@ -31,19 +31,19 @@ public:
 	//std::vector<float> g =			{ -0.9f, -0.7f, -0.5f, -0.3f, 0.0f, 0.3f, 0.5f, 0.7f, 0.9f, 0.95f, 0.99f };
 	//std::vector<float> eta =		{ 1.0f, 1.1f, 1.2f, 1.3f, 1.4f };
 
-	//std::vector<float> theta_i_v = { 0, 15, 30, 45, 60, 70, 80, 88 };
-	//std::vector<float> r_v = { 0.01f, 0.05f, 0.1f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 4.0f, 8.0f, 10.0f };
-	//std::vector<float> theta_s_v = { 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 };
-	//std::vector<float> albedo_v = { 0.9f };
-	//std::vector<float> g_v = { 0.3f };
-	//std::vector<float> eta_v = { 1.0f };
-
-	std::vector<float> theta_i_v = { 0 };
-	std::vector<float> r_v = { 0.1f };
-	std::vector<float> theta_s_v = { 0 };
+	std::vector<float> theta_i_v = { 0, 15, 30, 45, 60, 70, 80, 88 };
+	std::vector<float> r_v = { 0.01f, 0.05f, 0.1f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 4.0f, 8.0f, 10.0f };
+	std::vector<float> theta_s_v = { 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 };
 	std::vector<float> albedo_v = { 0.9f };
 	std::vector<float> g_v = { 0.3f };
 	std::vector<float> eta_v = { 1.0f };
+
+	//std::vector<float> theta_i_v = { 70 };
+	//std::vector<float> r_v = { 0.1f };
+	//std::vector<float> theta_s_v = { 45 };
+	//std::vector<float> albedo_v = { 0.9f };
+	//std::vector<float> g_v = { 0.3f };
+	//std::vector<float> eta_v = { 1.0f };
 
 	size_t flatten(size_t theta_i_idx, size_t r_idx, size_t theta_s_idx)
 	{
@@ -166,8 +166,8 @@ private:
 	std::string mFilePath = "test.bssrdf";
 
 	int mSimulationSamplesPerFrame = (int)1e7;
-	int mSimulationFrames = 2;
-	int mSimulationMaxIterations = (int)1e4;
+	int mSimulationFrames = 10;
+	int mSimulationMaxIterations = (int)1e9;
 
 	float * mCurrentHemisphereData = nullptr;
 	bool mPaused = false;

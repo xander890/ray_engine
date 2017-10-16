@@ -20,7 +20,7 @@ public:
 	optix::Buffer mAtomicPhotonCounterBuffer = nullptr;
 	optix::Buffer mPhotonBuffer = nullptr;
 	void reset() override;
-	unsigned int mBatchIterations = (int)1e5;
+	unsigned int mBatchIterations = (int)1e4;
 	unsigned int mMaxFrames = 100;
 	size_t mPhotons = 0;
 };

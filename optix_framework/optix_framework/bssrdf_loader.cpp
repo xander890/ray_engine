@@ -102,7 +102,7 @@ BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<s
 	for (size_t element : dimensions)
 		total_size *= element;
 
-	mBSSRDFStart = write_header();
+	mBSSRDFStart = write_header(std::ofstream::out);
 
 	std::ofstream of;
 	of.open(mFileName, std::ofstream::in | std::ofstream::out | std::ofstream::binary);
@@ -110,7 +110,7 @@ BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<s
 	of.put('\0');
 	of.close();
 
-	mBSSRDFStart = write_header();
+	mBSSRDFStart = write_header(std::ofstream::in | std::ofstream::out);
 
 }
 
@@ -148,10 +148,10 @@ void BSSRDFExporter::set_hemisphere(const float * bssrdf_data, const std::vector
 	ofs.close();
 }
 
-size_t BSSRDFExporter::write_header()
+size_t BSSRDFExporter::write_header(int mode)
 {
 	std::ofstream of;
-	of.open(mFileName, std::ofstream::in | std::ofstream::out);
+	of.open(mFileName, mode);
 	of << "# BSSRDF file format (version 0.1)" << std::endl;
 	of << "# Index dimensions is at follows:" << std::endl;
 	of << size_delimiter << " ";

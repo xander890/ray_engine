@@ -103,7 +103,6 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 
 }
 
-
 void normalize(float * data, size_t size)
 {
 	float max_elem = 0.0f;
@@ -276,6 +275,12 @@ void FullBSSRDFGenerator::start_rendering()
 	creator->set_max_iterations(mSimulationMaxIterations);
 	mSimulationCurrentFrame = 0;
 	creator->set_read_only(true);
+
+	float extinction = 1.0f;
+	float theta_i; float r; float theta_s; float albedo;  float g; float eta;
+	mParameters.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
+	creator->set_geometry_parameters(theta_i, r, theta_s);
+	creator->set_material_parameters(albedo, extinction, g, eta);
 }
 
 void FullBSSRDFGenerator::update_rendering()
