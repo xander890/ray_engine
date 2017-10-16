@@ -81,7 +81,7 @@ RT_PROGRAM void reference_bssrdf_gpu()
 		p.wp = w12;
 		p.i = 0;
 		p.status = PHOTON_STATUS_SCATTERING;
-		atomicAdd(&photon_counter[0], 1);
+		atomicAdd(&photon_counter[ref_frame_number], 1);
 	}
 
 	if (scatter_photon(p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
@@ -107,7 +107,7 @@ RT_PROGRAM void reference_bssrdf_gpu()
 
 RT_PROGRAM void reference_bssrdf_gpu_post()
 {
-	float photons = 0.0f;
+	unsigned int photons = 0;
 	for (int i = 0; i < photon_counter.buf.size(); i++)
 	{
 		photons += photon_counter[i];
