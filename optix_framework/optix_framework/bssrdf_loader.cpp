@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include "logger.h"
+#include "parserstringhelpers.h"
 
 BSSRDFLoader::BSSRDFLoader(const std::string & filename)
 {
@@ -106,22 +107,20 @@ size_t flatten_index(const std::vector<size_t>& idx, const std::vector<size_t>& 
 	return id;
 }
 
-BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<size_t>& dimensions) : mFileName(filename), mDimensions(dimensions)
+BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<size_t>& dimensions, const std::map<size_t, std::vector<float>> & parameters) : mFileName(filename), mDimensions(dimensions)
 {
 	size_t total_size = sizeof(float);
 	for (size_t element : dimensions)
 		total_size *= element;
 
-	mBSSRDFStart = write_header(std::ofstream::out);
+	mBSSRDFStart = write_header(std::ofstream::out, parameters);
 
 	std::ofstream of;
 	of.open(mFileName, std::ofstream::in | std::ofstream::out | std::ofstream::binary);
 	of.seekp(mBSSRDFStart + total_size - 1);
 	of.put('\0');
 	of.close();
-
-	//mBSSRDFStart = write_header(std::ofstream::in | std::ofstream::out);
-
+	
 }
 
 size_t BSSRDFExporter::get_material_slice_size()
@@ -158,7 +157,7 @@ void BSSRDFExporter::set_hemisphere(const float * bssrdf_data, const std::vector
 	ofs.close();
 }
 
-size_t BSSRDFExporter::write_header(int mode)
+size_t BSSRDFExporter::write_header(int mode, const std::map<size_t, std::vector<float>>& parameters)
 {
 	std::ofstream of;
 	of.open(mFileName, mode);
@@ -171,6 +170,12 @@ size_t BSSRDFExporter::write_header(int mode)
 	}
 	of << std::endl;
 	of << "#eta\tg\talbedo\ttheta_s\tr\ttheta_i\tphi_o\ttheta_o" << std::endl;
+	
+	for (const auto & pair : parameters)
+	{
+		of << "PARAMETER " << pair.first << " " << stringize(pair.second.data(), pair.second.size(), 2)<< std::endl;
+	}	
+	
 	of << bssrdf_delimiter << std::endl;
 	size_t t = of.tellp();
 	of.close();

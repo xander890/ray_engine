@@ -10,6 +10,8 @@
 #include <sstream>
 #include "reference_bssrdf_gpu.h"
 
+#pragma warning(disable : 4996)
+
 std::string gui_string(std::vector<float> & data)
 {
 	std::stringstream ss;
@@ -164,9 +166,12 @@ optix::Buffer FullBSSRDFGenerator::get_output_buffer()
 
 bool vector_gui(const std::string & name, std::vector<float> & vec, std::string & storage)
 {	
-	if (ImGui::InputText(name.c_str(), &storage[0], storage.size()))
+	static char buf[256];
+	storage.copy(buf, storage.size());
+	buf[storage.size() + 1] = '\0';
+	if (ImGui::InputText(name.c_str(), buf, storage.size()))
 	{
-		std::vector<float> c = tovalue<std::vector<float>>(storage);
+		std::vector<float> c = tovalue<std::vector<float>>(std::string(buf));
 		storage = gui_string(vec);
 		vec.clear();
 		vec.insert(vec.begin(), c.begin(), c.end());
@@ -220,8 +225,9 @@ void FullBSSRDFGenerator::post_draw_callback()
 	{
 		for (int i = 0; i < mParameters.parameters.size(); i++)
 		{
-			static std::string s = gui_string(mParameters.parameters[i]);
-			vector_gui(std::string("Simulated") + mParameters.parameter_names[i], mParameters.parameters[i], s);
+			if (pStrings[i] == "")
+				pStrings[i] = gui_string(mParameters.parameters[i]);
+			vector_gui(std::string("Simulated ") + mParameters.parameter_names[i], mParameters.parameters[i], pStrings[i]);
 		}
 	}
 
@@ -265,7 +271,8 @@ void FullBSSRDFGenerator::start_rendering()
 	std::vector<size_t> dims = mParameters.get_dimensions();
 	dims.push_back(creator->get_hemisphere_size().x);
 	dims.push_back(creator->get_hemisphere_size().y);
-	mExporter = std::make_unique<BSSRDFExporter>(mFilePath, dims);
+
+		mExporter = std::make_unique<BSSRDFExporter>(mFilePath, dims, mParameters.parameters);
 	
 	mState = ParameterState({ 0,0,0,0,0,0 });
 	creator->set_samples(mSimulationSamplesPerFrame);

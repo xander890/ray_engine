@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <map>
 
 #define bssrdf_delimiter std::string("BSSRDF")
 #define size_delimiter std::string("SIZE")
@@ -38,7 +39,7 @@ private:
 class BSSRDFExporter
 {
 public:
-	BSSRDFExporter(const std::string & filename, const std::vector<size_t> & dimensions);
+	BSSRDFExporter(const std::string & filename, const std::vector<size_t> & dimensions, const std::map<size_t, std::vector<float>> & parameters);
 	size_t get_material_slice_size();
 	size_t get_hemisphere_size();
 
@@ -46,7 +47,7 @@ public:
 	void set_hemisphere(const float * bssrdf, const std::vector<size_t> & idx);
 
 private:
-	size_t write_header(int mode);
+	size_t write_header(int mode, const std::map<size_t, std::vector<float>> & parameters);
 	std::vector<size_t> mDimensions;
 	size_t mBSSRDFStart = 0;
 	std::string mFileName;

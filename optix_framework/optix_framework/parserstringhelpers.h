@@ -28,10 +28,13 @@ inline std::string stringize(std::initializer_list<T> nums)
 template<typename T>
 inline std::string tostring(T p) {return std::to_string(p);}
 
+
 template<typename T>
-inline std::string stringize(T* nums, std::size_t size)
+inline std::string stringize(T* nums, std::size_t size, size_t precision = 8)
 {
 	std::stringstream ss;
+	ss << std::fixed;
+	ss.precision(precision);
 	for (int i = 0; i < size; i++)
 		ss << tostring(nums[i]) << " ";
 	return ss.str();
