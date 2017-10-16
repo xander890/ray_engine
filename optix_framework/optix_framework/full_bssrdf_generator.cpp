@@ -125,24 +125,28 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 		m_context["frame"]->setInt(frame);
 
 		creator->load_data();
-		creator->render();
 
-		m_context["show_false_colors"]->setUint(mShowFalseColors);
-		m_context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
-
-		if (is_rendering)
+		if (mCurrentRenderMode == RenderMode::RENDER_BSSRDF)
 		{
-			int i = 0;
+			creator->render();
+
+			m_context["show_false_colors"]->setUint(mShowFalseColors);
+			m_context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
+
+			if (is_rendering)
+			{
+				int i = 0;
+			}
+
+			void* source = creator->get_output_buffer()->map();
+			void* dest = mBSSRDFBufferTexture->map();
+
+			memcpy(mCurrentHemisphereData, source, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
+			memcpy(dest, mCurrentHemisphereData, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
+			normalize((float*)dest, (int)creator->get_storage_size());
+			creator->get_output_buffer()->unmap();
+			mBSSRDFBufferTexture->unmap();
 		}
-
-		void* source = creator->get_output_buffer()->map();
-		void* dest = mBSSRDFBufferTexture->map();
-
-		memcpy(mCurrentHemisphereData, source, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
-		memcpy(dest, mCurrentHemisphereData, creator->get_hemisphere_size().x*creator->get_hemisphere_size().y * sizeof(float));
-		normalize((float*)dest, (int)creator->get_storage_size());
-		creator->get_output_buffer()->unmap();
-		mBSSRDFBufferTexture->unmap();
 
 		RTsize w, h;
 		result_buffer->getSize(w, h);
@@ -199,7 +203,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 		if (ImmediateGUIDraw::Button("Choose bssrdf path...##BSSRDFExtPathButton"))
 		{
 			std::string filePath;
-			if (Dialogs::saveFileDialog(filePath))
+			if (Dialogs::openFileDialog(filePath))
 			{
 				mExternalFilePath = filePath;
 			}

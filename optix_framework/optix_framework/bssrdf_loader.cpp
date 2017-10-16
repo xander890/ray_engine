@@ -55,15 +55,25 @@ void BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t
 bool BSSRDFLoader::parse_header()
 {
 
-	std::ifstream file(mFileName);
-	std::string str;
+	std::ifstream file(mFileName, std::ofstream::in | std::ofstream::binary);
+
+#define MAX_HEADER_SIZE 2048
+	char header[MAX_HEADER_SIZE];
+	file.read(header, MAX_HEADER_SIZE * sizeof(char));
+	std::string str(header);
+
+	size_t bssrdf_del = str.find(std::string("\n") + bssrdf_delimiter);
 
 	bool parsed_dimensions = false;
 	bool has_bssrdf_flag = false;
-	while (std::getline(file, str)) {
+
+	mBSSRDFStart = str.find("\n", bssrdf_del + 1) + 1;
+
+	std::stringstream ss(str);
+
+	while (std::getline(ss, str)) {
 		if (str.size() >= bssrdf_delimiter.size() && str.substr(0, bssrdf_delimiter.size()).compare(bssrdf_delimiter) == 0)
 		{
-			mBSSRDFStart = file.tellg();
 			has_bssrdf_flag = true;
 			break;
 		}
@@ -110,7 +120,7 @@ BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<s
 	of.put('\0');
 	of.close();
 
-	mBSSRDFStart = write_header(std::ofstream::in | std::ofstream::out);
+	//mBSSRDFStart = write_header(std::ofstream::in | std::ofstream::out);
 
 }
 
