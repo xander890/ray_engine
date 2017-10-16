@@ -21,7 +21,7 @@ public:
 	optix::Buffer mPhotonBuffer = nullptr;
 	void reset() override;
 	unsigned int mBatchIterations = (int)1e4;
-	unsigned int mMaxFrames = 100;
-	size_t mPhotons = 0;
+	unsigned int mMaxFrames = 1000;
+	unsigned long long mPhotons = 0;
 };
 

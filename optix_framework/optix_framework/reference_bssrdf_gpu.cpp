@@ -58,7 +58,7 @@ void ReferenceBSSRDFGPU::render()
 	mPhotons = 0;
 	for (unsigned int i = 0; i < mRenderedFrames; i++)
 	{
-		mPhotons += bufs[i];
+		mPhotons += (size_t)(bufs[i]);
 	}
 	mAtomicPhotonCounterBuffer->unmap();
 }
