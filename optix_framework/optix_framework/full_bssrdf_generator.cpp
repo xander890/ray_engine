@@ -123,9 +123,7 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 	{
 		m_context["frame"]->setInt(frame);
 
-
 		creator->load_data();
-
 		creator->render();
 
 		m_context["show_false_colors"]->setUint(mShowFalseColors);
@@ -180,10 +178,18 @@ void FullBSSRDFGenerator::post_draw_callback()
 	
 	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
 
-	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors); ImmediateGUIDraw::SameLine();
+	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors); 
+	ImmediateGUIDraw::SameLine();
 	ImmediateGUIDraw::Checkbox("Pause", (bool*)&mPaused);
 
+	const char * comboelements[2] = { "Render BSSRDF", "Show Existing BSSRDF" };
+
 	creator->on_draw(true);
+
+	if (ImmediateGUIDraw::CollapsingHeader("Load existing BSSRDF"))
+	{
+
+	}
 
 	if (ImmediateGUIDraw::CollapsingHeader("Parameter Range"))
 	{
@@ -203,10 +209,10 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 	if (ImmediateGUIDraw::CollapsingHeader("Simulation Parameters"))
 	{
-		ImmediateGUIDraw::InputText("Path", &mFilePath[0], mFilePath.size(), ImGuiInputTextFlags_ReadOnly);
+		ImmediateGUIDraw::InputText("Path##BSSRDFDestPath", &mFilePath[0], mFilePath.size(), ImGuiInputTextFlags_ReadOnly);
 
 		std::string filePath;
-		if (ImmediateGUIDraw::Button("Choose bssrdf path..."))
+		if (ImmediateGUIDraw::Button("Choose bssrdf path...##BSSRDFDestPathButton"))
 		{
 			std::string filePath;
 			if (Dialogs::saveFileDialog(filePath))
@@ -238,21 +244,17 @@ void FullBSSRDFGenerator::start_rendering()
 
 	size_t total_size = mParameters.size() * sizeof(float) * creator->get_storage_size();
 
+	std::vector<size_t> dims = mParameters.get_dimensions();
+	dims.push_back(creator->get_hemisphere_size().x);
+	dims.push_back(creator->get_hemisphere_size().y);
+	mExporter = std::make_unique<BSSRDFExporter>(mFilePath, dims);
 	
-	std::ofstream of;
-	of.open(mFilePath);
-	of.seekp(total_size - 1);
-	of.put('\0');
-	of.close();
-
 	mState = ParameterState(0,0,0,0,0,0);
 	creator->set_samples(mSimulationSamplesPerFrame);
 	creator->set_max_iterations(mSimulationMaxIterations);
 	mSimulationCurrentFrame = 0;
 	creator->set_read_only(true);
 }
-
-
 
 void FullBSSRDFGenerator::update_rendering()
 {
@@ -268,7 +270,8 @@ void FullBSSRDFGenerator::update_rendering()
 			creator->set_geometry_parameters(theta_i, r, theta_s);
 			creator->set_material_parameters(albedo, extinction, g, eta);
 
-			write_hemisphere(mFilePath, mParameters.flatten(mState), mCurrentHemisphereData, creator->get_storage_size() * sizeof(float));
+			mExporter->set_hemisphere(mCurrentHemisphereData, {mState.eta_idx, mState.g_idx, mState.albedo_idx, mState.theta_s_idx, mState.r_idx, mState.theta_i_idx});
+			//write_hemisphere(mFilePath, mParameters.flatten(mState), mCurrentHemisphereData, creator->get_storage_size() * sizeof(float));
 
 			mState = mParameters.next(mState);
 			mSimulationCurrentFrame = 0;
@@ -322,4 +325,7 @@ void FullBSSRDFGenerator::clean_up()
 	delete[] mCurrentHemisphereData;
 }
 
-
+std::vector<size_t> FullBSSRDFParameters::get_dimensions()
+{
+	return{ eta_v.size(), g_v.size(), albedo_v.size(), theta_s_v.size(), r_v.size(), theta_i_v.size() };
+}

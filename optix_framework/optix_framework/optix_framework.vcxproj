@@ -179,6 +179,7 @@ echo Done.</Command>
     <ClCompile Include="box.cpp" />
     <ClCompile Include="brdf_utils.cpp" />
     <ClCompile Include="bssrdf_creator.cpp" />
+    <ClCompile Include="bssrdf_loader.cpp" />
     <ClCompile Include="bssrdf_visualizer.cpp" />
     <ClCompile Include="camera_host.cpp" />
     <ClCompile Include="chull.cpp" />
@@ -681,6 +682,7 @@ echo Done.</Command>
     <ClInclude Include="box.h" />
     <ClInclude Include="bssrdf.h" />
     <ClInclude Include="bssrdf_creator.h" />
+    <ClInclude Include="bssrdf_loader.h" />
     <ClInclude Include="bssrdf_sampling_properties.h" />
     <ClInclude Include="bssrdf_visualizer.h" />
     <ClInclude Include="camera.h" />

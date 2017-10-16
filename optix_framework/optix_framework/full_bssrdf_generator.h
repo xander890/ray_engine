@@ -2,6 +2,7 @@
 #include "SampleScene.h"
 #include <memory>
 #include <bssrdf_creator.h>
+#include <bssrdf_loader.h>
 
 class ImmediateGUI;
 
@@ -30,9 +31,16 @@ public:
 	//std::vector<float> g =			{ -0.9f, -0.7f, -0.5f, -0.3f, 0.0f, 0.3f, 0.5f, 0.7f, 0.9f, 0.95f, 0.99f };
 	//std::vector<float> eta =		{ 1.0f, 1.1f, 1.2f, 1.3f, 1.4f };
 
-	std::vector<float> theta_i_v = { 0, 15, 30, 45, 60, 70, 80, 88 };
-	std::vector<float> r_v = { 0.01f, 0.05f, 0.1f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 4.0f, 8.0f, 10.0f };
-	std::vector<float> theta_s_v = { 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 };
+	//std::vector<float> theta_i_v = { 0, 15, 30, 45, 60, 70, 80, 88 };
+	//std::vector<float> r_v = { 0.01f, 0.05f, 0.1f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 4.0f, 8.0f, 10.0f };
+	//std::vector<float> theta_s_v = { 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 };
+	//std::vector<float> albedo_v = { 0.9f };
+	//std::vector<float> g_v = { 0.3f };
+	//std::vector<float> eta_v = { 1.0f };
+
+	std::vector<float> theta_i_v = { 0 };
+	std::vector<float> r_v = { 0.1f };
+	std::vector<float> theta_s_v = { 0 };
 	std::vector<float> albedo_v = { 0.9f };
 	std::vector<float> g_v = { 0.3f };
 	std::vector<float> eta_v = { 1.0f };
@@ -95,6 +103,8 @@ public:
 		return !(state.theta_i_idx == ((size_t)-1) && state.r_idx == ((size_t)-1) && state.theta_s_idx == ((size_t)-1) && state.albedo_idx == ((size_t)-1) && state.g_idx == ((size_t)-1) && state.eta_idx == ((size_t)-1));
 	}
 
+	std::vector<size_t> get_dimensions();
+
 private:
 	bool increment(size_t src, size_t size, size_t & dst)
 	{
@@ -108,6 +118,9 @@ private:
 class FullBSSRDFGenerator : public SampleScene
 {
 public:
+
+	enum RenderMode { RENDER_BSSRDF = 0, SHOW_EXISTING_BSSRDF = 1 };
+
 	FullBSSRDFGenerator(const char * config);
 	~FullBSSRDFGenerator();
 	void initialize_scene(GLFWwindow * window, InitialCameraData& camera_data) override;
@@ -156,5 +169,7 @@ private:
 
 	float * mCurrentHemisphereData = nullptr;
 	bool mPaused = false;
+	RenderMode mCurrentRenderMode = RENDER_BSSRDF;
+	std::unique_ptr<BSSRDFExporter> mExporter = nullptr;
 };
 

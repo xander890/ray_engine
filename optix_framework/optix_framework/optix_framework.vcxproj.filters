@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CudaCompile Include="CUDA_files\normal_shader.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
     <CudaCompile Include="CUDA_files\subsurface_scattering_shader.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
@@ -22,9 +19,6 @@
     <CudaCompile Include="CUDA_files\tonemap_camera.cu">
       <Filter>CUDA_files\Cameras</Filter>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\lambertian_shader.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
     <CudaCompile Include="CUDA_files\sky_model_background.cu">
       <Filter>CUDA_files\Miss Programs</Filter>
     </CudaCompile>
@@ -34,21 +28,6 @@
     <CudaCompile Include="CUDA_files\environment_map_background.cu">
       <Filter>CUDA_files\Miss Programs</Filter>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\glass_shader.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\mirror_shader.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\metal_shader.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\constant_shader.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\glossy_shader.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
     <CudaCompile Include="CUDA_files\chull.cu">
       <Filter>CUDA_files\Mesh</Filter>
     </CudaCompile>
@@ -57,18 +36,6 @@
     </CudaCompile>
     <CudaCompile Include="CUDA_files\env_cameras.cu">
       <Filter>CUDA_files\Cameras</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\dispersion_shader.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\absorbing_glass.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\volume_shader.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu">
-      <Filter>CUDA_files</Filter>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\depth_ray.cu">
       <Filter>CUDA_files</Filter>
@@ -96,6 +63,39 @@
     </CudaCompile>
     <CudaCompile Include="CUDA_files\bssrdf_plane_visualizer.cu">
       <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\absorbing_glass.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\constant_shader.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\dispersion_shader.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\glass_shader.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\glossy_shader.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\lambertian_shader.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\metal_shader.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\mirror_shader.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\normal_shader.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\volume_shader.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu">
+      <Filter>CUDA_files\Standard Shaders</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
@@ -270,6 +270,7 @@
     <ClCompile Include="bssrdf_creator.cpp">
       <Filter>Source Files\BSSRDF</Filter>
     </ClCompile>
+    <ClCompile Include="bssrdf_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -589,6 +590,7 @@
     <ClInclude Include="quantized_diffusion_helpers.h">
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
+    <ClInclude Include="bssrdf_loader.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">
@@ -722,6 +724,9 @@
     </Filter>
     <Filter Include="Source Files\BSSRDF">
       <UniqueIdentifier>{3549d03c-40bc-4a66-9645-d9cfc6a6ef3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA_files\Standard Shaders">
+      <UniqueIdentifier>{a95124f8-9506-47c9-9dec-ef857f5e3107}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
