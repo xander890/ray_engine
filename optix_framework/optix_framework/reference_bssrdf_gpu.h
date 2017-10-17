@@ -2,10 +2,10 @@
 #include "reference_bssrdf.h"
 #include "bssrdf_creator.h"
 
-class ReferenceBSSRDFGPU : public ReferenceBSSRDF
+class ReferenceBSSRDFGPU : public BSSRDFHemisphereSimulated
 {
 public:
-	ReferenceBSSRDFGPU(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : ReferenceBSSRDF(ctx, hemisphere,samples)
+	ReferenceBSSRDFGPU(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : BSSRDFHemisphereSimulated(ctx, hemisphere,samples)
 	{
 	}
 

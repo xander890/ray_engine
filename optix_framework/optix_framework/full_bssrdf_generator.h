@@ -188,7 +188,7 @@ private:
 	void set_external_bssrdf(const std::string & file);
 
 	optix::Buffer result_buffer;
-	std::unique_ptr<ReferenceBSSRDF> creator;
+	std::unique_ptr<BSSRDFHemisphereSimulated> creator;
 	std::string config_file;
 
 	int entry_point_output = -1;

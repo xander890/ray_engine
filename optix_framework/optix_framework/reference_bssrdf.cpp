@@ -40,14 +40,14 @@ void HemisphereBSSRDFShader::reset()
 	ref_impl->reset();
 }
 
-HemisphereBSSRDFShader::HemisphereBSSRDFShader(const ShaderInfo & shader_info, std::unique_ptr<EmpiricalBSSRDFCreator>& creator, int camera_width, int camera_height) : Shader(shader_info),
+HemisphereBSSRDFShader::HemisphereBSSRDFShader(const ShaderInfo & shader_info, std::unique_ptr<BSSRDFHemisphereRenderer>& creator, int camera_width, int camera_height) : Shader(shader_info),
 mCameraWidth(camera_width),
 mCameraHeight(camera_height)
 {
 	if (creator != nullptr)
 		ref_impl = std::move(creator);
 	else
-		ref_impl = std::make_unique<ReferenceBSSRDF>(context);
+		ref_impl = std::make_unique<BSSRDFHemisphereSimulated>(context);
 }
 
 void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
@@ -57,7 +57,7 @@ void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
 
 	 if (ref_impl == nullptr)
 	 {
-		 ref_impl = std::make_unique<ReferenceBSSRDF>(context);
+		 ref_impl = std::make_unique<BSSRDFHemisphereSimulated>(context);
 
 	 }
 

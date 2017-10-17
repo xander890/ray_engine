@@ -3,10 +3,10 @@
 #include <host_device_common.h>
 #include <scattering_properties.h>
 
-class EmpiricalBSSRDFCreator
+class BSSRDFHemisphereRenderer
 {
 public:
-	EmpiricalBSSRDFCreator(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : context(ctx), mHemisphereSize(hemisphere) {
+	BSSRDFHemisphereRenderer(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : context(ctx), mHemisphereSize(hemisphere) {
 		//mProperties.selected_bssrdf = ScatteringDipole::STANDARD_DIPOLE_BSSRDF;
 	}
 
@@ -55,10 +55,10 @@ protected:
 	bool mInitialized = false;
 };
 
-class ReferenceBSSRDF : public EmpiricalBSSRDFCreator
+class BSSRDFHemisphereSimulated : public BSSRDFHemisphereRenderer
 {
 public:
-	ReferenceBSSRDF(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : EmpiricalBSSRDFCreator(ctx, hemisphere), mSamples(samples)
+	BSSRDFHemisphereSimulated(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : BSSRDFHemisphereRenderer(ctx, hemisphere), mSamples(samples)
 	{
 	}
 
@@ -75,10 +75,10 @@ protected:
 
 };
 
-class PlanarBSSRDF : public EmpiricalBSSRDFCreator
+class PlanarBSSRDF : public BSSRDFHemisphereRenderer
 {
 public:
-	PlanarBSSRDF(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : EmpiricalBSSRDFCreator(ctx, hemisphere)
+	PlanarBSSRDF(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFHemisphereRenderer(ctx, hemisphere)
 	{
 		mScatteringDipole = dipole;
 	}

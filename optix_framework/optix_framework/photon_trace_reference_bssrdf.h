@@ -9,7 +9,7 @@
 #include "phase_function.h"
 
 #define RND_FUNC rnd_tea
-#define EXTINCTION_DISTANCE_RR
+//#define EXTINCTION_DISTANCE_RR
 //#define INCLUDE_SINGLE_SCATTERING
 
 // Simple util to do plane ray intersection.

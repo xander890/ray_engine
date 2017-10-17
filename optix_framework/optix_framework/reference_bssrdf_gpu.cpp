@@ -16,7 +16,7 @@ void ReferenceBSSRDFGPU::init()
 		mPhotonBuffer->setElementSize(sizeof(PhotonSample));
 	}
 
-	EmpiricalBSSRDFCreator::init();
+	BSSRDFHemisphereRenderer::init();
 	std::string ptx_path = get_path_ptx("reference_bssrdf_gpu.cu");
 	
 	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_gpu");
@@ -52,7 +52,7 @@ void ReferenceBSSRDFGPU::render()
 		return;
 
 	context->setPrintLaunchIndex(0,0,0);
-	ReferenceBSSRDF::render();
+	BSSRDFHemisphereSimulated::render();
 
 	int * bufs = (int*)mAtomicPhotonCounterBuffer->map();
 	mPhotons = 0;
@@ -65,19 +65,19 @@ void ReferenceBSSRDFGPU::render()
 
 void ReferenceBSSRDFGPU::load_data()
 {
-	ReferenceBSSRDF::load_data();
+	BSSRDFHemisphereSimulated::load_data();
 	context["batch_iterations"]->setUint(mBatchIterations);
 }
 
 void ReferenceBSSRDFGPU::set_samples(int samples)
 {
 	mPhotonBuffer->setSize(samples);
-	ReferenceBSSRDF::set_samples(samples);
+	BSSRDFHemisphereSimulated::set_samples(samples);
 }
 
 bool ReferenceBSSRDFGPU::on_draw(bool show_material_params)
 {
-	ReferenceBSSRDF::on_draw(show_material_params);
+	BSSRDFHemisphereSimulated::on_draw(show_material_params);
 	if (ImmediateGUIDraw::InputInt("Batch iterations", (int*)&mBatchIterations))
 	{
 		reset();
@@ -95,7 +95,7 @@ size_t ReferenceBSSRDFGPU::get_samples()
 
 void ReferenceBSSRDFGPU::reset()
 {
-	ReferenceBSSRDF::reset();
+	BSSRDFHemisphereSimulated::reset();
 
 	PhotonSample * buf = reinterpret_cast<PhotonSample*>(mPhotonBuffer->map());
 	PhotonSample start = get_empty_photon();

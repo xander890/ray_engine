@@ -47,9 +47,9 @@ RT_PROGRAM void reference_bssrdf_camera()
 	g = planar_bssrdf_material_params->meancosine.x;
 #endif
 
-	const float theta_i_rad = deg2rad(theta_i);
-	const float theta_s_rad = deg2rad(-theta_s);
-	const optix::float3 wi = normalize(optix::make_float3(-sinf(theta_i_rad), 0, cosf(theta_i_rad)));
+	const float theta_i_rad = theta_i;
+	const float theta_s_rad = theta_s;
+	const optix::float3 wi = normalize(optix::make_float3(sinf(theta_i_rad), 0, cosf(theta_i_rad)));
 
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);

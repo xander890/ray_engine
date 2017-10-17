@@ -5,7 +5,7 @@
 #include "folders.h"
 #include <sstream>
 
-void EmpiricalBSSRDFCreator::set_geometry_parameters(float theta_i, float r, float theta_s)
+void BSSRDFHemisphereRenderer::set_geometry_parameters(float theta_i, float r, float theta_s)
 {
 	mThetai = theta_i;
 	mThetas = theta_s;
@@ -13,18 +13,18 @@ void EmpiricalBSSRDFCreator::set_geometry_parameters(float theta_i, float r, flo
 	reset();
 }
 
-void EmpiricalBSSRDFCreator::load_data()
+void BSSRDFHemisphereRenderer::load_data()
 {
 	if (!mInitialized)
 		init();
 	context["ref_frame_number"]->setUint(mRenderedFrames);
-	context["reference_bssrdf_theta_i"]->setFloat(mThetai);
-	context["reference_bssrdf_theta_s"]->setFloat(mThetas);
+	context["reference_bssrdf_theta_i"]->setFloat(deg2rad(mThetai));
+	context["reference_bssrdf_theta_s"]->setFloat(deg2rad(mThetas));
 	context["reference_bssrdf_radius"]->setFloat(mRadius);
 	context["reference_bssrdf_rel_ior"]->setFloat(mIor);
 }
 
-void EmpiricalBSSRDFCreator::set_material_parameters(float albedo, float extinction, float g, float eta)
+void BSSRDFHemisphereRenderer::set_material_parameters(float albedo, float extinction, float g, float eta)
 {
 	mAlbedo = albedo;
 	mExtinction = extinction;
@@ -33,7 +33,7 @@ void EmpiricalBSSRDFCreator::set_material_parameters(float albedo, float extinct
 	reset();
 }
 
-void EmpiricalBSSRDFCreator::reset()
+void BSSRDFHemisphereRenderer::reset()
 {
 	if (!mInitialized)
 		init();
@@ -47,7 +47,7 @@ void EmpiricalBSSRDFCreator::reset()
 	mProperties->unmap();
 }
 
-void EmpiricalBSSRDFCreator::init()
+void BSSRDFHemisphereRenderer::init()
 {
 	mInitialized = true;
 	if (mBSSRDFBufferIntermediate.get() == nullptr)
@@ -75,7 +75,7 @@ void EmpiricalBSSRDFCreator::init()
 	reset();
 }
 
-bool EmpiricalBSSRDFCreator::on_draw(bool show_material_params)
+bool BSSRDFHemisphereRenderer::on_draw(bool show_material_params)
 {
 	bool changed = false;
 
@@ -108,7 +108,7 @@ bool EmpiricalBSSRDFCreator::on_draw(bool show_material_params)
 
 void PlanarBSSRDF::init()
 {
-	EmpiricalBSSRDFCreator::init();
+	BSSRDFHemisphereRenderer::init();
 	std::string ptx_path = get_path_ptx("planar_bssrdf.cu");
 	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
 	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
@@ -141,22 +141,22 @@ void PlanarBSSRDF::render()
 
 bool PlanarBSSRDF::on_draw(bool show_material_params)
 {
-	if (EmpiricalBSSRDFCreator::on_draw(show_material_params))
+	if (BSSRDFHemisphereRenderer::on_draw(show_material_params))
 		reset();
 	return false;
 }
 
 void PlanarBSSRDF::load_data()
 {
-	EmpiricalBSSRDFCreator::load_data();
+	BSSRDFHemisphereRenderer::load_data();
 	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());
 	cc->selected_bssrdf = mScatteringDipole;
 	mProperties->unmap();
 }
 
-void ReferenceBSSRDF::init()
+void BSSRDFHemisphereSimulated::init()
 {
-	EmpiricalBSSRDFCreator::init();
+	BSSRDFHemisphereRenderer::init();
 	std::string ptx_path = get_path_ptx("reference_bssrdf.cu");
 	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
 	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
@@ -176,7 +176,7 @@ void ReferenceBSSRDF::init()
 
 }
 
-void ReferenceBSSRDF::render()
+void BSSRDFHemisphereSimulated::render()
 {
 	if (!mInitialized)
 		init();
@@ -185,20 +185,20 @@ void ReferenceBSSRDF::render()
 	mRenderedFrames++;
 }
 
-void ReferenceBSSRDF::load_data()
+void BSSRDFHemisphereSimulated::load_data()
 {
-	EmpiricalBSSRDFCreator::load_data();
+	BSSRDFHemisphereRenderer::load_data();
 	context["maximum_iterations"]->setUint(mMaxIterations);
 	context["reference_bssrdf_samples_per_frame"]->setUint(mSamples);
 
 }
 
-bool ReferenceBSSRDF::on_draw(bool show_material_params)
+bool BSSRDFHemisphereSimulated::on_draw(bool show_material_params)
 {
 	std::stringstream ss;
 	ss << "Rendered: " << mRenderedFrames << " frames, " << mRenderedFrames*mSamples << " samples" << std::endl;
 	ImmediateGUIDraw::Text(ss.str().c_str());
-	bool changed = EmpiricalBSSRDFCreator::on_draw(show_material_params);
+	bool changed = BSSRDFHemisphereRenderer::on_draw(show_material_params);
 
 	static int smpl = mSamples;
 	if (ImmediateGUIDraw::InputInt("Samples", (int*)&smpl, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0))
@@ -217,13 +217,13 @@ bool ReferenceBSSRDF::on_draw(bool show_material_params)
 	return false;
 }
 
-void ReferenceBSSRDF::set_samples(int samples)
+void BSSRDFHemisphereSimulated::set_samples(int samples)
 {
 	mSamples = samples;
 	reset();
 }
 
-void ReferenceBSSRDF::set_max_iterations(int max_iter)
+void BSSRDFHemisphereSimulated::set_max_iterations(int max_iter)
 {
 	mMaxIterations = max_iter;
 	reset();
