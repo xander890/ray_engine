@@ -47,13 +47,26 @@ bool SampledBSSRDF::on_draw()
 {
 	std::vector<const char*> elems{ "Camera based (Mertens et. al)", "Tangent plane (with distance)" , "Tangent plane (with probes)", "MIS axis (no probes)",  "MIS axis + probes (King et al.)" };
 	
-	mHasChanged |= ImmediateGUIDraw::Combo("Sampling technique", (int*)&properties->sampling_method, elems.data(), (int)elems.size(), (int)elems.size());
+	if (ImmediateGUIDraw::Combo("Sampling technique", (int*)&properties->sampling_method, elems.data(), (int)elems.size(), (int)elems.size()))
+	{
+		mHasChanged = true;
+		if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS ||
+			properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES)
+		{
+			properties->use_jacobian = 0;
+		}
+		else
+		{
+			properties->use_jacobian = 1;
+		}
+	}
 	mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->use_jacobian);
 	if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE)
 	{
 		mHasChanged |= ImmediateGUIDraw::DragFloat("Distance from surface", &properties->d_max, 0.1f, 0.0f, 1.0f);
 		mHasChanged |= ImGui::InputFloat("Min no ni", &properties->dot_no_ni_min);
 	}
+
 	mHasChanged |= ImGui::RadioButton("Show all", &properties->show_mode, BSSRDF_SHADERS_SHOW_ALL); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Refraction", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFRACTION); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Reflection", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFLECTION);

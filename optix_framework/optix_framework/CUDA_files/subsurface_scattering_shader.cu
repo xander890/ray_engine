@@ -26,7 +26,6 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 
 // SS properties
 
-
 // Variables for shading
 rtBuffer<PositionSample> sampling_output_buffer;
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
@@ -40,7 +39,7 @@ RT_PROGRAM void any_hit_shadow()
   // this material is opaque, so it fully attenuates all shadow rays
   prd_shadow.attenuation = 0.0f;
   rtTerminateRay();
-}
+}  
 
 // Closest hit program for Lambertian shading using the basic light as a directional source
 RT_PROGRAM void shade() 
@@ -90,7 +89,7 @@ RT_PROGRAM void shade()
 		float3 wt = recip_ior*(cos_theta_o*no - wo) - no*cos_theta_t;
 		PerRayData_radiance prd_refracted = prepare_new_pt_payload(prd_radiance);
 		prd_refracted.seed = t;
-
+		 
 		Ray refracted(xo, wt,  RayType::RADIANCE, scene_epsilon);
 		rtTrace(top_object, refracted, prd_refracted);
 
@@ -123,6 +122,9 @@ RT_PROGRAM void shade()
 
 		float3 w21 = no * cos_theta_t - recip_ior * (cos_theta_o * no - wo);
 
+#ifdef TEST_SAMPLING
+		accumulate += make_float3(TEST_SAMPLING_W)*sample.L;
+#else
         // compute contribution if sample is non-zero
         if (dot(sample.L, sample.L) > 0.0f)
         {
@@ -134,6 +136,7 @@ RT_PROGRAM void shade()
                 accumulate += T12*sample.L*bssrdf(sample.pos, sample.normal, w12, xo, no, w21, props) / exp_term;
             }
         }
+#endif
     }
 #ifdef TRANSMIT
     prd_radiance.result += accumulate / (float)N;

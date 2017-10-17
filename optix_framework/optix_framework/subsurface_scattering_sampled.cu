@@ -23,6 +23,7 @@ using namespace optix;
 
 //#define REFLECT
 
+
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
@@ -48,12 +49,12 @@ RT_PROGRAM void any_hit_shadow()
 
 
 
-__device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, const optix::float3& direction, float & depth, optix::float3 & normal, const float t_max = RT_DEFAULT_MAX)
+__device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, const optix::float3& direction, float & depth, optix::float3 & normal, const float t_min = scene_epsilon, const float t_max = RT_DEFAULT_MAX)
 {
 	PerRayData_normal_depth attribute_fetch_ray_payload = { make_float3(0.0f), RT_DEFAULT_MAX };
 	optix::Ray attribute_fetch_ray;
 	attribute_fetch_ray.ray_type =  RayType::ATTRIBUTE;
-	attribute_fetch_ray.tmin = scene_epsilon;
+	attribute_fetch_ray.tmin = t_min;
 	attribute_fetch_ray_payload.depth = t_max;
 	attribute_fetch_ray.tmax = t_max;
 	attribute_fetch_ray.direction = direction;
@@ -63,7 +64,7 @@ __device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, con
 
 	optix_print("Miss? %s, dir %f %f %f\n", abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3 ? "true" : "false", direction.x, direction.y, direction.z);
 
-	if (abs(attribute_fetch_ray_payload.depth - t_max) < 1e-3) // Miss
+	if (abs(attribute_fetch_ray_payload.depth - t_max) < 1e-9f) // Miss
 		return false;
 	depth = attribute_fetch_ray_payload.depth;
 	normal = attribute_fetch_ray_payload.normal;
@@ -71,7 +72,7 @@ __device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, con
 }
 
 
-__device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float3 & disc_origin, const float3 & disc_normal, const float3 & disc_tangent, const float3 & disc_bitangent, optix::float2 & disc_sample, uint & t, float3 & xi, float3 & ni, const float normal_bias = 0.0f)
+__device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float3 & disc_origin, const float3 & disc_normal, const float3 & disc_tangent, const float3 & disc_bitangent, optix::float2 & disc_sample, uint & t, float3 & xi, float3 & ni, const float normal_bias = 0.0f, const float t_min = scene_epsilon)
 {
 	float3 sample_ray_origin = disc_origin + disc_tangent*disc_sample.x + disc_bitangent*disc_sample.y;
 	float3 sample_ray_dir = disc_normal;
@@ -79,7 +80,7 @@ __device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float
 	float t_max = RT_DEFAULT_MAX;
 
 	float depth;
-	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, t_max))
+	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, t_min, t_max))
 		return false;
 	xi = sample_ray_origin + depth * sample_ray_dir;
 	return true;
@@ -118,7 +119,7 @@ __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const f
 	float3 sample_ray_origin = camera_data.eye;
 
 	float depth;
-	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, t_max))
+	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, scene_epsilon, t_max))
 		return false;
 	xi = sample_ray_origin + depth * sample_ray_dir;
 
@@ -155,7 +156,9 @@ __device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const 
 	integration_factor *= r / pdf_disk;
 	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
 	float inv_jac = max(bssrdf_sampling_properties->dot_no_ni_min, dot(normalize(no), normalize(ni)));
-	integration_factor = inv_jac > 0.0f ? integration_factor / inv_jac : 0.0f;
+
+	if (bssrdf_sampling_properties->use_jacobian == 1)
+		integration_factor = inv_jac > 0.0f ? integration_factor / inv_jac : 0.0f;
 	return true;
 }			
 
@@ -163,6 +166,7 @@ __device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const 
 __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
 	float3 & xi, float3 & ni, float & integration_factor)
 {
+	rnd_tea(t);
 	float chosen_sampling_mfp = get_sampling_mfp(props);
 	float r, phi, pdf_disk;
 	optix::float2 disc_sample = sample_disk_exponential(t, chosen_sampling_mfp, pdf_disk, r, phi);
@@ -171,27 +175,26 @@ __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float
 	create_onb(no, to, bo);
 	integration_factor = 1.0f;
 
-	const float pdf_top = 0.1f;
+	const float pdf = 0.5f;
 
 #define TOP 0
 #define BOTTOM 1
 	float verse_mult[2] = { 1, -1 };
-	float verse_offset[2] = { 0.0f, -scene_epsilon * 2.0f };
-	int verse = rnd(t) < pdf_top ? TOP : BOTTOM;
-	float3 used_no = no*verse_mult[verse];
-	integration_factor /= 1.0f-pdf_top; // ...and for the chosen axis
+	float pdfs[2] = { pdf, 1 - pdf };
+	int verse = rnd_tea(t) < pdf ? TOP : BOTTOM;
+	float3 used_no = no * verse_mult[verse];
+	integration_factor /= pdfs[verse]; // ...and for the chosen axis
 
-	const float offset = verse_offset[verse]; //including plane self intersections.
-											  // We sample the main axis
-	if (!sample_xi_ni_from_tangent_hemisphere(xo, used_no, to, bo, disc_sample, t, xi, ni, offset))
+	if (!sample_xi_ni_from_tangent_hemisphere(xo, used_no, to, bo, disc_sample, t, xi, ni, 0.0f, 0.0f))
 		return false;
 #undef TOP
 #undef BOTTOM
 
-
 	integration_factor *= r / pdf_disk;
 	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
+
 	float inv_jac = max(bssrdf_sampling_properties->dot_no_ni_min, dot(normalize(no), normalize(ni)));
+
 	if (bssrdf_sampling_properties->use_jacobian == 1)
 		integration_factor = inv_jac > 0.0f ? integration_factor / inv_jac : 0.0f;
 	return true;
@@ -209,26 +212,31 @@ __device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, c
 	integration_factor = 1.0f;
 
 	optix::float3 axes[3] = { no, bo, to };
-	int main_axis = choose_sampling_axis(t);
-	float* mis_weights_pdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
-
-	optix_print("Selecting axis %d", main_axis);
+	int main_axis =  int(rnd(t) * 3.0f);//choose_sampling_axis(t);
+	//float* mis_weights_pdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
+	float inv_pdf_axis = 3.0f;
 
 	float verse_mult[2] = { 1, -1 };
-	float verse_offset[2] = { scene_epsilon, -scene_epsilon * 3.0f };
-	int v = rnd(t) > 0.5f? 0 : 1;
+	int v = rnd(t) < 0.5f? 0 : 1;
 
-	float3 top = verse_mult[v] * axes[main_axis];
-	integration_factor /= mis_weights_pdf[main_axis] * 2.0f;
+	float3 probe_direction = verse_mult[v] * axes[main_axis];
+	float inv_pdf = 2.0f * inv_pdf_axis;
+	integration_factor *= inv_pdf;
 	float3 t1, t2;
-	create_onb(top, t1, t2);
+	create_onb(probe_direction, t1, t2);
+	optix_print("Selecting axis %d (verse %d), final %f %f %f (pdf %f)\n", main_axis, v, probe_direction.x, probe_direction.y, probe_direction.z, 1/inv_pdf);
 
-	if (!sample_xi_ni_from_tangent_hemisphere(xo, top, t1, t2, disc_sample, t, xi, ni, -bssrdf_sampling_properties->d_max))
+	if (!sample_xi_ni_from_tangent_hemisphere(xo, probe_direction, t1, t2, disc_sample, t, xi, ni, 0.0f, 0.0f))
 		return false;
 
 	integration_factor *= r / pdf_disk;
-	float inv_jac = max(0.0f, dot(normalize(top), normalize(ni)));
+	float inv_jac = dot(ni, normalize(probe_direction));
 	
+	if (inv_jac < 0)
+		return false;
+
+	if (bssrdf_sampling_properties->use_jacobian == 1)
+		integration_factor /= inv_jac;
 	// No jacobian, it may give singularities.
 	return true;
 }
@@ -244,7 +252,6 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	create_onb(no, to, bo);
 	integration_factor = 1.0f;
 
-	// We first choose one of the sampling axes...
 	optix::float3 axes[3] = { no, bo, to };
 
 	float verse_mult[2] = { 1, -1 };
@@ -253,6 +260,7 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	float pdf[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f };
 	float3 xis[6];
 	float3 nis[6];
+	float3 all_dirs[6];
 
 	float norm = 0.0f;
 	for (int i = 0; i < 3; i++)
@@ -264,12 +272,13 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 			create_onb(top, tan, bit);
 			float offset = verse_offset[j];
 			int idx = i * 2 + j;
-			if (!sample_xi_ni_from_tangent_hemisphere(xo, top, tan, bit, disc_sample, t, xis[idx], nis[idx], offset))
+			all_dirs[idx] = top;
+			if (!sample_xi_ni_from_tangent_hemisphere(xo, top, tan, bit, disc_sample, t, xis[idx], nis[idx], 0,0))
 			{
 				pdf[idx] = 0.0f;
-				continue;
+				continue;  
 			}
-			pdf[idx] = abs(optix::dot(nis[idx], top));
+			pdf[idx] = max(0.0f, dot(nis[idx], no));
 			norm += pdf[idx];
 		}
 	}
@@ -282,21 +291,17 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	{
 		pdf[i - 1] /= norm;
 		cdf[i] = cdf[i - 1] + pdf[i - 1];
-	}
+	} 
 
 	float test = 0.0f;
 	for (int i = 0; i < 6; i++) test += pdf[i];
 	optix_print("Pdf %f %f %f %f %f %f %f\n", pdf[0], pdf[1], pdf[2], pdf[3], pdf[4], pdf[5], pdf[6]);
 	optix_print("Test %f, %f %f %f %f %f %f %f\n", test, cdf[0], cdf[1], cdf[2], cdf[3], cdf[4], cdf[5], cdf[6]);
 
-	int axis = 0;
 	float var = rnd(t);
-	for (int i = 0; i < 7; i++)
-	{
-		axis = var > cdf[i] ? i : axis;
-	}
+	int axis = linear_sample_cdf(&cdf[0], 7, var);
 
-	float3 ax = axes[axis / 2] * verse_mult[axis % 2];
+	float3 ax = all_dirs[axis];
 	integration_factor /= pdf[axis]; 
 	ni = nis[axis];
 	xi = xis[axis];
@@ -394,9 +399,15 @@ __device__ __forceinline__ void _shade()
 		float integration_factor;
 		float3 xi, ni;
 		if (!importance_sample_position(xo, no, wo, props, t, xi, ni, integration_factor))
+		{
+			optix_print("Sample non valid.\n");
 			continue;
+		}
 		// Real hit point
 		
+#ifdef TEST_SAMPLING
+		L_d += make_float3(integration_factor * TEST_SAMPLING_W);
+#else
 		optix::float3 wi = make_float3(0);
 		optix::float3 L_i;
 		sample_light(xi, ni, 0, t, wi, L_i); // This returns pre-sampled w_i and L_i
@@ -414,10 +425,12 @@ __device__ __forceinline__ void _shade()
 		// compute contribution if sample is non-zero
 		if (dot(L_i, L_i) > 0.0f)
 		{
+
 			float3 S_d = bssrdf(xi, ni, w12, xo, no, w21, props);
 			L_d += L_i * S_d * T12 * integration_factor;
 			optix_print("Ld %f %f %f Li %f %f %f T12 %f int %f\n", L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
 		}
+#endif
 	}
 #ifdef TRANSMIT
 		prd_radiance.result += L_d / (float)N;

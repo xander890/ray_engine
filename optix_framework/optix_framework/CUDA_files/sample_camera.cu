@@ -94,9 +94,13 @@ RT_PROGRAM void sample_camera()
     float cos_theta = dot(light_vector, sample.normal);
     Le += light_radiance;        
     sample.dir = light_vector;
-
+	 
     // Compute transmitted radiance
     //sample.L = T12*V*Le*cos_theta_i*total_area;
+#ifdef TEST_SAMPLING
+	sample.L = make_float3(triangles*area);
+#else
     sample.L = Le*make_float3(triangles*area);
+#endif
     //printf("Le: %f, L: %f\n", Le.x, sample.L.x);
 }

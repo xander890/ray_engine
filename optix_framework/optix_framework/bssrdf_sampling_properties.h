@@ -21,7 +21,9 @@ struct BSSRDFSamplingProperties
 	int use_jacobian				DEFAULT(1);
 	float d_max						DEFAULT(1.0f);
 	float dot_no_ni_min				DEFAULT(0.001f);
-	optix::float3 mis_weights		DEFAULT(optix::make_float3(0.5f, 0.25f, 0.25f));
+	optix::float3 mis_weights		DEFAULT(optix::make_float3(1.f, 0.f, 0.f));
+//	optix::float3 mis_weights		DEFAULT(optix::make_float3(0.5f, 0.25f, 0.25f));
 	int show_mode					DEFAULT(BSSRDF_SHADERS_SHOW_ALL);
-	optix::float4 mis_weights_cdf	DEFAULT(optix::make_float4(0.0f, 0.5f, 0.75f, 1.0f));
+	optix::float4 mis_weights_cdf	DEFAULT(optix::make_float4(0.0f, 1.f, 1.f, 1.0f));
+	//	optix::float4 mis_weights_cdf	DEFAULT(optix::make_float4(0.0f, 0.5f, 0.75f, 1.0f));
 };
