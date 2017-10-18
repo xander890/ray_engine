@@ -22,6 +22,6 @@ public:
 	std::unique_ptr<BSSRDFSamplingProperties> properties = nullptr;
 	optix::Buffer mPropertyBuffer;
 
-	unsigned int mSamples = 25;
+	unsigned int mSamples = 1;
 	bool mHasChanged = true;
 };

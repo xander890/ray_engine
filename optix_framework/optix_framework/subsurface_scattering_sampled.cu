@@ -233,8 +233,8 @@ __device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, c
 	float inv_jac = dot(ni, normalize(probe_direction));
 	
 	// No jacobian, it may give singularities.
-	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor /= inv_jac;
+	//if (bssrdf_sampling_properties->use_jacobian == 1)
+	//	integration_factor /= inv_jac;
 	return true;
 }
 
@@ -329,8 +329,8 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	ni = nis[axis];
 	xi = xis[axis];
 	integration_factor *= r / pdf_disk;
-	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor /= max(0.0f, abs(dot(ax, ni)));
+	//if (bssrdf_sampling_properties->use_jacobian == 1)
+	//	integration_factor /= max(0.0f, abs(dot(ax, ni)));
 	return true;
 }
 
