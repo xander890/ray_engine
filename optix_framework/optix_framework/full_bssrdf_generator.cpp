@@ -9,7 +9,7 @@
 #include "dialogs.h"
 #include <sstream>
 #include "reference_bssrdf_gpu.h"
-
+#include "GL\glew.h"
 #pragma warning(disable : 4996)
 
 std::string gui_string(std::vector<float> & data)
