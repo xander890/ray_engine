@@ -22,7 +22,7 @@
 using namespace optix;
 
 //#define REFLECT
-
+#define RND_FUNC rnd_tea
 
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
@@ -96,7 +96,7 @@ __device__ __forceinline__ int sample_inverse_cdf(float * cdf, int cdf_size, flo
 
 __device__ __forceinline__ int choose_sampling_axis(uint & t)
 {
-	float var = rnd(t);
+	float var = RND_FUNC(t);
 	float* mis_weights_cdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights_cdf);
 	return sample_inverse_cdf(mis_weights_cdf, 4, var);
 }
@@ -106,7 +106,8 @@ __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const f
 {
 	float chosen_sampling_mfp = get_sampling_mfp(props);
 	float r, phi, pdf_disk;
-	optix::float2 disc_sample = sample_disk_exponential(t, chosen_sampling_mfp, pdf_disk, r, phi);
+	optix::float2 sample = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
 
 	float t_max = RT_DEFAULT_MAX;
 	optix::float3 to, bo;
@@ -140,7 +141,8 @@ __device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const 
 {
 	float chosen_sampling_mfp = get_sampling_mfp(props);
 	float r, phi, pdf_disk;
-	optix::float2 disc_sample = sample_disk_exponential(t, chosen_sampling_mfp, pdf_disk, r, phi);
+	optix::float2 sample = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
 
 	optix::float3 to, bo;
 	create_onb(no, to, bo);
@@ -165,7 +167,8 @@ __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float
 	rnd_tea(t);
 	float chosen_sampling_mfp = get_sampling_mfp(props);
 	float r, phi, pdf_disk;
-	optix::float2 disc_sample = sample_disk_exponential(t, chosen_sampling_mfp, pdf_disk, r, phi);
+	optix::float2 sample = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
 
 	optix::float3 to, bo;
 	create_onb(no, to, bo);
@@ -201,7 +204,8 @@ __device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, c
 {
 	float chosen_sampling_mfp = get_sampling_mfp(props);
 	float r, phi, pdf_disk;
-	optix::float2 disc_sample = sample_disk_exponential(t, chosen_sampling_mfp, pdf_disk, r, phi);
+	optix::float2 sample = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
 
 	optix::float3 to, bo;
 	create_onb(no, to, bo);
@@ -209,14 +213,14 @@ __device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, c
 
 	optix::float3 axes[3] = { no, bo, to };
 
-	int main_axis = rnd(t) * 3.0f;  
+	int main_axis = RND_FUNC(t) * 3.0f;  
 	float inv_pdf_axis = 3.0f;
 
 	//choose_sampling_axis(t);
 	//float* mis_weights_pdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
 
 	float verse_mult[2] = { 1, -1 };
-	int v = rnd(t) < 0.5f? 0 : 1;
+	int v = RND_FUNC(t) < 0.5f? 0 : 1;
 
 	float3 probe_direction = verse_mult[v] * axes[main_axis];
 	float inv_pdf = 2.0f * inv_pdf_axis;
@@ -242,7 +246,8 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 {
 	float chosen_sampling_mfp = get_sampling_mfp(props);
 	float r, phi, pdf_disk;
-	optix::float2 disc_sample = sample_disk_exponential(t, chosen_sampling_mfp, pdf_disk, r, phi);
+	optix::float2 sample = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
 
 	optix::float3 to, bo;
 	create_onb(no, to, bo);
@@ -250,7 +255,7 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	optix::float3 axes[3] = { no, bo, to };
 
 	// We first choose an axis.
-	int main_axis = int(rnd(t) * 3.0f);
+	int main_axis = int(RND_FUNC(t) * 3.0f);
 	float pdf_axis = 1.0f/3.0f;
 	//integration_factor /= pdf_axis;
 	float3 disc_axis = axes[main_axis];
@@ -313,7 +318,7 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	} 
 
 	// Sampling the inverse cdf.
-	float var = rnd(t);
+	float var = RND_FUNC(t);
 	int axis = sample_inverse_cdf(&cdf[0], 7, var);
 	float3 ax = all_dirs[axis];
 
@@ -368,7 +373,7 @@ __device__ __forceinline__ void _shade()
 	const ScatteringMaterialProperties& props = material.scattering_properties;
 	float recip_ior = 1.0f / material.relative_ior;
 	uint& t = prd_radiance.seed;
-	float reflect_xi = rnd(t);
+	float reflect_xi = RND_FUNC(t);
 	prd_radiance.result = make_float3(0.0f);
 
 #ifdef TRANSMIT
@@ -379,7 +384,7 @@ __device__ __forceinline__ void _shade()
 	{
 		beam_T = get_beam_transmittance(t_hit, props);
 		float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
-		if (rnd(t) >= prob) return;
+		if (RND_FUNC(t) >= prob) return;
 		beam_T /= prob;
 		recip_ior = material.relative_ior;
 		cos_theta_o = -cos_theta_o;
