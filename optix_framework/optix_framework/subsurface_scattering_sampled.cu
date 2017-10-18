@@ -230,11 +230,10 @@ __device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, c
 		return false;
 
 	integration_factor *= r / pdf_disk;
-	float inv_jac = dot(ni, normalize(probe_direction));
+	float inv_jac = abs(dot(ni, normalize(probe_direction)));
 	
-	// No jacobian, it may give singularities.
-	//if (bssrdf_sampling_properties->use_jacobian == 1)
-	//	integration_factor /= inv_jac;
+	if (bssrdf_sampling_properties->use_jacobian == 1)
+		integration_factor /= inv_jac;
 	return true;
 }
 
@@ -247,7 +246,6 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 
 	optix::float3 to, bo;
 	create_onb(no, to, bo);
-	integration_factor = 1.0f;
 
 	optix::float3 axes[3] = { no, bo, to };
 
@@ -261,9 +259,8 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	float3 disc_t, disc_b;
 	create_onb(disc_axis, disc_t, disc_b);
 	float3 tangent_plane_xi = xo + disc_t*disc_sample.x + disc_b*disc_sample.y;
-	tangent_plane_xi += disc_axis * scene_epsilon * 2; // Just to avoid problems on planar surfaces.
+	
 	optix_print("Sampling tangent plane %d\n", main_axis);
-
 
 	optix::float3 xo_xitan = xo - tangent_plane_xi;
 
@@ -276,15 +273,14 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	float pdf_axis_2 = exponential_pdf_disk(r_axis_2, chosen_sampling_mfp);
 
 	float mis_weight = pdf_disk / (pdf_disk + pdf_axis_1 + pdf_axis_2);
-	optix_print("MIS_WEIGTH %f\n", mis_weight);
-	integration_factor *= mis_weight;
-
+	
 	// Probe rays.
 	float pdf[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f };
 	float3 xis[6];
 	float3 nis[6];
 	float3 all_dirs[6];
 
+	tangent_plane_xi += disc_axis * scene_epsilon * 2; // Just to avoid problems on planar surfaces.
 	float verses[2] = { 1, -1 };
 	float norm = 0.0f;
 	for (int i = 0; i < 3; i++)
@@ -320,7 +316,6 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	float var = rnd(t);
 	int axis = sample_inverse_cdf(&cdf[0], 7, var);
 	float3 ax = all_dirs[axis];
-	//integration_factor /= pdf[axis];
 
 	optix_print("Pdf    %f %f %f %f %f %f \n", pdf[0], pdf[1], pdf[2], pdf[3], pdf[4], pdf[5]);
 	optix_print("Cdf %f %f %f %f %f %f %f\n", cdf[0], cdf[1], cdf[2], cdf[3], cdf[4], cdf[5], cdf[6]);
@@ -328,9 +323,17 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 
 	ni = nis[axis];
 	xi = xis[axis];
+
+	integration_factor = 1;
+	// MIS weight
+	integration_factor *= mis_weight;
+	// Pdf of the point (1/nk)
+	integration_factor /= pdf[axis];
+	// Disk pdf (cancels out partially with MIS weight)
 	integration_factor *= r / pdf_disk;
-	//if (bssrdf_sampling_properties->use_jacobian == 1)
-	//	integration_factor /= max(0.0f, abs(dot(ax, ni)));
+	// Jacobian
+	if (bssrdf_sampling_properties->use_jacobian == 1)
+		integration_factor /= abs(dot(ax, ni));
 	return true;
 }
 

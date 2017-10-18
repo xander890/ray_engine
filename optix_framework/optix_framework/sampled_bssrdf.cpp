@@ -50,15 +50,6 @@ bool SampledBSSRDF::on_draw()
 	if (ImmediateGUIDraw::Combo("Sampling technique", (int*)&properties->sampling_method, elems.data(), (int)elems.size(), (int)elems.size()))
 	{
 		mHasChanged = true;
-		if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS ||
-			properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES)
-		{
-			properties->use_jacobian = 0;
-		}
-		else
-		{
-			properties->use_jacobian = 1;
-		}
 	}
 	mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->use_jacobian);
 	if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE)
