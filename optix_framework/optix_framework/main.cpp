@@ -55,11 +55,15 @@ int main( int argc, char** argv )
 	int frames = -1;
 	float time = -1.0f;
 	std::string material_override_mtl = "";
-
+	bool start_bssrdf_generator = false;
 	std::vector<std::string> additional_parameters;
 	for ( int i = 1; i < argc; ++i ) 
 	{
-		std::string arg( argv[i] );
+	std::string arg( argv[i] );
+	if (arg == "-b" || arg == "--bssrdf-generator")
+	{
+		start_bssrdf_generator = true;
+	}
 	if( arg == "-h" || arg == "--help" ) 
 	{
 		printUsageAndExit( argv[0] ); 
@@ -153,36 +157,41 @@ int main( int argc, char** argv )
 	{
 
 //#define NEW_SCENE
-#ifdef NEW_SCENE
-	FullBSSRDFGenerator * scene = new FullBSSRDFGenerator(config_file.c_str());
-#else
-	ObjScene * scene = new ObjScene( filenames, shadername, config_file, rendering_rect );
-	if(material_override_mtl.size() > 0)
-		scene->add_override_material_file(material_override_mtl);
-	scene->add_override_parameters(additional_parameters);
-
-	if (auto_mode)
-	{
-		std::unique_ptr<RenderTask> task = nullptr;
-		if (frames > 0)
+		SampleScene * scene = nullptr;
+		if (start_bssrdf_generator)
 		{
-			task = std::make_unique<RenderTaskFrames>(frames, output_file, true);
-		}
-		else if (time > 0.0f)
-		{		
-			task = std::make_unique<RenderTaskTime>(time, output_file, true);
+			scene = new FullBSSRDFGenerator(config_file.c_str());
 		}
 		else
 		{
-			Logger::error << "Time or frames not specified" << std::endl;
-			exit(2);
-		}
-		scene->set_render_task(task);
-		scene->start_render_task_on_scene_ready();
-	}
-#endif
+			ObjScene * scene_o = new ObjScene(filenames, shadername, config_file, rendering_rect);
+			scene = scene_o;
+			if (material_override_mtl.size() > 0)
+				scene_o->add_override_material_file(material_override_mtl);
+			scene_o->add_override_parameters(additional_parameters);
 
-	GLFWDisplay::run( "Optix Renderer", scene );
+			if (auto_mode)
+			{
+				std::unique_ptr<RenderTask> task = nullptr;
+				if (frames > 0)
+				{
+					task = std::make_unique<RenderTaskFrames>(frames, output_file, true);
+				}
+				else if (time > 0.0f)
+				{
+					task = std::make_unique<RenderTaskTime>(time, output_file, true);
+				}
+				else
+				{
+					Logger::error << "Time or frames not specified" << std::endl;
+					exit(2);
+				}
+				scene_o->set_render_task(task);
+				scene_o->start_render_task_on_scene_ready();
+			}
+		}
+
+		GLFWDisplay::run( "Optix Renderer", scene );
 
 	} 
 	catch(optix::Exception & e )
