@@ -159,6 +159,11 @@ static __inline__ __device__ optix::float2 sample_disk_exponential(optix::uint &
 	return p;
 }
 
+static __inline__ __device__ float exponential_pdf_disk(float r, float sigma)
+{
+	return M_1_PIf * 0.5f * sigma * expf(-sigma * r);
+}
+
 static __inline__ __device__ optix::float2 sample_disk_exponential(optix::uint & seed, float sigma, float & pdf)
 {
 	float r, phi;

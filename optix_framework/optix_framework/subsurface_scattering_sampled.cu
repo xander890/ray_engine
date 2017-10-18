@@ -49,7 +49,7 @@ RT_PROGRAM void any_hit_shadow()
 
 
 
-__device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, const optix::float3& direction, float & depth, optix::float3 & normal, const float t_min = scene_epsilon, const float t_max = RT_DEFAULT_MAX)
+__device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, const optix::float3& direction, optix::float3 & xi, optix::float3 & normal, const float t_min = scene_epsilon, const float t_max = RT_DEFAULT_MAX)
 {
 	PerRayData_normal_depth attribute_fetch_ray_payload = { make_float3(0.0f), RT_DEFAULT_MAX };
 	optix::Ray attribute_fetch_ray;
@@ -66,7 +66,7 @@ __device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, con
 
 	if (abs(attribute_fetch_ray_payload.depth - t_max) < 1e-9f) // Miss
 		return false;
-	depth = attribute_fetch_ray_payload.depth;
+	xi = origin + attribute_fetch_ray_payload.depth * direction;
 	normal = attribute_fetch_ray_payload.normal;
 	return true;
 }
@@ -78,15 +78,13 @@ __device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float
 	float3 sample_ray_dir = disc_normal;
 	sample_ray_origin += normal_bias * disc_normal; // Offsetting the ray origin along the normal. Useful to shoot rays "backwards" towards the surface
 	float t_max = RT_DEFAULT_MAX;
-
-	float depth;
-	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, t_min, t_max))
+	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, xi, ni, t_min, t_max))
 		return false;
-	xi = sample_ray_origin + depth * sample_ray_dir;
+
 	return true;
 }
 
-__device__ __forceinline__ int linear_sample_cdf(float * cdf, int cdf_size, float xi)
+__device__ __forceinline__ int sample_inverse_cdf(float * cdf, int cdf_size, float xi)
 {
 	int c = 0;
 	for (int i = 0; i < cdf_size; i++)
@@ -100,7 +98,7 @@ __device__ __forceinline__ int choose_sampling_axis(uint & t)
 {
 	float var = rnd(t);
 	float* mis_weights_cdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights_cdf);
-	return linear_sample_cdf(mis_weights_cdf, 4, var);
+	return sample_inverse_cdf(mis_weights_cdf, 4, var);
 }
 
 __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
@@ -118,10 +116,8 @@ __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const f
 	float3 sample_ray_dir = normalize(sample_on_tangent_plane - camera_data.eye);
 	float3 sample_ray_origin = camera_data.eye;
 
-	float depth;
-	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, depth, ni, scene_epsilon, t_max))
+	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, xi, ni, scene_epsilon, t_max))
 		return false;
-	xi = sample_ray_origin + depth * sample_ray_dir;
 
 	integration_factor *= r / pdf_disk;
 	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
@@ -185,7 +181,7 @@ __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float
 	float3 used_no = no * verse_mult[verse];
 	integration_factor /= pdfs[verse]; // ...and for the chosen axis
 
-	if (!sample_xi_ni_from_tangent_hemisphere(xo, used_no, to, bo, disc_sample, t, xi, ni, 0.0f, 0.0f))
+	if (!sample_xi_ni_from_tangent_hemisphere(xo + no * scene_epsilon * 2, used_no, to, bo, disc_sample, t, xi, ni, 0.0f, 0.0f))
 		return false;
 #undef TOP
 #undef BOTTOM
@@ -212,9 +208,12 @@ __device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, c
 	integration_factor = 1.0f;
 
 	optix::float3 axes[3] = { no, bo, to };
-	int main_axis =  int(rnd(t) * 3.0f);//choose_sampling_axis(t);
-	//float* mis_weights_pdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
+
+	int main_axis = rnd(t) * 3.0f;  
 	float inv_pdf_axis = 3.0f;
+
+	//choose_sampling_axis(t);
+	//float* mis_weights_pdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
 
 	float verse_mult[2] = { 1, -1 };
 	int v = rnd(t) < 0.5f? 0 : 1;
@@ -222,22 +221,20 @@ __device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, c
 	float3 probe_direction = verse_mult[v] * axes[main_axis];
 	float inv_pdf = 2.0f * inv_pdf_axis;
 	integration_factor *= inv_pdf;
+
 	float3 t1, t2;
 	create_onb(probe_direction, t1, t2);
 	optix_print("Selecting axis %d (verse %d), final %f %f %f (pdf %f)\n", main_axis, v, probe_direction.x, probe_direction.y, probe_direction.z, 1/inv_pdf);
 
-	if (!sample_xi_ni_from_tangent_hemisphere(xo, probe_direction, t1, t2, disc_sample, t, xi, ni, 0.0f, 0.0f))
+	if (!sample_xi_ni_from_tangent_hemisphere(xo + no * scene_epsilon * 2, probe_direction, t1, t2, disc_sample, t, xi, ni, 0.0f, 0.0f))
 		return false;
 
 	integration_factor *= r / pdf_disk;
 	float inv_jac = dot(ni, normalize(probe_direction));
 	
-	if (inv_jac < 0)
-		return false;
-
+	// No jacobian, it may give singularities.
 	if (bssrdf_sampling_properties->use_jacobian == 1)
 		integration_factor /= inv_jac;
-	// No jacobian, it may give singularities.
 	return true;
 }
 
@@ -254,31 +251,56 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 
 	optix::float3 axes[3] = { no, bo, to };
 
-	float verse_mult[2] = { 1, -1 };
-	float verse_offset[2] = { scene_epsilon, -scene_epsilon * 3.0f };
+	// We first choose an axis.
+	int main_axis = int(rnd(t) * 3.0f);
+	float pdf_axis = 1.0f/3.0f;
+	//integration_factor /= pdf_axis;
+	float3 disc_axis = axes[main_axis];
 
+	// Sampling the corresponding tangent plane.
+	float3 disc_t, disc_b;
+	create_onb(disc_axis, disc_t, disc_b);
+	float3 tangent_plane_xi = xo + disc_t*disc_sample.x + disc_b*disc_sample.y;
+	tangent_plane_xi += disc_axis * scene_epsilon * 2; // Just to avoid problems on planar surfaces.
+	optix_print("Sampling tangent plane %d\n", main_axis);
+
+
+	optix::float3 xo_xitan = xo - tangent_plane_xi;
+
+	int axis_1 = (main_axis + 1) % 3;
+	float r_axis_1 = optix::length(xo_xitan - dot(xo_xitan, axes[axis_1]) * axes[axis_1]);
+	float pdf_axis_1 = exponential_pdf_disk(r_axis_1, chosen_sampling_mfp);
+
+	int axis_2 = (main_axis + 2) % 3;
+	float r_axis_2 = optix::length(xo_xitan - dot(xo_xitan, axes[axis_2]) * axes[axis_2]);
+	float pdf_axis_2 = exponential_pdf_disk(r_axis_2, chosen_sampling_mfp);
+
+	float mis_weight = pdf_disk / (pdf_disk + pdf_axis_1 + pdf_axis_2);
+	optix_print("MIS_WEIGTH %f\n", mis_weight);
+	integration_factor *= mis_weight;
+
+	// Probe rays.
 	float pdf[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f };
 	float3 xis[6];
 	float3 nis[6];
 	float3 all_dirs[6];
 
+	float verses[2] = { 1, -1 };
 	float norm = 0.0f;
 	for (int i = 0; i < 3; i++)
 	{
 		for (int j = 0; j < 2; j++)
 		{
-			float3 top = verse_mult[j] * axes[i];
-			float3 tan, bit;
-			create_onb(top, tan, bit);
-			float offset = verse_offset[j];
+			float3 probe_direction = verses[j] * axes[i];
 			int idx = i * 2 + j;
-			all_dirs[idx] = top;
-			if (!sample_xi_ni_from_tangent_hemisphere(xo, top, tan, bit, disc_sample, t, xis[idx], nis[idx], 0,0))
+			all_dirs[idx] = probe_direction;
+
+			if (!trace_depth_ray(tangent_plane_xi, probe_direction, xis[idx], nis[idx], 0, RT_DEFAULT_MAX))
 			{
 				pdf[idx] = 0.0f;
 				continue;  
 			}
-			pdf[idx] = max(0.0f, dot(nis[idx], no));
+			pdf[idx] = 1.0f; // max(0.0f, dot(nis[idx], probe_direction));
 			norm += pdf[idx];
 		}
 	}
@@ -286,6 +308,7 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	if (norm == 0.0f)
 		return false;
 
+	// Calculating cdf from the pdf.
 	float cdf[7] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f, 0.0f };
 	for (int i = 1; i <= 6; i++)
 	{
@@ -293,21 +316,21 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 		cdf[i] = cdf[i - 1] + pdf[i - 1];
 	} 
 
-	float test = 0.0f;
-	for (int i = 0; i < 6; i++) test += pdf[i];
-	optix_print("Pdf %f %f %f %f %f %f %f\n", pdf[0], pdf[1], pdf[2], pdf[3], pdf[4], pdf[5], pdf[6]);
-	optix_print("Test %f, %f %f %f %f %f %f %f\n", test, cdf[0], cdf[1], cdf[2], cdf[3], cdf[4], cdf[5], cdf[6]);
-
+	// Sampling the inverse cdf.
 	float var = rnd(t);
-	int axis = linear_sample_cdf(&cdf[0], 7, var);
-
+	int axis = sample_inverse_cdf(&cdf[0], 7, var);
 	float3 ax = all_dirs[axis];
-	integration_factor /= pdf[axis]; 
+	//integration_factor /= pdf[axis];
+
+	optix_print("Pdf    %f %f %f %f %f %f \n", pdf[0], pdf[1], pdf[2], pdf[3], pdf[4], pdf[5]);
+	optix_print("Cdf %f %f %f %f %f %f %f\n", cdf[0], cdf[1], cdf[2], cdf[3], cdf[4], cdf[5], cdf[6]);
+	optix_print("Chosen axis %d, (%f %f %f), pdf %f\n", axis, ax.x, ax.y, ax.z, var);
+
 	ni = nis[axis];
 	xi = xis[axis];
 	integration_factor *= r / pdf_disk;
 	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor /= max(0.0f, abs(dot(normalize(ax), normalize(ni))));
+		integration_factor /= max(0.0f, abs(dot(ax, ni)));
 	return true;
 }
 
