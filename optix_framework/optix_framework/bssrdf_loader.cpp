@@ -3,11 +3,48 @@
 #include <sstream>
 #include "logger.h"
 #include "parserstringhelpers.h"
+#include <algorithm>
+#include <assert.h>
 
-BSSRDFLoader::BSSRDFLoader(const std::string & filename)
+void parameters_to_string(const std::map<size_t, std::vector<float>> & parameters, const std::map<size_t, std::string> & names, std::string & result)
+{
+	std::stringstream ss;
+	for (auto & p : parameters)
+	{
+		ss << parameter_delimiter << " " << names.at(p.first) << " " << tostring(p.second) << std::endl;
+	}
+	result = ss.str();
+}
+
+void string_to_parameters(const std::string & parse, const std::map<size_t, std::string> & names, std::map<size_t, std::vector<float>> & parameters)
+{
+	std::stringstream ss(parse);
+	std::string str;
+	while (std::getline(ss, str)) {
+		if (str.size() >= parameter_delimiter.size() && str.substr(0, parameter_delimiter.size()) == parameter_delimiter)
+		{
+			std::stringstream ss(str.substr(parameter_delimiter.size()));
+			std::string name;
+			ss >> name;
+			std::string s = ss.str();
+			s.erase(0, name.length() + 1);
+			auto res = std::find_if(std::begin(names), std::end(names), [&](const auto &pair)
+			{
+				return pair.second == name;
+			});
+			if (res != names.end())
+				parameters[res->first] = tovalue<std::vector<float>>(s);
+		}
+	}
+}
+
+BSSRDFLoader::BSSRDFLoader(const std::string & filename, const std::map<size_t, std::string> & names)
 {
 	mFileName = filename;
-	if(!parse_header())
+
+	
+
+	if(!parse_header(names))
 	{
 		Logger::error << "BSSRDF header parsing failed." << std::endl;
 	}
@@ -27,6 +64,11 @@ size_t BSSRDFLoader::get_material_slice_size()
 size_t BSSRDFLoader::get_hemisphere_size()
 {
 	return mDimensions[phi_o_index] * mDimensions[theta_o_index];
+}
+
+const std::map<size_t, std::vector<float>>& BSSRDFLoader::get_parameters()
+{
+	return mParameters;
 }
 
 void BSSRDFLoader::load_material_slice(float * bssrdf_data, const std::vector<size_t>& idx)
@@ -53,7 +95,7 @@ void BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t
 	ifs.close();
 }
 	
-bool BSSRDFLoader::parse_header()
+bool BSSRDFLoader::parse_header(const std::map<size_t, std::string> & names)
 {
 
 	std::ifstream file(mFileName, std::ofstream::in | std::ofstream::binary);
@@ -69,6 +111,9 @@ bool BSSRDFLoader::parse_header()
 	bool has_bssrdf_flag = false;
 
 	mBSSRDFStart = str.find("\n", bssrdf_del + 1) + 1;
+
+	
+	string_to_parameters(str.substr(0, mBSSRDFStart), names, mParameters);
 
 	std::stringstream ss(str);
 
@@ -102,18 +147,37 @@ size_t flatten_index(const std::vector<size_t>& idx, const std::vector<size_t>& 
 	size_t id = idx[eta_index];
 	for (int i = 1; i < size.size(); i++)
 	{
+		assert(size[i] > idx[i]);
 		id = id * size[i] + idx[i];
 	}
 	return id;
 }
 
-BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<size_t>& dimensions, const std::map<size_t, std::vector<float>> & parameters) : mFileName(filename), mDimensions(dimensions)
+std::vector<size_t> unravel_index(const size_t& idx, const std::vector<size_t>& size)
+{
+	size_t index = idx;
+	std::vector<size_t> res(size.size(), 0);
+	for (int i = (int)size.size() - 1; i >= 0; i--)
+	{
+		res[i] = index % size[i];
+		index = index / size[i];
+	}
+	return res;
+}
+
+
+
+
+
+BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<size_t> & dimensions, const std::map<size_t, std::vector<float>> & parameters, const std::map<size_t, std::string> & names) : mFileName(filename), mDimensions(dimensions)
 {
 	size_t total_size = sizeof(float);
 	for (size_t element : dimensions)
 		total_size *= element;
 
-	mBSSRDFStart = write_header(std::ofstream::out, parameters);
+	std::string params;
+	parameters_to_string(parameters, names, params);
+	mBSSRDFStart = write_header(std::ofstream::out, params);
 
 	std::ofstream of;
 	of.open(mFileName, std::ofstream::in | std::ofstream::out | std::ofstream::binary);
@@ -157,7 +221,7 @@ void BSSRDFExporter::set_hemisphere(const float * bssrdf_data, const std::vector
 	ofs.close();
 }
 
-size_t BSSRDFExporter::write_header(int mode, const std::map<size_t, std::vector<float>>& parameters)
+size_t BSSRDFExporter::write_header(int mode, std::string parameters)
 {
 	std::ofstream of;
 	of.open(mFileName, mode);
@@ -171,10 +235,7 @@ size_t BSSRDFExporter::write_header(int mode, const std::map<size_t, std::vector
 	of << std::endl;
 	of << "#eta\tg\talbedo\ttheta_s\tr\ttheta_i\tphi_o\ttheta_o" << std::endl;
 	
-	for (const auto & pair : parameters)
-	{
-		of << "PARAMETER " << pair.first << " " << stringize(pair.second.data(), pair.second.size(), 2)<< std::endl;
-	}	
+	of << parameters;
 	
 	of << bssrdf_delimiter << std::endl;
 	size_t t = of.tellp();

@@ -198,7 +198,17 @@ void FullBSSRDFGenerator::post_draw_callback()
 		set_render_mode(mCurrentRenderMode);
 	}
 
-	creator->on_draw(true);
+	if (mCurrentRenderMode == RENDER_BSSRDF)
+	{
+		creator->on_draw(true);
+	}
+	else
+	{
+		if (mLoader != nullptr)
+		{
+			// FIXME finish gui
+		}
+	}
 
 	if (ImmediateGUIDraw::CollapsingHeader("Load existing BSSRDF"))
 	{
@@ -272,7 +282,7 @@ void FullBSSRDFGenerator::start_rendering()
 	dims.push_back(creator->get_hemisphere_size().x);
 	dims.push_back(creator->get_hemisphere_size().y);
 
-		mExporter = std::make_unique<BSSRDFExporter>(mFilePath, dims, mParameters.parameters);
+	mExporter = std::make_unique<BSSRDFExporter>(mFilePath, dims, mParameters.parameters, mParameters.parameter_names);
 	
 	mState = ParameterState({ 0,0,0,0,0,0 });
 	creator->set_samples(mSimulationSamplesPerFrame);
@@ -347,12 +357,12 @@ void FullBSSRDFGenerator::clean_up()
 
 void FullBSSRDFGenerator::set_external_bssrdf(const std::string & file)
 {
-	BSSRDFLoader loader(file);
+	mLoader = std::make_unique<BSSRDFLoader>(file, mParameters.parameter_names);
 	std::vector<size_t> dims;
-	loader.get_dimensions(dims);
+	mLoader->get_dimensions(dims);
 	mExternalBSSRDFBuffer->setSize(dims[phi_o_index], dims[theta_o_index]);
 	float * data = (float*)mExternalBSSRDFBuffer->map();
-	loader.load_hemisphere(data, {0,0,0,0,0,0});
+	mLoader->load_hemisphere(data, {0,0,0,0,0,0});
 	normalize(data, dims[phi_o_index] * dims[theta_o_index]);
 	mExternalBSSRDFBuffer->unmap();
 }

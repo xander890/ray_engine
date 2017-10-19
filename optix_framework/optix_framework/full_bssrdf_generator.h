@@ -74,7 +74,7 @@ public:
 	//	{ eta_index,		{ 1.0f } }
 	//};
 
-#define stringify_pair(x) x, prettify(#x)
+#define stringify_pair(x) x, #x
 	std::map<size_t, std::string> parameter_names = {
 		{ stringify_pair(theta_i_index) },
 		{ stringify_pair(r_index) },
@@ -213,6 +213,7 @@ private:
 	bool mPaused = false;
 	RenderMode mCurrentRenderMode = RENDER_BSSRDF;
 	std::unique_ptr<BSSRDFExporter> mExporter = nullptr;
+	std::unique_ptr<BSSRDFLoader> mLoader = nullptr;
 
 	optix::Buffer mExternalBSSRDFBuffer;
 	std::string mExternalFilePath = "test.bssrdf";
