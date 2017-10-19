@@ -199,7 +199,7 @@ __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float
 	return true;
 }
 
-__device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
+__device__ __forceinline__ bool random_axis(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, uint & t,
 	float3 & xi, float3 & ni, float & integration_factor)
 {
 	float chosen_sampling_mfp = get_sampling_mfp(props);
@@ -209,35 +209,54 @@ __device__ __forceinline__ bool axis_mis(const float3 & xo, const float3 & no, c
 
 	optix::float3 to, bo;
 	create_onb(no, to, bo);
-	integration_factor = 1.0f;
 
 	optix::float3 axes[3] = { no, bo, to };
 
 	int main_axis = RND_FUNC(t) * 3.0f;  
 	float inv_pdf_axis = 3.0f;
 
-	//choose_sampling_axis(t);
-	//float* mis_weights_pdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights);
-
 	float verse_mult[2] = { 1, -1 };
 	int v = RND_FUNC(t) < 0.5f? 0 : 1;
 
 	float3 probe_direction = verse_mult[v] * axes[main_axis];
 	float inv_pdf = 2.0f * inv_pdf_axis;
-	integration_factor *= inv_pdf;
 
-	float3 t1, t2;
-	create_onb(probe_direction, t1, t2);
-	optix_print("Selecting axis %d (verse %d), final %f %f %f (pdf %f)\n", main_axis, v, probe_direction.x, probe_direction.y, probe_direction.z, 1/inv_pdf);
+	optix::float3 chosen_axes[3] = { probe_direction, make_float3(0), make_float3(0) };
+	create_onb(probe_direction, chosen_axes[1], chosen_axes[2]);
 
-	if (!sample_xi_ni_from_tangent_hemisphere(xo + no * scene_epsilon * 2, probe_direction, t1, t2, disc_sample, t, xi, ni, 0.0f, 0.0f))
+	float3 xi_tangent_space = xo + chosen_axes[1]*disc_sample.x + chosen_axes[2]*disc_sample.y;
+	float3 sample_ray_dir = probe_direction;
+	float t_max = RT_DEFAULT_MAX;
+
+	if (!trace_depth_ray(xi_tangent_space + no * scene_epsilon * 2, sample_ray_dir, xi, ni, 0.0f, t_max))
 		return false;
 
-	integration_factor *= r / pdf_disk;
-	float inv_jac = abs(dot(ni, normalize(probe_direction)));
-	
-	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor /= inv_jac;
+	optix::float3 xo_xi = xo - xi_tangent_space;
+
+	float dot0 = abs(dot(ni, probe_direction));
+
+	float3 axis_1 = chosen_axes[1];
+	float dot1 = abs(dot(ni, axis_1));
+	float3 axis_2 = chosen_axes[2];
+	float dot2 = abs(dot(ni, axis_2));
+
+	float wi0 = pdf_disk * dot0 / r;
+
+	float3 tangent_point_xi_xo_1 = xo_xi - dot(xo_xi, axis_1) * axis_1;
+	float r_axis_1 = optix::length(tangent_point_xi_xo_1);
+	float pdf_axis_1 = exponential_pdf_disk(r_axis_1, chosen_sampling_mfp);
+	float J_1_inv = abs(dot(ni, axis_1));
+	float wi1 = pdf_axis_1 * dot1 / r_axis_1;
+
+	float3 tangent_point_xi_xo_2 = xo_xi - dot(xo_xi, axis_2) * axis_2;
+	float r_axis_2 = optix::length(tangent_point_xi_xo_2);
+	float pdf_axis_2 = exponential_pdf_disk(r_axis_2, chosen_sampling_mfp);
+	float J_2_inv = abs(dot(ni, axis_2));
+	float wi2 = pdf_axis_2 * dot2 / r_axis_2;
+
+	float weight = 1.0f / (wi0 + wi1 + wi2);
+
+	integration_factor = inv_pdf * weight;
 	return true;
 }
 
@@ -338,7 +357,7 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 	integration_factor *= r / pdf_disk;
 	// Jacobian
 	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor /= abs(dot(ax, ni));
+		integration_factor *= abs(dot(ax, ni));
 	return true;
 }
 
@@ -350,7 +369,7 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
 	case BssrdfSamplingType::BSSRDF_SAMPLING_CAMERA_BASED:				return camera_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
 	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE:				return tangent_based_sampling(xo, no, wo, props, t, xi, ni, integration_factor);	break;
 	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES:	return tangent_no_offset(xo, no, wo, props, t, xi, ni, integration_factor);	break;
-	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS:					return axis_mis(xo, no, wo, props, t, xi, ni, integration_factor);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS:					return random_axis(xo, no, wo, props, t, xi, ni, integration_factor);	break;
 	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES:		return axis_mis_probes(xo, no, wo, props, t, xi, ni, integration_factor);	break;
 	}
 }
