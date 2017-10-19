@@ -6,13 +6,15 @@
 void ReferenceBSSRDFGPU::init()
 {
 	if (mAtomicPhotonCounterBuffer.get() == nullptr)
-	{
-		mAtomicPhotonCounterBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_INT, mMaxFrames);
+	{		
+		mAtomicPhotonCounterBuffer = create_glbo_buffer<int>(context, RT_BUFFER_INPUT_OUTPUT, mMaxFrames);
+		mAtomicPhotonCounterBuffer->setFormat(RT_FORMAT_INT);
 	}
 
 	if (mPhotonBuffer.get() == nullptr)
 	{
-		mPhotonBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_USER, mSamples);
+		mPhotonBuffer = create_glbo_buffer<PhotonSample>(context, RT_BUFFER_INPUT_OUTPUT, mSamples);
+		mPhotonBuffer->setFormat(RT_FORMAT_USER);
 		mPhotonBuffer->setElementSize(sizeof(PhotonSample));
 	}
 

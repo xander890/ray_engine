@@ -1,5 +1,21 @@
 #pragma once
 #include "optix_world.h"
+#include "GL\glew.h"
+
+template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsigned int type, unsigned int size)
+{
+	GLuint buf;
+	glCreateBuffers(1, &buf);
+
+	GLint bind;
+	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &bind);
+	glBindBuffer(GL_ARRAY_BUFFER, buf);
+	glBufferData(GL_ARRAY_BUFFER, size * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, bind);
+	optix::Buffer r = ctx->createBufferFromGLBO(type, buf);
+	r->setSize(size);
+	return r;
+}
 
 template<typename T> optix::Buffer create_buffer(optix::Context & ctx, int size)
 {

@@ -52,32 +52,14 @@ void BSSRDFHemisphereRenderer::init()
 	mInitialized = true;
 	if (mBSSRDFBufferIntermediate.get() == nullptr)
 	{
-		static GLuint buf;
-		glCreateBuffers(1, &buf);
-
-		GLint bind;
-		glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &bind);
-		glBindBuffer(GL_ARRAY_BUFFER, buf);
-		glBufferData(GL_ARRAY_BUFFER, mHemisphereSize.x*mHemisphereSize.y * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, bind);
-
-		mBSSRDFBufferIntermediate = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, buf);
+		mBSSRDFBufferIntermediate = create_glbo_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mHemisphereSize.x*mHemisphereSize.y);
 		mBSSRDFBufferIntermediate->setFormat(RT_FORMAT_FLOAT);
 		mBSSRDFBufferIntermediate->setSize(mHemisphereSize.x, mHemisphereSize.y);
 	}
 
 	if (mBSSRDFBuffer.get() == nullptr)
 	{
-		static GLuint buf;
-		glCreateBuffers(1, &buf);
-
-		GLint bind;
-		glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &bind);
-		glBindBuffer(GL_ARRAY_BUFFER, buf);
-		glBufferData(GL_ARRAY_BUFFER, mHemisphereSize.x*mHemisphereSize.y * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, bind);
-
-		mBSSRDFBuffer = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, buf);
+		mBSSRDFBuffer = create_glbo_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mHemisphereSize.x*mHemisphereSize.y);
 		mBSSRDFBuffer->setFormat(RT_FORMAT_FLOAT);
 		mBSSRDFBuffer->setSize(mHemisphereSize.x, mHemisphereSize.y);
 	}
