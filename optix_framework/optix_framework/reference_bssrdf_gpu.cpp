@@ -13,7 +13,7 @@ void ReferenceBSSRDFGPU::init()
 
 	if (mPhotonBuffer.get() == nullptr)
 	{
-		mPhotonBuffer = create_glbo_buffer<PhotonSample>(context, RT_BUFFER_INPUT_OUTPUT, mSamples);
+		mPhotonBuffer = create_glbo_buffer<PhotonSample>(context, RT_BUFFER_INPUT_OUTPUT, 10000000);
 		mPhotonBuffer->setFormat(RT_FORMAT_USER);
 		mPhotonBuffer->setElementSize(sizeof(PhotonSample));
 	}
@@ -73,7 +73,6 @@ void ReferenceBSSRDFGPU::load_data()
 
 void ReferenceBSSRDFGPU::set_samples(int samples)
 {
-	mPhotonBuffer->setSize(samples);
 	BSSRDFHemisphereSimulated::set_samples(samples);
 }
 
