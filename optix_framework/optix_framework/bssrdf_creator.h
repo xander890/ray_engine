@@ -58,7 +58,7 @@ protected:
 class BSSRDFHemisphereSimulated : public BSSRDFHemisphereRenderer
 {
 public:
-	BSSRDFHemisphereSimulated(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : BSSRDFHemisphereRenderer(ctx, hemisphere), mSamples(samples)
+	BSSRDFHemisphereSimulated(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e8) : BSSRDFHemisphereRenderer(ctx, hemisphere), mSamples(samples)
 	{
 	}
 

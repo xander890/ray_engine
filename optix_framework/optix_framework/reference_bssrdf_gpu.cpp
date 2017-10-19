@@ -100,7 +100,9 @@ void ReferenceBSSRDFGPU::reset()
 
 	PhotonSample * buf = reinterpret_cast<PhotonSample*>(mPhotonBuffer->map());
 	PhotonSample start = get_empty_photon();
-	for (unsigned int i = 0; i < mSamples; i++)
+	RTsize s;
+	mPhotonBuffer->getSize(s);
+	for (unsigned int i = 0; i < s; i++)
 	{
 		buf[i] = start;
 	}

@@ -206,7 +206,7 @@ private:
 	std::string mFilePath = "test.bssrdf";
 
 	int mSimulationSamplesPerFrame = (int)1e7;
-	int mSimulationFrames = 10;
+	int mSimulationFrames = 100;
 	int mSimulationMaxIterations = (int)1e9;
 
 	float * mCurrentHemisphereData = nullptr;
