@@ -12,6 +12,7 @@ public:
     void initialize_shader(optix::Context) override;
     void initialize_mesh(Mesh& object) override;
     void pre_trace_mesh(Mesh& object) override;
+	void load_data(Mesh & object) override;
 	bool on_draw() override;
 	virtual Shader* clone() override { return new PresampledSurfaceBssrdf(*this); }
 
@@ -19,6 +20,8 @@ private:
     int entry_point;
 	optix::Buffer mSampleBuffer;
 	unsigned int mSamples = 1000;
+	float mArea;
+	optix::Buffer mCdfBuffer;
 };
 
 

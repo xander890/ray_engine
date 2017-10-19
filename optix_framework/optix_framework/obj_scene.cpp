@@ -631,15 +631,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 
 	double t0 = currentTime();
 
-	execute_on_scene_elements([=](Mesh & m)
-	{
-		m.load();
-	});
-	double t1 = currentTime();
-	update_timer(render_time_load, t1 - t0);
-
-	t0 = currentTime();
-
 	if (m_camera_changed)
 	{
 		reset_renderer();
@@ -653,9 +644,10 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
     method->pre_trace();
     execute_on_scene_elements([=](Mesh & m)
     {
+		m.load();
         m.pre_trace();
     });
-	t1 = currentTime();
+	double t1 = currentTime();
 	update_timer(render_time_pre_trace, t1 - t0);
 
 	unsigned int width = camera->get_width();

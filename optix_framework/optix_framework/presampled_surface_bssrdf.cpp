@@ -25,11 +25,12 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
     context["sampling_vindex_buffer"]->setBuffer(empty_bufferi3);
     context["sampling_nindex_buffer"]->setBuffer(empty_bufferi3);
 
+
+
     mSampleBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
     mSampleBuffer->setFormat(RT_FORMAT_USER);
     mSampleBuffer->setElementSize(sizeof(PositionSample));
     mSampleBuffer->setSize(mSamples);
-    context["sampling_output_buffer"]->setBuffer(mSampleBuffer);
 }
 
 void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
@@ -58,17 +59,16 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
     }
     v_idx_buff->unmap();
     v_buff->unmap();
-    object.get_geometry_instance()["total_area"]->setFloat(totalArea);
+	mArea = totalArea;
     std::cout << "Area: " << totalArea << std::endl;
 
     for (unsigned int i = 0; i < triangles; ++i)
     {
     	cdf[i] /= totalArea;
     }
-    Buffer cdf_buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, triangles);
-    memcpy(cdf_buffer->map(), cdf, triangles * sizeof(float));
-        object.get_geometry_instance()["area_cdf"]->setBuffer(cdf_buffer);
-    cdf_buffer->unmap();
+    mCdfBuffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, triangles);
+    memcpy(mCdfBuffer->map(), cdf, triangles * sizeof(float));
+		mCdfBuffer->unmap();
     delete[] cdf;
 
 	Shader::initialize_mesh(object);
@@ -77,15 +77,25 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
 
 void PresampledSurfaceBssrdf::pre_trace_mesh(Mesh& obj)
 {
-    Geometry g = obj.mGeometry;
-    GeometryInstance object = obj.get_geometry_instance();
-    context["sampling_vertex_buffer"]->setBuffer(g["vertex_buffer"]->getBuffer());
-    context["sampling_normal_buffer"]->setBuffer(g["normal_buffer"]->getBuffer());
-    context["sampling_vindex_buffer"]->setBuffer(g["vindex_buffer"]->getBuffer());
-    context["sampling_nindex_buffer"]->setBuffer(g["nindex_buffer"]->getBuffer());
+	auto buf = BufPtr<PositionSample>(mSampleBuffer->getId());
+	context["sampling_output_buffer"]->setUserData(sizeof(BufPtr<PositionSample>), &buf);
     context["bssrdf_enabled"]->setUint(0);	// Disabling BSSRDF computation on sample collection.
     context->launch(entry_point, mSamples);
     context["bssrdf_enabled"]->setUint(1);
+}
+
+void PresampledSurfaceBssrdf::load_data(Mesh & obj)
+{
+	Geometry g = obj.mGeometry;
+	GeometryInstance object = obj.get_geometry_instance();
+	auto buf = BufPtr<PositionSample>(mSampleBuffer->getId());
+	object["sampling_output_buffer"]->setUserData(sizeof(BufPtr<PositionSample>), &buf);
+	object["total_area"]->setFloat(mArea);
+	object["area_cdf"]->setBuffer(mCdfBuffer);
+	context["sampling_vertex_buffer"]->setBuffer(g["vertex_buffer"]->getBuffer());
+	context["sampling_normal_buffer"]->setBuffer(g["normal_buffer"]->getBuffer());
+	context["sampling_vindex_buffer"]->setBuffer(g["vindex_buffer"]->getBuffer());
+	context["sampling_nindex_buffer"]->setBuffer(g["nindex_buffer"]->getBuffer());
 }
 
 bool PresampledSurfaceBssrdf::on_draw()

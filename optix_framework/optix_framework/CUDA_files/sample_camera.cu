@@ -22,8 +22,8 @@ rtBuffer<int3>   sampling_nindex_buffer;
 rtBuffer<float>  area_cdf;  
 rtDeclareVariable(float, total_area, , );
 
-// Window variables
-rtBuffer<PositionSample> sampling_output_buffer;
+rtDeclareVariable(BufPtr<PositionSample>, sampling_output_buffer, , );
+
 
 __forceinline__ __device__ unsigned int cdf_bsearch(float xi)
 {
