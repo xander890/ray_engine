@@ -3,6 +3,8 @@
 #include <vector>
 #include <map>
 
+#define USE_SMALL_FILES
+
 #define bssrdf_delimiter std::string("BSSRDF")
 #define size_delimiter std::string("SIZE")
 #define parameter_delimiter std::string("PARAMETER")
@@ -49,8 +51,10 @@ public:
 	void set_hemisphere(const float * bssrdf, const std::vector<size_t> & idx);
 
 private:
-	size_t write_header(int mode, const std::string p);
+	std::string create_header();
 	std::vector<size_t> mDimensions;
-	size_t mBSSRDFStart = 0;
+	std::string mHeader;
 	std::string mFileName;
+	const std::map<size_t, std::vector<float>> & mParameters;
+	const std::map<size_t, std::string> & mNames;
 };

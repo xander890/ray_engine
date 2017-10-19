@@ -16,3 +16,14 @@ inline std::string prettify(const std::string & s)
 	}
 	return res;
 }
+
+inline void split_extension(const std::string& filename, std::string & file, std::string & ext) {
+	size_t lastdot = filename.find_last_of(".");
+	if (lastdot == std::string::npos) 
+	{
+		file = filename;
+		ext = "";
+	}
+	file = filename.substr(0, lastdot);
+	ext = filename.substr(lastdot);
+}

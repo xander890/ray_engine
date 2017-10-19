@@ -5,6 +5,26 @@
 #include "parserstringhelpers.h"
 #include <algorithm>
 #include <assert.h>
+#include <string_utils.h>
+
+std::string get_filename(const std::string & filename, const std::vector<size_t> & idx, const std::map<size_t, std::vector<float>> & params)
+{
+	std::stringstream file;
+	file << std::fixed;
+	file.precision(2);
+	std::string f, e;
+	split_extension(filename, f, e);
+
+	file << f << "_eta_" << params.at(eta_index)[idx[eta_index]] << "_g_" << params.at(g_index)[idx[g_index]] << "_alpha_" << params.at(albedo_index)[idx[albedo_index]] << e;
+	std::string s = file.str();
+	return s;
+}
+
+bool file_exists(const std::string & file)
+{
+	std::ifstream f(file);
+	return (bool)f;
+}
 
 void parameters_to_string(const std::map<size_t, std::vector<float>> & parameters, const std::map<size_t, std::string> & names, std::string & result)
 {
@@ -40,9 +60,7 @@ void string_to_parameters(const std::string & parse, const std::map<size_t, std:
 
 BSSRDFLoader::BSSRDFLoader(const std::string & filename, const std::map<size_t, std::string> & names)
 {
-	mFileName = filename;
-
-	
+	mFileName = filename;	
 
 	if(!parse_header(names))
 	{
@@ -75,24 +93,46 @@ void BSSRDFLoader::load_material_slice(float * bssrdf_data, const std::vector<si
 {
 	if (idx.size() != 3)
 		Logger::error << "Material index is 3 dimensional." << std::endl;
+#ifdef USE_SMALL_FILES
+	size_t pos = 0;
+	std::string filename = get_filename(mFileName, idx, mParameters);
+	std::ifstream ifs;
+	ifs.open(filename, std::ofstream::in | std::ofstream::binary);
+	ifs.seekg(pos);
+	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_material_slice_size() * sizeof(float));
+	ifs.close();
+#else
 	size_t pos = flatten_index({ idx[0], idx[1], idx[2], 0, 0, 0, 0, 0 }, mDimensions) * sizeof(float);
 	std::ifstream ifs;
 	ifs.open(mFileName, std::ofstream::in | std::ofstream::binary);
 	ifs.seekg(pos + mBSSRDFStart);
 	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_material_slice_size() * sizeof(float));
 	ifs.close();
+#endif
 }
 
 void BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t>& idx)
 {
 	if (idx.size() != 6)
 		Logger::error << "Hemisphere index is 6 dimensional." << std::endl;
+
+#ifdef USE_SMALL_FILES
+	std::vector<size_t> dims = mDimensions;
+	dims[eta_index] = dims[albedo_index] = dims[g_index] = 1;
+	size_t pos = flatten_index({ 0, 0, 0, idx[3], idx[4], idx[5], 0, 0 }, dims) * sizeof(float);
+	std::ifstream ifs;
+	ifs.open(get_filename(mFileName, idx, mParameters), std::ofstream::in | std::ofstream::binary);
+	ifs.seekg(pos);
+	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_hemisphere_size() * sizeof(float));
+	ifs.close();
+#else
 	size_t pos = flatten_index({ idx[0], idx[1], idx[2], idx[3], idx[4], idx[5], 0, 0 }, mDimensions) * sizeof(float);
 	std::ifstream ifs;
 	ifs.open(mFileName, std::ofstream::in | std::ofstream::binary);
 	ifs.seekg(pos + mBSSRDFStart);
 	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_hemisphere_size() * sizeof(float));
 	ifs.close();
+#endif
 }
 	
 bool BSSRDFLoader::parse_header(const std::map<size_t, std::string> & names)
@@ -169,22 +209,27 @@ std::vector<size_t> unravel_index(const size_t& idx, const std::vector<size_t>& 
 
 
 
-BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<size_t> & dimensions, const std::map<size_t, std::vector<float>> & parameters, const std::map<size_t, std::string> & names) : mFileName(filename), mDimensions(dimensions)
+BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<size_t> & dimensions, const std::map<size_t, std::vector<float>> & parameters, const std::map<size_t, std::string> & names) : mFileName(filename), mDimensions(dimensions), mParameters(parameters), mNames(names)
 {
 	size_t total_size = sizeof(float);
 	for (size_t element : dimensions)
 		total_size *= element;
 
-	std::string params;
-	parameters_to_string(parameters, names, params);
-	mBSSRDFStart = write_header(std::ofstream::out, params);
+	mHeader = create_header();
 
+#ifdef USE_SMALL_FILES
 	std::ofstream of;
-	of.open(mFileName, std::ofstream::in | std::ofstream::out | std::ofstream::binary);
-	of.seekp(mBSSRDFStart + total_size - 1);
+	of.open(filename, std::ofstream::out);
+	of << mHeader;
+	of.close();
+#else
+	std::ofstream of;
+	of.open(mFileName, std::ofstream::out);
+	of << mHeader;
+	of.seekp(mHeader.size() + total_size - 1);
 	of.put('\0');
 	of.close();
-	
+#endif
 }
 
 size_t BSSRDFExporter::get_material_slice_size()
@@ -201,44 +246,80 @@ void BSSRDFExporter::set_material_slice(const float * bssrdf_data, const std::ve
 {
 	if (idx.size() != 3)
 		Logger::error << "Material index is 3 dimensional." << std::endl;
+#ifdef USE_SMALL_FILES
+	size_t pos = 0;
+	std::ofstream ofs;
+	std::string filename = get_filename(mFileName, idx, mParameters);
+	if (!file_exists(filename))
+	{
+		ofs.open(filename, std::ofstream::out);
+		ofs.seekp(get_material_slice_size() * sizeof(float) - 1);
+		ofs.put('\0');
+		ofs.close();
+	}
+	ofs.seekp(pos);
+	ofs.write(reinterpret_cast<const char*>(bssrdf_data), get_material_slice_size() * sizeof(float));
+	ofs.close();
+#else
 	size_t pos = flatten_index({ idx[0], idx[1], idx[2], 0, 0, 0, 0, 0 }, mDimensions) * sizeof(float);
 	std::ofstream ofs;
 	ofs.open(mFileName, std::ofstream::in | std::ofstream::out | std::ofstream::binary);
-	ofs.seekp(pos + mBSSRDFStart);
+	ofs.seekp(pos + mHeader.size());
 	ofs.write(reinterpret_cast<const char*>(bssrdf_data), get_material_slice_size() * sizeof(float));
 	ofs.close();
+#endif
 }
 
 void BSSRDFExporter::set_hemisphere(const float * bssrdf_data, const std::vector<size_t>& idx)
 {
 	if (idx.size() != 6)
 		Logger::error << "Hemisphere index is 6 dimensional." << std::endl;
+#ifdef USE_SMALL_FILES
+	std::vector<size_t> dims = mDimensions;
+	dims[eta_index] = dims[albedo_index] = dims[g_index] = 1;
+	size_t pos = flatten_index({ 0, 0, 0, idx[3], idx[4], idx[5], 0, 0 }, dims) * sizeof(float);
+	std::ofstream ofs;
+	std::string filename = get_filename(mFileName, idx, mParameters);
+	if (!file_exists(filename))
+	{
+		ofs.open(filename, std::ofstream::out);
+		ofs.seekp(get_material_slice_size() * sizeof(float) - 1);
+		ofs.put('\0');
+		ofs.close();
+	}
+	ofs.open(filename, std::ofstream::in | std::ofstream::out | std::ofstream::binary);
+	ofs.seekp(pos);
+	ofs.write(reinterpret_cast<const char*>(bssrdf_data), get_hemisphere_size() * sizeof(float));
+	ofs.close();
+#else
 	size_t pos = flatten_index({ idx[0], idx[1], idx[2], idx[3], idx[4], idx[5], 0, 0 }, mDimensions) * sizeof(float);
 	std::ofstream ofs;
 	ofs.open(mFileName, std::ofstream::in | std::ofstream::out | std::ofstream::binary);
-	ofs.seekp(pos + mBSSRDFStart);
+	ofs.seekp(pos + mHeader.size());
 	ofs.write(reinterpret_cast<const char*>(bssrdf_data), get_hemisphere_size() * sizeof(float));
 	ofs.close();
+#endif
 }
 
-size_t BSSRDFExporter::write_header(int mode, std::string parameters)
+std::string BSSRDFExporter::create_header()
 {
-	std::ofstream of;
-	of.open(mFileName, mode);
-	of << "# BSSRDF file format (version 0.1)" << std::endl;
-	of << "# Index dimensions is at follows:" << std::endl;
-	of << size_delimiter << " ";
+	std::stringstream ss;
+	//ss.open(mFileName, std::ofstream::out);
+	ss << "# BSSRDF file format (version 0.1)" << std::endl;
+	ss << "# Index dimensions is at follows:" << std::endl;
+	ss << size_delimiter << " ";
 	for (int i = 0; i < 8; i++)
 	{
-		of << mDimensions[i] << " ";
+		ss << mDimensions[i] << " ";
 	}
-	of << std::endl;
-	of << "#eta\tg\talbedo\ttheta_s\tr\ttheta_i\tphi_o\ttheta_o" << std::endl;
-	
-	of << parameters;
-	
-	of << bssrdf_delimiter << std::endl;
-	size_t t = of.tellp();
-	of.close();
-	return t;
+	ss << std::endl;
+	ss << "#eta\tg\talbedo\ttheta_s\tr\ttheta_i\tphi_o\ttheta_o" << std::endl;
+
+	std::string params;
+	parameters_to_string(mParameters, mNames, params);
+	ss << params;
+
+	ss << bssrdf_delimiter << std::endl;
+	size_t t = ss.tellp();
+	return ss.str();
 }

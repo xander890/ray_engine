@@ -206,7 +206,24 @@ void FullBSSRDFGenerator::post_draw_callback()
 	{
 		if (mLoader != nullptr)
 		{
-			// FIXME finish gui
+			static std::vector<size_t> index(6);
+			for (int i = 0; i < 6; i++)
+			{
+				std::string s;
+				for (int k = 0; k < mLoader->get_parameters().at(i).size(); k++)
+				{
+					s += std::to_string(mLoader->get_parameters().at(i)[k]) + '\0';
+				}
+				if (ImmediateGUIDraw::Combo(mParameters.parameter_names[i].c_str(), (int*)&index[i], s.c_str(), (int)mLoader->get_parameters().at(i).size()))
+				{
+					std::vector<size_t> dims;
+					mLoader->get_dimensions(dims);
+					float * data = (float*)mExternalBSSRDFBuffer->map();
+					mLoader->load_hemisphere(data, { 0,0,0,0,0,0 });
+					normalize(data, dims[phi_o_index] * dims[theta_o_index]);
+					mExternalBSSRDFBuffer->unmap();
+				}
+			}
 		}
 	}
 
