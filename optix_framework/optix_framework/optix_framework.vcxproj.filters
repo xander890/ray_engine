@@ -591,6 +591,9 @@
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
     <ClInclude Include="bssrdf_loader.h" />
+    <ClInclude Include="forward_dipole.h">
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

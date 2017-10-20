@@ -35,14 +35,6 @@ static __device__ __inline__ void shadow_hit(PerRayData_shadow & shadow_payload,
 	rtTerminateRay();
 }
 
-#ifdef NDEBUG
-#define optix_print 
-#define optix_assert(x) 
-#else
-#define optix_print rtPrintf
-#define optix_assert(x) if(!(x)) optix_print("Assertion " #x " failed. File: %s, Line %d\n", __FILE__, __LINE__); 
-#endif
-
 //#define TEST_SAMPLING
 #define TEST_SAMPLING_W 0.01f
 
