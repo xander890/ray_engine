@@ -8,7 +8,7 @@
 #include "optical_helper.h"
 #include "phase_function.h"
 
-#define RND_FUNC rnd_tea
+#define RND_FUNC rnd_accurate
 //#define EXTINCTION_DISTANCE_RR
 //#define INCLUDE_SINGLE_SCATTERING
 
@@ -98,17 +98,15 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 
 			optix_assert(optix::dot(d_vec, no) > 0.0f);
 
-			const float cos_theta_21 = optix::max(optix::dot(d_vec, no), 0.0f); 
-			const float cos_theta_21_sqr = cos_theta_21*cos_theta_21;
 
 			// Note: we are checking the *exiting* ray, so we flip the relative ior 
-			const float sin_theta_o_sqr = n2_over_n1*n2_over_n1*(1.0f - cos_theta_21_sqr);
-
+			float3 wo;
+			float cos_theta_o, cos_theta_21, F_r;
 			// If there is no total internal reflection, we accumulate
-			if (sin_theta_o_sqr < 1.0f) 
+			if (refract(-d_vec, -no, n2_over_n1, wo, F_r, cos_theta_21, cos_theta_o))
 			{
-				const float cos_theta_o = sqrtf(1.0f - sin_theta_o_sqr);
-				const float F_t = 1.0f - fresnel_R(cos_theta_21, n2_over_n1); 
+				const float F_t = 1 - F_r;
+								
 				optix_assert(F_t < 1.0f);
 
 				const float phi_21 = atan2f(d_vec.y, d_vec.x);		
