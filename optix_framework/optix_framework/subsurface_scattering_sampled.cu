@@ -231,7 +231,7 @@ __device__ __forceinline__ bool random_axis(const float3 & xo, const float3 & no
 	if (!trace_depth_ray(xi_tangent_space + no * scene_epsilon * 2, sample_ray_dir, xi, ni, 0.0f, t_max))
 		return false;
 
-	optix::float3 xo_xi = xo - xi_tangent_space;
+	optix::float3 xo_xi = xo - xi;
 
 	float dot0 = abs(dot(ni, probe_direction));
 
