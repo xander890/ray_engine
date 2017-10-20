@@ -32,26 +32,21 @@ RT_PROGRAM void reference_bssrdf_camera()
 	 
 	const float incident_power = 1.0f;
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
-	 
-#ifdef USE_HARDCODED_MATERIALS
-	get_default_material(theta_i, r, theta_s, albedo, extinction, g, n2_over_n1);
-#else
+	  
 	theta_i = reference_bssrdf_theta_i;
 	theta_s = reference_bssrdf_theta_s;
-	r = reference_bssrdf_radius;
+	r = reference_bssrdf_radius; 
 	n2_over_n1 = reference_bssrdf_rel_ior;
 	albedo = reference_bssrdf_material_params->albedo.x;
 	extinction = reference_bssrdf_material_params->extinction.x;
 	g = reference_bssrdf_material_params->meancosine.x;
-#endif
-	const float theta_i_rad = theta_i; 
-	const float theta_s_rad = theta_s;
-	const optix::float3 wi = normalize(optix::make_float3(sinf(theta_i_rad), 0, cosf(theta_i_rad)));
+
+	const optix::float3 wi = normalize(optix::make_float3(-sinf(theta_i), 0, cosf(theta_i)));
 
 	// Geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);
-	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
+	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), -sin(theta_s), 0);
 	const optix::float3 no = ni;
 
 	// Refraction 

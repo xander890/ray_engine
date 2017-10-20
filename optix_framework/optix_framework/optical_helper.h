@@ -47,6 +47,7 @@ __host__ __device__ __inline__ float fresnel_R(float cos_theta, float eta)
   float sin_theta_t_sqr = 1.0f/(eta*eta)*(1.0f - cos_theta*cos_theta);
   if(sin_theta_t_sqr >= 1.0f) return 1.0f;
   float cos_theta_t = sqrt(1.0f - sin_theta_t_sqr);
+ 
   return fresnel_R(cos_theta, cos_theta_t, eta);
 }
 
@@ -59,6 +60,7 @@ __host__ __device__ __inline__ bool _refract(const optix::float3 & i, const opti
 	if (sin_theta_t_sqr >= 1.0f)
 	{
 		// Total internal refraction
+		cos_theta_t = 1.0f;
 		return false;
 	}
 	cos_theta_t = sqrt(1.0f - sin_theta_t_sqr);
@@ -66,10 +68,11 @@ __host__ __device__ __inline__ bool _refract(const optix::float3 & i, const opti
 	return true;
 }
 
-__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float eta, optix::float3 & refracted, float & F_r, float & cos_theta_i, float & cos_theta_t)
+// IOR has to be refracted medium index over source medium index
+__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & F_r, float & cos_theta_i, float & cos_theta_t)
 {
-	bool pass = _refract(i, n, eta, refracted, cos_theta_i, cos_theta_t);
-	F_r = !pass ? 1.0f : fresnel_R(cos_theta_i, cos_theta_t, eta);
+	bool pass = _refract(i, n, n1_over_n2, refracted, cos_theta_i, cos_theta_t);
+	F_r = !pass ? 1.0f : fresnel_R(cos_theta_i, cos_theta_t, 1.0f/n1_over_n2);
 	return pass;
 }
 

@@ -75,18 +75,12 @@ RT_PROGRAM void shade()
         cos_theta_o = -cos_theta_o;
     }
 
-    float sin_theta_t_sqr = recip_ior*recip_ior*(1.0f - cos_theta_o*cos_theta_o);
-    float cos_theta_t = 1.0f;
-    float R = 1.0f;
-    if (sin_theta_t_sqr < 1.0f)
-    {
-        cos_theta_t = sqrtf(1.0f - sin_theta_t_sqr);
-        R = fresnel_R(cos_theta_o, cos_theta_t, recip_ior);
-    }
+	float3 wt;
+	float R;
+	refract(wo, n, recip_ior, wt, R);
 
     if (reflect_xi >= R)
     {
-		float3 wt = recip_ior*(cos_theta_o*no - wo) - no*cos_theta_t;
 		PerRayData_radiance prd_refracted = prepare_new_pt_payload(prd_radiance);
 		prd_refracted.seed = t;
 		 
@@ -113,14 +107,13 @@ RT_PROGRAM void shade()
 
         // compute direction of the transmitted light
         const float3& wi = sample.dir;
-        float cos_theta_i = max(dot(wi, sample.normal), 0.0f);
-        float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
-        float sin_theta_t_sqr = recip_ior*recip_ior*(1.0f - cos_theta_i_sqr);
-        float cos_theta_t_i = sqrt(1.0f - sin_theta_t_sqr);
-        float3 w12 = recip_ior*(cos_theta_i*sample.normal - wi) - sample.normal*cos_theta_t_i;
-        float T12 = 1.0f - fresnel_R(cos_theta_i, cos_theta_t_i, recip_ior);
+        float3 w12;
+		float R12;
 
-		float3 w21 = no * cos_theta_t - recip_ior * (cos_theta_o * no - wo);
+		refract(wi, n, recip_ior, w12, R12);
+
+		float T12 = 1.0f - R12;
+		float3 w21 = -wt;
 
 #ifdef TEST_SAMPLING
 		accumulate += make_float3(TEST_SAMPLING_W)*sample.L;
@@ -150,13 +143,11 @@ RT_PROGRAM void shade()
     // Trace reflected ray
     if (reflect_xi < R)
     {
-        float3 wr = 2.0f*cos_theta_o*no - wo;
+		float3 wr = -reflect(wo, no);
         PerRayData_radiance prd_reflected = prepare_new_pt_payload(prd_radiance);
 		prd_reflected.seed = t;
 		Ray reflected(xo, wr,  RayType::RADIANCE, scene_epsilon);
-        rtTrace(top_object, reflected, prd_reflected);
-
-		
+        rtTrace(top_object, reflected, prd_reflected);	
 		t = prd_reflected.seed;
         prd_radiance.result += prd_reflected.result;
     }

@@ -21,8 +21,6 @@ __device__ __forceinline__ float single_approx(optix::float3 xi, optix::float3 n
   return sigma_s_p*d1*phase_HG(dot(w12, w21), g)*exp(-sigma_t_p*d1 - sigma_t*d2)/(d2*d2);
 }
 
-#define USE_PRECOMPUTED
-
 __device__ __forceinline__ float3 quantized_diffusion_bssrdf(const float3& xi, const float3& ni, const float3& w12,
 	const float3& xo, const float3& no,
 	const ScatteringMaterialProperties& properties)

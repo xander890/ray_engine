@@ -13,6 +13,72 @@
 #include "GLFW\glfw3.h"
 #pragma warning(disable : 4996)
 
+
+
+__forceinline__ __device__ void get_default_material(const std::string & mat, float & theta_i, float & r, float & theta_s, float & albedo, float & extinction, float & g, float & n2_over_n1)
+{
+	if (mat == "A")
+	{
+		theta_i = 30.0f;
+		albedo = 0.6f;
+		extinction = 1.0f;
+		g = 0.0f;
+		n2_over_n1 = 1.3f;
+		r = 4.0f;
+		theta_s = 0;
+	}
+	else if (mat == "B")
+	{
+		theta_i = 60.0f;
+		theta_s = 60;
+		r = 0.8f;
+		albedo = 0.99f;
+		extinction = 1.0f;
+		g = -0.3f;
+		n2_over_n1 = 1.4f;
+	}
+	else if (mat == "C")
+	{
+		theta_i = 70.0f;
+		theta_s = 60;
+		r = 1.0f;
+		albedo = 0.3f;
+		extinction = 1.0f;
+		g = 0.9f;
+		n2_over_n1 = 1.4f;
+	}
+	else if (mat == "D")
+	{
+		theta_i = 0.0f;
+		theta_s = 105.0f;
+		r = 4.0f;
+		albedo = 0.5f;
+		extinction = 1.0f;
+		g = 0.0f;
+		n2_over_n1 = 1.2f;
+	}
+	else if (mat == "E")
+	{
+		theta_i = 80.0f;
+		theta_s = 165.0f;
+		r = 2.0f;
+		albedo = 0.8f;
+		extinction = 1.0f;
+		g = -0.3f;
+		n2_over_n1 = 1.3f;
+	}
+	else if (mat == "F")
+	{
+		theta_i = 80.0f;
+		theta_s = 105.0f;
+		r = .6f;
+		albedo = 0.5f;
+		extinction = 1.0f;
+		g = -0.9f;
+		n2_over_n1 = 1.4f;
+	}
+}
+
 std::string gui_string(std::vector<float> & data)
 {
 	std::stringstream ss;
@@ -32,7 +98,7 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 
 void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
 {
-	//m_context->setPrintEnabled(true);
+	m_context->setPrintEnabled(true);
 	m_context->setPrintBufferSize(200);
 	m_context->setPrintLaunchIndex(0, 0, 0);
 	ConfigParameters::init(config_file);
@@ -203,6 +269,15 @@ void FullBSSRDFGenerator::post_draw_callback()
 	if (mCurrentRenderMode == RENDER_BSSRDF)
 	{
 		creator->on_draw(true);
+		const char * opts[6] = {"A","B","C","D","E", "F"};
+		static int def = 0;
+		if (ImmediateGUIDraw::Combo("Default material", &def, opts, 6,6))
+		{
+			float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
+			get_default_material(opts[def], theta_i, r, theta_s, albedo, extinction, g, n2_over_n1);
+			creator->set_geometry_parameters(theta_i, r, theta_s);
+			creator->set_material_parameters(albedo, 1, g, n2_over_n1);
+		}		
 	}
 	else
 	{

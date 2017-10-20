@@ -32,7 +32,7 @@ rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
 
 RT_PROGRAM void reference_bssrdf_gpu()
 {
-	optix_print("Welcome.\n");
+	optix_print("Welcome.\n"); 
 	uint idx = launch_index.x;
 	optix::uint t = ref_frame_number * launch_dim.x + idx;
 	hash(t);
@@ -40,9 +40,6 @@ RT_PROGRAM void reference_bssrdf_gpu()
 	const float incident_power = 1.0f;
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
 
-#ifdef USE_HARDCODED_MATERIALS
-	get_default_material(theta_i, r, theta_s, albedo, extinction, g, n2_over_n1);
-#else
 	theta_i = reference_bssrdf_theta_i;
 	theta_s = reference_bssrdf_theta_s;
 	r = reference_bssrdf_radius;
@@ -50,17 +47,16 @@ RT_PROGRAM void reference_bssrdf_gpu()
 	albedo = reference_bssrdf_material_params->albedo.x;
 	extinction = reference_bssrdf_material_params->extinction.x;
 	g = reference_bssrdf_material_params->meancosine.x;
-#endif
-	const float theta_i_rad = deg2rad(theta_i);
-	const float theta_s_rad = deg2rad(theta_s);
-	const optix::float3 wi = normalize(optix::make_float3(sinf(theta_i_rad), 0, cosf(theta_i_rad)));
+
+	const float theta_i_rad = theta_i;
+	const float theta_s_rad = -theta_s;
+	const optix::float3 wi = normalize(optix::make_float3(-sinf(theta_i_rad), 0, cosf(theta_i_rad)));
 
 	// Geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);
-	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
+	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), -sin(theta_s), 0);
 	const optix::float3 no = ni;
-
 
 	PhotonSample p = photon_buffer[idx];
 
@@ -69,37 +65,37 @@ RT_PROGRAM void reference_bssrdf_gpu()
 		optix_print("New photon.\n");
 		p.t = ref_frame_number * launch_dim.x + idx;
 		hash(p.t);
-		// Refraction 
+		// Refraction      
 		const float n1_over_n2 = 1.0f / n2_over_n1;
-		const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f);
-		const float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
-		const float sin_theta_t_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_i_sqr);
+		const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f); 
+		const float cos_theta_i_sqr = cos_theta_i*cos_theta_i; 
+		const float sin_theta_t_sqr = n1_over_n2 *n1_over_n2*(1.0f - cos_theta_i_sqr); 
 		const float cos_theta_t_i = sqrt(1.0f - sin_theta_t_sqr);
 		const optix::float3 w12 = n1_over_n2*(cos_theta_i*ni - wi) - ni*cos_theta_t_i;
 		p.flux = incident_power;
-		p.xp = xi;
-		p.wp = w12;
+		p.xp = xi; 
+		p.wp = w12;  
 		p.i = 0;
-		p.status = PHOTON_STATUS_SCATTERING;
-		atomicAdd(&photon_counter[ref_frame_number], 1);
+		p.status = PHOTON_STATUS_SCATTERING; 
+		atomicAdd(&photon_counter[ref_frame_number], 1); 
 	}
 
 	if (scatter_photon(p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
 	{
 		photon_buffer[idx].status = PHOTON_STATUS_NEW;
 	}
-	else
+	else 
 	{
-		p.i += batch_iterations;
+		p.i += batch_iterations;  
 		if (p.i >= maximum_iterations)
 		{
 			optix_print("Max iterations reached. Distance %f (%f mfps)\n", length(p.xp - xo), length(p.xp - xo) / r);
-			photon_buffer[idx].status = PHOTON_STATUS_NEW;
+			photon_buffer[idx].status = PHOTON_STATUS_NEW; 
 		}
 		else
-		{
+		{ 
 			optix_print("Continuing %d.\n", p.i);
-			photon_buffer[idx] = p;
+			photon_buffer[idx] = p; 
 		}
 	}
 

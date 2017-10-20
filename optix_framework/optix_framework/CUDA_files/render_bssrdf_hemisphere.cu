@@ -25,9 +25,9 @@ RT_PROGRAM void render_ref()
 	
 
 	if (l >= 1)
-	{
+	{ 
 		output_buffer[launch_index] = make_float4(0);
-	}
+	} 
 	else
 	{
 		float2 coords = get_normalized_hemisphere_buffer_coordinates(l * M_PIf * 0.5f, phi_o);

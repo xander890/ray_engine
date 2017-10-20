@@ -35,9 +35,6 @@ RT_PROGRAM void reference_bssrdf_camera()
 
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
 
-#ifdef USE_HARDCODED_MATERIALS
-	get_default_material(theta_i, r, theta_s, albedo, extinction, g, n2_over_n1);
-#else
 	theta_i = reference_bssrdf_theta_i;
 	theta_s = reference_bssrdf_theta_s;
 	r = reference_bssrdf_radius;
@@ -45,8 +42,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	albedo = planar_bssrdf_material_params->albedo.x;
 	extinction = planar_bssrdf_material_params->extinction.x;
 	g = planar_bssrdf_material_params->meancosine.x;
-#endif
-
+	
 	const float theta_i_rad = theta_i;
 	const float theta_s_rad = theta_s;
 	const optix::float3 wi = normalize(optix::make_float3(sinf(theta_i_rad), 0, cosf(theta_i_rad)));

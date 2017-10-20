@@ -41,16 +41,16 @@ protected:
 	optix::Buffer mBSSRDFBuffer = nullptr;
 
 	// Geometric properties
-	float mThetai = 60.0f;
-	float mThetas = 0.0f;
-	float mRadius = 0.8f;
+	float mThetai = 70.0f;
+	float mThetas = 60.0f;
+	float mRadius = 1.0f;
 	// Scattering properties
 	optix::Buffer mProperties;
 
-	float mAlbedo = 0.9f;
+	float mAlbedo = 0.3f;
 	float mExtinction = 1.0f;
-	float mAsymmetry = 0.0f;
-	float mIor = 1.3f;
+	float mAsymmetry = 0.9f;
+	float mIor = 1.4f;
 	bool mIsReadOnly = false;
 	bool mInitialized = false;
 };
