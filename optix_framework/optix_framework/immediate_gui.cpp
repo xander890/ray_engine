@@ -5,9 +5,13 @@
 #include<glfw\glfw3.h>
 
 
+
 ImmediateGUI::ImmediateGUI(GLFWwindow * window)
 {
 	ImGui_ImplGlfwGL3_Init(window, false);
+	glfwSetCharCallback(window, ImGui_ImplGlfwGL3_CharCallback);
+	glfwSetScrollCallback(window, ImGui_ImplGlfwGL3_ScrollCallback);
+	win = window;
 }
 
 ImmediateGUI::~ImmediateGUI()
@@ -17,8 +21,7 @@ ImmediateGUI::~ImmediateGUI()
 
 bool ImmediateGUI::keyPressed(int key, int action, int modifier)
 {
-	ImGuiIO& io = ImGui::GetIO();
-	io.AddInputCharacter(key);
+	ImGui_ImplGlfwGL3_KeyCallback(win, key, 0, action, modifier);
 	return false;
 }
 
@@ -26,18 +29,7 @@ bool ImmediateGUI::keyPressed(int key, int action, int modifier)
 
 bool ImmediateGUI::mousePressed(int x, int y, int button, int action, int mods)
 {
-	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2((float)x, (float)y);
-
-	if (action == GLFW_PRESS && (button == GLFW_MOUSE_BUTTON_LEFT))
-		io.MouseDown[0] = true;
-	else
-		io.MouseDown[0] = false;
-
-	if (action == GLFW_PRESS && (button == GLFW_MOUSE_BUTTON_RIGHT))
-		io.MouseDown[1] = true;
-	else
-		io.MouseDown[1] = false;
+	ImGui_ImplGlfwGL3_MouseButtonCallback(win, button, action, mods);
 
 	return ImGui::IsMouseHoveringAnyWindow();
 }
@@ -73,3 +65,4 @@ void ImmediateGUI::end_window() const
 {
 	ImGui::End();
 }
+

@@ -10,6 +10,7 @@
 #include <sstream>
 #include "reference_bssrdf_gpu.h"
 #include "GL\glew.h"
+#include "GLFW\glfw3.h"
 #pragma warning(disable : 4996)
 
 std::string gui_string(std::vector<float> & data)
@@ -168,8 +169,9 @@ bool vector_gui(const std::string & name, std::vector<float> & vec, std::string 
 {	
 	static char buf[256];
 	storage.copy(buf, storage.size());
-	buf[storage.size() + 1] = '\0';
-	if (ImGui::InputText(name.c_str(), buf, storage.size()))
+	buf[storage.size()] = '\0';
+
+	if (ImGui::InputText(name.c_str(), buf, storage.size(), ImGuiInputTextFlags_EnterReturnsTrue))
 	{
 		std::vector<float> c = tovalue<std::vector<float>>(std::string(buf));
 		storage = gui_string(vec);

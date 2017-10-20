@@ -33,4 +33,5 @@ public:
 
 private:
 	bool visible = true;
+	GLFWwindow * win;
 };
