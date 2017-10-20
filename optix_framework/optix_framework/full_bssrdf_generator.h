@@ -219,6 +219,5 @@ private:
 	std::string mExternalFilePath = "test.bssrdf";
 
 	void set_render_mode(RenderMode toapply);
-	std::vector<std::string> pStrings = std::vector<std::string>(mParameters.parameters.size(), "");
 };
 

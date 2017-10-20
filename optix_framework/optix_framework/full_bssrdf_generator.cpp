@@ -237,7 +237,7 @@ bool vector_gui(const std::string & name, std::vector<float> & vec, std::string 
 	storage.copy(buf, storage.size());
 	buf[storage.size()] = '\0';
 
-	if (ImGui::InputText(name.c_str(), buf, storage.size(), ImGuiInputTextFlags_EnterReturnsTrue))
+	if (ImGui::InputText(name.c_str(), buf, storage.size()))
 	{
 		std::vector<float> c = tovalue<std::vector<float>>(std::string(buf));
 		storage = gui_string(vec);
@@ -327,11 +327,29 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 	if (ImmediateGUIDraw::CollapsingHeader("Parameter Range"))
 	{
+		static std::vector<char*> data(0);
+
+		if (data.size() == 0)
+		{
+			for (int i = 0; i < mParameters.parameters.size(); i++)
+			{
+				data.push_back(new char[256]);
+				std::string s = gui_string(mParameters.parameters[i]);
+				s.copy(&data[i][0], s.size());
+				data[i][s.size()] = '\0';
+			}
+		}
+
 		for (int i = 0; i < mParameters.parameters.size(); i++)
 		{
-			if (pStrings[i] == "")
-				pStrings[i] = gui_string(mParameters.parameters[i]);
-			vector_gui(std::string("Simulated ") + mParameters.parameter_names[i], mParameters.parameters[i], pStrings[i]);
+			if (ImGui::InputText((std::string("Simulated ") + mParameters.parameter_names[i]).c_str(), data[i], 256, ImGuiInputTextFlags_EnterReturnsTrue))
+			{
+				std::vector<float> c = tovalue<std::vector<float>>(std::string(data[i]));
+				std::string s = gui_string(mParameters.parameters[i]);
+				s.copy(&data[i][0], s.size());
+				mParameters.parameters[i].clear();
+				mParameters.parameters[i].insert(mParameters.parameters[i].begin(), c.begin(), c.end());
+			}
 		}
 	}
 
