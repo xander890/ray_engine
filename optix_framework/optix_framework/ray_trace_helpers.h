@@ -70,19 +70,15 @@ __inline__ __device__ float trace_shadow_ray(const optix::float3 & hit_pos, cons
 
 __device__ __inline__ void get_glass_rays(const optix::float3& wo, const float ior, const float3& hit_pos, float3& normal, optix::Ray& reflected_ray, optix::Ray& refracted_ray, float& R, float& cos_theta_signed)
 {
-	// Compute Fresnel reflectance
 	cos_theta_signed = dot(normal, -wo);
 	float eta = cos_theta_signed < 0.0f ? 1.0f / ior : ior;
 	float recip_eta = 1.0f / eta;
 	normal = normal*copysignf(1.0f, cos_theta_signed);
-	float cos_theta = fabsf(cos_theta_signed);
-	float sin_theta_t_sqr = recip_eta*recip_eta*(1.0f - cos_theta*cos_theta);
-	float cos_theta_t = sqrtf(1.0f - sin_theta_t_sqr);
-	R = sin_theta_t_sqr < 1.0f ? fresnel_R(cos_theta, cos_theta_t, eta) : 1.0f;
 
-	float3 refr_dir = recip_eta*wo + normal*(recip_eta*cos_theta - cos_theta_t);
+	optix::float3 refr_dir;
+	refract(-wo, normal, eta, refr_dir, R);
+
 	refracted_ray = optix::make_Ray(hit_pos, refr_dir,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
-
 	float3 reflected_dir = reflect(wo, normal);
 	reflected_ray = optix::make_Ray(hit_pos, reflected_dir,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 }

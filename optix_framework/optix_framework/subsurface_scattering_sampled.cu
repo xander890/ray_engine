@@ -409,21 +409,15 @@ __device__ __forceinline__ void _shade()
 		cos_theta_o = -cos_theta_o;
 	}
 
-	float sin_theta_t_sqr = recip_ior*recip_ior*(1.0f - cos_theta_o*cos_theta_o);
-	float cos_theta_t = 1.0f;
-	float R = 1.0f;
-	if (sin_theta_t_sqr < 1.0f)
-	{
-		cos_theta_t = sqrtf(1.0f - sin_theta_t_sqr);
-		R = fresnel_R(cos_theta_o, cos_theta_t, recip_ior);
-	}
+	float3 wt;
+	float R;
+	refract(wo, n, recip_ior, wt, R);
 
 	R = bssrdf_sampling_properties->show_mode == BSSRDF_SHADERS_SHOW_REFLECTION ? 1.0f : R;
 	R = bssrdf_sampling_properties->show_mode == BSSRDF_SHADERS_SHOW_REFRACTION ? 0.0f : R;
 
 	if (reflect_xi >= R)
 	{
-		float3 wt = recip_ior*(cos_theta_o*no - wo) - no*cos_theta_t;
 		PerRayData_radiance prd_refracted = prepare_new_pt_payload(prd_radiance);
 
 		Ray refracted(xo, wt,  RayType::RADIANCE, scene_epsilon);
@@ -440,8 +434,7 @@ __device__ __forceinline__ void _shade()
 #endif
 
 	float3 L_d = make_float3(0.0f);
-	uint N = samples_per_pixel;// sampling_output_buffer.size();
-
+	uint N = samples_per_pixel;
 	int count = 0;
 
 	for (uint i = 0; i < N; i++)
@@ -453,7 +446,6 @@ __device__ __forceinline__ void _shade()
 			optix_print("Sample non valid.\n");
 			continue;
 		}
-		// Real hit point
 		
 #ifdef TEST_SAMPLING
 		L_d += make_float3(integration_factor * TEST_SAMPLING_W);
@@ -463,14 +455,11 @@ __device__ __forceinline__ void _shade()
 		sample_light(xi, ni, 0, t, wi, L_i); // This returns pre-sampled w_i and L_i
 
 		// compute direction of the transmitted light
-		float cos_theta_i = max(dot(wi, ni), 0.0f);
-		float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
-		float sin_theta_t_sqr = recip_ior*recip_ior*(1.0f - cos_theta_i_sqr);
-		float cos_theta_t_i = sqrt(1.0f - sin_theta_t_sqr);
-		float3 w12 = recip_ior*(cos_theta_i*ni - wi) - ni*cos_theta_t_i;
-		float T12 = 1.0f - fresnel_R(cos_theta_i, cos_theta_t_i, recip_ior);
-
-		float3 w21 = no * cos_theta_t - recip_ior * (cos_theta_o * no - wo);
+		float3 w12; 
+		float R12;
+		refract(wi, ni, recip_ior, w12, R12);
+		float T12 = 1.0f - R12;
+		float3 w21 = -wt;
 
 		// compute contribution if sample is non-zero
 		if (dot(L_i, L_i) > 0.0f)
@@ -494,7 +483,8 @@ __device__ __forceinline__ void _shade()
 	// Trace reflected ray
 	if (reflect_xi < R)
 	{
-		float3 wr = 2.0f*cos_theta_o*no - wo;
+		
+		float3 wr = -reflect(wo, no);
 		PerRayData_radiance prd_reflected = prepare_new_pt_payload(prd_radiance);
 		Ray reflected(xo, wr,  RayType::RADIANCE, scene_epsilon);
 		rtTrace(top_object, reflected, prd_reflected);
