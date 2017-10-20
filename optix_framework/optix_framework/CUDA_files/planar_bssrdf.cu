@@ -53,19 +53,16 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const optix::float3 no = ni;
 
 	const float n1_over_n2 = 1.0f / n2_over_n1;
-	const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f);
-	const float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
-	const float sin_theta_t_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_i_sqr);
-	const float cos_theta_t_i = sqrt(1.0f - sin_theta_t_sqr);
-	const optix::float3 w12 = n1_over_n2*(cos_theta_i*ni - wi) - ni*cos_theta_t_i;
-	float T12 = 1.0f - fresnel_R(cos_theta_i, cos_theta_t_i, n1_over_n2);
+	float R12;
+	optix::float3 w12; 
+	refract(wi, ni, n1_over_n2, w12, R12);
+	float T12 = 1.0f - R12;
 
-	const float cos_theta_o = optix::dot(wo, no);
-	const float cos_theta_o_sqr = cos_theta_o*cos_theta_o;
-	const float sin_theta_to_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_o_sqr);
-	const float cos_theta_t_o = sqrt(1.0f - sin_theta_to_sqr);
-	const optix::float3 w21 = no*cos_theta_t_o - n1_over_n2*(cos_theta_o*no - wo);
-	float T21 = 1.0f - fresnel_R(cos_theta_o, cos_theta_t_o, n1_over_n2);
+	float R21;
+	optix::float3 w21;
+	refract(wo, no, n1_over_n2, w21, R21);
+	float T21 = 1.0f - R21;
+	w21 = -w21;
 
 	optix::float3 S = T12 * bssrdf(xi, ni, w12, xo, no, w21, *planar_bssrdf_material_params) * T21;
 	planar_resulting_flux_intermediate[launch_index] = S.x;

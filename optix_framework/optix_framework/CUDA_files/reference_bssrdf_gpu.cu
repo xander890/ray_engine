@@ -37,10 +37,10 @@ RT_PROGRAM void reference_bssrdf_gpu()
 	optix::uint t = ref_frame_number * launch_dim.x + idx;
 	hash(t);
 
-	const float incident_power = 1.0f;
+	const float incident_power = 1.0f; 
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
 
-	theta_i = reference_bssrdf_theta_i;
+	theta_i = reference_bssrdf_theta_i; 
 	theta_s = reference_bssrdf_theta_s;
 	r = reference_bssrdf_radius;
 	n2_over_n1 = reference_bssrdf_rel_ior;
@@ -67,11 +67,9 @@ RT_PROGRAM void reference_bssrdf_gpu()
 		hash(p.t);
 		// Refraction      
 		const float n1_over_n2 = 1.0f / n2_over_n1;
-		const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f); 
-		const float cos_theta_i_sqr = cos_theta_i*cos_theta_i; 
-		const float sin_theta_t_sqr = n1_over_n2 *n1_over_n2*(1.0f - cos_theta_i_sqr); 
-		const float cos_theta_t_i = sqrt(1.0f - sin_theta_t_sqr);
-		const optix::float3 w12 = n1_over_n2*(cos_theta_i*ni - wi) - ni*cos_theta_t_i;
+		optix::float3 w12;
+		refract(wi, ni, n1_over_n2, w12);
+
 		p.flux = incident_power;
 		p.xp = xi; 
 		p.wp = w12;  

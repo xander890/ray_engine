@@ -182,16 +182,10 @@ RT_PROGRAM void shade()
     }
 
     // Compute Fresnel reflectance (R) and trace refracted ray if necessary
-    float R = 1.0f;
-    float sin_theta_out_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_in*cos_theta_in);
-    float3 reflected_dir = 2.0f*cos_theta_in*normal - w_i;
+    float R;
+	float3 reflected_dir = -reflect(w_i, normal); 
     float3 refracted_dir;
-    if (sin_theta_out_sqr < 1.0f)
-    {
-        float cos_theta_out = sqrtf(1.0f - sin_theta_out_sqr);
-        R = fresnel_R(cos_theta_in, cos_theta_out, n1_over_n2);
-        refracted_dir = n1_over_n2*(normal*cos_theta_in - w_i) - normal*cos_theta_out;
-    }
+	refract(w_i, normal, n1_over_n2, refracted_dir, R);
 
     // Sample new ray inside or outside
     ++prd_radiance.depth;

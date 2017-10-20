@@ -50,12 +50,10 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const optix::float3 no = ni;
 
 	// Refraction 
+
 	const float n1_over_n2 = 1.0f / n2_over_n1;
-	const float cos_theta_i = optix::max(optix::dot(wi, ni), 0.0f);
-	const float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
-	const float sin_theta_t_sqr = n1_over_n2*n1_over_n2*(1.0f - cos_theta_i_sqr);
-	const float cos_theta_t_i = sqrt(1.0f - sin_theta_t_sqr);
-	const optix::float3 w12 = n1_over_n2*(cos_theta_i*ni - wi) - ni*cos_theta_t_i;
+	optix::float3 w12;
+	refract(wi, ni, n1_over_n2, w12);
 
 	float flux_t = incident_power / ((float)reference_bssrdf_samples_per_frame);
 	optix::float3 xp = xi;

@@ -68,6 +68,9 @@ __host__ __device__ __inline__ bool _refract(const optix::float3 & i, const opti
 	return true;
 }
 
+// Refraction convention.
+// i always points away from the medium.
+// refracted always points inside the medium
 // IOR has to be refracted medium index over source medium index
 __host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & F_r, float & cos_theta_i, float & cos_theta_t)
 {
