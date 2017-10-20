@@ -15,7 +15,7 @@
 
 
 
-__forceinline__ __device__ void get_default_material(const std::string & mat, float & theta_i, float & r, float & theta_s, float & albedo, float & extinction, float & g, float & n2_over_n1)
+void get_default_material(const std::string & mat, float & theta_i, float & r, float & theta_s, float & albedo, float & extinction, float & g, float & n2_over_n1)
 {
 	if (mat == "A")
 	{
@@ -98,7 +98,7 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 
 void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
 {
-	m_context->setPrintEnabled(true);
+	m_context->setPrintEnabled(false);
 	m_context->setPrintBufferSize(200);
 	m_context->setPrintLaunchIndex(0, 0, 0);
 	ConfigParameters::init(config_file);
