@@ -106,7 +106,7 @@ bool BSSRDFHemisphereRenderer::on_draw(bool show_material_params)
 	return changed;
 }
 
-void PlanarBSSRDF::init()
+void BSSRDFHemisphereModel::init()
 {
 	BSSRDFHemisphereRenderer::init();
 	std::string ptx_path = get_path_ptx("planar_bssrdf.cu");
@@ -127,7 +127,7 @@ void PlanarBSSRDF::init()
 
 }
 
-void PlanarBSSRDF::render()
+void BSSRDFHemisphereModel::render()
 {
 	if (!mInitialized)
 		init();
@@ -139,14 +139,14 @@ void PlanarBSSRDF::render()
 	mRenderedFrames++;
 }
 
-bool PlanarBSSRDF::on_draw(bool show_material_params)
+bool BSSRDFHemisphereModel::on_draw(bool show_material_params)
 {
 	if (BSSRDFHemisphereRenderer::on_draw(show_material_params))
 		reset();
 	return false;
 }
 
-void PlanarBSSRDF::load_data()
+void BSSRDFHemisphereModel::load_data()
 {
 	BSSRDFHemisphereRenderer::load_data();
 	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());

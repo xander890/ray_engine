@@ -409,11 +409,11 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info4, c, camera_width, camera_height));
 
 	ShaderInfo info5 = ShaderInfo(21, "empty.cu", "Plane BSSRDF (Dipole)");
-	std::unique_ptr<BSSRDFHemisphereRenderer> c2 = std::make_unique<PlanarBSSRDF>(context);
+	std::unique_ptr<BSSRDFHemisphereRenderer> c2 = std::make_unique<BSSRDFHemisphereModel>(context);
 	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info5, c2, camera_width, camera_height));
 
 	ShaderInfo info6 = ShaderInfo(22, "empty.cu", "BSSRDF Visualizer");
-	ShaderFactory::add_shader(std::make_unique<BSSRDFVisualizer>(info6, camera_width, camera_height));
+	ShaderFactory::add_shader(std::make_unique<BSSRDFPlaneRenderer>(info6, camera_width, camera_height));
 
     for (auto& kv : MaterialLibrary::media)
 	{

@@ -3,22 +3,22 @@
 #include "optix_utils.h"
 
 
-int BSSRDFVisualizer::entry_point_output = -1;
+int BSSRDFPlaneRenderer::entry_point_output = -1;
 
 
 
-void BSSRDFVisualizer::reset()
+void BSSRDFPlaneRenderer::reset()
 {
 }
 
-BSSRDFVisualizer::BSSRDFVisualizer(const ShaderInfo & shader_info, int camera_width, int camera_height) : Shader(shader_info),
+BSSRDFPlaneRenderer::BSSRDFPlaneRenderer(const ShaderInfo & shader_info, int camera_width, int camera_height) : Shader(shader_info),
 mCameraWidth(camera_width),
 mCameraHeight(camera_height)
 {
 
 }
 
-void BSSRDFVisualizer::initialize_shader(optix::Context ctx)
+void BSSRDFPlaneRenderer::initialize_shader(optix::Context ctx)
 {
 	Shader::initialize_shader(ctx);
 	//in static constructor
@@ -38,22 +38,22 @@ void BSSRDFVisualizer::initialize_shader(optix::Context ctx)
 
 }
 
-void BSSRDFVisualizer::initialize_mesh(Mesh& object)
+void BSSRDFPlaneRenderer::initialize_mesh(Mesh& object)
 {
 
 }
 
-void BSSRDFVisualizer::pre_trace_mesh(Mesh& object)
+void BSSRDFPlaneRenderer::pre_trace_mesh(Mesh& object)
 {
 	
 }
 
-void BSSRDFVisualizer::post_trace_mesh(Mesh & object)
+void BSSRDFPlaneRenderer::post_trace_mesh(Mesh & object)
 {
 	context->launch(entry_point_output, mCameraWidth, mCameraHeight);
 }
 
-bool BSSRDFVisualizer::on_draw()
+bool BSSRDFPlaneRenderer::on_draw()
 {
 	ImmediateGUIDraw::SliderInt("Angle of incoming light", &mAngle, -89, 89);
 	ImmediateGUIDraw::InputFloat("Scalar multiplier", &mMult);
@@ -62,7 +62,7 @@ bool BSSRDFVisualizer::on_draw()
 	return false;
 }
 
-void BSSRDFVisualizer::load_data(Mesh & object)
+void BSSRDFPlaneRenderer::load_data(Mesh & object)
 {
 	context["scale_multiplier"]->setFloat(mMult);
 	context["show_false_colors"]->setUint(mShowFalseColors);

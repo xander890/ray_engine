@@ -75,10 +75,10 @@ protected:
 
 };
 
-class PlanarBSSRDF : public BSSRDFHemisphereRenderer
+class BSSRDFHemisphereModel : public BSSRDFHemisphereRenderer
 {
 public:
-	PlanarBSSRDF(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFHemisphereRenderer(ctx, hemisphere)
+	BSSRDFHemisphereModel(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFHemisphereRenderer(ctx, hemisphere)
 	{
 		mScatteringDipole = dipole;
 	}
@@ -87,5 +87,6 @@ public:
 	void render() override;
 	bool on_draw(bool show_material_params) override;
 	void load_data() override;
+	void set_dipole(ScatteringDipole::Type dip) { mScatteringDipole = dip;  }
 	ScatteringDipole::Type mScatteringDipole;
 };

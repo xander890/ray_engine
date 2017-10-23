@@ -160,7 +160,7 @@ class FullBSSRDFGenerator : public SampleScene
 {
 public:
 
-	enum RenderMode { RENDER_BSSRDF = 0, SHOW_EXISTING_BSSRDF = 1 };
+	enum RenderMode { RENDER_BSSRDF = 0, SHOW_EXISTING_BSSRDF = 1};
 
 	FullBSSRDFGenerator(const char * config);
 	~FullBSSRDFGenerator();
@@ -189,12 +189,14 @@ private:
 	void set_external_bssrdf(const std::string & file);
 
 	optix::Buffer result_buffer;
-	std::unique_ptr<BSSRDFHemisphereSimulated> creator;
+	std::shared_ptr<BSSRDFHemisphereRenderer>	 mCurrentBssrdfRenderer;
+	std::shared_ptr<BSSRDFHemisphereSimulated>	 mBssrdfReferenceSimulator;
+	std::shared_ptr<BSSRDFHemisphereModel>		 mBssrdfModelSimulator;
 	std::string config_file;
 
 	int entry_point_output = -1;
-	optix::Buffer mBSSRDFBufferTexture;
-	optix::TextureSampler mBSSRDFHemisphereTex;
+	optix::Buffer mBSSRDFBufferTexture = nullptr;
+	optix::TextureSampler mBSSRDFHemisphereTex = nullptr;
 	float mScaleMultiplier = 1.f;
 	int mShowFalseColors = 1;
 	std::unique_ptr<ImmediateGUI> gui;
@@ -215,7 +217,8 @@ private:
 	optix::Buffer mExternalBSSRDFBuffer;
 	std::string mExternalFilePath = "test.bssrdf";
 
-	void set_render_mode(RenderMode toapply);
 	std::unique_ptr<RenderTask> current_render_task;
+	bool mSimulate = 1;
+	void set_render_mode(RenderMode m, bool isSimulated);
 };
 
