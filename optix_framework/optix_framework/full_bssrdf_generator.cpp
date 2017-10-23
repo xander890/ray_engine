@@ -1,7 +1,7 @@
 #include "full_bssrdf_generator.h"
 #include "optix_utils.h"
 #include "immediate_gui.h"
-#include <bssrdf_creator.h>
+#include <bssrdf_hemisphere_creator.h>
 #include "parserstringhelpers.h"
 #include <fstream>
 #include "parameter_parser.h"

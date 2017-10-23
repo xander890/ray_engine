@@ -1,4 +1,4 @@
-#include "bssrdf_creator.h"
+#include "bssrdf_hemisphere_creator.h"
 #include "immediate_gui.h"
 #include "optix_utils.h"
 #include "GL\glew.h"

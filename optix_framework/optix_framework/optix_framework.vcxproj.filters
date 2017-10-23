@@ -267,10 +267,10 @@
       <Filter>Source Files\Shaders</Filter>
     </ClCompile>
     <ClCompile Include="full_bssrdf_generator.cpp" />
-    <ClCompile Include="bssrdf_creator.cpp">
+    <ClCompile Include="bssrdf_loader.cpp" />
+    <ClCompile Include="bssrdf_hemisphere_creator.cpp">
       <Filter>Source Files\BSSRDF</Filter>
     </ClCompile>
-    <ClCompile Include="bssrdf_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -581,9 +581,6 @@
     <ClInclude Include="photon_trace_structs.h">
       <Filter>Header Files\BSSRDFs</Filter>
     </ClInclude>
-    <ClInclude Include="bssrdf_creator.h">
-      <Filter>Header Files\BSSRDFs</Filter>
-    </ClInclude>
     <ClInclude Include="string_utils.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
@@ -593,6 +590,9 @@
     <ClInclude Include="bssrdf_loader.h" />
     <ClInclude Include="forward_dipole.h">
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="bssrdf_hemisphere_creator.h">
+      <Filter>Header Files\BSSRDFs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

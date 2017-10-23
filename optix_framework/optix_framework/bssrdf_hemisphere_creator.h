@@ -10,7 +10,6 @@ public:
 		//mProperties.selected_bssrdf = ScatteringDipole::STANDARD_DIPOLE_BSSRDF;
 	}
 
-
 	virtual void load_data();
 	void set_geometry_parameters(float theta_i, float r, float theta_s);
 	void set_material_parameters(float albedo, float extinction, float g, float eta);

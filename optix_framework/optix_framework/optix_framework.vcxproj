@@ -178,7 +178,7 @@ echo Done.</Command>
     <ClCompile Include="apple_juice.cpp" />
     <ClCompile Include="box.cpp" />
     <ClCompile Include="brdf_utils.cpp" />
-    <ClCompile Include="bssrdf_creator.cpp" />
+    <ClCompile Include="bssrdf_hemisphere_creator.cpp" />
     <ClCompile Include="bssrdf_loader.cpp" />
     <ClCompile Include="bssrdf_visualizer.cpp" />
     <ClCompile Include="camera_host.cpp" />
@@ -681,7 +681,7 @@ echo Done.</Command>
     <ClInclude Include="area_light.h" />
     <ClInclude Include="box.h" />
     <ClInclude Include="bssrdf.h" />
-    <ClInclude Include="bssrdf_creator.h" />
+    <ClInclude Include="bssrdf_hemisphere_creator.h" />
     <ClInclude Include="bssrdf_loader.h" />
     <ClInclude Include="bssrdf_sampling_properties.h" />
     <ClInclude Include="bssrdf_visualizer.h" />

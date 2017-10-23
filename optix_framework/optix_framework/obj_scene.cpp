@@ -49,7 +49,7 @@
 #include "reference_bssrdf.h"
 #include "reference_bssrdf_gpu.h"
 #include "bssrdf_visualizer.h"
-#include "bssrdf_creator.h"
+#include "bssrdf_hemisphere_creator.h"
 
 using namespace std;
 using namespace optix;

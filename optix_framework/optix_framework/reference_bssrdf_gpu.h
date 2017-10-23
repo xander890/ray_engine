@@ -1,6 +1,6 @@
 #pragma once
 #include "reference_bssrdf.h"
-#include "bssrdf_creator.h"
+#include "bssrdf_hemisphere_creator.h"
 
 class ReferenceBSSRDFGPU : public BSSRDFHemisphereSimulated
 {

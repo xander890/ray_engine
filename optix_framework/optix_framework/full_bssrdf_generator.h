@@ -1,7 +1,7 @@
 #pragma once
 #include "SampleScene.h"
 #include <memory>
-#include <bssrdf_creator.h>
+#include <bssrdf_hemisphere_creator.h>
 #include <bssrdf_loader.h>
 #include <map>
 #include "string_utils.h"
