@@ -53,9 +53,9 @@ protected:
 	// Scattering properties
 	optix::Buffer mProperties;
 
-	float mAlbedo = 0.3f;
-	float mExtinction = 1.0f;
-	float mAsymmetry = 0.9f;
+	float mAlbedo = 0.99f;
+	float mExtinction = 1.01f;
+	float mAsymmetry = 0.0f;
 	bool mIsReadOnly = false;
 	bool mInitialized = false;
 

@@ -10,11 +10,13 @@
 
 #define MTS_FWDSCAT_GIVE_REAL_AND_VIRTUAL_SOURCE_EQUAL_SAMPLING_WEIGHT false
 
+#define MTS_FWDSCAT_DEBUG
+
 #ifdef MTS_FWDSCAT_DEBUG
-# define FSAssert(x)      Assert(x)
-# define FSAssertWarn(x)  AssertWarn(x)
-# define SFSAssert(x)     SAssert(x)
-# define SFSAssertWarn(x) SAssertWarn(x)
+# define FSAssert(x)      optix_assert(x)
+# define FSAssertWarn(x)  optix_assert(x)
+# define SFSAssert(x)     optix_assert(x)
+# define SFSAssertWarn(x) optix_assert(x)
 #else /* This removes the side-effects from the functions! */
 # define FSAssert(x)      ((void) 0)
 # define FSAssertWarn(x)  ((void) 0)
@@ -35,7 +37,7 @@ using namespace optix;
 #define MakeFloat3 optix::make_float3
 #define MakeFloat3d optix::make_double3
 
-#define Log(x,y,...) optix_print(y, __VA_ARGS__)
+#define Log(x,y,...) optix_print(y "\n", __VA_ARGS__)
 #define Epsilon 1e-6
 
 enum TangentPlaneMode {
@@ -61,7 +63,7 @@ enum ZvMode {
 # define CancellationCheck(a, b) do { \
 	if (math::catastrophicCancellation(a,b))\
 		Log(EWarn, "Catastrophic cancellation! (relative %e, %e & %e)",\
-				std::abs(a+b)/std::abs(a-b), a, b);\
+				abs(a+b)/abs(a-b), a, b);\
 	} while (0)
 #else
 # define CancellationCheck(a, b) ((void) 0)
@@ -214,8 +216,8 @@ Float fresnelDielectricExt(Float cosThetaI_, Float &cosThetaT_, Float eta) {
 	}
 
 	/* Find the absolute cosines of the incident/transmitted rays */
-	Float cosThetaI = std::abs(cosThetaI_);
-	Float cosThetaT = std::sqrt(cosThetaTSqr);
+	Float cosThetaI = abs(cosThetaI_);
+	Float cosThetaT = sqrt(cosThetaTSqr);
 
 	Float Rs = (cosThetaI - eta * cosThetaT)
 		/ (cosThetaI + eta * cosThetaT);
@@ -269,8 +271,8 @@ __device__ __host__ __forceinline__ double absorptionAndFloat3izationConstant(Fl
 	if (ps < 0.03) {
 		double ps2 = ps*ps;
 		double ps3 = ps2*ps;
-		result = sqrt(2.0) * std::pow(M_PI, -2.5)
-			* std::pow(ps, -11. / 2.) * (
+		result = sqrt(2.0) * pow(M_PI, -2.5)
+			* pow(ps, -11. / 2.) * (
 				81. / 32. + 243. / 64.*ps + 3429. / 1280.*ps2 - 243. / 2560.*ps3);
 		result *= p*p*p; // from p=1 back to the real p value;
 		result *= exp(-sigma_a*theLength);
@@ -299,9 +301,9 @@ __device__ __host__ __forceinline__ double absorptionAndFloat3izationConstant(Fl
 			* sqrt(F) * (E*E - 2 * D*F) * exp(C - D - sigma_a*theLength)
 			/ denom;
 #ifdef MTS_FWDSCAT_DEBUG
-		FSAssertWarn(std::isfinite(exp(D + C)));
-		FSAssertWarn(std::isfinite(exp(2 * D)));
-		FSAssertWarn(std::isfinite(exp(E*E / F)));
+		FSAssertWarn(isfinite(exp(D + C)));
+		FSAssertWarn(isfinite(exp(2 * D)));
+		FSAssertWarn(isfinite(exp(E*E / F)));
 		// denom
 		CancellationCheck(E*E / F, -2 * D); /* need to switch to large ps expansion
 											sufficiently fast, see above */
@@ -311,7 +313,7 @@ __device__ __host__ __forceinline__ double absorptionAndFloat3izationConstant(Fl
 	}
 
 #ifdef MTS_FWDSCAT_DEBUG
-	if (!std::isfinite(result)) {
+	if (!isfinite(result)) {
 		Log(EWarn, "problem with analytical Float3ization at ps %e: %e",
 			ps, result);
 	}
@@ -335,7 +337,7 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	TangentPlaneMode tangentMode,
 	ZvMode zvMode,
 	Float3 &u0_virt, Float3 &R_virt,
-	Float3 *optional_n0_effective) {
+	Float3 *optional_n0_effective = nullptr) {
 	Float3 n0_effective;
 	switch (tangentMode) {
 	case EFrisvadEtAl:
@@ -381,12 +383,11 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	if (rejectInternalIncoming && dot(n0_effective, u0) > 0)
 		return false;
 
-	FSAssert(abs(n0_effective.length() - 1) < Epsilon);
+	FSAssert(abs(optix::length(n0_effective) - 1) < Epsilon);
 
 	Float zv;
 	Float sigma_sp = sigma_s * mu;
 	Float sigma_tp = sigma_sp + sigma_a;
-
 
 	switch (zvMode) {
 	case EFrisvadEtAlZv: {
@@ -453,7 +454,7 @@ __device__ __host__ __forceinline__ bool getTentativeIndexMatchedVirtualSourceDi
 		return false; // Won't be able to evaluate bssrdf transport anyway!
 	}
 	else {
-		FSAssert(R_virt.isFinite());
+		FSAssert(isfinite(R_virt));
 	}
 	if (optional_n0_effective)
 		*optional_n0_effective = n0_effective;
@@ -462,7 +463,7 @@ __device__ __host__ __forceinline__ bool getTentativeIndexMatchedVirtualSourceDi
 	double C, D, E, F;
 	calcValues(s, sigma_s, sigma_a, mu, C, D, E, F);
 	double ratio = exp(E*dot(R - R_virt, uL) - F*(dot(R,R) - dot(R_virt, R_virt)));
-	Float realSourceWeight = (std::isinf(ratio + 1) ? 1.0 : ratio / (ratio + 1));
+	Float realSourceWeight = (isinf(ratio + 1) ? 1.0 : ratio / (ratio + 1));
 	// TODO: clamp the extremes of 0 and 1 to something slightly more 'centered'?
 	FSAssert(realSourceWeight >= 0 && realSourceWeight <= 1);
 #if MTS_FWDSCAT_GIVE_REAL_AND_VIRTUAL_SOURCE_EQUAL_SAMPLING_WEIGHT
@@ -479,8 +480,8 @@ __device__ __host__ __forceinline__ Float evalMonopole(
 	const Float sigma_a,
 	const Float mu,
 	Float3 u0, Float3 uL, Float3 R, Float length) {
-	FSAssert(abs(u0.length() - 1) < 1e-6);
-	FSAssert(abs(uL.length() - 1) < 1e-6);
+	FSAssert(abs(optix::length(u0) - 1) < 1e-6);
+	FSAssert(abs(optix::length(uL) - 1) < 1e-6);
 
 	double C, D, E, F;
 	calcValues(length, sigma_s, sigma_a, mu, C, D, E, F);
@@ -512,7 +513,7 @@ __device__ __host__ __forceinline__ Float evalMonopole(
 		CancellationCheck(-C + E*dot(R, uL) + lHlreg*cosTheta, -F*dot(R,R));
 
 #ifdef MTS_FWDSCAT_DEBUG
-	if (!std::isfinite(G) || G < 0) {
+	if (!isfinite(G) || G < 0) {
 		Log(EWarn, "Invalid G in evalMonopole(): "
 			"%e; s %e C %e D %e E %e F %e Rsq %e u0dotuL %e",
 			G, length, C, D, E, F, dot(R,R), dot(u0, uL));
@@ -529,8 +530,8 @@ __device__ __host__ __forceinline__ Float evalPlaneSource(
 	Float3 u0, Float3 uL,
 	Float3 n, Float Rz, Float length) {
 
-	FSAssert(abs(u0.length() - 1) < 1e-6);
-	FSAssert(abs(uL.length() - 1) < 1e-6);
+	FSAssert(abs(optix::length(u0) - 1) < 1e-6);
+	FSAssert(abs(optix::length(uL) - 1) < 1e-6);
 
 	double C, D, E, F;
 	calcValues(length, sigma_s, sigma_a, mu, C, D, E, F);
@@ -547,7 +548,7 @@ __device__ __host__ __forceinline__ Float evalPlaneSource(
 			+ E*Rz * (u0z + uLz)
 			- F*Rz*Rz);
 
-	if (!std::isfinite(result)) {
+	if (!isfinite(result)) {
 		Log(EWarn, "non-finite result %lf", result);
 		return 0;
 	}
@@ -572,8 +573,8 @@ __device__ __host__ __forceinline__ Float evalDipole(
 
 	/* If reciprocal is requested, nL should be finite and uL_external should point
 	* along nL. */
-	FSAssert(!reciprocal || nL.isFinite());
-	FSAssert(!reciprocal || dot(uL_external, nL) >= -Epsilon); // positive with small margin for roundoff errors
+	FSAssert(!reciprocal || isfinite(nL));
+	FSAssert(!reciprocal || dot(uL, nL) >= -Epsilon); // positive with small margin for roundoff errors
 	//if (isfinite(nL) && dot(uL_external, nL) <= 0) // clamp to protect against roundoff errors
 	//	return 0.0f;
 
@@ -588,7 +589,7 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	* keep the directions pointing along the propagation direction of
 	* light (i.e. not the typical refract as in BSDFs, for instance, which
 	* flips to the other side of the boundary). */
-	Float _cosThetaT, F0, FL;
+	//Float _cosThetaT, F0, FL;
 	//Float3 u0 = refract(-u0_external, n0, m_eta, _cosThetaT, F0);
 	//Float3 uL = -refract(uL_external, nL, m_eta, _cosThetaT, FL);
 	//Float fresnelTransmittance = includeFresnelTransmittance? (1 - F0)*(1 - FL) : 1;
@@ -603,9 +604,11 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	//	return 0.0f;
 	//}
 
+	optix_print("Start.\n");
 
 	Float3 R_virt;
 	Float3 u0_virt;
+	optix_print("Getting virtual source...\n");
 	if (!getVirtualDipoleSource(sigma_s, sigma_a, mu, m_eta, n0, u0, nL, uL, R, length,
 		rejectInternalIncoming, tangentMode, zvMode,
 		u0_virt, R_virt, nullptr))
@@ -613,11 +616,11 @@ __device__ __host__ __forceinline__ Float evalDipole(
 
 	// Effective BRDF?
 	if (useEffectiveBRDF) {
-		FSAssert((n0 - nL).length() < Epsilon); // same point -> same Float3
+		FSAssert(optix::length(n0 - nL) < Epsilon); // same point -> same Float3
 		Float Rv_z = dot(R_virt, nL);
 #ifdef MTS_FWDSCAT_DEBUG
-		Float lRvl = R_virt.length();
-		FSAssert((n0 - nL).length() < Epsilon); // same point -> same Float3
+		Float lRvl = optix::length(R_virt);
+		FSAssert(optix::length(n0 - nL) < Epsilon); // same point -> same Float3
 		FSAssert(Rv_z <= 0); // pointing from virtual point towards xL -> into medium
 							 // the only displacement should be in the Float3 direction:
 		FSAssertWarn(lRvl == 0 || abs((lRvl - abs(Rv_z)) / lRvl) < Epsilon);
@@ -629,6 +632,8 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	}
 
 	// Full BSSRDF
+	optix_print("Getting virtual source...\n");
+
 	Float real = 0, virt = 0;
 	if (dipoleMode & EReal)
 		real = evalMonopole(sigma_s, sigma_a, mu, u0, uL, R, length);
@@ -641,6 +646,9 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	case EVirt:        transport = virt; break; // note: positive sign
 	default: Log(EError, "Unknown dipoleMode: %d", dipoleMode); return 0;
 	}
+
+	optix_print("BSSRDF: %f\n", transport);
+
 	if (reciprocal) {
 		Float transportRev = evalDipole(sigma_s, sigma_a, mu, m_eta,
 			nL, -uL, n0, -u0, -R, length,
@@ -663,14 +671,14 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 		optix::get_channel(k, res) = evalDipole(
 			optix::get_channel(k, properties.scattering),
 			optix::get_channel(k, properties.absorption),
-			optix::get_channel(k, properties.meancosine),
+			1.0f - optix::get_channel(k, properties.meancosine),
 			1.0f,
-			no, w21,
-			ni, w12,
-			xo - xi, length(xo - xi),
+			no, normalize(w21),
+			ni, normalize(w12),
+			(xo - xi), 4*length(xo - xi),
 			false,
 			false,
-			TangentPlaneMode::EFrisvadEtAl,
+			TangentPlaneMode::EUnmodifiedIncoming,
 			ZvMode::EFrisvadEtAlZv,
 			false,
 			ERealAndVirt

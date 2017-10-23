@@ -17,7 +17,6 @@ rtDeclareVariable(float, ior, , );
 
 RT_PROGRAM void render_ref()
 {
-	optix_print("Hemi\n\n");
 	float2 uv = make_float2(launch_index) / make_float2(launch_dim);
 	float2 ip = uv * 2 - make_float2(1); // [-1, 1], this is xd, yd
 
@@ -53,7 +52,7 @@ RT_PROGRAM void render_ref()
 		refract(wo, no, 1 / ior , w21, R21);
 		float T21 = 1.0f - R21;
 
-		float S_shown = fresnel_integral / T21 * optix::rtTex2D<float4>(resulting_flux_tex, uv.x, uv.y).x;
+		float S_shown = reference_scale_multiplier * fresnel_integral / T21 * optix::rtTex2D<float4>(resulting_flux_tex, uv.x, uv.y).x;
 
 		float t = clamp((log(S_shown + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);
 		float h = clamp((1.0 - t)*2.0f, 0.0f, 0.65f);
