@@ -10,6 +10,18 @@
 
 #define MTS_FWDSCAT_GIVE_REAL_AND_VIRTUAL_SOURCE_EQUAL_SAMPLING_WEIGHT false
 
+#ifdef MTS_FWDSCAT_DEBUG
+# define FSAssert(x)      Assert(x)
+# define FSAssertWarn(x)  AssertWarn(x)
+# define SFSAssert(x)     SAssert(x)
+# define SFSAssertWarn(x) SAssertWarn(x)
+#else /* This removes the side-effects from the functions! */
+# define FSAssert(x)      ((void) 0)
+# define FSAssertWarn(x)  ((void) 0)
+# define SFSAssert(x)     ((void) 0)
+# define SFSAssertWarn(x) ((void) 0)
+#endif
+
 #ifdef SINGLE_PRECISION
 # define MTS_FWDSCAT_DIRECTION_MIN_MU 1e-3
 #else
@@ -55,11 +67,10 @@ enum ZvMode {
 # define CancellationCheck(a, b) ((void) 0)
 #endif
 
-#define dmax(a,b) (((a) > (b)) ? (a) : (b))
-#define dmin(a,b) (((a) < (b)) ? (a) : (b))
-__device__ __host__ __forceinline__ Float clamp(const Float f, const Float a, const Float b)
+
+__device__ __host__ __forceinline__ bool isfinite(Float3 & v)
 {
-	return dmax(a, dmin(f, b));
+	return isfinite(v.x) && isfinite(v.y) && isfinite(v.z);
 }
 
 __device__ __host__ __forceinline__  Float dEon_C1(const Float n) {
@@ -80,6 +91,65 @@ __device__ __host__ __forceinline__  Float dEon_C2(const Float n) {
 
 __device__ __host__ __forceinline__  Float dEon_A(const Float eta) {
 	return (1 + 3 * dEon_C2(eta)) / (1 - 2 * dEon_C1(eta));
+}
+
+__device__ __host__ __forceinline__ void calcValues(const double length, const Float sigma_s, const Float sigma_a, const Float mu, double &C, double &D, double &E, double &F) {
+	FSAssert(length >= 0);
+	FSAssert(mu > 0 && mu <= 1);
+	FSAssert(sigma_s > 0);
+	FSAssert(length >= 0);
+
+	double p = 0.5 * mu * sigma_s;
+	double s = length;
+	double ps = p*s;
+
+	/* TODO/NOTE: C is independent of R,u0,uL eventually, so purely
+	* a Float3ization problem!
+	* We could drop C, but that has the effect of exploding the
+	* Float3ization constant exponential beyond double precision range for
+	* small p*s. So we currently keep it as a help for numerical stability.
+	* (Maybe a reduced form leads to something that is still managable and
+	* allows for a simpler Float3ization function fit?) Either way, the
+	* nu0 term in C is simply dropped */
+
+	if (ps < 0.001) {
+		/* Expansion accurate up to a range of 6 orders of ps */
+		C = 3. / ps + 0.4*ps - 11. / 525.*ps*ps*ps;
+		D = 1.5 / ps - 0.1*ps + 13. / 1050.*ps*ps*ps;
+		E = p * (4.5 / (ps*ps) + 0.3 - 3. / 350 * ps*ps);
+		F = p*p * (4.5 / (ps*ps*ps) + 1.8 / ps - 3. / 350 * ps);
+	}
+	else if (ps > 1.0 / 0.001) {
+		/* Expansion accurate up to a range of 'all' orders of 1/ps (exact
+		* geometric series) */
+		double series = 1.0 / (ps - 1.0); // = 1/ps + 1/ps^2 + 1/ps^3 + ...
+		C = 1.5 + 0.75 * series;
+		D = 0.75 * series;
+		E = p * 1.5 * series;
+		F = p*p * 1.5 * series;
+	}
+	else {
+		/* Exact solutions, in a ps range that is safe from numerical problems */
+		double TH = tanh(p*s);
+		double SH = sinh(2 * p*s);
+		double TH2 = tanh(2 * p*s); /* Note: SH/CH with CH = sqrt(1 + SH*SH) is
+									unstable for large arguments (inf/inf) */
+
+		double A = 1 / (s / p - TH / (p*p));
+		double B = TH / (2 * p);
+
+		CancellationCheck(3 * A*B*B, 3 / (2 * TH2)); // C
+		CancellationCheck(3 * A*B*B, -3 / (2 * SH));  // D
+		C = 3 * A*B*B + 3 / (2 * TH2);
+		D = 3 * A*B*B - 3 / (2 * SH);
+		E = 3 * A*B;
+		F = 3 * A / 2;
+	}
+
+	FSAssert(C >= 0);
+	FSAssert(D >= 0);
+	FSAssert(E >= 0);
+	FSAssert(F >= 0);
 }
 
 Float fresnelDiffuseReflectance(Float eta) {
@@ -172,18 +242,6 @@ Float3 refract(const Float3 &wi, const Float3 &n, Float eta, Float &cosThetaT, F
 }
 
 
-#ifdef MTS_FWDSCAT_DEBUG
-# define FSAssert(x)      Assert(x)
-# define FSAssertWarn(x)  AssertWarn(x)
-# define SFSAssert(x)     SAssert(x)
-# define SFSAssertWarn(x) SAssertWarn(x)
-#else /* This removes the side-effects from the functions! */
-# define FSAssert(x)      ((void) 0)
-# define FSAssertWarn(x)  ((void) 0)
-# define SFSAssert(x)     ((void) 0)
-# define SFSAssertWarn(x) ((void) 0)
-#endif
-
 __device__ __host__ __forceinline__ Float _reducePrecisionForCosTheta(Float x) {
 	/* Turns out not to help too much -- or even make things worse! So
 	* don't round. TODO: Test some more at some point... */
@@ -263,64 +321,7 @@ __device__ __host__ __forceinline__ double absorptionAndFloat3izationConstant(Fl
 	return result;
 }
 
-__device__ __host__ __forceinline__ void calcValues(const double length, const Float sigma_s, const Float sigma_a, const Float mu, double &C, double &D, double &E, double &F)  {
-	FSAssert(length >= 0);
-	FSAssert(mu > 0 && mu <= 1);
-	FSAssert(sigma_s > 0);
-	FSAssert(length >= 0);
 
-	double p = 0.5 * mu * sigma_s;
-	double s = length;
-	double ps = p*s;
-
-	/* TODO/NOTE: C is independent of R,u0,uL eventually, so purely
-	* a Float3ization problem!
-	* We could drop C, but that has the effect of exploding the
-	* Float3ization constant exponential beyond double precision range for
-	* small p*s. So we currently keep it as a help for numerical stability.
-	* (Maybe a reduced form leads to something that is still managable and
-	* allows for a simpler Float3ization function fit?) Either way, the
-	* nu0 term in C is simply dropped */
-
-	if (ps < 0.001) {
-		/* Expansion accurate up to a range of 6 orders of ps */
-		C = 3. / ps + 0.4*ps - 11. / 525.*ps*ps*ps;
-		D = 1.5 / ps - 0.1*ps + 13. / 1050.*ps*ps*ps;
-		E = p * (4.5 / (ps*ps) + 0.3 - 3. / 350 * ps*ps);
-		F = p*p * (4.5 / (ps*ps*ps) + 1.8 / ps - 3. / 350 * ps);
-	}
-	else if (ps > 1.0 / 0.001) {
-		/* Expansion accurate up to a range of 'all' orders of 1/ps (exact
-		* geometric series) */
-		double series = 1.0 / (ps - 1.0); // = 1/ps + 1/ps^2 + 1/ps^3 + ...
-		C = 1.5 + 0.75 * series;
-		D = 0.75 * series;
-		E = p * 1.5 * series;
-		F = p*p * 1.5 * series;
-	}
-	else {
-		/* Exact solutions, in a ps range that is safe from numerical problems */
-		double TH = tanh(p*s);
-		double SH = sinh(2 * p*s);
-		double TH2 = tanh(2 * p*s); /* Note: SH/CH with CH = sqrt(1 + SH*SH) is
-									unstable for large arguments (inf/inf) */
-
-		double A = 1 / (s / p - TH / (p*p));
-		double B = TH / (2 * p);
-
-		CancellationCheck(3 * A*B*B, 3 / (2 * TH2)); // C
-		CancellationCheck(3 * A*B*B, -3 / (2 * SH));  // D
-		C = 3 * A*B*B + 3 / (2 * TH2);
-		D = 3 * A*B*B - 3 / (2 * SH);
-		E = 3 * A*B;
-		F = 3 * A / 2;
-	}
-
-	FSAssert(C >= 0);
-	FSAssert(D >= 0);
-	FSAssert(E >= 0);
-	FSAssert(F >= 0);
-}
 
 
 
@@ -477,7 +478,6 @@ __device__ __host__ __forceinline__ Float evalMonopole(
 	const Float sigma_s,
 	const Float sigma_a,
 	const Float mu,
-	const Float m_eta,
 	Float3 u0, Float3 uL, Float3 R, Float length) {
 	FSAssert(abs(u0.length() - 1) < 1e-6);
 	FSAssert(abs(uL.length() - 1) < 1e-6);
@@ -526,7 +526,6 @@ __device__ __host__ __forceinline__ Float evalPlaneSource(
 	const Float sigma_s,
 	const Float sigma_a,
 	const Float mu,
-	const Float m_eta,
 	Float3 u0, Float3 uL,
 	Float3 n, Float Rz, Float length) {
 
@@ -560,14 +559,13 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	const Float sigma_a,
 	const Float mu,
 	const Float m_eta,
-	Float3 n0, Float3 u0_external,
-	Float3 nL, Float3 uL_external,
+	Float3 n0, Float3 u0,
+	Float3 nL, Float3 uL,
 	Float3 R, Float length,
 	bool rejectInternalIncoming,
 	bool reciprocal,
 	TangentPlaneMode tangentMode,
 	ZvMode zvMode,
-	bool includeFresnelTransmittance = true,
 	bool useEffectiveBRDF = false ,
 	DipoleMode dipoleMode = ERealAndVirt
 	) {
@@ -576,12 +574,12 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	* along nL. */
 	FSAssert(!reciprocal || nL.isFinite());
 	FSAssert(!reciprocal || dot(uL_external, nL) >= -Epsilon); // positive with small margin for roundoff errors
-	if (isfinite(nL) && dot(uL_external, nL) <= 0) // clamp to protect against roundoff errors
-		return 0.0f;
+	//if (isfinite(nL) && dot(uL_external, nL) <= 0) // clamp to protect against roundoff errors
+	//	return 0.0f;
 
 #if MTS_FWDSCAT_DIPOLE_REJECT_INCOMING_WRT_TRUE_SURFACE_Float3
-	if (dot(u0_external, n0) >= 0)
-		return 0.0f;
+	//if (dot(u0_external, n0) >= 0)
+	//	return 0.0f;
 #endif
 
 
@@ -591,19 +589,19 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	* light (i.e. not the typical refract as in BSDFs, for instance, which
 	* flips to the other side of the boundary). */
 	Float _cosThetaT, F0, FL;
-	Float3 u0 = refract(-u0_external, n0, m_eta, _cosThetaT, F0);
-	Float3 uL = -refract(uL_external, nL, m_eta, _cosThetaT, FL);
-	Float fresnelTransmittance = includeFresnelTransmittance? (1 - F0)*(1 - FL) : 1;
+	//Float3 u0 = refract(-u0_external, n0, m_eta, _cosThetaT, F0);
+	//Float3 uL = -refract(uL_external, nL, m_eta, _cosThetaT, FL);
+	//Float fresnelTransmittance = includeFresnelTransmittance? (1 - F0)*(1 - FL) : 1;
 
-	if (m_eta == 1)
-		FSAssert(u0 == u0_external  &&  uL == uL_external);
+	//if (m_eta == 1)
+	//	FSAssert(u0 == u0_external  &&  uL == uL_external);
 
-	if (optix::length(u0) == 0 || optix::length(uL) == 0) {
-		if (m_eta > 1)
-			Log(EWarn, "Could not refract, which is weird because we have a "
-				"higher ior! (eta=%f)", m_eta);
-		return 0.0f;
-	}
+	//if (optix::length(u0) == 0 || optix::length(uL) == 0) {
+	//	if (m_eta > 1)
+	//		Log(EWarn, "Could not refract, which is weird because we have a "
+	//			"higher ior! (eta=%f)", m_eta);
+	//	return 0.0f;
+	//}
 
 
 	Float3 R_virt;
@@ -625,17 +623,17 @@ __device__ __host__ __forceinline__ Float evalDipole(
 		FSAssertWarn(lRvl == 0 || abs((lRvl - abs(Rv_z)) / lRvl) < Epsilon);
 #endif
 
-		return fresnelTransmittance * (
-			evalPlaneSource(sigma_s, sigma_a, mu, m_eta, u0, uL, nL, 0.0f, length)
-			- evalPlaneSource(sigma_s, sigma_a, mu, m_eta, u0_virt, uL, nL, Rv_z, length));
+		return (
+			evalPlaneSource(sigma_s, sigma_a, mu,  u0, uL, nL, 0.0f, length)
+			- evalPlaneSource(sigma_s, sigma_a, mu,  u0_virt, uL, nL, Rv_z, length));
 	}
 
 	// Full BSSRDF
 	Float real = 0, virt = 0;
 	if (dipoleMode & EReal)
-		real = evalMonopole(sigma_s, sigma_a, mu, m_eta, u0, uL, R, length);
+		real = evalMonopole(sigma_s, sigma_a, mu, u0, uL, R, length);
 	if (dipoleMode & EVirt)
-		virt = evalMonopole(sigma_s, sigma_a, mu, m_eta, u0_virt, uL, R_virt, length);
+		virt = evalMonopole(sigma_s, sigma_a, mu, u0_virt, uL, R_virt, length);
 	Float transport;
 	switch (dipoleMode) {
 	case ERealAndVirt: transport = real - virt; break;
@@ -648,9 +646,35 @@ __device__ __host__ __forceinline__ Float evalDipole(
 			nL, -uL, n0, -u0, -R, length,
 			rejectInternalIncoming, false,
 			tangentMode, zvMode, useEffectiveBRDF, dipoleMode);
-		return 0.5 * (transport + transportRev) * fresnelTransmittance;
+		return 0.5 * (transport + transportRev);
 	}
 	else {
-		return transport * fresnelTransmittance;
+		return transport;
 	}
+}
+
+__device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const float3& ni, const float3& w12,
+	const float3& xo, const float3& no, const float3& w21,
+	const ScatteringMaterialProperties& properties)
+{
+	optix::float3 res;
+	for (int k = 0; k < 3; k++)
+	{
+		optix::get_channel(k, res) = evalDipole(
+			optix::get_channel(k, properties.scattering),
+			optix::get_channel(k, properties.absorption),
+			optix::get_channel(k, properties.meancosine),
+			1.0f,
+			no, w21,
+			ni, w12,
+			xo - xi, length(xo - xi),
+			false,
+			false,
+			TangentPlaneMode::EFrisvadEtAl,
+			ZvMode::EFrisvadEtAlZv,
+			false,
+			ERealAndVirt
+		);
+	}
+	return res;
 }

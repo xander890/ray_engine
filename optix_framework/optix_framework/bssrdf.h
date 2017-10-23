@@ -8,6 +8,7 @@
 #include <bssrdf_sampling_properties.h>
 #include <quantized_diffusion.h>
 #include <photon_beam_diffusion.h>
+#include <forward_dipole.h>
 
 using optix::float3;
 
@@ -27,6 +28,8 @@ __forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, c
 		return quantized_diffusion_bssrdf(_xi, _ni, _w12, _xo, _no, properties);
 	case ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF:
 		return photon_beam_diffusion_bssrdf(_xi, _ni, _w12, _xo, _no, properties);
+	case ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF:
+		return forward_dipole_bssrdf(_xi, _ni, _w12, _xo, _no, _w21, properties);
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
 	default:
 		return standard_dipole_bssrdf(length(_xo - _xi), properties);
