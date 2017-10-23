@@ -27,6 +27,7 @@ rtDeclareVariable(float, reference_bssrdf_theta_s, , );
 rtDeclareVariable(float, reference_bssrdf_radius, , );
 rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, reference_bssrdf_material_params, , );
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
+rtDeclareVariable(int, reference_bssrdf_output_shape, , );
 
 //#define USE_HARDCODED_MATERIALS
 
@@ -77,8 +78,8 @@ RT_PROGRAM void reference_bssrdf_gpu()
 		p.status = PHOTON_STATUS_SCATTERING; 
 		atomicAdd(&photon_counter[ref_frame_number], 1); 
 	}
-
-	if (scatter_photon(p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
+	 
+	if (scatter_photon(reference_bssrdf_output_shape, p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
 	{
 		photon_buffer[idx].status = PHOTON_STATUS_NEW;
 	}

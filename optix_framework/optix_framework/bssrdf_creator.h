@@ -3,11 +3,14 @@
 #include <host_device_common.h>
 #include <scattering_properties.h>
 
-class BSSRDFHemisphereRenderer
+class BSSRDFRenderer
 {
 public:
-	BSSRDFHemisphereRenderer(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e5) : context(ctx), mHemisphereSize(hemisphere) {
-		//mProperties.selected_bssrdf = ScatteringDipole::STANDARD_DIPOLE_BSSRDF;
+	enum OutputShape { PLANE = BSSRDF_OUTPUT_PLANE, HEMISPHERE = BSSRDF_OUTPUT_HEMISPHERE};
+
+	BSSRDFRenderer(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::uint2 shape_size  = optix::make_uint2(0,0)) : context(ctx), mShapeSize(shape_size) {
+		mOutputShape = shape;
+		mShapeSize = default_size(shape);
 	}
 
 	virtual void load_data();
@@ -19,19 +22,23 @@ public:
 	virtual void render() = 0;
 
 	optix::Buffer get_output_buffer() { return mBSSRDFBuffer; }
-	optix::uint2 get_hemisphere_size() { return mHemisphereSize; }
-	size_t get_storage_size() { return mHemisphereSize.x*mHemisphereSize.y; }
+	optix::uint2 get_size() { return mShapeSize; }
+	size_t get_storage_size() { return mShapeSize.x*mShapeSize.y; }
 	virtual size_t get_samples() { return 1; }
 
 	virtual bool on_draw(bool show_material_params);
 
 	void set_read_only(bool is_read_only) { mIsReadOnly = is_read_only;  }
-	
+	void set_shape(OutputShape shape);
+	OutputShape get_shape() { return mOutputShape; }
+	float mIor = 1.4f;
+
 protected:
+	OutputShape mOutputShape; 
 	int entry_point = -1;
 	int entry_point_post = -1;
 
-	optix::uint2 mHemisphereSize;
+	optix::uint2 mShapeSize;
 	optix::Context context = nullptr;
 
 	unsigned int mRenderedFrames = 0;
@@ -49,15 +56,20 @@ protected:
 	float mAlbedo = 0.3f;
 	float mExtinction = 1.0f;
 	float mAsymmetry = 0.9f;
-	float mIor = 1.4f;
 	bool mIsReadOnly = false;
 	bool mInitialized = false;
+
+private:
+	static optix::uint2 default_size(OutputShape shape)
+	{
+		return shape == HEMISPHERE ? optix::make_uint2(160, 40) : optix::make_uint2(400, 400);
+	}
 };
 
-class BSSRDFHemisphereSimulated : public BSSRDFHemisphereRenderer
+class BSSRDFRendererSimulated : public BSSRDFRenderer
 {
 public:
-	BSSRDFHemisphereSimulated(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e8) : BSSRDFHemisphereRenderer(ctx, hemisphere), mSamples(samples)
+	BSSRDFRendererSimulated(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::uint2 & shape_size = optix::make_uint2(160, 40), const unsigned int samples = (int)1e8) : BSSRDFRenderer(ctx, shape, shape_size), mSamples(samples)
 	{
 	}
 
@@ -68,16 +80,17 @@ public:
 	virtual void set_samples(int samples);
 	virtual void set_max_iterations(int max_iter);
 	size_t get_samples() override { return mSamples * mRenderedFrames; }
+
 protected:
 	unsigned int mSamples;
 	unsigned int mMaxIterations = (int)1e4;
 
 };
 
-class BSSRDFHemisphereModel : public BSSRDFHemisphereRenderer
+class BSSRDFRendererModel : public BSSRDFRenderer
 {
 public:
-	BSSRDFHemisphereModel(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFHemisphereRenderer(ctx, hemisphere)
+	BSSRDFRendererModel(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::uint2 & shape_size = optix::make_uint2(160, 40), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFRenderer(ctx, shape, shape_size)
 	{
 		mScatteringDipole = dipole;
 	}

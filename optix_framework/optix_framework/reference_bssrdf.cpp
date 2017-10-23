@@ -2,7 +2,7 @@
 #include "immediate_gui.h"
 #include "optix_utils.h"
 #include "GL\glew.h"
-#include <bssrdf_hemisphere_creator.h>
+#include <bssrdf_creator.h>
 
 int HemisphereBSSRDFShader::entry_point_output = -1;
 
@@ -16,7 +16,7 @@ HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader & other) :
 
 void HemisphereBSSRDFShader::init_output()
 {
-	std::string ptx_path_output = get_path_ptx("render_bssrdf_hemisphere.cu");
+	std::string ptx_path_output = get_path_ptx("render_bssrdf.cu");
 	optix::Program ray_gen_program_output = context->createProgramFromPTXFile(ptx_path_output, "render_ref");
 
 	if(entry_point_output == -1)
@@ -24,7 +24,7 @@ void HemisphereBSSRDFShader::init_output()
 
 	mBSSRDFBufferTexture = context->createBuffer(RT_BUFFER_INPUT);
 	mBSSRDFBufferTexture->setFormat(RT_FORMAT_FLOAT);
-	mBSSRDFBufferTexture->setSize(ref_impl->get_hemisphere_size().x, ref_impl->get_hemisphere_size().y);
+	mBSSRDFBufferTexture->setSize(ref_impl->get_size().x, ref_impl->get_size().y);
 
 	mBSSRDFHemisphereTex = context->createTextureSampler();
 	mBSSRDFHemisphereTex->setFilteringModes(RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE);
@@ -40,14 +40,14 @@ void HemisphereBSSRDFShader::reset()
 	ref_impl->reset();
 }
 
-HemisphereBSSRDFShader::HemisphereBSSRDFShader(const ShaderInfo & shader_info, std::unique_ptr<BSSRDFHemisphereRenderer>& creator, int camera_width, int camera_height) : Shader(shader_info),
+HemisphereBSSRDFShader::HemisphereBSSRDFShader(const ShaderInfo & shader_info, std::unique_ptr<BSSRDFRenderer>& creator, int camera_width, int camera_height) : Shader(shader_info),
 mCameraWidth(camera_width),
 mCameraHeight(camera_height)
 {
 	if (creator != nullptr)
 		ref_impl = std::move(creator);
 	else
-		ref_impl = std::make_unique<BSSRDFHemisphereSimulated>(context);
+		ref_impl = std::make_unique<BSSRDFRendererSimulated>(context);
 }
 
 void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
@@ -57,7 +57,7 @@ void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
 
 	 if (ref_impl == nullptr)
 	 {
-		 ref_impl = std::make_unique<BSSRDFHemisphereSimulated>(context);
+		 ref_impl = std::make_unique<BSSRDFRendererSimulated>(context);
 
 	 }
 
@@ -78,7 +78,7 @@ void HemisphereBSSRDFShader::pre_trace_mesh(Mesh& object)
 
 	void* source = ref_impl->get_output_buffer()->map();
 	void* dest = mBSSRDFBufferTexture->map();
-	memcpy(dest, source, ref_impl->get_hemisphere_size().x*ref_impl->get_hemisphere_size().y * sizeof(float));
+	memcpy(dest, source, ref_impl->get_size().x*ref_impl->get_size().y * sizeof(float));
 	ref_impl->get_output_buffer()->unmap();
 	mBSSRDFBufferTexture->unmap();
 }

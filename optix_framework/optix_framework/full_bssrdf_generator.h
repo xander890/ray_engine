@@ -1,8 +1,9 @@
 #pragma once
 #include "SampleScene.h"
 #include <memory>
-#include <bssrdf_hemisphere_creator.h>
+#include <bssrdf_creator.h>
 #include <bssrdf_loader.h>
+#include <reference_bssrdf_gpu.h>
 #include <map>
 #include "string_utils.h"
 #include "logger.h"
@@ -189,9 +190,9 @@ private:
 	void set_external_bssrdf(const std::string & file);
 
 	optix::Buffer result_buffer;
-	std::shared_ptr<BSSRDFHemisphereRenderer>	 mCurrentBssrdfRenderer;
-	std::shared_ptr<BSSRDFHemisphereSimulated>	 mBssrdfReferenceSimulator;
-	std::shared_ptr<BSSRDFHemisphereModel>		 mBssrdfModelSimulator;
+	std::shared_ptr<BSSRDFRenderer>	 mCurrentBssrdfRenderer;
+	std::shared_ptr<ReferenceBSSRDFGPU>	 mBssrdfReferenceSimulator;
+	std::shared_ptr<BSSRDFRendererModel>		 mBssrdfModelSimulator;
 	std::string config_file;
 
 	int entry_point_output = -1;

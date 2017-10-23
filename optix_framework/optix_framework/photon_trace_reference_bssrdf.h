@@ -54,7 +54,7 @@ __forceinline__ __device__ void store_values_in_buffer(const float cos_theta_o, 
 }
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
+__forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
 {
 	// Defining geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
@@ -157,4 +157,108 @@ __forceinline__ __device__ bool scatter_photon(optix::float3& xp, optix::float3&
 		}
 	}
 	return false;
+}
+
+#define PLANAR_SCENE_SIZE 2.0f
+__forceinline__ __device__ optix::float2 get_normalized_planar_buffer_coordinates(const optix::float2 & coord)
+{
+	return (coord + make_float2(PLANAR_SCENE_SIZE)) / (2 * PLANAR_SCENE_SIZE);
+}
+
+__forceinline__ __device__ optix::float2 get_planar_buffer_coordinates(const optix::float2 & normalized_coord)
+{
+	return (normalized_coord * (2 * PLANAR_SCENE_SIZE)) - make_float2(PLANAR_SCENE_SIZE);
+}
+
+
+__forceinline__ __device__ void store_values_in_buffer_planar(const optix::float2 & xo_plane, const float flux_E, BufPtr2D<float> & resulting_flux)
+{
+	const optix::size_t2 bins = resulting_flux.size();
+	optix::float2 coords = get_normalized_planar_buffer_coordinates(xo_plane);
+
+	// Store only if on the plane
+	if (coords.x >= 0.0f && coords.x < 1.0f && coords.y >= 0.0f && coords.y < 1.0f)
+	{
+		optix::uint2 idxs = make_uint2(coords * make_float2(bins));
+		optix_assert(flux_E >= 0.0f);
+		optix_assert(!isnan(flux_E));
+
+		// Atomic add to avoid thread conflicts
+		if (!isnan(flux_E))
+			atomicAdd(&resulting_flux[idxs], flux_E);
+	}
+}
+
+
+// Returns true if the photon has been absorbed, false otherwise
+__forceinline__ __device__ bool scatter_photon_planar(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
+{
+	// Defining geometry
+	const optix::float3 xi = optix::make_float3(0, 0, 0);
+	const optix::float3 ni = optix::make_float3(0, 0, 1);
+	const optix::float3 no = ni;
+	const float n1_over_n2 = 1.0f / n2_over_n1;
+
+	// We count executions to allow stop/resuming of this function.
+	int i;
+	for (i = starting_it; i < starting_it + executions; i++)
+	{
+		// If the flux is really small, we can stop here, the contribution is too small.
+		if (flux_t < 1e-12)
+			return true;
+
+		const float rand = 1.0f - RND_FUNC(t); // RND_FUNC(t) in [0, 1). Avoids infinity when sampling exponential distribution.
+
+											   // Sampling new distance for photon, testing if it intersects the interface
+		const float d = -log(rand) / extinction;
+		optix::Ray ray = optix::make_Ray(xp, wp, 0, scene_epsilon, d);
+		optix_assert(xp.z < 1e-6);
+		optix_assert(xp.z > -INFINITY);
+
+		float intersection_distance;
+		if (!intersect_plane(xi, ni, ray, intersection_distance))
+		{
+			// We are still within the medium.
+			// Russian roulette to check for absorption.
+			float absorption_prob = RND_FUNC(t);
+			if (absorption_prob > albedo)
+			{
+				optix_print("(%d) Absorption.\n", i);
+				return true;
+			}
+
+			// We scatter now.
+			xp = xp + wp * d;
+
+			// We choose a new direction sampling the phase function
+			optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+			wp = optix::normalize(sample_HG(wp, g, smpl));
+		}
+		else
+		{
+			// We have intersected the plane. 
+			const optix::float3 surface_point = xp + wp * intersection_distance;
+			optix_assert(optix::dot(wp, no) > 0);
+
+			// Calculate Fresnel coefficient
+			const float cos_theta_p = optix::max(optix::dot(wp, no), 0.0f);
+			const float F_r = fresnel_R(cos_theta_p, n2_over_n1); // assert F_t < 1
+
+			float outgoing_flux = (1.0f - F_r) * flux_t;
+			store_values_in_buffer_planar(make_float2(surface_point.x, surface_point.y), outgoing_flux, resulting_flux);
+
+			// Reflect and turn to face inside.
+			flux_t *= F_r;
+			xp = surface_point;
+			wp = reflect(wp, -no);
+			optix_print("(%d) Reached surface %f.\n", i, outgoing_flux);
+		}
+	}
+	return false;
+}
+
+__forceinline__ __device__ bool scatter_photon(int mode, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
+{
+	return (mode == BSSRDF_OUTPUT_HEMISPHERE) ? scatter_photon_hemisphere(xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t, starting_it, executions) :
+		scatter_photon_planar(xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t, starting_it, executions);
 }

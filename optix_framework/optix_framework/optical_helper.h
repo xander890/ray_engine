@@ -79,17 +79,17 @@ __host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix
 	return pass;
 }
 
-__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float eta, optix::float3 & refracted, float & F_r)
+__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & F_r)
 {
 	float cos_theta_i, cos_theta_t;
-	return refract(i, n, eta, refracted, F_r, cos_theta_i, cos_theta_t);
+	return refract(i, n, n1_over_n2, refracted, F_r, cos_theta_i, cos_theta_t);
 }
 
 
-__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float eta, optix::float3 & refracted)
+__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted)
 {
 	float cos_theta_i, cos_theta_t;
-	return _refract(i, n, eta, refracted, cos_theta_i, cos_theta_t);
+	return _refract(i, n, n1_over_n2, refracted, cos_theta_i, cos_theta_t);
 }
 
 

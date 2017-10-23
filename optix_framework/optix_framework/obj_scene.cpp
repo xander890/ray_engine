@@ -49,7 +49,7 @@
 #include "reference_bssrdf.h"
 #include "reference_bssrdf_gpu.h"
 #include "bssrdf_visualizer.h"
-#include "bssrdf_hemisphere_creator.h"
+#include "bssrdf_creator.h"
 
 using namespace std;
 using namespace optix;
@@ -405,11 +405,11 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	ShaderFactory::add_shader(std::make_unique<SampledBSSRDF>(info2));
 
 	ShaderInfo info4 = ShaderInfo(20, "empty.cu", "Plane BSSRDF (Reference)"); 
-	std::unique_ptr<BSSRDFHemisphereRenderer> c = std::make_unique<BSSRDFHemisphereSimulated>(context);
+	std::unique_ptr<BSSRDFRenderer> c = std::make_unique<BSSRDFRendererSimulated>(context);
 	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info4, c, camera_width, camera_height));
 
 	ShaderInfo info5 = ShaderInfo(21, "empty.cu", "Plane BSSRDF (Dipole)");
-	std::unique_ptr<BSSRDFHemisphereRenderer> c2 = std::make_unique<BSSRDFHemisphereModel>(context);
+	std::unique_ptr<BSSRDFRenderer> c2 = std::make_unique<BSSRDFRendererModel>(context);
 	ShaderFactory::add_shader(std::make_unique<HemisphereBSSRDFShader>(info5, c2, camera_width, camera_height));
 
 	ShaderInfo info6 = ShaderInfo(22, "empty.cu", "BSSRDF Visualizer");

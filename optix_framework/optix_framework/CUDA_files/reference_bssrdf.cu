@@ -21,6 +21,7 @@ rtDeclareVariable(float, reference_bssrdf_theta_s, , );
 rtDeclareVariable(float, reference_bssrdf_radius, , );
 rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, reference_bssrdf_material_params, , );
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
+rtDeclareVariable(int, reference_bssrdf_output_shape, , );
 
 //#define USE_HARDCODED_MATERIALS
 
@@ -59,7 +60,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	optix::float3 xp = xi;
 	optix::float3 wp = w12;
 
-	if (!scatter_photon(xp, wp, flux_t, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, t, 0, maximum_iterations))
+	if (!scatter_photon(reference_bssrdf_output_shape, xp, wp, flux_t, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, t, 0, maximum_iterations))
 	{
 		optix_print("Max iterations reached. Distance %f (%f mfps)\n", length(xp - xo), length(xp - xo) / r);
 	}

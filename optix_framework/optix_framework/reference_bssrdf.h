@@ -3,12 +3,12 @@
 #include <mesh.h>
 #include <string>
 #include <parameter_parser.h>
-class BSSRDFHemisphereRenderer;
+class BSSRDFRenderer;
 
 class HemisphereBSSRDFShader : public Shader
 {
 public:
-	HemisphereBSSRDFShader(const ShaderInfo& shader_info, std::unique_ptr<BSSRDFHemisphereRenderer>& creator, int camera_width, int camera_height);
+	HemisphereBSSRDFShader(const ShaderInfo& shader_info, std::unique_ptr<BSSRDFRenderer>& creator, int camera_width, int camera_height);
 
 	void initialize_shader(optix::Context) override;
 	void initialize_mesh(Mesh& object) override;
@@ -42,6 +42,6 @@ protected:
 	optix::Buffer mBSSRDFBufferTexture;
 	optix::TextureSampler mBSSRDFHemisphereTex;
 
-	std::shared_ptr<BSSRDFHemisphereRenderer> ref_impl;
+	std::shared_ptr<BSSRDFRenderer> ref_impl;
 };
 

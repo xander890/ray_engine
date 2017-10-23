@@ -17,6 +17,19 @@ template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsi
 	return r;
 }
 
+template<typename T> void resize_glbo_buffer(optix::Buffer & buffer, unsigned int size)
+{
+	GLuint buf = buffer->getGLBOId();
+
+	GLint bind;
+	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &bind);
+	glBindBuffer(GL_ARRAY_BUFFER, buf);
+	glBufferData(GL_ARRAY_BUFFER, size * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, bind);
+	buffer->setSize(size);
+}
+
+
 template<typename T> optix::Buffer create_buffer(optix::Context & ctx, int size)
 {
 	optix::Buffer buf = ctx->createBuffer(RT_BUFFER_INPUT);

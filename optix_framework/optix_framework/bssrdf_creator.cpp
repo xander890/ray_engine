@@ -1,11 +1,11 @@
-#include "bssrdf_hemisphere_creator.h"
+#include "bssrdf_creator.h"
 #include "immediate_gui.h"
 #include "optix_utils.h"
 #include "GL\glew.h"
 #include "folders.h"
 #include <sstream>
 
-void BSSRDFHemisphereRenderer::set_geometry_parameters(float theta_i, float r, float theta_s)
+void BSSRDFRenderer::set_geometry_parameters(float theta_i, float r, float theta_s)
 {
 	mThetai = theta_i;
 	mThetas = theta_s;
@@ -13,7 +13,7 @@ void BSSRDFHemisphereRenderer::set_geometry_parameters(float theta_i, float r, f
 	reset();
 }
 
-void BSSRDFHemisphereRenderer::load_data()
+void BSSRDFRenderer::load_data()
 {
 	if (!mInitialized)
 		init();
@@ -22,9 +22,10 @@ void BSSRDFHemisphereRenderer::load_data()
 	context["reference_bssrdf_theta_s"]->setFloat(deg2rad(mThetas));
 	context["reference_bssrdf_radius"]->setFloat(mRadius);
 	context["reference_bssrdf_rel_ior"]->setFloat(mIor);
+	context["reference_bssrdf_output_shape"]->setInt(static_cast<int>(mOutputShape));
 }
 
-void BSSRDFHemisphereRenderer::set_material_parameters(float albedo, float extinction, float g, float eta)
+void BSSRDFRenderer::set_material_parameters(float albedo, float extinction, float g, float eta)
 {
 	mAlbedo = albedo;
 	mExtinction = extinction;
@@ -33,7 +34,7 @@ void BSSRDFHemisphereRenderer::set_material_parameters(float albedo, float extin
 	reset();
 }
 
-void BSSRDFHemisphereRenderer::reset()
+void BSSRDFRenderer::reset()
 {
 	if (!mInitialized)
 		init();
@@ -47,21 +48,21 @@ void BSSRDFHemisphereRenderer::reset()
 	mProperties->unmap();
 }
 
-void BSSRDFHemisphereRenderer::init()
+void BSSRDFRenderer::init()
 {
 	mInitialized = true;
 	if (mBSSRDFBufferIntermediate.get() == nullptr)
 	{
-		mBSSRDFBufferIntermediate = create_glbo_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mHemisphereSize.x*mHemisphereSize.y);
+		mBSSRDFBufferIntermediate = create_glbo_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mShapeSize.x*mShapeSize.y);
 		mBSSRDFBufferIntermediate->setFormat(RT_FORMAT_FLOAT);
-		mBSSRDFBufferIntermediate->setSize(mHemisphereSize.x, mHemisphereSize.y);
+		mBSSRDFBufferIntermediate->setSize(mShapeSize.x, mShapeSize.y);
 	}
 
 	if (mBSSRDFBuffer.get() == nullptr)
 	{
-		mBSSRDFBuffer = create_glbo_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mHemisphereSize.x*mHemisphereSize.y);
+		mBSSRDFBuffer = create_glbo_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mShapeSize.x*mShapeSize.y);
 		mBSSRDFBuffer->setFormat(RT_FORMAT_FLOAT);
-		mBSSRDFBuffer->setSize(mHemisphereSize.x, mHemisphereSize.y);
+		mBSSRDFBuffer->setSize(mShapeSize.x, mShapeSize.y);
 	}
 
 	if (mProperties.get() == nullptr)
@@ -75,7 +76,7 @@ void BSSRDFHemisphereRenderer::init()
 	reset();
 }
 
-bool BSSRDFHemisphereRenderer::on_draw(bool show_material_params)
+bool BSSRDFRenderer::on_draw(bool show_material_params)
 {
 	bool changed = false;
 
@@ -83,9 +84,11 @@ bool BSSRDFHemisphereRenderer::on_draw(bool show_material_params)
 	float backup_theta_s = mThetas;
 
 	changed |= ImmediateGUIDraw::SliderFloat("Incoming light angle (deg.)", &mThetai, 0, 90);
-	changed |= ImmediateGUIDraw::InputFloat("Radius", &mRadius, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
-	changed |= ImmediateGUIDraw::SliderFloat("Angle on plane", &mThetas, 0, 360);
-
+	if (mOutputShape == HEMISPHERE)
+	{
+		changed |= ImmediateGUIDraw::InputFloat("Radius", &mRadius, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::SliderFloat("Angle on plane", &mThetas, 0, 360);
+	}
 	mThetai = mIsReadOnly ? backup_theta_i : mThetai;
 	mThetas = mIsReadOnly ? backup_theta_s : mThetas;
 
@@ -106,9 +109,20 @@ bool BSSRDFHemisphereRenderer::on_draw(bool show_material_params)
 	return changed;
 }
 
-void BSSRDFHemisphereModel::init()
+void BSSRDFRenderer::set_shape(OutputShape shape)
 {
-	BSSRDFHemisphereRenderer::init();
+	mOutputShape = shape;
+	mShapeSize = default_size(shape);
+	resize_glbo_buffer<float>(mBSSRDFBufferIntermediate, mShapeSize.x*mShapeSize.y);
+	resize_glbo_buffer<float>(mBSSRDFBuffer, mShapeSize.x*mShapeSize.y);
+
+	mBSSRDFBufferIntermediate->setSize(mShapeSize.x, mShapeSize.y);
+	mBSSRDFBuffer->setSize(mShapeSize.x, mShapeSize.y);
+}
+
+void BSSRDFRendererModel::init()
+{
+	BSSRDFRenderer::init();
 	std::string ptx_path = get_path_ptx("planar_bssrdf.cu");
 	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
 	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
@@ -127,36 +141,36 @@ void BSSRDFHemisphereModel::init()
 
 }
 
-void BSSRDFHemisphereModel::render()
+void BSSRDFRendererModel::render()
 {
 	if (!mInitialized)
 		init();
 	const optix::int3 c = context->getPrintLaunchIndex();
 	context->setPrintLaunchIndex(20, 20, -1);
-	context->launch(entry_point, mHemisphereSize.x, mHemisphereSize.y);
-	context->launch(entry_point_post, mHemisphereSize.x, mHemisphereSize.y);
+	context->launch(entry_point, mShapeSize.x, mShapeSize.y);
+	context->launch(entry_point_post, mShapeSize.x, mShapeSize.y);
 	context->setPrintLaunchIndex(c.x, c.y, c.z);
 	mRenderedFrames++;
 }
 
-bool BSSRDFHemisphereModel::on_draw(bool show_material_params)
+bool BSSRDFRendererModel::on_draw(bool show_material_params)
 {
-	if (BSSRDFHemisphereRenderer::on_draw(show_material_params))
+	if (BSSRDFRenderer::on_draw(show_material_params))
 		reset();
 	return false;
 }
 
-void BSSRDFHemisphereModel::load_data()
+void BSSRDFRendererModel::load_data()
 {
-	BSSRDFHemisphereRenderer::load_data();
+	BSSRDFRenderer::load_data();
 	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());
 	cc->selected_bssrdf = mScatteringDipole;
 	mProperties->unmap();
 }
 
-void BSSRDFHemisphereSimulated::init()
+void BSSRDFRendererSimulated::init()
 {
-	BSSRDFHemisphereRenderer::init();
+	BSSRDFRenderer::init();
 	std::string ptx_path = get_path_ptx("reference_bssrdf.cu");
 	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
 	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
@@ -172,33 +186,31 @@ void BSSRDFHemisphereSimulated::init()
 	context["reference_resulting_flux_intermediate"]->setUserData(sizeof(BufPtr2D<float>), &ptr);
 	BufPtr2D<float> ptr2 = BufPtr2D<float>(mBSSRDFBuffer->getId());
 	context["reference_resulting_flux"]->setUserData(sizeof(BufPtr2D<float>), &ptr2);
-
-
 }
 
-void BSSRDFHemisphereSimulated::render()
+void BSSRDFRendererSimulated::render()
 {
 	if (!mInitialized)
 		init();
 	context->launch(entry_point, mSamples);
-	context->launch(entry_point_post, mHemisphereSize.x, mHemisphereSize.y);
+	context->launch(entry_point_post, mShapeSize.x, mShapeSize.y);
 	mRenderedFrames++;
 }
 
-void BSSRDFHemisphereSimulated::load_data()
+void BSSRDFRendererSimulated::load_data()
 {
-	BSSRDFHemisphereRenderer::load_data();
+	BSSRDFRenderer::load_data();
 	context["maximum_iterations"]->setUint(mMaxIterations);
 	context["reference_bssrdf_samples_per_frame"]->setUint(mSamples);
 
 }
 
-bool BSSRDFHemisphereSimulated::on_draw(bool show_material_params)
+bool BSSRDFRendererSimulated::on_draw(bool show_material_params)
 {
 	std::stringstream ss;
 	ss << "Rendered: " << mRenderedFrames << " frames, " << mRenderedFrames*mSamples << " samples" << std::endl;
 	ImmediateGUIDraw::Text(ss.str().c_str());
-	bool changed = BSSRDFHemisphereRenderer::on_draw(show_material_params);
+	bool changed = BSSRDFRenderer::on_draw(show_material_params);
 
 	static int smpl = mSamples;
 	if (ImmediateGUIDraw::InputInt("Samples", (int*)&smpl, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0))
@@ -217,13 +229,13 @@ bool BSSRDFHemisphereSimulated::on_draw(bool show_material_params)
 	return false;
 }
 
-void BSSRDFHemisphereSimulated::set_samples(int samples)
+void BSSRDFRendererSimulated::set_samples(int samples)
 {
 	mSamples = samples;
 	reset();
 }
 
-void BSSRDFHemisphereSimulated::set_max_iterations(int max_iter)
+void BSSRDFRendererSimulated::set_max_iterations(int max_iter)
 {
 	mMaxIterations = max_iter;
 	reset();

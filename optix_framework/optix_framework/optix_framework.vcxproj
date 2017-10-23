@@ -178,7 +178,7 @@ echo Done.</Command>
     <ClCompile Include="apple_juice.cpp" />
     <ClCompile Include="box.cpp" />
     <ClCompile Include="brdf_utils.cpp" />
-    <ClCompile Include="bssrdf_hemisphere_creator.cpp" />
+    <ClCompile Include="bssrdf_creator.cpp" />
     <ClCompile Include="bssrdf_loader.cpp" />
     <ClCompile Include="bssrdf_visualizer.cpp" />
     <ClCompile Include="camera_host.cpp" />
@@ -525,8 +525,7 @@ echo Done.</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\render_bssrdf_hemisphere.cu" />
-    <CudaCompile Include="CUDA_files\render_reference_bssrdf_gpu.cu" />
+    <CudaCompile Include="CUDA_files\render_bssrdf.cu" />
     <CudaCompile Include="CUDA_files\sample_camera.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
@@ -681,7 +680,7 @@ echo Done.</Command>
     <ClInclude Include="area_light.h" />
     <ClInclude Include="box.h" />
     <ClInclude Include="bssrdf.h" />
-    <ClInclude Include="bssrdf_hemisphere_creator.h" />
+    <ClInclude Include="bssrdf_creator.h" />
     <ClInclude Include="bssrdf_loader.h" />
     <ClInclude Include="bssrdf_sampling_properties.h" />
     <ClInclude Include="bssrdf_visualizer.h" />

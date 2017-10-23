@@ -1,7 +1,7 @@
 #include "full_bssrdf_generator.h"
 #include "optix_utils.h"
 #include "immediate_gui.h"
-#include <bssrdf_hemisphere_creator.h>
+#include <bssrdf_creator.h>
 #include "parserstringhelpers.h"
 #include <fstream>
 #include "parameter_parser.h"
@@ -116,15 +116,15 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
-	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPU>(m_context, optix::make_uint2(160, 40), (int)10e5);
+	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPU>(m_context, BSSRDFRenderer::HEMISPHERE, optix::make_uint2(160, 40), (int)10e5);
 	mBssrdfReferenceSimulator->init();
 
-	mBssrdfModelSimulator = std::make_shared<BSSRDFHemisphereModel>(m_context);
+	mBssrdfModelSimulator = std::make_shared<BSSRDFRendererModel>(m_context);
 	mBssrdfModelSimulator->init();
 
 	set_render_mode(mCurrentRenderMode, mSimulate);
 
-	std::string ptx_path_output = get_path_ptx("render_bssrdf_hemisphere.cu");
+	std::string ptx_path_output = get_path_ptx("render_bssrdf.cu");
 	optix::Program ray_gen_program_output = m_context->createProgramFromPTXFile(ptx_path_output, "render_ref");
 
 	if (entry_point_output == -1)
@@ -136,7 +136,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 
 	mBSSRDFBufferTexture = m_context->createBuffer(RT_BUFFER_INPUT);
 	mBSSRDFBufferTexture->setFormat(RT_FORMAT_FLOAT);
-	mBSSRDFBufferTexture->setSize(mCurrentBssrdfRenderer->get_hemisphere_size().x, mCurrentBssrdfRenderer->get_hemisphere_size().y);
+	mBSSRDFBufferTexture->setSize(mCurrentBssrdfRenderer->get_size().x, mCurrentBssrdfRenderer->get_size().y);
 
 	mBSSRDFHemisphereTex = m_context->createTextureSampler();
 	mBSSRDFHemisphereTex->setFilteringModes(RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE);
@@ -196,9 +196,11 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 			void* source = mCurrentBssrdfRenderer->get_output_buffer()->map();
 			void* dest = mBSSRDFBufferTexture->map();
 
-			memcpy(mCurrentHemisphereData, source, mCurrentBssrdfRenderer->get_hemisphere_size().x*mCurrentBssrdfRenderer->get_hemisphere_size().y * sizeof(float));
-			memcpy(dest, mCurrentHemisphereData, mCurrentBssrdfRenderer->get_hemisphere_size().x*mCurrentBssrdfRenderer->get_hemisphere_size().y * sizeof(float));
-			normalize((float*)dest, (int)mCurrentBssrdfRenderer->get_storage_size());
+			memcpy(mCurrentHemisphereData, source, mCurrentBssrdfRenderer->get_size().x*mCurrentBssrdfRenderer->get_size().y * sizeof(float));
+			memcpy(dest, mCurrentHemisphereData, mCurrentBssrdfRenderer->get_size().x*mCurrentBssrdfRenderer->get_size().y * sizeof(float));
+
+			if(mCurrentBssrdfRenderer->get_shape() == BSSRDFRenderer::HEMISPHERE)
+				normalize((float*)dest, (int)mCurrentBssrdfRenderer->get_storage_size());
 			mCurrentBssrdfRenderer->get_output_buffer()->unmap();
 			mBSSRDFBufferTexture->unmap();
 		}
@@ -207,6 +209,7 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 
 		RTsize w, h;
 		result_buffer->getSize(w, h);
+		m_context["ior"]->setFloat(mCurrentBssrdfRenderer->mIor);
 		m_context->launch(entry_point_output, w, h);
 
 		frame++;
@@ -265,6 +268,17 @@ void FullBSSRDFGenerator::post_draw_callback()
 			set_render_mode(mCurrentRenderMode, def1 == 0? false : true);
 		}
 
+		const char * opts2[2] = { "Plane", "Hemisphere" };
+		static BSSRDFRenderer::OutputShape def2 = BSSRDFRenderer::HEMISPHERE;
+
+		if (ImmediateGUIDraw::Combo("Render type", (int*)&def2, opts2, 2, 2))
+		{
+			mCurrentBssrdfRenderer->set_shape(def2);
+			delete[] mCurrentHemisphereData;
+			mCurrentHemisphereData = new float[mCurrentBssrdfRenderer->get_storage_size()];
+			mBSSRDFBufferTexture->setSize(mCurrentBssrdfRenderer->get_size().x, mCurrentBssrdfRenderer->get_size().y);
+		}
+
 		if (!mSimulate)
 		{
 			std::string dipoles = "";
@@ -278,7 +292,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 			static ScatteringDipole::Type dipole;
 			if (ImmediateGUIDraw::Combo("Dipole", (int*)&dipole, dipoles.c_str(), ScatteringDipole::count()))
 			{
-				std::dynamic_pointer_cast<BSSRDFHemisphereModel>(mCurrentBssrdfRenderer)->set_dipole(dipole);
+				std::dynamic_pointer_cast<BSSRDFRendererModel>(mCurrentBssrdfRenderer)->set_dipole(dipole);
 			}
 		}
 
@@ -409,8 +423,8 @@ void FullBSSRDFGenerator::start_rendering()
 	size_t total_size = mParameters.size() * sizeof(float) * mCurrentBssrdfRenderer->get_storage_size();
 
 	std::vector<size_t> dims = mParameters.get_dimensions();
-	dims.push_back(mCurrentBssrdfRenderer->get_hemisphere_size().x);
-	dims.push_back(mCurrentBssrdfRenderer->get_hemisphere_size().y);
+	dims.push_back(mCurrentBssrdfRenderer->get_size().x);
+	dims.push_back(mCurrentBssrdfRenderer->get_size().y);
 
 	mExporter = std::make_unique<BSSRDFExporter>(current_render_task->get_destination_file(), dims, mParameters.parameters, mParameters.parameter_names);
 	
@@ -418,8 +432,8 @@ void FullBSSRDFGenerator::start_rendering()
 
 	if (mSimulate)
 	{
-		std::dynamic_pointer_cast<BSSRDFHemisphereSimulated>(mCurrentBssrdfRenderer)->set_samples(mSimulationSamplesPerFrame);
-		std::dynamic_pointer_cast<BSSRDFHemisphereSimulated>(mCurrentBssrdfRenderer)->set_max_iterations(mSimulationMaxIterations);
+		std::dynamic_pointer_cast<BSSRDFRendererSimulated>(mCurrentBssrdfRenderer)->set_samples(mSimulationSamplesPerFrame);
+		std::dynamic_pointer_cast<BSSRDFRendererSimulated>(mCurrentBssrdfRenderer)->set_max_iterations(mSimulationMaxIterations);
 	}	mCurrentBssrdfRenderer->set_read_only(true);
 
 	float extinction = 1.0f;
@@ -438,7 +452,7 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 			Logger::info << "Simulation frame " << mState.tostring() << " complete. (" << flatten_index(mState.mData, mParameters.get_dimensions()) << "/" << mParameters.get_size() << ") "; 
 			if (mSimulate)
 			{
-				Logger::info << std::dynamic_pointer_cast<BSSRDFHemisphereSimulated>(mCurrentBssrdfRenderer)->get_samples() << " samples. ";
+				Logger::info << std::dynamic_pointer_cast<BSSRDFRendererSimulated>(mCurrentBssrdfRenderer)->get_samples() << " samples. ";
 			}
 			Logger::info <<  std::endl;
 			float extinction = 1.0f;
@@ -526,7 +540,7 @@ void FullBSSRDFGenerator::set_render_mode(RenderMode m, bool isSimulated)
 	}
 
 	if(m == RENDER_BSSRDF)
-		mCurrentBssrdfRenderer = mSimulate? std::static_pointer_cast<BSSRDFHemisphereRenderer>(mBssrdfReferenceSimulator) : std::static_pointer_cast<BSSRDFHemisphereRenderer>(mBssrdfModelSimulator);
+		mCurrentBssrdfRenderer = mSimulate? std::static_pointer_cast<BSSRDFRenderer>(mBssrdfReferenceSimulator) : std::static_pointer_cast<BSSRDFRenderer>(mBssrdfModelSimulator);
 }
 
 std::vector<size_t> FullBSSRDFParameters::get_dimensions()

@@ -46,18 +46,6 @@
     <CudaCompile Include="debug_camera.cu">
       <Filter>CUDA_files\Cameras</Filter>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\reference_bssrdf.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\render_reference_bssrdf_gpu.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\render_bssrdf_hemisphere.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
     <CudaCompile Include="CUDA_files\planar_bssrdf.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
@@ -96,6 +84,15 @@
     </CudaCompile>
     <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu">
       <Filter>CUDA_files\Standard Shaders</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\reference_bssrdf.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\render_bssrdf.cu">
+      <Filter>CUDA_files</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
@@ -268,7 +265,7 @@
     </ClCompile>
     <ClCompile Include="full_bssrdf_generator.cpp" />
     <ClCompile Include="bssrdf_loader.cpp" />
-    <ClCompile Include="bssrdf_hemisphere_creator.cpp">
+    <ClCompile Include="bssrdf_creator.cpp">
       <Filter>Source Files\BSSRDF</Filter>
     </ClCompile>
   </ItemGroup>
@@ -591,7 +588,7 @@
     <ClInclude Include="forward_dipole.h">
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
-    <ClInclude Include="bssrdf_hemisphere_creator.h">
+    <ClInclude Include="bssrdf_creator.h">
       <Filter>Header Files\BSSRDFs</Filter>
     </ClInclude>
   </ItemGroup>

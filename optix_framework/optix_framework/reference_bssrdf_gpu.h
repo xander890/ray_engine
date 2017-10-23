@@ -1,11 +1,11 @@
 #pragma once
 #include "reference_bssrdf.h"
-#include "bssrdf_hemisphere_creator.h"
+#include "bssrdf_creator.h"
 
-class ReferenceBSSRDFGPU : public BSSRDFHemisphereSimulated
+class ReferenceBSSRDFGPU : public BSSRDFRendererSimulated
 {
 public:
-	ReferenceBSSRDFGPU(optix::Context & ctx, const optix::uint2 & hemisphere = optix::make_uint2(160, 40), const unsigned int samples = (int)1e8) : BSSRDFHemisphereSimulated(ctx, hemisphere,samples)
+	ReferenceBSSRDFGPU(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::uint2 & shape_size = optix::make_uint2(160, 40), const unsigned int samples = (int)1e8) : BSSRDFRendererSimulated(ctx, shape, shape_size, samples)
 	{
 	}
 
