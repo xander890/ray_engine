@@ -323,6 +323,16 @@ bool ObjScene::draw_gui()
 		}
 		current_render_task->on_draw();
 
+		if (!current_render_task->is_active() && ImmediateGUIDraw::Button("Start task"))
+		{
+			changed = true;
+			current_render_task->start();
+		}
+
+		if (current_render_task->is_active() && ImmediateGUIDraw::Button("End task"))
+		{
+			current_render_task->end();
+		}
 	}
 
 	return changed;

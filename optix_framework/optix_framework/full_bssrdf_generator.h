@@ -6,6 +6,7 @@
 #include <map>
 #include "string_utils.h"
 #include "logger.h"
+#include "render_task.h"
 
 #define INVALID_INDEX ((size_t)(-1))
 class ImmediateGUI;
@@ -174,7 +175,7 @@ public:
 	void post_draw_callback() override;
 
 	void start_rendering();
-	void update_rendering();
+	void update_rendering(float deltaTime);
 	void end_rendering();
 
 	bool key_pressed(int key, int x, int y) override;
@@ -197,16 +198,12 @@ private:
 	float mScaleMultiplier = 1.f;
 	int mShowFalseColors = 1;
 	std::unique_ptr<ImmediateGUI> gui;
-	bool is_rendering = false;
 
 	FullBSSRDFParameters mParameters;
 	ParameterState mState;
-	int mSimulationCurrentFrame = 0;
-
-	std::string mFilePath = "test.bssrdf";
 
 	int mSimulationSamplesPerFrame = (int)1e7;
-	int mSimulationFrames = 100;
+	int mSimulationMaxFrames = 100;
 	int mSimulationMaxIterations = (int)1e9;
 
 	float * mCurrentHemisphereData = nullptr;
@@ -219,5 +216,6 @@ private:
 	std::string mExternalFilePath = "test.bssrdf";
 
 	void set_render_mode(RenderMode toapply);
+	std::unique_ptr<RenderTask> current_render_task;
 };
 

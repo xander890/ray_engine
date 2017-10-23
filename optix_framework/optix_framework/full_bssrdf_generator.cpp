@@ -10,6 +10,7 @@
 #include <sstream>
 #include "reference_bssrdf_gpu.h"
 #include "GL\glew.h"
+#include "cputimer.h"
 #include "GLFW\glfw3.h"
 #pragma warning(disable : 4996)
 
@@ -90,6 +91,7 @@ std::string gui_string(std::vector<float> & data)
 
 FullBSSRDFGenerator::FullBSSRDFGenerator(const char * config ) : config_file(config)
 {
+	current_render_task = std::make_unique<RenderTaskTimeorFrames>(100, 10.0f, "test.bssrdf", false);
 }
 
 FullBSSRDFGenerator::~FullBSSRDFGenerator()
@@ -145,24 +147,6 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 
 	gui = std::make_unique<ImmediateGUI>(window);
 
-	//FullBSSRDFParameters p;
-
-	//int m = 0;
-	//long long sum = 0;
-	//for (int i = 0; i < p.eta.size(); i++)
-	//	for (int i2 = 0; i2 < p.g.size(); i2++)
-	//		for (int i3 = 0; i3 < p.albedo.size(); i3++)
-	//			for (int i4 = 0; i4 < p.theta_s.size(); i4++)
-	//				for (int i5 = 0; i5 < p.r.size(); i5++)
-	//					for (int i6 = 0; i6 < p.theta_i.size(); i6++)
-	//					{
-	//						sum += (long long)p.flatten(i6, i5, i4, i3, i2, i);
-	//						m = max(m, (int)p.flatten(i6, i5, i4, i3, i2, i));
-	//					}
-	//long long tot = (long)(p.eta.size()* p.g.size()*p.albedo.size()*p.theta_s.size()*p.r.size()*p.theta_i.size());
-	//Logger::info << m << " " << tot - 1;
-	//Logger::info << " " << sum << " " << tot*(tot-1)/2 << std::endl;
-
 	if (mCurrentHemisphereData == nullptr)
 	{
 		mCurrentHemisphereData = new float[creator->get_storage_size()];
@@ -191,6 +175,8 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 
 	if (!mPaused)
 	{
+		double time = currentTime();
+
 		m_context["frame"]->setInt(frame);
 
 		creator->load_data();
@@ -202,11 +188,6 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 			m_context["show_false_colors"]->setUint(mShowFalseColors);
 			m_context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
 
-			if (is_rendering)
-			{
-				int i = 0;
-			}
-
 			void* source = creator->get_output_buffer()->map();
 			void* dest = mBSSRDFBufferTexture->map();
 
@@ -217,12 +198,15 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 			mBSSRDFBufferTexture->unmap();
 		}
 
+		double time1 = currentTime();
+
 		RTsize w, h;
 		result_buffer->getSize(w, h);
 		m_context->launch(entry_point_output, w, h);
 
 		frame++;
-		update_rendering();
+
+		update_rendering(static_cast<float>(time1 - time));
 	}
 }
 
@@ -345,7 +329,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 			if (ImGui::InputText((std::string("Simulated ") + mParameters.parameter_names[i]).c_str(), data[i], 256, ImGuiInputTextFlags_EnterReturnsTrue))
 			{
 				std::vector<float> c = tovalue<std::vector<float>>(std::string(data[i]));
-				std::string s = gui_string(mParameters.parameters[i]);
+				std::string s = gui_string(c);
 				s.copy(&data[i][0], s.size());
 				mParameters.parameters[i].clear();
 				mParameters.parameters[i].insert(mParameters.parameters[i].begin(), c.begin(), c.end());
@@ -355,27 +339,32 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 	if (ImmediateGUIDraw::CollapsingHeader("Simulation Parameters"))
 	{
-		ImmediateGUIDraw::InputText("Path##BSSRDFDestPath", &mFilePath[0], mFilePath.size(), ImGuiInputTextFlags_ReadOnly);
+		ImmediateGUIDraw::InputInt("Simulation Samples per frame", &mSimulationSamplesPerFrame);
+		ImmediateGUIDraw::InputInt("Maximum Simulation Frames", &mSimulationMaxFrames);
+		ImmediateGUIDraw::InputInt("Maximum Scattering evts./frame", &mSimulationMaxIterations);
 
-		std::string filePath;
-		if (ImmediateGUIDraw::Button("Choose bssrdf path...##BSSRDFDestPathButton"))
+		static int current_item = 2;
+		const char * items[3] = { "Frame based", "Time based", "Time/Frame (first one to finish)" };
+		if (!current_render_task->is_active())
 		{
-			std::string filePath;
-			if (Dialogs::saveFileDialog(filePath))
+			if (ImmediateGUIDraw::Combo("Render task type", &current_item, items, 3, 3))
 			{
-				mFilePath = filePath;
+				if (current_item == 0)
+					current_render_task = std::make_unique<RenderTaskFrames>(100, current_render_task->get_destination_file(), false);
+				else if(current_item == 1)
+					current_render_task = std::make_unique<RenderTaskTime>(10.0f, current_render_task->get_destination_file(), false);
+				else
+					current_render_task = std::make_unique<RenderTaskTimeorFrames>(100, 10.0f, current_render_task->get_destination_file(), false);
 			}
 		}
-		ImmediateGUIDraw::InputInt("Simulation Samples per frame", &mSimulationSamplesPerFrame);
-		ImmediateGUIDraw::InputInt("Simulation Frames", &mSimulationFrames);
-		ImmediateGUIDraw::InputInt("Simulation Maximum Iterations", &mSimulationMaxIterations);
+		current_render_task->on_draw();
 	}
 
-	if (!is_rendering && ImmediateGUIDraw::Button("Start Simulation"))
+	if (!current_render_task->is_active() && ImmediateGUIDraw::Button("Start Simulation"))
 	{
 		start_rendering();
 	}
-	if (is_rendering && ImmediateGUIDraw::Button("End Simulation"))
+	if (current_render_task->is_active() && ImmediateGUIDraw::Button("End Simulation"))
 	{
 		end_rendering();
 	}
@@ -386,20 +375,18 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 void FullBSSRDFGenerator::start_rendering()
 {
-	is_rendering = true;
-
+	current_render_task->start();
 	size_t total_size = mParameters.size() * sizeof(float) * creator->get_storage_size();
 
 	std::vector<size_t> dims = mParameters.get_dimensions();
 	dims.push_back(creator->get_hemisphere_size().x);
 	dims.push_back(creator->get_hemisphere_size().y);
 
-	mExporter = std::make_unique<BSSRDFExporter>(mFilePath, dims, mParameters.parameters, mParameters.parameter_names);
+	mExporter = std::make_unique<BSSRDFExporter>(current_render_task->get_destination_file(), dims, mParameters.parameters, mParameters.parameter_names);
 	
 	mState = ParameterState({ 0,0,0,0,0,0 });
 	creator->set_samples(mSimulationSamplesPerFrame);
 	creator->set_max_iterations(mSimulationMaxIterations);
-	mSimulationCurrentFrame = 0;
 	creator->set_read_only(true);
 
 	float extinction = 1.0f;
@@ -409,11 +396,11 @@ void FullBSSRDFGenerator::start_rendering()
 	creator->set_material_parameters(albedo, extinction, g, eta);
 }
 
-void FullBSSRDFGenerator::update_rendering()
+void FullBSSRDFGenerator::update_rendering(float deltaTime)
 {
-	if (is_rendering)
+	if (current_render_task->is_active())
 	{
-		if (mSimulationCurrentFrame == mSimulationFrames - 1)
+		if (current_render_task->is_finished())
 		{
 			Logger::info << "Simulation frame "<< mState.tostring() <<" complete. ("<< flatten_index(mState.mData, mParameters.get_dimensions()) <<"/"<< mParameters.get_size() <<") " << creator->get_samples() << " samples. " << std::endl;
 			float extinction = 1.0f;
@@ -426,24 +413,27 @@ void FullBSSRDFGenerator::update_rendering()
 			mExporter->set_hemisphere(mCurrentHemisphereData, mState.mData);
 
 			mState = mParameters.next(mState);
-			mSimulationCurrentFrame = 0;
 
 			if (!mParameters.is_valid(mState))
 			{
 				end_rendering();
 			}
+			else
+			{
+				current_render_task->start();
+			}
 
 		}
 		else
 		{
-			mSimulationCurrentFrame++;
+			current_render_task->update(deltaTime);
 		}
 	}
 }
 
 void FullBSSRDFGenerator::end_rendering()
 {
-	is_rendering = false;
+	current_render_task->end();
 	creator->set_read_only(false);
 }
 
