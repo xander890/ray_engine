@@ -113,8 +113,8 @@ void BSSRDFRenderer::set_shape(OutputShape shape)
 {
 	mOutputShape = shape;
 	mShapeSize = default_size(shape);
-	resize_glbo_buffer<float>(mBSSRDFBufferIntermediate, mShapeSize.x*mShapeSize.y);
-	resize_glbo_buffer<float>(mBSSRDFBuffer, mShapeSize.x*mShapeSize.y);
+	//resize_glbo_buffer<float>(mBSSRDFBufferIntermediate, mShapeSize.x*mShapeSize.y);
+	//resize_glbo_buffer<float>(mBSSRDFBuffer, mShapeSize.x*mShapeSize.y);
 
 	mBSSRDFBufferIntermediate->setSize(mShapeSize.x, mShapeSize.y);
 	mBSSRDFBuffer->setSize(mShapeSize.x, mShapeSize.y);

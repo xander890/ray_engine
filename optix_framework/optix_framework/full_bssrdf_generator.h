@@ -111,7 +111,7 @@ public:
 		ParameterState val = state;
 		std::vector<size_t> dims = get_dimensions();
 		size_t i;
-		for (i = dims.size() - 1; i > 0; i--)
+		for (i = dims.size() - 1; i >= 0; i--)
 		{
 			// increment returns true if overflow, so we keep adding.
 			if (!increment(state[i], dims[i], val[i]))
@@ -121,7 +121,7 @@ public:
 		}
 
 		// When the last index overflows.
-		if (i == 0)
+		if (i == -1)
 		{
 			return invalid_index;
 		}

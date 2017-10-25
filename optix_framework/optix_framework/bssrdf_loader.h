@@ -29,8 +29,8 @@ public:
 	size_t get_material_slice_size();
 	size_t get_hemisphere_size();
 	const std::map<size_t, std::vector<float>>& get_parameters();
-	void load_material_slice(float * bssrdf_data, const std::vector<size_t> & idx);
-	void load_hemisphere(float * bssrdf, const std::vector<size_t> & idx);
+	bool load_material_slice(float * bssrdf_data, const std::vector<size_t> & idx);
+	bool load_hemisphere(float * bssrdf, const std::vector<size_t> & idx);
 
 private:
 	bool parse_header(const std::map<size_t, std::string> & names);

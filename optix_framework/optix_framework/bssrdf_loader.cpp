@@ -89,10 +89,13 @@ const std::map<size_t, std::vector<float>>& BSSRDFLoader::get_parameters()
 	return mParameters;
 }
 
-void BSSRDFLoader::load_material_slice(float * bssrdf_data, const std::vector<size_t>& idx)
+bool BSSRDFLoader::load_material_slice(float * bssrdf_data, const std::vector<size_t>& idx)
 {
 	if (idx.size() != 3)
+	{
+		return false;
 		Logger::error << "Material index is 3 dimensional." << std::endl;
+	}
 #ifdef USE_SMALL_FILES
 	size_t pos = 0;
 	std::string filename = get_filename(mFileName, idx, mParameters);
@@ -109,21 +112,32 @@ void BSSRDFLoader::load_material_slice(float * bssrdf_data, const std::vector<si
 	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_material_slice_size() * sizeof(float));
 	ifs.close();
 #endif
+	return true;
 }
 
-void BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t>& idx)
+bool BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t>& idx)
 {
 	if (idx.size() != 6)
+	{
 		Logger::error << "Hemisphere index is 6 dimensional." << std::endl;
-
+		return false;
+	}
 #ifdef USE_SMALL_FILES
 	std::vector<size_t> dims = mDimensions;
 	dims[eta_index] = dims[albedo_index] = dims[g_index] = 1;
 	size_t pos = flatten_index({ 0, 0, 0, idx[3], idx[4], idx[5], 0, 0 }, dims) * sizeof(float);
-	std::ifstream ifs;
-	ifs.open(get_filename(mFileName, idx, mParameters), std::ofstream::in | std::ofstream::binary);
-	if (!ifs.good())
-		Logger::error << "File not found. " << std::endl;
+	std::string s = get_filename(mFileName, idx, mParameters);
+	if (!file_exists(s))
+	{
+		//Logger::error << "File not found. " << s << std::endl;
+		return false;
+	}
+	else
+	{
+		Logger::info << "File found. " << std::endl;
+	}
+
+	std::ifstream ifs(s, std::ofstream::in | std::ofstream::binary);
 	ifs.seekg(pos);
 	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_hemisphere_size() * sizeof(float));
 	ifs.close();
@@ -135,6 +149,7 @@ void BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t
 	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_hemisphere_size() * sizeof(float));
 	ifs.close();
 #endif
+	return true;
 }
 	
 bool BSSRDFLoader::parse_header(const std::map<size_t, std::string> & names)
