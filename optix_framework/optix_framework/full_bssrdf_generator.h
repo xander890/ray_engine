@@ -211,6 +211,7 @@ private:
 
 	float * mCurrentHemisphereData = nullptr;
 	bool mPaused = false;
+	bool mFastMode = false;
 	RenderMode mCurrentRenderMode = RENDER_BSSRDF;
 	std::unique_ptr<BSSRDFExporter> mExporter = nullptr;
 	std::unique_ptr<BSSRDFLoader> mLoader = nullptr;

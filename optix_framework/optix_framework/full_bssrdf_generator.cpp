@@ -194,23 +194,29 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 			m_context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
 
 			void* source = mCurrentBssrdfRenderer->get_output_buffer()->map();
-			void* dest = mBSSRDFBufferTexture->map();
 
 			memcpy(mCurrentHemisphereData, source, mCurrentBssrdfRenderer->get_size().x*mCurrentBssrdfRenderer->get_size().y * sizeof(float));
-			memcpy(dest, mCurrentHemisphereData, mCurrentBssrdfRenderer->get_size().x*mCurrentBssrdfRenderer->get_size().y * sizeof(float));
+			if (!mFastMode)
+			{
+				void* dest = mBSSRDFBufferTexture->map();
+				memcpy(dest, mCurrentHemisphereData, mCurrentBssrdfRenderer->get_size().x*mCurrentBssrdfRenderer->get_size().y * sizeof(float));
 
-			if(mCurrentBssrdfRenderer->get_shape() == BSSRDFRenderer::HEMISPHERE)
-				normalize((float*)dest, (int)mCurrentBssrdfRenderer->get_storage_size());
+				if (mCurrentBssrdfRenderer->get_shape() == BSSRDFRenderer::HEMISPHERE)
+					normalize((float*)dest, (int)mCurrentBssrdfRenderer->get_storage_size());
+				mBSSRDFBufferTexture->unmap();
+			}
 			mCurrentBssrdfRenderer->get_output_buffer()->unmap();
-			mBSSRDFBufferTexture->unmap();
 		}
 
 		double time1 = currentTime();
 
-		RTsize w, h;
-		result_buffer->getSize(w, h);
-		m_context["ior"]->setFloat(mCurrentBssrdfRenderer->mIor);
-		m_context->launch(entry_point_output, w, h);
+		if (!mFastMode)
+		{
+			RTsize w, h;
+			result_buffer->getSize(w, h);
+			m_context["ior"]->setFloat(mCurrentBssrdfRenderer->mIor);
+			m_context->launch(entry_point_output, w, h);
+		}
 
 		frame++;
 
@@ -251,6 +257,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors); 
 	ImmediateGUIDraw::SameLine();
 	ImmediateGUIDraw::Checkbox("Pause", (bool*)&mPaused);
+	ImmediateGUIDraw::Checkbox("Fast Mode", (bool*)&mFastMode);
 
 	const char * comboelements[2] = { "Render BSSRDF", "Show Existing Empirical BSSRDF" };
 	if (ImmediateGUIDraw::Combo("Select Render mode", (int*)&mCurrentRenderMode, comboelements, 2, 2))
@@ -441,6 +448,7 @@ void FullBSSRDFGenerator::start_rendering()
 	mParameters.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
 	mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 	mCurrentBssrdfRenderer->set_material_parameters(albedo, extinction, g, eta);
+	mFastMode = true;
 }
 
 void FullBSSRDFGenerator::update_rendering(float deltaTime)
