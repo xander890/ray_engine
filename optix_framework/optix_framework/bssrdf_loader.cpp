@@ -251,7 +251,7 @@ BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<s
 
 size_t BSSRDFExporter::get_material_slice_size()
 {
-	return get_hemisphere_size() * mDimensions[albedo_index] * mDimensions[g_index] * mDimensions[eta_index];
+	return get_hemisphere_size() * mDimensions[theta_i_index] * mDimensions[theta_s_index] * mDimensions[r_index];
 }
 
 size_t BSSRDFExporter::get_hemisphere_size()

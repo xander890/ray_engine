@@ -8,6 +8,7 @@
 #include "string_utils.h"
 #include "logger.h"
 #include "render_task.h"
+#include <algorithm>
 
 #define INVALID_INDEX ((size_t)(-1))
 class ImmediateGUI;
@@ -64,7 +65,7 @@ public:
 		{ theta_s_index,		{ 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 } },
 		{ albedo_index,			{ 0.01f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 0.99f } },
 		{ g_index,				{ -0.9f, -0.7f, -0.5f, -0.3f, 0.0f, 0.3f, 0.5f, 0.7f, 0.9f, 0.95f, 0.99f } },
-		{ eta_index,			{1.0f, 1.1f, 1.2f, 1.3f, 1.4f } }
+		{ eta_index,			{ 1.0f, 1.1f, 1.2f, 1.3f, 1.4f } }
 	};
 
 	//std::map<size_t, std::vector<float>> parameters = {
@@ -106,12 +107,33 @@ public:
 		eta = parameters[eta_index][state[eta_index]];
 	}
 
+	bool get_single_index(const float val, const size_t idx, size_t & idx_res)
+	{
+		auto res = std::find_if(std::begin(parameters[idx]), std::end(parameters[idx]), [val](float & f)->bool { return val - f < 1e-6f; });
+		if (res == std::end(parameters[idx]))
+			return false;
+		idx_res = std::distance(std::begin(parameters[idx]), res);
+		return true;
+	}
+
+	bool get_index(const float theta_i, const float r, const float theta_s, const float albedo, const float g, const float eta, ParameterState & state)
+	{
+		bool success = true;
+		success &= get_single_index(theta_i, theta_i_index, state.mData[theta_i_index]);
+		success &= get_single_index(r, r_index, state.mData[r_index]);
+		success &= get_single_index(theta_s, theta_s_index, state.mData[theta_s_index]);
+		success &= get_single_index(albedo, albedo_index, state.mData[albedo_index]);
+		success &= get_single_index(g, g_index, state.mData[g_index]);
+		success &= get_single_index(eta, eta_index, state.mData[eta_index]);
+		return success;
+	}
+
 	ParameterState next(const ParameterState & state)
 	{
 		ParameterState val = state;
 		std::vector<size_t> dims = get_dimensions();
-		size_t i;
-		for (i = dims.size() - 1; i >= 0; i--)
+		int i;
+		for (i = (int)dims.size() - 1; i >= 0; i--)
 		{
 			// increment returns true if overflow, so we keep adding.
 			if (!increment(state[i], dims[i], val[i]))
@@ -203,7 +225,8 @@ private:
 	int mShowFalseColors = 1;
 	std::unique_ptr<ImmediateGUI> gui;
 
-	FullBSSRDFParameters mParameters;
+	FullBSSRDFParameters mParametersSimulation;
+	FullBSSRDFParameters mParametersOriginal;
 	ParameterState mState;
 
 	int mSimulationSamplesPerFrame = (int)1e7;
