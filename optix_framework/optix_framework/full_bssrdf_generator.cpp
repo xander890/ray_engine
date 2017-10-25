@@ -333,7 +333,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 					std::vector<size_t> dims;
 					mLoader->get_dimensions(dims);
 					float * data = (float*)mExternalBSSRDFBuffer->map();
-					mLoader->load_hemisphere(data, { 0,0,0,0,0,0 });
+					mLoader->load_hemisphere(data, index);
 					normalize(data, dims[phi_o_index] * dims[theta_o_index]);
 					mExternalBSSRDFBuffer->unmap();
 				}

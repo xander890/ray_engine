@@ -122,6 +122,8 @@ void BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t
 	size_t pos = flatten_index({ 0, 0, 0, idx[3], idx[4], idx[5], 0, 0 }, dims) * sizeof(float);
 	std::ifstream ifs;
 	ifs.open(get_filename(mFileName, idx, mParameters), std::ofstream::in | std::ofstream::binary);
+	if (!ifs.good())
+		Logger::error << "File not found. " << std::endl;
 	ifs.seekg(pos);
 	ifs.read(reinterpret_cast<char*>(bssrdf_data), get_hemisphere_size() * sizeof(float));
 	ifs.close();
