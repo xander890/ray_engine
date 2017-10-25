@@ -468,10 +468,15 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 void FullBSSRDFGenerator::start_rendering()
 {
-	Logger::info << "Simulation started." << std::endl;
-	Logger::info << "Eta:    " << tostring(mParametersSimulation.parameters[eta_index]) << std::endl;
-	Logger::info << "G:      " << tostring(mParametersSimulation.parameters[g_index]) << std::endl;
-	Logger::info << "Albedo: " << tostring(mParametersSimulation.parameters[albedo_index]) << std::endl;
+	Logger::info << "Simulation started. " << std::endl;
+	Logger::info << current_render_task->to_string() << std::endl;
+	Logger::info << "Destination file: " << current_render_task->get_destination_file() << std::endl;
+	Logger::info << "Eta:     " << tostring(mParametersSimulation.parameters[eta_index]) << std::endl;
+	Logger::info << "G:       " << tostring(mParametersSimulation.parameters[g_index]) << std::endl;
+	Logger::info << "Albedo:  " << tostring(mParametersSimulation.parameters[albedo_index]) << std::endl;
+	Logger::info << "Theta s: " << tostring(mParametersSimulation.parameters[theta_s_index]) << std::endl;
+	Logger::info << "R:       " << tostring(mParametersSimulation.parameters[r_index]) << std::endl;
+	Logger::info << "Theta i: " << tostring(mParametersSimulation.parameters[theta_i_index]) << std::endl;
 	current_render_task->start();
 
 	std::vector<size_t> dims = mParametersOriginal.get_dimensions();

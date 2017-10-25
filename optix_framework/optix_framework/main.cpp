@@ -64,6 +64,7 @@ int main( int argc, char** argv )
 	if (arg == "-b" || arg == "--bssrdf-generator")
 	{
 		start_bssrdf_generator = true;
+		output_file = "test.bssrdf";
 	}
 	if (arg == "--no-display")
 	{
@@ -162,7 +163,7 @@ int main( int argc, char** argv )
 		{
 			task = std::make_unique<RenderTaskTimeorFrames>(frames, time, output_file, true);
 		}
-		if (frames > 0)
+		else if (frames > 0)
 		{
 			task = std::make_unique<RenderTaskFrames>(frames, output_file, true);
 		}
