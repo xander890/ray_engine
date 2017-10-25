@@ -336,7 +336,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 	{
 		if (mLoader != nullptr)
 		{
-			static std::vector<size_t> index(6);
+			static ParameterState index({0,0,0,0,0,0});
 			for (int i = 0; i < 6; i++)
 			{
 				std::string s;
@@ -344,14 +344,20 @@ void FullBSSRDFGenerator::post_draw_callback()
 				{
 					s += std::to_string(mLoader->get_parameters().at(i)[k]) + '\0';
 				}
-				if (ImmediateGUIDraw::Combo(mParametersOriginal.parameter_names[i].c_str(), (int*)&index[i], s.c_str(), (int)mLoader->get_parameters().at(i).size()))
+				if (ImmediateGUIDraw::Combo(mParametersOriginal.parameter_names[i].c_str(), (int*)&index.mData[i], s.c_str(), (int)mLoader->get_parameters().at(i).size()))
 				{
 					std::vector<size_t> dims;
 					mLoader->get_dimensions(dims);
 					float * data = (float*)mExternalBSSRDFBuffer->map();
-					mLoader->load_hemisphere(data, index);
+					mLoader->load_hemisphere(data, index.mData);
 					normalize(data, dims[phi_o_index] * dims[theta_o_index]);
 					mExternalBSSRDFBuffer->unmap();
+					
+
+					float theta_i; float r; float theta_s; float albedo;  float g; float eta;
+					mParametersSimulation.get_parameters(index, theta_i, r, theta_s, albedo, g, eta);
+					mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
+					mCurrentBssrdfRenderer->set_material_parameters(albedo, 1, g, eta);
 				}
 			}
 		}
