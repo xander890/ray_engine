@@ -12,6 +12,7 @@
 #include "GL\glew.h"
 #include "cputimer.h"
 #include "GLFW\glfw3.h"
+#include "GLFWDisplay.h"
 #pragma warning(disable : 4996)
 
 
@@ -129,7 +130,15 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	if (entry_point_output == -1)
 		entry_point_output = add_entry_point(m_context, ray_gen_program_output);
 
-	result_buffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
+	if (GLFWDisplay::isDisplayAvailable())
+	{
+		result_buffer = create_glbo_buffer < optix::float4 >(m_context, RT_BUFFER_INPUT_OUTPUT, 1024 * 1024);
+	}
+	else
+	{
+		result_buffer = create_buffer < optix::float4 >(m_context, RT_BUFFER_INPUT_OUTPUT, 1024 * 1024);
+	}
+
 	result_buffer->setFormat(RT_FORMAT_FLOAT4);
 	result_buffer->setSize(1024, 1024);
 
@@ -327,7 +336,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 	{
 		if (mLoader != nullptr)
 		{
-			static std::vector<size_t> index(6);
+			static ParameterState index({0,0,0,0,0,0});
 			for (int i = 0; i < 6; i++)
 			{
 				std::string s;
@@ -335,14 +344,20 @@ void FullBSSRDFGenerator::post_draw_callback()
 				{
 					s += std::to_string(mLoader->get_parameters().at(i)[k]) + '\0';
 				}
-				if (ImmediateGUIDraw::Combo(mParametersOriginal.parameter_names[i].c_str(), (int*)&index[i], s.c_str(), (int)mLoader->get_parameters().at(i).size()))
+				if (ImmediateGUIDraw::Combo(mParametersOriginal.parameter_names[i].c_str(), (int*)&index.mData[i], s.c_str(), (int)mLoader->get_parameters().at(i).size()))
 				{
 					std::vector<size_t> dims;
 					mLoader->get_dimensions(dims);
 					float * data = (float*)mExternalBSSRDFBuffer->map();
-					mLoader->load_hemisphere(data, index);
+					mLoader->load_hemisphere(data, index.mData);
 					normalize(data, dims[phi_o_index] * dims[theta_o_index]);
 					mExternalBSSRDFBuffer->unmap();
+					
+
+					float theta_i; float r; float theta_s; float albedo;  float g; float eta;
+					mParametersSimulation.get_parameters(index, theta_i, r, theta_s, albedo, g, eta);
+					mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
+					mCurrentBssrdfRenderer->set_material_parameters(albedo, 1, g, eta);
 				}
 			}
 		}
@@ -453,10 +468,15 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 void FullBSSRDFGenerator::start_rendering()
 {
-	Logger::info << "Simulation started." << std::endl;
-	Logger::info << "Eta:    " << tostring(mParametersSimulation.parameters[eta_index]) << std::endl;
-	Logger::info << "G:      " << tostring(mParametersSimulation.parameters[g_index]) << std::endl;
-	Logger::info << "Albedo: " << tostring(mParametersSimulation.parameters[albedo_index]) << std::endl;
+	Logger::info << "Simulation started. " << std::endl;
+	Logger::info << current_render_task->to_string() << std::endl;
+	Logger::info << "Destination file: " << current_render_task->get_destination_file() << std::endl;
+	Logger::info << "Eta:     " << tostring(mParametersSimulation.parameters[eta_index]) << std::endl;
+	Logger::info << "G:       " << tostring(mParametersSimulation.parameters[g_index]) << std::endl;
+	Logger::info << "Albedo:  " << tostring(mParametersSimulation.parameters[albedo_index]) << std::endl;
+	Logger::info << "Theta s: " << tostring(mParametersSimulation.parameters[theta_s_index]) << std::endl;
+	Logger::info << "R:       " << tostring(mParametersSimulation.parameters[r_index]) << std::endl;
+	Logger::info << "Theta i: " << tostring(mParametersSimulation.parameters[theta_i_index]) << std::endl;
 	current_render_task->start();
 
 	std::vector<size_t> dims = mParametersOriginal.get_dimensions();
@@ -604,4 +624,12 @@ std::vector<size_t> FullBSSRDFParameters::get_dimensions()
 	for (int i = 0; i < dims.size(); i++)
 		dims[i] = parameters[i].size();
 	return dims;
+}
+
+void FullBSSRDFGenerator::set_render_task(std::unique_ptr<RenderTask>& task)
+{
+	if (!current_render_task->is_active())
+		current_render_task = std::move(task);
+	else
+		Logger::error << "Wait of end of current task before setting a new one." << std::endl;
 }

@@ -12,9 +12,11 @@ public:
 	virtual bool is_active() = 0;
 	virtual bool is_finished() = 0;
 	virtual std::string get_progress_string() = 0;
+	virtual std::string to_string() = 0;
 	virtual bool on_draw();
 	virtual void end();
 	const std::string& get_destination_file() { return destination_file; }
+	void set_destination_file(const std::string& file) { destination_file = file; }
 
 protected:
 	bool close_program_on_exit = false;
@@ -33,6 +35,7 @@ public:
 	void end() override;
 	bool on_draw() override;
 
+	std::string to_string() override;
 private:
 	int destination_samples;
 	int current_frame;
@@ -50,6 +53,7 @@ public:
 	void end() override;
 	bool on_draw() override;
 
+	std::string to_string() override;
 private:
 	float destination_time = 10.0f;
 	float current_time;
@@ -66,6 +70,7 @@ public:
 	std::string get_progress_string() override;
 	void end() override;
 	bool on_draw() override;
+	std::string to_string() override;
 private:
 	float destination_time = 10.0f;
 	float current_time;

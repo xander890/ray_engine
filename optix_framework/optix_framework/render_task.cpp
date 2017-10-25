@@ -92,6 +92,11 @@ bool RenderTaskFrames::on_draw()
 	return changed | RenderTask::on_draw();
 }
 
+std::string RenderTaskFrames::to_string()
+{
+	return std::string("Frame based. Stopping at ") + std::to_string(destination_samples) + " frames";
+}
+
 RenderTaskTime::RenderTaskTime(float destination_time, const std::string& destination_file, bool close_program_on_exit = false):
 	RenderTask(destination_file, close_program_on_exit), destination_time(destination_time), current_time(FLT_MIN)
 {
@@ -138,6 +143,11 @@ bool RenderTaskTime::on_draw()
 		changed |= ImmediateGUIDraw::InputFloat("Time (s)", &destination_time);
 	}
 	return changed | RenderTask::on_draw();
+}
+
+std::string RenderTaskTime::to_string()
+{
+	return std::string("Time based. Stopping at ") + std::to_string(destination_time) + " seconds.";
 }
 
 RenderTaskTimeorFrames::RenderTaskTimeorFrames(int max_frames, float dest_time, const std::string & destination_file, bool close_program_on_exit) : RenderTask(destination_file, close_program_on_exit)
@@ -194,5 +204,10 @@ bool RenderTaskTimeorFrames::on_draw()
 		changed |= ImmediateGUIDraw::InputFloat("Time (s)", &destination_time);
 	}
 	return changed | RenderTask::on_draw();
+}
+
+std::string RenderTaskTimeorFrames::to_string()
+{
+	return std::string("Time/Frame based. Stopping at ") + std::to_string(destination_samples) + " frames or " + std::to_string(destination_time) + " seconds, whichever first.";
 }
 

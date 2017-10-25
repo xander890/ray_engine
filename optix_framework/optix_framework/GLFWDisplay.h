@@ -48,6 +48,7 @@ public:
 
   static void setRequiresDisplay( const bool requires_display )
   { m_requires_display = requires_display; }
+  static bool isDisplayAvailable() { return m_requires_display; }
   static void setCamera(SampleScene::InitialCameraData& camera_data);
 
 //  static bool isBenchmark() { return m_cur_continuous_mode == CDBenchmark || m_cur_continuous_mode == CDBenchmarkTimed ||

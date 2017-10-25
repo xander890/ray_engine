@@ -210,6 +210,7 @@ public:
 	void clean_up() override;
 	void scene_initialized() override;
 
+	void set_render_task(std::unique_ptr<RenderTask>& task);
 private:
 
 	void set_external_bssrdf(const std::string & file);
