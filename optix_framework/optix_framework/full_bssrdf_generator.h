@@ -99,6 +99,8 @@ public:
 
 	void get_parameters(const ParameterState & state, float & theta_i, float & r, float & theta_s, float & albedo, float & g, float & eta)
 	{
+		if (!is_valid(state))
+			return;
 		theta_i = parameters[theta_i_index][state[theta_i_index]];
 		r = parameters[r_index][state[r_index]];
 		theta_s = parameters[theta_s_index][state[theta_s_index]];

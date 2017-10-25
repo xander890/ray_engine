@@ -300,8 +300,8 @@ void BSSRDFExporter::set_hemisphere(const float * bssrdf_data, const std::vector
 	if (!file_exists(filename))
 	{
 		ofs.open(filename, std::ofstream::out);
-		ofs.seekp(get_material_slice_size() * sizeof(float) - 1);
-		ofs.put('\0');
+		//ofs.seekp(get_material_slice_size() * sizeof(float) - 1);
+		//ofs.put('\0');
 		ofs.close();
 	}
 	ofs.open(filename, std::ofstream::in | std::ofstream::out | std::ofstream::binary);

@@ -501,10 +501,9 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 				Logger::error << "Index mismatch" << std::endl;
 
 			Logger::info << "Index: " << mState.tostring() << "(simulation) "<< original_state.tostring() << "(original) Parameters: eta " << eta << " g " << g << " albedo " << albedo << std::endl;
-			mExporter->set_hemisphere(mCurrentHemisphereData, mState.mData);
+			mExporter->set_hemisphere(mCurrentHemisphereData, original_state.mData);
 			mState = mParametersSimulation.next(mState);
 			float extinction = 1.0f;
-			mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
 
 			if (!mParametersSimulation.is_valid(mState))
 			{
@@ -512,6 +511,7 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 			}
 			else
 			{
+				mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
 				mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 				mCurrentBssrdfRenderer->set_material_parameters(albedo, extinction, g, eta);
 				current_render_task->start();
