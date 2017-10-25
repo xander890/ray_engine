@@ -175,7 +175,7 @@ bool RenderTaskTimeorFrames::is_finished()
 
 std::string RenderTaskTimeorFrames::get_progress_string()
 {
-	return  std::to_string(current_time) + "/" + std::to_string(destination_time) + " seconds, " + std::to_string(current_frame) + "/" + std::to_string(destination_samples) + " frames";
+	return  std::to_string(current_time) + "/" + std::to_string(destination_time) + " seconds,\n" + std::to_string(current_frame) + "/" + std::to_string(destination_samples) + " frames";
 }
 
 void RenderTaskTimeorFrames::end()

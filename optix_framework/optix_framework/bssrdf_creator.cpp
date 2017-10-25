@@ -53,14 +53,14 @@ void BSSRDFRenderer::init()
 	mInitialized = true;
 	if (mBSSRDFBufferIntermediate.get() == nullptr)
 	{
-		mBSSRDFBufferIntermediate = create_glbo_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mShapeSize.x*mShapeSize.y);
+		mBSSRDFBufferIntermediate = create_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mShapeSize.x*mShapeSize.y);
 		mBSSRDFBufferIntermediate->setFormat(RT_FORMAT_FLOAT);
 		mBSSRDFBufferIntermediate->setSize(mShapeSize.x, mShapeSize.y);
 	}
 
 	if (mBSSRDFBuffer.get() == nullptr)
 	{
-		mBSSRDFBuffer = create_glbo_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mShapeSize.x*mShapeSize.y);
+		mBSSRDFBuffer = create_buffer<float>(context, RT_BUFFER_INPUT_OUTPUT, mShapeSize.x*mShapeSize.y);
 		mBSSRDFBuffer->setFormat(RT_FORMAT_FLOAT);
 		mBSSRDFBuffer->setSize(mShapeSize.x, mShapeSize.y);
 	}
@@ -113,8 +113,8 @@ void BSSRDFRenderer::set_shape(OutputShape shape)
 {
 	mOutputShape = shape;
 	mShapeSize = default_size(shape);
-	resize_glbo_buffer<float>(mBSSRDFBufferIntermediate, mShapeSize.x*mShapeSize.y);
-	resize_glbo_buffer<float>(mBSSRDFBuffer, mShapeSize.x*mShapeSize.y);
+	//resize_glbo_buffer<float>(mBSSRDFBufferIntermediate, mShapeSize.x*mShapeSize.y);
+	//resize_glbo_buffer<float>(mBSSRDFBuffer, mShapeSize.x*mShapeSize.y);
 
 	mBSSRDFBufferIntermediate->setSize(mShapeSize.x, mShapeSize.y);
 	mBSSRDFBuffer->setSize(mShapeSize.x, mShapeSize.y);

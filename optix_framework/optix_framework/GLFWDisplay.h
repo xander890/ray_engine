@@ -131,7 +131,6 @@ private:
   static bool           m_initialized;
 
   static bool           m_requires_display;
-  static bool           m_benchmark_no_display;
 //  static unsigned int   m_warmup_frames;
 //  static unsigned int   m_timed_frames;
 //  static double         m_warmup_start; // time when the warmup started

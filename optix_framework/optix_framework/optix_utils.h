@@ -30,9 +30,9 @@ template<typename T> void resize_glbo_buffer(optix::Buffer & buffer, unsigned in
 }
 
 
-template<typename T> optix::Buffer create_buffer(optix::Context & ctx, int size)
+template<typename T> optix::Buffer create_buffer(optix::Context & ctx, unsigned int type, int size)
 {
-	optix::Buffer buf = ctx->createBuffer(RT_BUFFER_INPUT);
+	optix::Buffer buf = ctx->createBuffer(type);
 	buf->setFormat(RT_FORMAT_USER);
 	buf->setElementSize(sizeof(T));
 	buf->setSize(size);
@@ -41,7 +41,7 @@ template<typename T> optix::Buffer create_buffer(optix::Context & ctx, int size)
 
 template<typename T> optix::Buffer create_buffer(optix::Context & ctx)
 {
-	return create_buffer<T>(ctx, 1);
+	return create_buffer<T>(ctx, RT_BUFFER_INPUT, 1);
 }
 
 template<typename T> void initialize_buffer(optix::Buffer & buf, std::vector<T>& data)

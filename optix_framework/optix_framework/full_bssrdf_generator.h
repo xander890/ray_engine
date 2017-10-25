@@ -111,7 +111,7 @@ public:
 		ParameterState val = state;
 		std::vector<size_t> dims = get_dimensions();
 		size_t i;
-		for (i = dims.size() - 1; i > 0; i--)
+		for (i = dims.size() - 1; i >= 0; i--)
 		{
 			// increment returns true if overflow, so we keep adding.
 			if (!increment(state[i], dims[i], val[i]))
@@ -121,7 +121,7 @@ public:
 		}
 
 		// When the last index overflows.
-		if (i == 0)
+		if (i == -1)
 		{
 			return invalid_index;
 		}
@@ -163,7 +163,7 @@ public:
 
 	enum RenderMode { RENDER_BSSRDF = 0, SHOW_EXISTING_BSSRDF = 1};
 
-	FullBSSRDFGenerator(const char * config);
+	FullBSSRDFGenerator(const char * config, bool offline_render);
 	~FullBSSRDFGenerator();
 	void initialize_scene(GLFWwindow * window, InitialCameraData& camera_data) override;
 
@@ -184,6 +184,7 @@ public:
 	bool mouse_moving(int x, int y) override;
 
 	void clean_up() override;
+	void scene_initialized() override;
 
 private:
 
@@ -222,5 +223,6 @@ private:
 	std::unique_ptr<RenderTask> current_render_task;
 	bool mSimulate = 1;
 	void set_render_mode(RenderMode m, bool isSimulated);
+	bool start_offline_rendering = false;
 };
 
