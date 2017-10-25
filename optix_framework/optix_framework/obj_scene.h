@@ -29,7 +29,7 @@ class ObjScene : public SampleScene
 {
 public:
 
-	ObjScene(const std::vector<std::string>& obj_filenames, const std::string& shader_name, const std::string& config_file, optix::int4 rendering_r = optix::make_int4(-1));
+	ObjScene(const std::vector<std::string>& obj_filenames, optix::int4 rendering_r = optix::make_int4(-1));
 	ObjScene();
 
 	virtual ~ObjScene();
@@ -74,7 +74,6 @@ public:
 
 	std::string override_mat = "";
 	void add_override_material_file(std::string mat);
-	void add_override_parameters(std::vector<std::string> & params);
 private:
 	optix::Context context;
 	bool debug_mode_enabled = false;
@@ -138,7 +137,6 @@ private:
 
 	void load_camera_extrinsics(InitialCameraData & data);
 
-	const std::string config_file = "config.xml";
 	optix::int4 custom_rr;
 
 	optix::uint4 zoom_debug_window = optix::make_uint4(20,20,300,300);

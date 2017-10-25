@@ -40,8 +40,8 @@ inline std::string stringize(T* nums, std::size_t size, size_t precision = 8)
 	return ss.str();
 }
 
-template<typename T>
-inline std::string tostring(std::vector<T> p) { return stringize(p.data(), p.size()); }
+template<>
+inline std::string tostring(std::vector<float> p) { return stringize(p.data(), p.size()); }
 
 // One dimensional
 template<>

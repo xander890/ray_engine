@@ -89,7 +89,7 @@ std::string gui_string(std::vector<float> & data)
 	return ss.str();
 }
 
-FullBSSRDFGenerator::FullBSSRDFGenerator(const char * config ) : config_file(config)
+FullBSSRDFGenerator::FullBSSRDFGenerator(const char * config , bool offline) : config_file(config), start_offline_rendering(offline)
 {
 	current_render_task = std::make_unique<RenderTaskTimeorFrames>(100, 10.0f, "test.bssrdf", false);
 }
@@ -103,7 +103,6 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context->setPrintEnabled(false);
 	m_context->setPrintBufferSize(200);
 	m_context->setPrintLaunchIndex(0, 0, 0);
-	ConfigParameters::init(config_file);
 	Folders::init();
 	m_context["scene_epsilon"]->setFloat(1e-3f);
 	auto top_node = m_context->createGroup();
@@ -150,13 +149,21 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["resulting_flux_tex"]->setUserData(sizeof(TexPtr), &(s));
 	m_context["output_buffer"]->setBuffer(result_buffer);
 
-	gui = std::make_unique<ImmediateGUI>(window);
+	gui = nullptr;
+	if (window != nullptr)
+	{
+		gui = std::make_unique<ImmediateGUI>(window);
+	}
 
 	if (mCurrentHemisphereData == nullptr)
 	{
 		mCurrentHemisphereData = new float[mCurrentBssrdfRenderer->get_storage_size()];
 	}
-
+	
+	mParameters.parameters[eta_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "eta", mParameters.parameters[eta_index], "Eta indices to scan.");
+	mParameters.parameters[g_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "g", mParameters.parameters[g_index], "Eta indices to scan.");
+	mParameters.parameters[albedo_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "albedo", mParameters.parameters[albedo_index], "Eta indices to scan.");
+	
 	mExternalBSSRDFBuffer = m_context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, 1);
 
 }
@@ -243,6 +250,8 @@ bool vector_gui(const std::string & name, std::vector<float> & vec, std::string 
 
 void FullBSSRDFGenerator::post_draw_callback()
 {
+	if (gui == nullptr)
+		return;
 	gui->start_draw();
 	gui->start_window("Ray tracing demo", 20, 20, 500, 600);
 	
@@ -402,13 +411,26 @@ void FullBSSRDFGenerator::post_draw_callback()
 			}
 		}
 		current_render_task->on_draw();
-		if (!current_render_task->is_active() && ImmediateGUIDraw::Button("Start Simulation"))
+		if (current_render_task->is_active())
 		{
-			start_rendering();
+			const float progress_total = flatten_index(mState.mData, mParameters.get_dimensions()) / (float)mParameters.get_size();
+			const auto dims = mParameters.get_dimensions();
+			const size_t material_size = dims[theta_i_index] * dims[theta_s_index] * dims[r_index];
+			const float progress_bssrdf = (flatten_index(mState.mData, mParameters.get_dimensions()) % material_size) / (float)material_size;
+			ImmediateGUIDraw::ProgressBar(progress_total, ImVec2(-1,0),"Simulation progress");
+			ImmediateGUIDraw::ProgressBar(progress_bssrdf, ImVec2(-1, 0),"Current material progress");
+
+			if (ImmediateGUIDraw::Button("End Simulation"))
+			{
+				end_rendering();
+			}
 		}
-		if (current_render_task->is_active() && ImmediateGUIDraw::Button("End Simulation"))
+		else
 		{
-			end_rendering();
+			if (ImmediateGUIDraw::Button("Start Simulation"))
+			{
+				start_rendering();
+			}
 		}
 
 	}
@@ -419,6 +441,10 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 void FullBSSRDFGenerator::start_rendering()
 {
+	Logger::info << "Simulation started." << std::endl;
+	Logger::info << "Eta:    " << tostring(mParameters.parameters[eta_index]) << std::endl;
+	Logger::info << "G:      " << tostring(mParameters.parameters[g_index]) << std::endl;
+	Logger::info << "Albedo: " << tostring(mParameters.parameters[albedo_index]) << std::endl;
 	current_render_task->start();
 	size_t total_size = mParameters.size() * sizeof(float) * mCurrentBssrdfRenderer->get_storage_size();
 
@@ -449,22 +475,23 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 	{
 		if (current_render_task->is_finished())
 		{
-			Logger::info << "Simulation frame " << mState.tostring() << " complete. (" << flatten_index(mState.mData, mParameters.get_dimensions()) << "/" << mParameters.get_size() << ") "; 
+			Logger::info << "Simulation frame " << flatten_index(mState.mData, mParameters.get_dimensions()) + 1 << "/" << mParameters.get_size() << " complete. ";
 			if (mSimulate)
 			{
 				Logger::info << std::dynamic_pointer_cast<BSSRDFRendererSimulated>(mCurrentBssrdfRenderer)->get_samples() << " samples. ";
 			}
-			Logger::info <<  std::endl;
-			float extinction = 1.0f;
 			float theta_i; float r; float theta_s; float albedo;  float g; float eta;
+			mParameters.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
+			Logger::info <<  std::endl;
+			Logger::info << "Index: " << mState.tostring() << " Parameters: eta " << eta << " g " << g << " albedo " << albedo << std::endl;
+
+			mExporter->set_hemisphere(mCurrentHemisphereData, mState.mData);
+			mState = mParameters.next(mState);
+			float extinction = 1.0f;
 			mParameters.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
 
 			mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 			mCurrentBssrdfRenderer->set_material_parameters(albedo, extinction, g, eta);
-
-			mExporter->set_hemisphere(mCurrentHemisphereData, mState.mData);
-
-			mState = mParameters.next(mState);
 
 			if (!mParameters.is_valid(mState))
 			{
@@ -491,22 +518,35 @@ void FullBSSRDFGenerator::end_rendering()
 
 bool FullBSSRDFGenerator::key_pressed(int key, int x, int y)
 {
+	if (gui == nullptr)
+		return false;
 	return gui->keyPressed(key,x,y);
 }
 
 bool FullBSSRDFGenerator::mouse_pressed(int x, int y, int button, int action, int mods)
 {
+	if (gui == nullptr)
+		return false;
 	return gui->mousePressed(x, y,button,action,mods);
 }
 
 bool FullBSSRDFGenerator::mouse_moving(int x, int y)
 {
+	if (gui == nullptr)
+		return false;
 	return gui->mouseMoving(x, y);
 }
 
 void FullBSSRDFGenerator::clean_up()
 {
+	SampleScene::clean_up();
 	delete[] mCurrentHemisphereData;
+}
+
+void FullBSSRDFGenerator::scene_initialized()
+{
+	if (start_offline_rendering)
+		start_rendering();
 }
 
 void FullBSSRDFGenerator::set_external_bssrdf(const std::string & file)

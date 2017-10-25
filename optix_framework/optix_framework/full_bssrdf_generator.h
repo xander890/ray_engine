@@ -163,7 +163,7 @@ public:
 
 	enum RenderMode { RENDER_BSSRDF = 0, SHOW_EXISTING_BSSRDF = 1};
 
-	FullBSSRDFGenerator(const char * config);
+	FullBSSRDFGenerator(const char * config, bool offline_render);
 	~FullBSSRDFGenerator();
 	void initialize_scene(GLFWwindow * window, InitialCameraData& camera_data) override;
 
@@ -184,6 +184,7 @@ public:
 	bool mouse_moving(int x, int y) override;
 
 	void clean_up() override;
+	void scene_initialized() override;
 
 private:
 
@@ -221,5 +222,6 @@ private:
 	std::unique_ptr<RenderTask> current_render_task;
 	bool mSimulate = 1;
 	void set_render_mode(RenderMode m, bool isSimulated);
+	bool start_offline_rendering = false;
 };
 

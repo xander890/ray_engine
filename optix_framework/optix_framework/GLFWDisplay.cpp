@@ -54,7 +54,6 @@ bool           GLFWDisplay::m_initialized = false;
 std::string    GLFWDisplay::m_title = "";
 
 bool            GLFWDisplay::m_requires_display = true;
-bool            GLFWDisplay::m_benchmark_no_display = false;
 
 
 void GLFWDisplay::printUsage()
@@ -71,7 +70,7 @@ void GLFWDisplay::init( int& argc, char** argv )
 {
   m_initialized = true;
 
-  if (!m_benchmark_no_display)
+  if (m_requires_display)
   {
 	  if (!glfwInit())
 	  {
@@ -89,29 +88,34 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   m_scene = scene;
   m_title = title;
 
-  m_window = glfwCreateWindow(1, 1, m_title.c_str(), nullptr, nullptr);
-  glfwMakeContextCurrent(m_window);
-
-  glewInit();
-  GLint GlewInitResult = glewInit();
-  if (GLEW_OK != GlewInitResult)
+  if (m_requires_display)
   {
-	  printf("ERROR: %s\n", glewGetErrorString(GlewInitResult));
-	  exit(EXIT_FAILURE);
+	  m_window = glfwCreateWindow(1, 1, m_title.c_str(), nullptr, nullptr);
+	  glfwMakeContextCurrent(m_window);
+
+	  glewInit();
+	  GLint GlewInitResult = glewInit();
+	  if (GLEW_OK != GlewInitResult)
+	  {
+		  printf("ERROR: %s\n", glewGetErrorString(GlewInitResult));
+		  exit(EXIT_FAILURE);
+	  }
+
+	  if (glewIsSupported("GL_EXT_texture_sRGB GL_EXT_framebuffer_sRGB")) {
+		  m_sRGB_supported = true;
+	  }
+
+	  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+	  if (!m_window)
+	  {
+		  glfwTerminate();
+		  exit(EXIT_FAILURE);
+	  }
   }
-
-  if (glewIsSupported( "GL_EXT_texture_sRGB GL_EXT_framebuffer_sRGB")) {
-    m_sRGB_supported = true;
-  }
-
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-
-
-  if (!m_window)
+  else
   {
-	  glfwTerminate();
-	  exit(EXIT_FAILURE);
+	  m_window = nullptr;
   }
 
   int buffer_width;
@@ -142,25 +146,37 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
     exit(2);
   }
 
-  glfwSetWindowSize(m_window, buffer_width, buffer_height);
-  // Initialize state
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0, 1, 0, 1, -1, 1 );
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glViewport(0, 0, buffer_width, buffer_height);
-
-  glfwSetKeyCallback(m_window, keyPressed);
-  glfwSetMouseButtonCallback(m_window, mouseButton);
-  glfwSetCursorPosCallback(m_window, mouseMotion);
-  glfwSetWindowSizeCallback(m_window, resize);
- 
   m_scene->scene_initialized();
-  while (!glfwWindowShouldClose(m_window))
+
+  if (m_requires_display)
   {
-	  glfwPollEvents();
-	  display();
+
+	  glfwSetWindowSize(m_window, buffer_width, buffer_height);
+	  // Initialize state
+	  glMatrixMode(GL_PROJECTION);
+	  glLoadIdentity();
+	  glOrtho(0, 1, 0, 1, -1, 1);
+	  glMatrixMode(GL_MODELVIEW);
+	  glLoadIdentity();
+	  glViewport(0, 0, buffer_width, buffer_height);
+
+	  glfwSetKeyCallback(m_window, keyPressed);
+	  glfwSetMouseButtonCallback(m_window, mouseButton);
+	  glfwSetCursorPosCallback(m_window, mouseMotion);
+	  glfwSetWindowSizeCallback(m_window, resize);
+
+	  while (!glfwWindowShouldClose(m_window))
+	  {
+		  glfwPollEvents();
+		  display();
+	  }
+  }
+  else
+  {
+	  while (true)
+	  {
+		  display();
+	  }
   }
 }
 
@@ -346,7 +362,7 @@ void GLFWDisplay::displayFrame()
 void GLFWDisplay::display()
 {
 
-  bool display_requested = true;
+  bool display_requested = m_requires_display;
 
   try {
     // render the scene

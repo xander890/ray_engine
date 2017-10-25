@@ -126,11 +126,10 @@ bool ObjScene::key_pressed(int key, int action, int modifier)
 }
 
 
-ObjScene::ObjScene(const std::vector<std::string>& obj_filenames, const std::string & shader_name, const std::string & config_file, optix::int4 rendering_r)
+ObjScene::ObjScene(const std::vector<std::string>& obj_filenames, optix::int4 rendering_r)
 	: context(m_context),
 	current_miss_program(), filenames(obj_filenames), method(nullptr), m_frame(0u),
-	deforming(false),
-	config_file(config_file)
+	deforming(false)
 {
 	calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
 	custom_rr = rendering_r;
@@ -142,8 +141,7 @@ ObjScene::ObjScene()
 	: context(m_context),
      filenames(1, "test.obj"),
 	m_frame(0u),
-	deforming(false),
-	config_file("config.xml")
+	deforming(false)
 {
 	calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
 	mMeshes.clear();
@@ -375,8 +373,6 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	context->setPrintBufferSize(2000);
 	setDebugEnabled(debug_mode_enabled);
 	context->setPrintLaunchIndex(0, 0);
-	ConfigParameters::init(config_file);
-	ConfigParameters::override_parameters(parameters_override);
 
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
@@ -1072,9 +1068,4 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 void ObjScene::transform_changed()
 {
 	scene->getAcceleration()->markDirty();
-}
-
-void ObjScene::add_override_parameters(std::vector<std::string>& params)
-{
-	parameters_override.insert(parameters_override.begin(), params.begin(), params.end());
 }

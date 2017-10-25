@@ -29,7 +29,7 @@ void BSSRDFPlaneRenderer::initialize_shader(optix::Context ctx)
 	if (entry_point_output == -1)
 		entry_point_output = add_entry_point(context, ray_gen_program_output);
 
-	mParameters = create_buffer<ScatteringMaterialProperties>(context, 1);
+	mParameters = create_buffer<ScatteringMaterialProperties>(context, RT_BUFFER_INPUT, 1);
 
 	BufPtr<ScatteringMaterialProperties> id = BufPtr<ScatteringMaterialProperties>(mParameters->getId());
 	context["planar_bssrdf_material_params"]->setUserData(sizeof(BufPtr<ScatteringMaterialProperties>), &id);

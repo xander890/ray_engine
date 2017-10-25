@@ -45,7 +45,6 @@ int main( int argc, char** argv )
 {
 	std::vector<std::string> filenames;
 	std::string filename = "";
-	std::string shadername = "";
 	std::string output_file = "rendering.raw";
 	std::string config_file = "config.xml";
 	bool accel_caching_on = false;
@@ -82,13 +81,6 @@ int main( int argc, char** argv )
 		auto_mode = true;
 		output_file = argv[++i];
 		lower_case_string(output_file);
-	}
-	else if (arg == "-sh" || arg == "--shader")
-	{
-		if (i == argc-1 )
-		printUsageAndExit( argv[0] );
-		shadername = argv[++i];
-		lower_case_string(shadername);
 	}
 	else if (arg == "--material_override")
 	{
@@ -151,6 +143,10 @@ int main( int argc, char** argv )
 	}
 	//if ( filenames.size() == 0 ) 
 	//  filenames.push_back(string("./meshes/") + "closed_bunny_vn.obj");
+	ConfigParameters::init(config_file);
+	ConfigParameters::override_parameters(additional_parameters);
+
+	//GLFWDisplay::setRequiresDisplay(false);
 	GLFWDisplay::init( argc, argv );
 	
 	try 
@@ -160,15 +156,14 @@ int main( int argc, char** argv )
 		SampleScene * scene = nullptr;
 		if (start_bssrdf_generator)
 		{
-			scene = new FullBSSRDFGenerator(config_file.c_str());
+			scene = new FullBSSRDFGenerator(config_file.c_str(), false);
 		}
 		else
 		{
-			ObjScene * scene_o = new ObjScene(filenames, shadername, config_file, rendering_rect);
+			ObjScene * scene_o = new ObjScene(filenames, rendering_rect);
 			scene = scene_o;
 			if (material_override_mtl.size() > 0)
 				scene_o->add_override_material_file(material_override_mtl);
-			scene_o->add_override_parameters(additional_parameters);
 
 			if (auto_mode)
 			{
