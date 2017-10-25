@@ -12,6 +12,7 @@
 #include "GL\glew.h"
 #include "cputimer.h"
 #include "GLFW\glfw3.h"
+#include "GLFWDisplay.h"
 #pragma warning(disable : 4996)
 
 
@@ -129,7 +130,15 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	if (entry_point_output == -1)
 		entry_point_output = add_entry_point(m_context, ray_gen_program_output);
 
-	result_buffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
+	if (GLFWDisplay::isDisplayAvailable())
+	{
+		result_buffer = create_glbo_buffer < optix::float4 >(m_context, RT_BUFFER_INPUT_OUTPUT, 1024 * 1024);
+	}
+	else
+	{
+		result_buffer = create_buffer < optix::float4 >(m_context, RT_BUFFER_INPUT_OUTPUT, 1024 * 1024);
+	}
+
 	result_buffer->setFormat(RT_FORMAT_FLOAT4);
 	result_buffer->setSize(1024, 1024);
 
@@ -589,4 +598,12 @@ std::vector<size_t> FullBSSRDFParameters::get_dimensions()
 	for (int i = 0; i < dims.size(); i++)
 		dims[i] = parameters[i].size();
 	return dims;
+}
+
+void FullBSSRDFGenerator::set_render_task(std::unique_ptr<RenderTask>& task)
+{
+	if (!current_render_task->is_active())
+		current_render_task = std::move(task);
+	else
+		Logger::error << "Wait of end of current task before setting a new one." << std::endl;
 }
