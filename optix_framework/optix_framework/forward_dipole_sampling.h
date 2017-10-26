@@ -272,7 +272,7 @@ __device__ __host__ __forceinline__   void implLengthShortLimit(
 	const Float sigma_s,
 	const Float mu,
 	Float3 R, const Float3 *u0, Float3 uL, Float &s, unsigned int & t, Float *pdf, bool use_sampler) {
-	if (u0 == NULL) {
+	if (u0 == nullptr) {
 		implLengthShortLimitMargOverU0(sigma_s, mu, R, uL, s, t, pdf, use_sampler);
 	}
 	else {
