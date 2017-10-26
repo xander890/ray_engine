@@ -190,6 +190,18 @@ void normalize(float * data, size_t size)
 	}
 }
 
+float average(float * data, size_t size)
+{
+	float avg = 0.0f;
+	for (int i = 0; i < size; i++)
+	{
+		avg += data[i];
+	}
+	avg /= size;
+	return avg;
+}
+
+
 void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 {
 	static int frame = 0;
@@ -521,6 +533,7 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 				Logger::error << "Index mismatch" << std::endl;
 
 			Logger::info << "Index: " << mState.tostring() << "(simulation) "<< original_state.tostring() << "(original) Parameters: eta " << eta << " g " << g << " albedo " << albedo << std::endl;
+			std::cout << "Average: " << std::scientific << average(mCurrentHemisphereData, mExporter->get_hemisphere_size()) << std::defaultfloat << std::endl;
 			mExporter->set_hemisphere(mCurrentHemisphereData, original_state.mData);
 			mState = mParametersSimulation.next(mState);
 			float extinction = 1.0f;
