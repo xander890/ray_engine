@@ -196,3 +196,8 @@ static __host__ __device__ __inline__ float step(const float &edge, const float 
 	  return (x < edge)? 0.0f : 1.0f;
 }
 
+static __host__ __device__ __inline__ void sincosf(float x, float* sin_x, float* cos_x)
+{
+	*sin_x = sinf(x);
+	*cos_x = cosf(x);
+}

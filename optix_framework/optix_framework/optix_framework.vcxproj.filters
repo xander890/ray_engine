@@ -591,6 +591,18 @@
     <ClInclude Include="bssrdf_creator.h">
       <Filter>Header Files\BSSRDFs</Filter>
     </ClInclude>
+    <ClInclude Include="forward_dipole_sampling.h">
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="forward_dipole_utils.h">
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="forward_dipole_truncnorm.h">
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="forward_dipole_tom748.h">
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

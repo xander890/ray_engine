@@ -68,7 +68,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 
 	float R21;
 	optix::float3 w21;
-	refract(wo, no, n1_over_n2, w21, R21);
+	refract(wo, no, n1_over_n2, w21, R21); 
 	float T21 = 1.0f - R21;
 	w21 = -w21;
 	planar_bssrdf_material_params->use_precomputed_qd = false;

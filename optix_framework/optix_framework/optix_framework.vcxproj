@@ -694,6 +694,10 @@ echo Done.</Command>
     <ClInclude Include="device_mesh_data.h" />
     <ClInclude Include="environment_map_background.h" />
     <ClInclude Include="forward_dipole.h" />
+    <ClInclude Include="forward_dipole_sampling.h" />
+    <ClInclude Include="forward_dipole_tom748.h" />
+    <ClInclude Include="forward_dipole_truncnorm.h" />
+    <ClInclude Include="forward_dipole_utils.h" />
     <ClInclude Include="full_bssrdf_generator.h" />
     <ClInclude Include="glm.h" />
     <ClInclude Include="GLFWDisplay.h" />

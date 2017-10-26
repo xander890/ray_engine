@@ -35,11 +35,7 @@
 #include "random.h"
 #include "math_helpers.h"
 
-static __host__ __inline__ void sincosf(float x, float* sin_x, float* cos_x)
-{
-  *sin_x = sinf(x);
-  *cos_x = cosf(x);
-}
+
 
 // rotate vector around an axis
 static __host__  __device__ __inline__ optix::float3 rotate_vector(const optix::float3& vector, const optix::float3& axis, float angle)
