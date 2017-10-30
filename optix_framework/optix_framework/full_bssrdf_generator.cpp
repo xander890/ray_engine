@@ -358,11 +358,9 @@ void FullBSSRDFGenerator::post_draw_callback()
 				}
 				if (ImmediateGUIDraw::Combo(mParametersOriginal.parameter_names[i].c_str(), (int*)&index.mData[i], s.c_str(), (int)mLoader->get_parameters().at(i).size()))
 				{
-					std::vector<size_t> dims;
-					mLoader->get_dimensions(dims);
 					float * data = (float*)mExternalBSSRDFBuffer->map();
 					mLoader->load_hemisphere(data, index.mData);
-					normalize(data, dims[phi_o_index] * dims[theta_o_index]);
+					normalize(data, mLoader->get_hemisphere_size());
 					mExternalBSSRDFBuffer->unmap();
 					
 
@@ -491,11 +489,7 @@ void FullBSSRDFGenerator::start_rendering()
 	Logger::info << "Theta i: " << tostring(mParametersSimulation.parameters[theta_i_index]) << std::endl;
 	current_render_task->start();
 
-	std::vector<size_t> dims = mParametersOriginal.get_dimensions();
-	dims.push_back(mCurrentBssrdfRenderer->get_size().x);
-	dims.push_back(mCurrentBssrdfRenderer->get_size().y);
-
-	mExporter = std::make_unique<BSSRDFExporter>(current_render_task->get_destination_file(), dims, mParametersOriginal.parameters, mParametersOriginal.parameter_names);
+	mExporter = std::make_unique<BSSRDFExporter>(current_render_task->get_destination_file(), mParametersOriginal, mCurrentBssrdfRenderer->get_size().x, mCurrentBssrdfRenderer->get_size().y);
 	
 	mState = ParameterState({ 0,0,0,0,0,0 });
 
@@ -599,13 +593,13 @@ void FullBSSRDFGenerator::scene_initialized()
 
 void FullBSSRDFGenerator::set_external_bssrdf(const std::string & file)
 {
-	mLoader = std::make_unique<BSSRDFLoader>(file, mParametersOriginal.parameter_names);
-	std::vector<size_t> dims;
-	mLoader->get_dimensions(dims);
-	mExternalBSSRDFBuffer->setSize(dims[phi_o_index], dims[theta_o_index]);
+	mLoader = std::make_unique<BSSRDFLoader>(file);
+	auto phio = mLoader->get_hemisphere_phi_o();
+	auto thetao = mLoader->get_hemisphere_theta_o();
+	mExternalBSSRDFBuffer->setSize(phio,thetao);
 	float * data = (float*)mExternalBSSRDFBuffer->map();
 	mLoader->load_hemisphere(data, {0,0,0,0,0,0});
-	normalize(data, dims[phi_o_index] * dims[theta_o_index]);
+	normalize(data, mLoader->get_hemisphere_size());
 	mExternalBSSRDFBuffer->unmap();
 }
 
@@ -631,13 +625,6 @@ void FullBSSRDFGenerator::set_render_mode(RenderMode m, bool isSimulated)
 		mCurrentBssrdfRenderer = mSimulate? std::static_pointer_cast<BSSRDFRenderer>(mBssrdfReferenceSimulator) : std::static_pointer_cast<BSSRDFRenderer>(mBssrdfModelSimulator);
 }
 
-std::vector<size_t> FullBSSRDFParameters::get_dimensions()
-{
-	std::vector<size_t> dims(parameters.size());
-	for (int i = 0; i < dims.size(); i++)
-		dims[i] = parameters[i].size();
-	return dims;
-}
 
 void FullBSSRDFGenerator::set_render_task(std::unique_ptr<RenderTask>& task)
 {

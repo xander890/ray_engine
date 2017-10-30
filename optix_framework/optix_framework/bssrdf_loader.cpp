@@ -58,11 +58,11 @@ void string_to_parameters(const std::string & parse, const std::map<size_t, std:
 	}
 }
 
-BSSRDFLoader::BSSRDFLoader(const std::string & filename, const std::map<size_t, std::string> & names)
+BSSRDFLoader::BSSRDFLoader(const std::string & filename)
 {
-	mFileName = filename;	
+	mFileName = filename;
 
-	if(!parse_header(names))
+	if (!parse_header())
 	{
 		Logger::error << "BSSRDF header parsing failed." << std::endl;
 	}
@@ -81,7 +81,7 @@ size_t BSSRDFLoader::get_material_slice_size()
 
 size_t BSSRDFLoader::get_hemisphere_size()
 {
-	return mDimensions[phi_o_index] * mDimensions[theta_o_index];
+	return mThetaoSize*mPhioSize;
 }
 
 const std::map<size_t, std::vector<float>>& BSSRDFLoader::get_parameters()
@@ -125,7 +125,7 @@ bool BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t
 #ifdef USE_SMALL_FILES
 	std::vector<size_t> dims = mDimensions;
 	dims[eta_index] = dims[albedo_index] = dims[g_index] = 1;
-	size_t pos = flatten_index({ 0, 0, 0, idx[3], idx[4], idx[5], 0, 0 }, dims) * sizeof(float);
+	size_t pos = flatten_index({ 0, 0, 0, idx[3], idx[4], idx[5] }, dims) * get_hemisphere_size() * sizeof(float);
 	std::string s = get_filename(mFileName, idx, mParameters);
 	if (!file_exists(s))
 	{
@@ -152,7 +152,7 @@ bool BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t
 	return true;
 }
 	
-bool BSSRDFLoader::parse_header(const std::map<size_t, std::string> & names)
+bool BSSRDFLoader::parse_header()
 {
 
 	std::ifstream file(mFileName, std::ofstream::in | std::ofstream::binary);
@@ -169,8 +169,7 @@ bool BSSRDFLoader::parse_header(const std::map<size_t, std::string> & names)
 
 	mBSSRDFStart = str.find("\n", bssrdf_del + 1) + 1;
 
-	
-	string_to_parameters(str.substr(0, mBSSRDFStart), names, mParameters);
+	string_to_parameters(str.substr(0, mBSSRDFStart), BSSRDFParameterManager::parameter_names, mParameters);
 
 	std::stringstream ss(str);
 
@@ -183,7 +182,7 @@ bool BSSRDFLoader::parse_header(const std::map<size_t, std::string> & names)
 		if (str.size() >= size_delimiter.size() && str.substr(0, size_delimiter.size()).compare(size_delimiter) == 0)
 		{
 			std::stringstream ss (str.substr(size_delimiter.size()));
-			for (int i = 0; i < 8; i++)
+			for (int i = 0; i < 6; i++)
 			{
 				size_t size;
 				ss >> size; 
@@ -191,6 +190,12 @@ bool BSSRDFLoader::parse_header(const std::map<size_t, std::string> & names)
 					return false;
 				mDimensions.push_back(size);
 			}
+			ss >> mPhioSize;
+			if (ss.fail())
+				return false;
+			ss >> mThetaoSize;
+			if (ss.fail())
+				return false;
 			parsed_dimensions = true;
 		}
 		if (str.size() > 0 && str[0] == '#')
@@ -199,37 +204,13 @@ bool BSSRDFLoader::parse_header(const std::map<size_t, std::string> & names)
 	return has_bssrdf_flag && parsed_dimensions;
 }
 
-size_t flatten_index(const std::vector<size_t>& idx, const std::vector<size_t>& size)
+
+BSSRDFExporter::BSSRDFExporter(const std::string & filename, const BSSRDFParameterManager & manager, size_t size_theta_o, size_t size_phi_o) : mManager(manager), mFileName(filename)
 {
-	size_t id = idx[eta_index];
-	for (int i = 1; i < size.size(); i++)
-	{
-		assert(size[i] > idx[i]);
-		id = id * size[i] + idx[i];
-	}
-	return id;
-}
-
-std::vector<size_t> unravel_index(const size_t& idx, const std::vector<size_t>& size)
-{
-	size_t index = idx;
-	std::vector<size_t> res(size.size(), 0);
-	for (int i = (int)size.size() - 1; i >= 0; i--)
-	{
-		res[i] = index % size[i];
-		index = index / size[i];
-	}
-	return res;
-}
-
-
-
-
-
-BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<size_t> & dimensions, const std::map<size_t, std::vector<float>> & parameters, const std::map<size_t, std::string> & names) : mFileName(filename), mDimensions(dimensions), mParameters(parameters), mNames(names)
-{
+	mThetaoSize = size_theta_o;
+	mPhioSize = size_phi_o;
 	size_t total_size = sizeof(float);
-	for (size_t element : dimensions)
+	for (size_t element : mManager.get_dimensions())
 		total_size *= element;
 
 	mHeader = create_header();
@@ -251,12 +232,13 @@ BSSRDFExporter::BSSRDFExporter(const std::string & filename, const std::vector<s
 
 size_t BSSRDFExporter::get_material_slice_size()
 {
-	return get_hemisphere_size() * mDimensions[theta_i_index] * mDimensions[theta_s_index] * mDimensions[r_index];
+	auto dims = mManager.get_dimensions();
+	return get_hemisphere_size() * dims[theta_i_index] * dims[theta_s_index] * dims[r_index];
 }
 
 size_t BSSRDFExporter::get_hemisphere_size()
 {
-	return mDimensions[phi_o_index] * mDimensions[theta_o_index];
+	return mThetaoSize * mPhioSize;
 }
 
 void BSSRDFExporter::set_material_slice(const float * bssrdf_data, const std::vector<size_t>& idx)
@@ -266,7 +248,7 @@ void BSSRDFExporter::set_material_slice(const float * bssrdf_data, const std::ve
 #ifdef USE_SMALL_FILES
 	size_t pos = 0;
 	std::ofstream ofs;
-	std::string filename = get_filename(mFileName, idx, mParameters);
+	std::string filename = get_filename(mFileName, idx, mManager.parameters);
 	if (!file_exists(filename))
 	{
 		ofs.open(filename, std::ofstream::out);
@@ -292,11 +274,11 @@ void BSSRDFExporter::set_hemisphere(const float * bssrdf_data, const std::vector
 	if (idx.size() != 6)
 		Logger::error << "Hemisphere index is 6 dimensional." << std::endl;
 #ifdef USE_SMALL_FILES
-	std::vector<size_t> dims = mDimensions;
+	std::vector<size_t> dims = mManager.get_dimensions();
 	dims[eta_index] = dims[albedo_index] = dims[g_index] = 1;
-	size_t pos = flatten_index({ 0, 0, 0, idx[3], idx[4], idx[5], 0, 0 }, dims) * sizeof(float);
+	size_t pos = flatten_index({ 0, 0, 0, idx[3], idx[4], idx[5]}, dims) * get_hemisphere_size() * sizeof(float);
 	std::ofstream ofs;
-	std::string filename = get_filename(mFileName, idx, mParameters);
+	std::string filename = get_filename(mFileName, idx, mManager.parameters);
 	if (!file_exists(filename))
 	{
 		ofs.open(filename, std::ofstream::out);
@@ -325,15 +307,17 @@ std::string BSSRDFExporter::create_header()
 	ss << "# BSSRDF file format (version 0.1)" << std::endl;
 	ss << "# Index dimensions is at follows:" << std::endl;
 	ss << size_delimiter << " ";
-	for (int i = 0; i < 8; i++)
+	auto di = mManager.get_dimensions();
+	for (int i = 0; i < di.size(); i++)
 	{
-		ss << mDimensions[i] << " ";
+		ss << di[i] << " ";
 	}
+	ss << mPhioSize << " " << mThetaoSize;
 	ss << std::endl;
 	ss << "#eta\tg\talbedo\ttheta_s\tr\ttheta_i\tphi_o\ttheta_o" << std::endl;
 
 	std::string params;
-	parameters_to_string(mParameters, mNames, params);
+	parameters_to_string(mManager.parameters, BSSRDFParameterManager::parameter_names, params);
 	ss << params;
 
 	ss << bssrdf_delimiter << std::endl;

@@ -171,7 +171,7 @@ __device__ __host__ __forceinline__ void calcValues(const double length, const F
 	FSAssert(F >= 0);
 }
 
-Float fresnelDiffuseReflectance(Float eta) {
+__device__ __host__ __forceinline__ Float fresnelDiffuseReflectance(Float eta) {
 	/* Fast mode: the following code approximates the
 	* diffuse Frensel reflectance for the eta<1 and
 	* eta>1 cases. An evalution of the accuracy led
@@ -215,7 +215,7 @@ Float fresnelDiffuseReflectance(Float eta) {
 	return 0.0f;
 }
 
-Float fresnelDielectricExt(Float cosThetaI_, Float &cosThetaT_, Float eta) {
+__device__ __host__ __forceinline__ Float fresnelDielectricExt(Float cosThetaI_, Float &cosThetaT_, Float eta) {
 	if (eta == 1) {
 		cosThetaT_ = -cosThetaI_;
 		return 0.0f;
@@ -389,6 +389,7 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	Float zv;
 	Float sigma_sp = sigma_s * mu;
 	Float sigma_tp = sigma_sp + sigma_a;
+	
 
 	switch (zvMode) {
 	case EFrisvadEtAlZv: {
@@ -457,9 +458,11 @@ __device__ __host__ __forceinline__ bool getTentativeIndexMatchedVirtualSourceDi
 	else {
 		FSAssert(isfinite(R_virt));
 	}
-	if (optional_n0_effective)
+
+
+	if (optional_n0_effective != nullptr)
 		*optional_n0_effective = n0_effective;
-	if (!optional_realSourceRelativeWeight)
+	if (optional_realSourceRelativeWeight == nullptr)
 		return true;
 	double C, D, E, F;
 	calcValues(s, sigma_s, sigma_a, mu, C, D, E, F);

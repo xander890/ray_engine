@@ -1,8 +1,29 @@
 #pragma once
-#include <utility>
 #define BOOST_MATH_INSTRUMENT_CODE(x)
+#include "host_device_common.h"
 
-static __host__ __device__ __inline__ double sign(double v)
+template<typename T>
+__device__ __forceinline__  T get_min();
+template<>
+__device__ __forceinline__ float get_min() { return FLT_MIN;  }
+template<>
+__device__ __forceinline__ double get_min() { return DBL_MIN; }
+
+template<typename T>
+__device__ __forceinline__  T get_max();
+template<>
+__device__ __forceinline__ float get_max() { return FLT_MAX; }
+template<>
+__device__ __forceinline__ double get_max() { return DBL_MAX; }
+
+template<typename T>
+__device__ __forceinline__  T get_epsilon();
+template<>
+__device__ __forceinline__ float get_epsilon() { return FLT_EPSILON; }
+template<>
+__device__ __forceinline__ double get_epsilon() { return DBL_EPSILON; }
+
+static __device__ __forceinline__ double sign(double v)
 {
 	return copysign(1.0f, v);
 }
@@ -11,11 +32,11 @@ template <class T>
 class eps_tolerance
 {
 public:
-	eps_tolerance(unsigned bits)
+	__device__ eps_tolerance(unsigned bits)
 	{
-			eps = max(T(ldexp(1.0F, 1 - bits)), 2 * std::numeric_limits<T>::epsilon());
+			eps = max(T(ldexp(1.0F, 1 - bits)), 2 * get_epsilon<T>());
 	}
-	bool operator()(const T& a, const T& b)
+	__device__ bool operator()(const T& a, const T& b)
 	{
 		
 			return (fabs(a - b) / min(fabs(a), fabs(b))) <= eps;
@@ -24,43 +45,10 @@ private:
 	T eps;
 };
 
-struct equal_floor
-{
-	equal_floor() {}
-	template <class T>
-	bool operator()(const T& a, const T& b)
-	{
-		
-			return floor(a) == floor(b);
-	}
-};
-
-struct equal_ceil
-{
-	equal_ceil() {}
-	template <class T>
-	bool operator()(const T& a, const T& b)
-	{
-		
-			return ceil(a) == ceil(b);
-	}
-};
-
-struct equal_nearest_integer
-{
-	equal_nearest_integer() {}
-	template <class T>
-	bool operator()(const T& a, const T& b)
-	{
-		
-			return floor(a + 0.5f) == floor(b + 0.5f);
-	}
-};
-
 namespace detail {
 
 	template <class F, class T>
-	void bracket(F f, T& a, T& b, T c, T& fa, T& fb, T& d, T& fd)
+	__device__ __forceinline__ void bracket(F f, T& a, T& b, T c, T& fa, T& fb, T& d, T& fd)
 	{
 		//
 		// Given a point c inside the existing enclosing interval
@@ -71,7 +59,7 @@ namespace detail {
 		// to the root.
 		//
 		  // For ADL of std math functions
-			T tol = std::numeric_limits<T>::epsilon() * 2;
+			T tol = get_epsilon<T>() * 2;
 		//
 		// If the interval [a,b] is very small, or if c is too close 
 		// to one end of the interval then we need to adjust the
@@ -124,7 +112,7 @@ namespace detail {
 	}
 
 	template <class T>
-	inline T safe_div(T num, T denom, T r)
+	__device__ __forceinline__ T safe_div(T num, T denom, T r)
 	{
 		//
 		// return num / denom without overflow,
@@ -134,14 +122,14 @@ namespace detail {
 
 			if (fabs(denom) < 1)
 			{
-				if (fabs(denom * (std::numeric_limits<T>::max)()) <= fabs(num))
+				if (fabs(denom * (get_max<T>())) <= fabs(num))
 					return r;
 			}
 		return num / denom;
 	}
 
 	template <class T>
-	inline T secant_interpolate(const T& a, const T& b, const T& fa, const T& fb)
+	__device__ __forceinline__  T secant_interpolate(const T& a, const T& b, const T& fa, const T& fb)
 	{
 		//
 		// Performs standard secant interpolation of [a,b] given
@@ -154,7 +142,7 @@ namespace detail {
 		//
 		  // For ADL of std math functions
 
-			T tol = std::numeric_limits<T>::epsilon() * 5;
+			T tol = get_epsilon<T>() * 5;
 		T c = a - (fa / (fb - fa)) * (b - a);
 		if ((c <= a + fabs(a) * tol) || (c >= b - fabs(b) * tol))
 			return (a + b) / 2;
@@ -162,7 +150,7 @@ namespace detail {
 	}
 
 	template <class T>
-	T quadratic_interpolate(const T& a, const T& b, T const& d,
+	__device__ __forceinline__ T quadratic_interpolate(const T& a, const T& b, T const& d,
 		const T& fa, const T& fb, T const& fd,
 		unsigned count)
 	{
@@ -180,8 +168,8 @@ namespace detail {
 		//
 		// Start by obtaining the coefficients of the quadratic polynomial:
 		//
-		T B = safe_div(fb - fa, b - a, (std::numeric_limits<T>::max)());
-		T A = safe_div(fd - fb, d - b, (std::numeric_limits<T>::max)());
+		T B = safe_div(fb - fa, b - a, get_max<T>());
+		T A = safe_div(fd - fb, d - b, get_max<T>());
 		A = safe_div(A - B, d - a, T(0));
 
 		if (a == 0)
@@ -218,7 +206,7 @@ namespace detail {
 	}
 
 	template <class T>
-	T cubic_interpolate(const T& a, const T& b, const T& d,
+	__device__ __forceinline__ T cubic_interpolate(const T& a, const T& b, const T& d,
 		const T& e, const T& fa, const T& fb,
 		const T& fd, const T& fe)
 	{
@@ -267,7 +255,7 @@ namespace detail {
 } // namespace detail
 
 template <class F, class T, class Tol>
-std::pair<T, T> toms748_solve(F f, const T& ax, const T& bx, const T& fax, const T& fbx, Tol tol, size_t max_iter)
+__device__ __forceinline__ optix::double2 toms748_solve(F f, const T& ax, const T& bx, const T& fax, const T& fbx, Tol tol, size_t max_iter)
 {
 	//
 	// Main entry point and logic for Toms Algorithm 748
@@ -296,7 +284,7 @@ std::pair<T, T> toms748_solve(F f, const T& ax, const T& bx, const T& fax, const
 			b = a;
 		else if (fb == 0)
 			a = b;
-		return std::make_pair(a, b);
+		return optix::make_double2(a, b);
 	}
 
 	//if (sign(fa) * sign(fb) > 0)
@@ -343,7 +331,7 @@ std::pair<T, T> toms748_solve(F f, const T& ax, const T& bx, const T& fax, const
 		// then variable prof will get set to true, and we'll end up
 		// taking a quadratic step instead.
 		//
-		T min_diff = (std::numeric_limits<T>::min)() * 32;
+		T min_diff = get_min<T>() * 32;
 		bool prof = (fabs(fa - fb) < min_diff) || (fabs(fa - fd) < min_diff) || (fabs(fa - fe) < min_diff) || (fabs(fb - fd) < min_diff) || (fabs(fb - fe) < min_diff) || (fabs(fd - fe) < min_diff);
 		if (prof)
 		{
@@ -436,14 +424,14 @@ std::pair<T, T> toms748_solve(F f, const T& ax, const T& bx, const T& fax, const
 	{
 		a = b;
 	}
-	return std::make_pair(a, b);
+	return optix::make_double2(a, b);
 }
 
 template <class F, class T, class Tol>
-inline std::pair<T, T> toms748_solve(F f, const T& ax, const T& bx, Tol tol, size_t max_iter)
+__device__ __forceinline__ optix::double2 toms748_solve(F f, const T& ax, const T& bx, Tol tol, size_t max_iter)
 {
 	max_iter -= 2;
-	std::pair<T, T> r = toms748_solve(f, ax, bx, f(ax), f(bx), tol, max_iter);
+	optix::double2 r = toms748_solve(f, ax, bx, f(ax), f(bx), tol, max_iter);
 	max_iter += 2;
 	return r;
 }

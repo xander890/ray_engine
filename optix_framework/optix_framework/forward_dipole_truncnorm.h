@@ -2,21 +2,24 @@
 #include "forward_dipole_utils.h"
 #include "random.h"
 
-Float2 squareToStdNormal(const Float2 &sample) {
+#define RND_FUNC rnd_tea
+
+__device__ __host__ __forceinline__ Float2 squareToStdNormal(const Float2 &sample) {
 	Float r = sqrt(-2 * log(1 - sample.x)),
-	phi = 2 * M_PI * sample.y;
-	Float2 result;
-	sincos(phi, &result.y, &result.x);
+		phi = 2 * M_PI * sample.y;
+	Float2 result = MakeFloat2(cos(phi), sin(phi));
 	return result * r;
 }
 
-inline Float stdnorm(unsigned int & t) {
-	return squareToStdNormal(MakeFloat2(rnd_accurate(t), rnd_accurate(t))).x;
+__device__ __host__ __forceinline__   Float stdnorm(unsigned int & t) {
+	float xx = RND_FUNC(t);
+	float yy = RND_FUNC(t);
+	return squareToStdNormal(MakeFloat2(xx, yy)).x;
 }
 
 
 /// Check if simpler subalgorithm is appropriate.
-inline bool CheckSimple(const Float low, ///< lower bound of distribution
+__device__ __host__ __forceinline__   bool CheckSimple(const Float low, ///< lower bound of distribution
 	const Float high ///< upper bound of distribution
 ) {
 	// Init Values Used in Inequality of Interest
@@ -37,7 +40,7 @@ inline bool CheckSimple(const Float low, ///< lower bound of distribution
 /// XXX This check was missing from:
 /// https://github.com/olmjo/RcppTN
 /// http://olmjo.com/computing/RcppTN/
-inline bool CheckRejectFromUniformInsteadOfNormal(
+__device__ __host__ __forceinline__   bool CheckRejectFromUniformInsteadOfNormal(
 	const Float low, const Float high) {
 	if (low * high > 0)
 		return false;
@@ -51,7 +54,7 @@ inline bool CheckRejectFromUniformInsteadOfNormal(
 /// 
 /// Samples z from gaussian and rejects when out of bounds
 
-inline Float UseAlg1(const Float low, ///< lower bound of distribution
+__device__ __host__ __forceinline__   Float UseAlg1(const Float low, ///< lower bound of distribution
 	const Float high, ///< upper bound of distribution
 	unsigned int & t
 ) {
@@ -86,7 +89,7 @@ inline Float UseAlg1(const Float low, ///< lower bound of distribution
 /// Samples from exponential distribution and rejects to transform to 
 /// 'one-sided' bounded Gaussian.
 
-inline Float UseAlg2(const Float low, ///< lower bound of distribution
+__device__ __host__ __forceinline__   Float UseAlg2(const Float low, ///< lower bound of distribution
 	unsigned int & t
 ) {
 	// Init Values
@@ -105,11 +108,11 @@ inline Float UseAlg2(const Float low, ///< lower bound of distribution
 
 	// Loop Until Valid Draw
 	while (valid == 0) {
-		Float e = -log(rnd_accurate(t));
+		Float e = -log(RND_FUNC(t));
 		z = low + e / alpha;
 
 		rho = exp(-pow(alpha - z, 2) / 2);
-		u = rnd_accurate(t);
+		u = RND_FUNC(t);
 		if (u <= rho) {
 			// Keep Successes
 			valid = 1;
@@ -129,7 +132,7 @@ inline Float UseAlg2(const Float low, ///< lower bound of distribution
 /// 
 /// Samples z uniformly within lo..hi and rejects based on gaussian weight
 
-inline Float UseAlg3(const Float low, ///< lower bound of distribution
+__device__ __host__ __forceinline__   Float UseAlg3(const Float low, ///< lower bound of distribution
 	const Float high, ///< upper bound of distribution
 	unsigned int & t
 ) {
@@ -145,7 +148,7 @@ inline Float UseAlg3(const Float low, ///< lower bound of distribution
 
 	// Loop Until Valid Draw
 	while (valid == 0) {
-		z = low + rnd_accurate(t) * (high - low);
+		z = low + RND_FUNC(t) * (high - low);
 		if (0 < low) {
 			rho = exp((pow(low, 2) - pow(z, 2)) / 2);
 		}
@@ -157,7 +160,7 @@ inline Float UseAlg3(const Float low, ///< lower bound of distribution
 			rho = exp(-pow(z, 2) / 2);
 		}
 
-		u = rnd_accurate(t);
+		u = RND_FUNC(t);
 		if (u <= rho) {
 			valid = 1;
 		}
@@ -169,7 +172,7 @@ inline Float UseAlg3(const Float low, ///< lower bound of distribution
 	//
 }
 
-inline Float truncnorm(const Float mean,
+__device__ __host__ __forceinline__   Float truncnorm(const Float mean,
 	const Float sd,
 	const Float low,
 	const Float high,
@@ -186,8 +189,8 @@ inline Float truncnorm(const Float mean,
 		return low;
 	}
 
-	if (std::isinf(sd)) {
-		return low + rnd_accurate(t) * (high - low);
+	if (isinf(sd)) {
+		return low + RND_FUNC(t) * (high - low);
 	}
 
 	SAssert(sd > 0);
@@ -239,6 +242,7 @@ inline Float truncnorm(const Float mean,
 		) {
 		type = 4;
 	}
+
 
 	////////////
 	// Type 1 //
@@ -309,7 +313,7 @@ inline Float truncnorm(const Float mean,
 	return clamp(c_mean + c_sd * draw, low, high); // to protect against round-off
 }
 
-inline Float truncnormPdf(const Float _mean,
+__device__ __host__ __forceinline__   Float truncnormPdf(const Float _mean,
 	const Float _sd,
 	const Float _lo,
 	const Float _hi,
@@ -333,7 +337,7 @@ inline Float truncnormPdf(const Float _mean,
 
 	if (sd == 0) {
 		double scale = hi - lo;
-		if (!std::isfinite(scale))
+		if (!isfinite(scale))
 			SLog(EError, "I currently only support finite intervals when sd==0");
 		double acceptedError = Epsilon * scale;
 		if (lo <= mean && mean <= hi)
@@ -379,7 +383,7 @@ inline Float truncnormPdf(const Float _mean,
 		SAssert(erfDiff > 0);
 		pdf = 2.0*exp(-absoluteExpArgument)
 			/ ((sqrt(2 * M_PI) * sd) * erfDiff);
-		if (!std::isfinite(pdf))
+		if (!isfinite(pdf))
 			Log(EWarn, "full pdf %e, %e %e %e %e", pdf, c_stdlo, c_stdhi, c_stdz, sd);
 	}
 	else {
@@ -394,7 +398,7 @@ inline Float truncnormPdf(const Float _mean,
 		pdf = exp(0.5*(c_stdhi*c_stdhi - c_stdz*c_stdz)) * c_stdlo * c_stdhi
 			/ (-c_stdlo + c_stdhi*exp(0.5*(c_stdhi*c_stdhi - c_stdlo*c_stdlo)));
 		pdf /= sd; // transform back to non-standard setting
-		if (!std::isfinite(pdf))
+		if (!isfinite(pdf))
 			Log(EWarn, "expanded pdf %e, %e %e %e %e %e", pdf, c_stdlo, c_stdhi, c_stdz, sd);
 	}
 	//SAssert(std::isfinite(pdf));

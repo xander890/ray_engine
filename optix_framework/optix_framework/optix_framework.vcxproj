@@ -181,6 +181,7 @@ echo Done.</Command>
     <ClCompile Include="bssrdf_creator.cpp" />
     <ClCompile Include="bssrdf_loader.cpp" />
     <ClCompile Include="bssrdf_visualizer.cpp" />
+    <ClCompile Include="bssrdf_parameter_manager.cpp" />
     <ClCompile Include="camera_host.cpp" />
     <ClCompile Include="chull.cpp" />
     <ClCompile Include="constant_background.cpp" />
@@ -684,6 +685,7 @@ echo Done.</Command>
     <ClInclude Include="bssrdf_loader.h" />
     <ClInclude Include="bssrdf_sampling_properties.h" />
     <ClInclude Include="bssrdf_visualizer.h" />
+    <ClInclude Include="bssrdf_parameter_manager.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="camera_host.h" />
     <ClInclude Include="colormap.h" />
