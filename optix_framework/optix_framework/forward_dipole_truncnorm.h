@@ -373,12 +373,13 @@ __device__ __host__ __forceinline__   Float truncnormPdf(const Float _mean,
 
 	double pdf;
 	double c_stdhi = (hi - mean) / sd; // standarized bound
-	double c_stdlo = (lo - mean) / sd; // standarized bound
+	double c_stdlo = (lo - mean) / sd; // standarized bound 
 	double c_stdz = (z - mean) / sd; // standarized sample
 	if (c_stdhi > -8.) { // in this case: full erf expression should be sufficiently stable
-		double absoluteExpArgument = 0.5 * pow((z - mean) / sd, 2);
-		double erfDiff = USE_ERF((hi - mean) / (sqrt(2)*sd))
-			- USE_ERF((lo - mean) / (sqrt(2)*sd));
+		double absoluteExpArgument = 0.5 * ((z - mean) / sd) *  ((z - mean) / sd);
+		double erf1 = (hi - mean) / (M_SQRT2f*sd);
+		double erf2 = (lo - mean) / (M_SQRT2f*sd);
+		double erfDiff = USE_ERF(erf1) - USE_ERF(erf2);
 		//SAssert(absoluteExpArgument < LOG_REDUCED_PRECISION); // this can underflow if pdf becomes 0, which is OK...
 		SAssert(erfDiff > 0);
 		pdf = 2.0*exp(-absoluteExpArgument)
@@ -399,7 +400,7 @@ __device__ __host__ __forceinline__   Float truncnormPdf(const Float _mean,
 			/ (-c_stdlo + c_stdhi*exp(0.5*(c_stdhi*c_stdhi - c_stdlo*c_stdlo)));
 		pdf /= sd; // transform back to non-standard setting
 		if (!isfinite(pdf))
-			Log(EWarn, "expanded pdf %e, %e %e %e %e %e", pdf, c_stdlo, c_stdhi, c_stdz, sd);
+			Log(EWarn, "expanded pdf %e, %e %e %e %e", pdf, c_stdlo, c_stdhi, c_stdz, sd);
 	}
 	//SAssert(std::isfinite(pdf));
 	return pdf;

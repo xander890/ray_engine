@@ -16,7 +16,7 @@ __device__ __host__ __forceinline__   Float sampleLengthAbsorption(const float s
 	Float &s, unsigned int & t) {
 	if (sigma_a == 0)
 		return 0.0;
-	s = -log(rnd_accurate(t)) / sigma_a;
+	s = -log(rnd_tea(t)) / sigma_a;
 	Float pdf = sigma_a*exp(-sigma_a*s);
 	FSAssert(isfinite(s));
 	FSAssert(s >= 0);
@@ -131,21 +131,21 @@ __device__ __host__ __forceinline__   void implLengthShortLimitKnownU0(
 
 	if (use_sampler) {
 		do {
-			t = truncnorm(mean, stddev, 0.0, 1.0 / 0.0, seed);
+			t = truncnorm(mean, stddev, 0.0, INFINITY, seed);
 		} while (t == 0);
-		ps = std::pow(t, -1. / 3.);
+		ps = pow(t, -1. / 3.);
 		s = ps / p;
 	}
 	else {
 		ps = p*s;
 		t = 1 / (ps*ps*ps);
 	}
-	FSAssert(std::isfinite(s));
+	FSAssert(isfinite(s));
 	FSAssert(s > 0);
 
 
 	if (pdf) {
-		Float tPdf = truncnormPdf(mean, stddev, 0.0, 1.0 / 0.0, t);
+		Float tPdf = truncnormPdf(mean, stddev, 0.0, INFINITY, t);
 
 		// transform from pdf(t = (ps)^(-3)) to pdf(ps) [factor 3*(ps)^-4] & go back to p!=1 [factor p]
 		*pdf = tPdf * 3 / (ps*ps*ps*ps) * p;
@@ -163,6 +163,7 @@ __device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
 	Float r2 = r*r;
 	Float cosTheta = clamp(dot(R, uL) / lRl, (Float)-1, (Float)1);
 
+
 	/* TODO:
 	*
 	* (1) This is not very sensible for r > 1 (set this strategy's MIS
@@ -178,11 +179,10 @@ __device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
 		return;
 	}
 
-
-	Float invps_mean; // the critical point (t* in the suppl. mat. of the paper)
 #if 1 /* Exact, fully cosTheta-dependent solution from Maple codegen (true), or 
 					  crude, easy to evaluate approximation (false) */
 					  // Maple codegen for (the real part of) the root that we want
+	Float invps_mean; // the critical point (t* in the suppl. mat. of the paper)
 	double t1 = 1. / r;
 	double t5 = cosTheta * cosTheta;
 	double t6 = cosTheta * t5;
@@ -193,12 +193,15 @@ __device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
 	double t16 = r * cosTheta;
 	double t20 = 96 * t7 - 4 * t9 + 180 * t11 - 20 * t6 + 243 * t14
 		- 36 * t16 - 28 * t5 - 120 * r + 16;
+
+
 	double t21 = abs(t20);
 	double t22 = sqrt(t21);
 	double t23 = (t20 > 0) - (t20 < 0); // =signum(t20): (t20>0 ? 1 : (t20<0 ? -1 : 0));
 	double t24 = t23 * t22;
-	double t25 = sqrt(30);
+	double t25 = sqrt(30.0);
 	double t34 = t25 * t22;
+
 	double t45 = -288 * cosTheta * t25 * t24 + 3888 * r * t34 - 960 * t23 * t34
 		+ 1440 * t5 * t34 + 768 * t6 * t34 - 288 * cosTheta * t34 + 77760 * t11
 		- 15552 * t16 + 216 * t21 + 41472 * t7 + 3840 * cosTheta + 6400;
@@ -244,10 +247,9 @@ __device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
 
 	Float invps;
 	Float ps;
-
 	if (use_sampler) {
 		do {
-			invps = truncnorm(invps_mean, stddev, 0.0, 1.0 / 0.0, seed);
+			invps = truncnorm(invps_mean, stddev, 0.0, INFINITY, seed);
 		} while (invps == 0);
 		ps = 1 / invps;
 		s = ps / p;
@@ -260,8 +262,8 @@ __device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
 	FSAssert(isfinite(s));
 	FSAssert(s > 0);
 
-	if (pdf) {
-		Float invpsPdf = truncnormPdf(invps_mean, stddev, 0.0, 1.0 / 0.0, invps);
+	if (pdf != nullptr) {
+		Float invpsPdf = truncnormPdf(invps_mean, stddev, 0.0, FLT_MAX, invps);
 
 		// transform from pdf(1/(ps)) to pdf(ps) [factor (ps)^-2] & go back to p!=1 [factor p]
 		*pdf = invpsPdf / (ps*ps) * p;
@@ -379,7 +381,7 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 		theCdf = clamp(theCdf, 0., 1.);
 		return theCdf;
 	};
-	double u = rnd_accurate(t);
+	double u = rnd_tea(t);
 	auto target = [=](double ps) { return cdf(ps) - u; };
 
 	// Bracket the root
@@ -401,8 +403,8 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 	}
 
 	size_t max_iter = 1000;
-	std::pair<double, double> Rvnsol = toms748_solve(target, lo, hi, eps_tolerance<double>(15), max_iter);
-	Float s_p1 = 0.5*(Rvnsol.first + Rvnsol.second);
+	optix::double2 Rvnsol = toms748_solve(target, lo, hi, eps_tolerance<double>(15), max_iter);
+	Float s_p1 = 0.5*(Rvnsol.x + Rvnsol.y);
 	s = s_p1 / p;
 	if (!isfinite(s)) {
 		Log(EWarn, "FIXME %f", s);
@@ -423,17 +425,18 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 
 // If d_in is unknown, it is set to NULL
 __device__ __host__ __forceinline__  Float sampleLengthDipole(
-	const Float sigma_s,
-	const Float sigma_a,
-	const Float mu,
-	const Float m_eta, 
+	const float sigma_s,
+	const float sigma_a,
+	const float mu,
+	const float m_eta, 
 	const Float3 &uL, const Float3 &nL, const Float3 &R,
 	const Float3 *u0, const Float3 &n0,
 	TangentPlaneMode tangentMode, Float &s, unsigned int & t) {
 
 	Float3 R_virt;
+
 	if (!getTentativeIndexMatchedVirtualSourceDisp(sigma_s, sigma_a, mu, m_eta,
-		n0, nL, uL, R, 0. / 0., tangentMode, R_virt))
+		n0, nL, uL, R, NAN, tangentMode, R_virt))
 		return 0.0;
 
 	/* For R-dependent functions that don't take the dipole into account
@@ -441,7 +444,7 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 	* TODO: Smart MIS weight? (Need length-marginalized 'realSourceWeight'
 	* from getTentativeIndexMatchedVirtualSourceDisp then.) */
 	Float3 R_effective, R_other;
-	if (rnd_accurate(t) < 0.5) {
+	if (rnd_tea(t) < 0.5) {
 		R_effective = R;
 		R_other = R_virt;
 	}
@@ -449,10 +452,9 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 		R_effective = R_virt;
 		R_other = R;
 	}
-
 	Float p1, p2, p3;
 	p1 = p2 = p3 = -1;
-	const Float u = rnd_accurate(t);
+	const Float u = rnd_tea(t);
 	if (u < lengthSample_w1) {
 		p1 = sampleLengthShortLimit(sigma_s, mu, R, u0, uL, s, t);
 		if (p1 == 0)
@@ -468,7 +470,7 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 		if (p3 == 0)
 			return 0.0f;
 	}
-
+	
 	if (p1 == -1)
 		p1 = (lengthSample_w1 == 0 ? 0 : pdfLengthShortLimit(sigma_s, mu, R, u0, uL, s));
 	if (p2 == -1)
@@ -486,17 +488,17 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 }
 
 __device__ __host__ __forceinline__  Float pdfLengthDipole(
-	const Float sigma_s,
-	const Float sigma_a,
-	const Float mu,
-	const Float m_eta,
+	const float sigma_s,
+	const float sigma_a,
+	const float mu,
+	const float m_eta,
 	const Float3 &uL, const Float3 &nL, const Float3 &R,
 	const Float3 *u0, const Float3 &n0,
 	TangentPlaneMode tangentMode, Float s) {
 	FSAssert(s >= 0);
 	Float3 R_virt;
 	if (!getTentativeIndexMatchedVirtualSourceDisp(sigma_s, sigma_a, mu, m_eta,
-		n0, nL, uL, R, 0. / 0., tangentMode, R_virt))
+		n0, nL, uL, R, NAN, tangentMode, R_virt))
 		return 0.0;
 
 	Float p1 = (lengthSample_w1 == 0 ? 0 :

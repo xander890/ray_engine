@@ -48,8 +48,8 @@ RT_PROGRAM void render()
 	float3 S = T12 * fresnel_integral * bssrdf(xi, ni, w12, xo, no, w12, *planar_bssrdf_material_params);
 	float S_shown = optix::get_channel(channel_to_show, S) * scale_multiplier;
 
-	float t = optix::clamp((log(S_shown + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);
-	float h = optix::clamp((1.0 - t)*2.0f, 0.0f, 0.65f);
+	float t = optix::clamp((logf(S_shown + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);
+	float h = optix::clamp((1.0f - t)*2.0f, 0.0f, 0.65f);
 	 
 	optix::float4 res = make_float4(S_shown);
 	if(show_false_colors)

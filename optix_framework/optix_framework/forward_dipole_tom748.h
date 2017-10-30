@@ -1,29 +1,9 @@
 #pragma once
-#define BOOST_MATH_INSTRUMENT_CODE(x)
+#define BOOST_MATH_INSTRUMENT_CODE(x) 
 #include "host_device_common.h"
+#include "forward_dipole_utils.h"
 
-template<typename T>
-__device__ __forceinline__  T get_min();
-template<>
-__device__ __forceinline__ float get_min() { return FLT_MIN;  }
-template<>
-__device__ __forceinline__ double get_min() { return DBL_MIN; }
-
-template<typename T>
-__device__ __forceinline__  T get_max();
-template<>
-__device__ __forceinline__ float get_max() { return FLT_MAX; }
-template<>
-__device__ __forceinline__ double get_max() { return DBL_MAX; }
-
-template<typename T>
-__device__ __forceinline__  T get_epsilon();
-template<>
-__device__ __forceinline__ float get_epsilon() { return FLT_EPSILON; }
-template<>
-__device__ __forceinline__ double get_epsilon() { return DBL_EPSILON; }
-
-static __device__ __forceinline__ double sign(double v)
+static __host__ __device__ __forceinline__ double sign(double v)
 {
 	return copysign(1.0f, v);
 }
@@ -48,7 +28,7 @@ private:
 namespace detail {
 
 	template <class F, class T>
-	__device__ __forceinline__ void bracket(F f, T& a, T& b, T c, T& fa, T& fb, T& d, T& fd)
+	__host__ __device__ __forceinline__ void bracket(F f, T& a, T& b, T c, T& fa, T& fb, T& d, T& fd)
 	{
 		//
 		// Given a point c inside the existing enclosing interval
@@ -112,7 +92,7 @@ namespace detail {
 	}
 
 	template <class T>
-	__device__ __forceinline__ T safe_div(T num, T denom, T r)
+	__host__ __device__ __forceinline__ T safe_div(T num, T denom, T r)
 	{
 		//
 		// return num / denom without overflow,
@@ -129,7 +109,7 @@ namespace detail {
 	}
 
 	template <class T>
-	__device__ __forceinline__  T secant_interpolate(const T& a, const T& b, const T& fa, const T& fb)
+	__host__ __device__ __forceinline__  T secant_interpolate(const T& a, const T& b, const T& fa, const T& fb)
 	{
 		//
 		// Performs standard secant interpolation of [a,b] given
@@ -150,7 +130,7 @@ namespace detail {
 	}
 
 	template <class T>
-	__device__ __forceinline__ T quadratic_interpolate(const T& a, const T& b, T const& d,
+	__host__ __device__ __forceinline__ T quadratic_interpolate(const T& a, const T& b, T const& d,
 		const T& fa, const T& fb, T const& fd,
 		unsigned count)
 	{
@@ -206,7 +186,7 @@ namespace detail {
 	}
 
 	template <class T>
-	__device__ __forceinline__ T cubic_interpolate(const T& a, const T& b, const T& d,
+	__host__ __device__ __forceinline__ T cubic_interpolate(const T& a, const T& b, const T& d,
 		const T& e, const T& fa, const T& fb,
 		const T& fd, const T& fe)
 	{
@@ -255,7 +235,7 @@ namespace detail {
 } // namespace detail
 
 template <class F, class T, class Tol>
-__device__ __forceinline__ optix::double2 toms748_solve(F f, const T& ax, const T& bx, const T& fax, const T& fbx, Tol tol, size_t max_iter)
+__host__ __device__ __forceinline__ optix::double2 toms748_solve(F f, const T& ax, const T& bx, const T& fax, const T& fbx, Tol tol, size_t max_iter)
 {
 	//
 	// Main entry point and logic for Toms Algorithm 748
@@ -263,7 +243,7 @@ __device__ __forceinline__ optix::double2 toms748_solve(F f, const T& ax, const 
 	//
 	  // For ADL of std math functions
 	
-	unsigned int count = max_iter;
+	unsigned int count = (unsigned int)max_iter;
 	T a, b, fa, fb, c, u, fu, a0, b0, d, fd, e, fe;
 	static const T mu = 0.5f;
 
@@ -428,7 +408,7 @@ __device__ __forceinline__ optix::double2 toms748_solve(F f, const T& ax, const 
 }
 
 template <class F, class T, class Tol>
-__device__ __forceinline__ optix::double2 toms748_solve(F f, const T& ax, const T& bx, Tol tol, size_t max_iter)
+__host__ __device__ __forceinline__ optix::double2 toms748_solve(F f, const T& ax, const T& bx, Tol tol, size_t max_iter)
 {
 	max_iter -= 2;
 	optix::double2 r = toms748_solve(f, ax, bx, f(ax), f(bx), tol, max_iter);

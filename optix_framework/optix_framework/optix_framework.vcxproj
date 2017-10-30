@@ -236,6 +236,7 @@ echo Done.</Command>
     <ClCompile Include="presampled_surface_bssrdf.cpp" />
     <ClCompile Include="sky_model.cpp" />
     <ClCompile Include="sphere.cpp" />
+    <ClCompile Include="forward_dipole_test.cpp" />
     <ClCompile Include="transform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -694,9 +695,11 @@ echo Done.</Command>
     <ClInclude Include="default_shader.h" />
     <ClInclude Include="device_environment_map.h" />
     <ClInclude Include="device_mesh_data.h" />
+    <ClInclude Include="double_support_optix.h" />
     <ClInclude Include="environment_map_background.h" />
     <ClInclude Include="forward_dipole.h" />
     <ClInclude Include="forward_dipole_sampling.h" />
+    <ClInclude Include="forward_dipole_test.h" />
     <ClInclude Include="forward_dipole_tom748.h" />
     <ClInclude Include="forward_dipole_truncnorm.h" />
     <ClInclude Include="forward_dipole_utils.h" />

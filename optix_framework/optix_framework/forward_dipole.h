@@ -22,7 +22,7 @@ __device__ __host__ __forceinline__ Float evalMonopole(
 	Float3 Hnorm = Float3(H / lHl);
 	Float lHlreg = (lHl > 1. / MTS_FWDSCAT_DIRECTION_MIN_MU) ?
 		1. / MTS_FWDSCAT_DIRECTION_MIN_MU : lHl;
-	Float cosTheta = roundCosThetaForStability(dot(u0, Hnorm), -1, 1);
+	Float cosTheta = clamp(dot(u0, Hnorm), -1., 1.);
 
 	double N = absorptionAndFloat3izationConstant(length, sigma_s, sigma_a, mu);
 	double G = N * exp(-C + E*dot(R, uL) + lHlreg*cosTheta - F*dot(R,R));
@@ -35,7 +35,7 @@ __device__ __host__ __forceinline__ Float evalMonopole(
 	if (abs(E*dot(R, uL)) > 1e3)
 		CancellationCheck(-C, E*dot(R, uL));
 	if (abs(lHlreg*cosTheta) > 1e3)
-		CancellationCheck(-C + E*dot(R, uL), lHlreg*cosTheta);
+		CancellationCheck(-C + E*dot(R, uL), (double)lHlreg*cosTheta);
 	if (abs(F*dot(R,R)) > 1e3)
 		CancellationCheck(-C + E*dot(R, uL) + lHlreg*cosTheta, -F*dot(R,R));
 
@@ -102,15 +102,6 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	* along nL. */
 	FSAssert(!reciprocal || isfinite(nL));
 	FSAssert(!reciprocal || dot(uL, nL) >= -Epsilon); // positive with small margin for roundoff errors
-	//if (isfinite(nL) && dot(uL_external, nL) <= 0) // clamp to protect against roundoff errors
-	//	return 0.0f;
-
-#if MTS_FWDSCAT_DIPOLE_REJECT_INCOMING_WRT_TRUE_SURFACE_Float3
-	//if (dot(u0_external, n0) >= 0)
-	//	return 0.0f;
-#endif
-
-
 	/* Handle eta != 1 case by 'refracting' the 'external' directions
 	* u0_external and uL_external to 'internal' directions u0 and uL. We
 	* keep the directions pointing along the propagation direction of
@@ -135,12 +126,12 @@ __device__ __host__ __forceinline__ Float evalDipole(
 
 	Float3 R_virt;
 	Float3 u0_virt;
-	optix_print("Getting virtual source...\n");
 	if (!getVirtualDipoleSource(sigma_s, sigma_a, mu, m_eta, n0, u0, nL, uL, R, length,
 		rejectInternalIncoming, tangentMode, zvMode,
 		u0_virt, R_virt, nullptr))
 		return 0.0f;
 
+	optix_print("Virtual source... R_virt %f %f %f, u_o %f %f %f\n", R_virt.x, R_virt.y, R_virt.z, u0_virt.x, u0_virt.y, u0_virt.z );
 	// Effective BRDF?
 	if (useEffectiveBRDF) {
 		FSAssert(optix::length(n0 - nL) < Epsilon); // same point -> same Float3
@@ -159,7 +150,6 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	}
 
 	// Full BSSRDF
-	optix_print("Getting virtual source...\n");
 
 	Float real = 0, virt = 0;
 	if (dipoleMode & EReal)
@@ -174,7 +164,7 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	default: Log(EError, "Unknown dipoleMode: %d", dipoleMode); return 0;
 	}
 
-	optix_print("BSSRDF: %f\n", transport);
+	optix_print("BSSRDF: %e\n", transport);
 
 	if (reciprocal) {
 		Float transportRev = evalDipole(sigma_s, sigma_a, mu, m_eta,
@@ -188,15 +178,57 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	}
 }
 
+
+__host__ __device__ __inline__ void test_forward_dipole_cuda()
+{
+	const Float3 xi = MakeFloat3(0., 0., 0.);
+	const Float3 xo = MakeFloat3(1., 0., 0.);
+	const Float3 ni = MakeFloat3(0., 0., 1.);
+	const Float3 no = MakeFloat3(0., 0., 1.);
+	const Float3 w12 = MakeFloat3(0., 0., -1.);
+	const Float3 w21 = MakeFloat3(0., 0., -1.);
+	float sigma_s = 1;
+	float sigma_a = 0.01f;
+	float mu = 1 - 0.0f;
+	float eta = 1.0f;
+	Float3 R = xo - xi;
+	unsigned int seed = 1023;
+	unsigned int samples = 100;
+	Float S = 0.0;
+	for (unsigned int i = 0; i < samples; i++)
+	{
+		TangentPlaneMode tangent = TangentPlaneMode::EUnmodifiedIncoming;
+		Float s;
+		float wi = sampleLengthDipole(sigma_s, sigma_a, mu, eta, w12, ni, R, nullptr, no, tangent, s, seed);
+		optix_print("Sampled s: %e, w: %e\n", s, wi);
+		S += evalDipole(sigma_s, sigma_a, mu, eta,
+			no, normalize(w21),
+			ni, normalize(w12),
+			R, s,
+			false,
+			false,
+			tangent,
+			ZvMode::EFrisvadEtAlZv,
+			false,
+			EVirt
+		);
+	}
+	S /= samples;
+	optix_print("Dipole test: %e\n ", S);
+}
+
 __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const float3& ni, const float3& w12,
 	const float3& xo, const float3& no, const float3& w21,
 	const ScatteringMaterialProperties& properties)
 {
+	//test_forward_dipole_cuda();
+	//return make_float3(0);
+
 	TangentPlaneMode tangent = TangentPlaneMode::EUnmodifiedIncoming;
-	float3 R = xo - xi;
+	Float3 R = MakeFloat3(xo - xi);
 	optix::float3 res;
 	unsigned int seed = 1023;
-	unsigned int samples = 1000;
+	unsigned int samples = 10;
 
 	for (int k = 0; k < 3; k++)
 	{
@@ -206,23 +238,25 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 		float eta = 1.0f;
 		float S = 0.0f;
 
-		for (int i = 0; i < samples; i++)
+		for (unsigned int i = 0; i < samples; i++)
 		{
-			float s;
-			float wi = sampleLengthDipole(sigma_s, sigma_a, mu, eta, w12, ni, R, nullptr, no, tangent, s, seed);
-			S += evalDipole(sigma_s, sigma_a, mu, eta,
-				no, normalize(w21),
-				ni, normalize(w12),
-				(xo - xi), s,
+			Float s = 0.0f;
+			float wi = sampleLengthDipole(sigma_s, sigma_a, mu, eta, MakeFloat3(w12), MakeFloat3(ni), R, nullptr, MakeFloat3(no), tangent, s, seed);
+			optix_print("Sampled s: %f, w: %f, i: %d\n", s, wi,i );
+			S += fmaxf(0,evalDipole(sigma_s, sigma_a, mu, eta,
+				MakeFloat3(no), -MakeFloat3(w21),
+				MakeFloat3(ni), MakeFloat3(w12),
+				R, s,
 				false,
 				false,
 				tangent,
 				ZvMode::EFrisvadEtAlZv,
 				false,
 				ERealAndVirt
-			) * wi;
+			)) * wi;
 		}
 		optix::get_channel(k, res) = S / samples;
 	}
 	return res;
 }
+

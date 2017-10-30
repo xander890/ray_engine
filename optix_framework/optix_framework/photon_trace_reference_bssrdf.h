@@ -8,7 +8,7 @@
 #include "optical_helper.h"
 #include "phase_function.h"
 
-#define RND_FUNC rnd_accurate
+#define RND_FUNC rnd_tea
 //#define EXTINCTION_DISTANCE_RR
 //#define INCLUDE_SINGLE_SCATTERING
 
@@ -159,7 +159,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 	return false;
 }
 
-#define PLANAR_SCENE_SIZE 2.0f
+#define PLANAR_SCENE_SIZE 8.0f
 __forceinline__ __device__ optix::float2 get_normalized_planar_buffer_coordinates(const optix::float2 & coord)
 {
 	return (coord + make_float2(PLANAR_SCENE_SIZE)) / (2 * PLANAR_SCENE_SIZE);

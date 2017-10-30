@@ -13,8 +13,8 @@
 #include "cputimer.h"
 #include "GLFW\glfw3.h"
 #include "GLFWDisplay.h"
+#include "forward_dipole_test.h"
 #pragma warning(disable : 4996)
-
 
 
 void get_default_material(const std::string & mat, float & theta_i, float & r, float & theta_s, float & albedo, float & extinction, float & g, float & n2_over_n1)
@@ -102,6 +102,7 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
 {
 	m_context->setPrintEnabled(false);
+	test_forward_dipole();
 	m_context->setPrintBufferSize(200);
 	m_context->setPrintLaunchIndex(0, 0, 0);
 	Folders::init();
@@ -120,6 +121,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	mBssrdfReferenceSimulator->init();
 
 	mBssrdfModelSimulator = std::make_shared<BSSRDFRendererModel>(m_context);
+	mBssrdfModelSimulator->set_dipole(ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF);
 	mBssrdfModelSimulator->init();
 
 	set_render_mode(mCurrentRenderMode, mSimulate);
@@ -247,7 +249,6 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 		}
 
 		frame++;
-
 		update_rendering(static_cast<float>(time1 - time));
 	}
 }
@@ -326,7 +327,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 				t = ScatteringDipole::next(t);
 			} while (t != ScatteringDipole::NotValidEnumItem);
 
-			static ScatteringDipole::Type dipole;
+			static ScatteringDipole::Type dipole = ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF;
 			if (ImmediateGUIDraw::Combo("Dipole", (int*)&dipole, dipoles.c_str(), ScatteringDipole::count()))
 			{
 				std::dynamic_pointer_cast<BSSRDFRendererModel>(mCurrentBssrdfRenderer)->set_dipole(dipole);

@@ -268,6 +268,7 @@
     <ClCompile Include="bssrdf_creator.cpp">
       <Filter>Source Files\BSSRDF</Filter>
     </ClCompile>
+    <ClCompile Include="forward_dipole_test.cpp" />
     <ClCompile Include="bssrdf_parameter_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -603,6 +604,10 @@
     </ClInclude>
     <ClInclude Include="forward_dipole_tom748.h">
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
+    </ClInclude>
+    <ClInclude Include="forward_dipole_test.h" />
+    <ClInclude Include="double_support_optix.h">
+      <Filter>Header Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="bssrdf_parameter_manager.h" />
   </ItemGroup>

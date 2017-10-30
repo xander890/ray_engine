@@ -39,7 +39,6 @@ RT_PROGRAM void render_ref()
 				output_buffer[launch_index] = make_float4(jet(val), 1);
 			else
 				output_buffer[launch_index] = make_float4(val);
-
 		}
 	}
 	else
@@ -59,7 +58,8 @@ RT_PROGRAM void render_ref()
 
 		optix::float4 res = make_float4(S_shown);
 		if (show_false_colors)
-			res = optix::make_float4(hsv2rgb(h, 1.0, 1.0), 1.0);
+			res = optix::make_float4(jet(S_shown),1);
+//			res = optix::make_float4(hsv2rgb(h, 1.0, 1.0), 1.0);
 		output_buffer[launch_index] = res;
 	}
 	

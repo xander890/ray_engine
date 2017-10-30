@@ -1,8 +1,8 @@
 #pragma once
 #include "host_device_common.h"
+#include "double_support_optix.h"
 #define M_PI           3.14159265358979323846  /* pi */
 
-#define USE_ERF erf
 
 /* Reject incoming directions that come from within the actual geometry
 * (i.e. w.r.t. the actual local Float3 at the incoming point instead of,
@@ -12,6 +12,7 @@
 #define MTS_FWDSCAT_GIVE_REAL_AND_VIRTUAL_SOURCE_EQUAL_SAMPLING_WEIGHT false
 
 #define MTS_FWDSCAT_DEBUG
+#define MTS_WITH_CANCELLATION_CHECKS
 
 #ifdef MTS_FWDSCAT_DEBUG
 # define FSAssert(x)      optix_assert(x)
@@ -41,12 +42,12 @@
 
 
 using namespace optix;
-#define Float float
-#define Float2 optix::float2
-#define Float3 optix::float3
+#define Float double
+#define Float2 optix::double2
+#define Float3 optix::double3
 #define Float3d optix::double3
-#define MakeFloat3 optix::make_float3
-#define MakeFloat2 optix::make_float2
+#define MakeFloat3 optix::make_double3
+#define MakeFloat2 optix::make_double2
 #define MakeFloat3d optix::make_double3
 
 #define Log(x,y,...) optix_print(y "\n", __VA_ARGS__)
@@ -72,25 +73,57 @@ enum ZvMode {
 	EFrisvadEtAlZv,    /// As in the directional dipole model of Frisvad et al.
 };
 
+__host__ __device__ __forceinline__ double erf_approx_toshiya(double x) {
+	const double a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+	double t = 1.0 / (1.0 + p*abs(x));
+	double y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x);
+	return copysign(1.0, x)*y;
+}
+
+#define USE_ERF erf
+
 #ifdef MTS_WITH_CANCELLATION_CHECKS
-# define CancellationCheck(a, b) do { \
-	if (math::catastrophicCancellation(a,b))\
+__host__ __device__ __forceinline__ bool catastrophicCancellation(float a, float b) {
+	return abs(a + b) / abs(a - b) < 1e-4;
+}
+__host__ __device__ __forceinline__ bool catastrophicCancellation(double a, double b) {
+	return abs(a + b) / abs(a - b) < 1e-7;
+}
+
+# define CancellationCheck(a, b) do {\
+	if (catastrophicCancellation(a,b))\
 		Log(EWarn, "Catastrophic cancellation! (relative %e, %e & %e)",\
-				abs(a+b)/abs(a-b), a, b);\
-	} while (0)
+				abs((a)+(b))/abs((a)-(b)), a, b);\
+	} while(0)
 #else
 # define CancellationCheck(a, b) ((void) 0)
 #endif
-
-__device__ __host__ __forceinline__ double clamp(const double f, const double a, const double b)
-{
-	return max(a, min(f, b));
-}
 
 __device__ __host__ __forceinline__ bool isfinite(Float3 & v)
 {
 	return isfinite(v.x) && isfinite(v.y) && isfinite(v.z);
 }
+
+template<typename T>
+__host__ __device__ __forceinline__  T get_min();
+template<>
+__host__ __device__ __forceinline__ float get_min() { return FLT_MIN; }
+template<>
+__host__ __device__ __forceinline__ double get_min() { return DBL_MIN; }
+
+template<typename T>
+__host__ __device__ __forceinline__  T get_max();
+template<>
+__host__ __device__ __forceinline__ float get_max() { return FLT_MAX; }
+template<>
+__host__ __device__ __forceinline__ double get_max() { return DBL_MAX; }
+
+template<typename T>
+__host__ __device__ __forceinline__  T get_epsilon();
+template<>
+__host__ __device__ __forceinline__ float get_epsilon() { return FLT_EPSILON; }
+template<>
+__host__ __device__ __forceinline__ double get_epsilon() { return DBL_EPSILON; }
 
 __device__ __host__ __forceinline__  Float dEon_C1(const Float n) {
 	Float r;
@@ -158,7 +191,7 @@ __device__ __host__ __forceinline__ void calcValues(const double length, const F
 		double B = TH / (2 * p);
 
 		CancellationCheck(3 * A*B*B, 3 / (2 * TH2)); // C
-		CancellationCheck(3 * A*B*B, -3 / (2 * SH));  // D
+		CancellationCheck((3 * A*B*B), (-3 / (2 * SH)));  // D
 		C = 3 * A*B*B + 3 / (2 * TH2);
 		D = 3 * A*B*B - 3 / (2 * SH);
 		E = 3 * A*B;
@@ -253,17 +286,6 @@ __device__ __host__ __forceinline__ Float _reducePrecisionForCosTheta(Float x) {
 	return x;
 	//return roundFloatForStability(x);
 	//return roundToSignificantDigits(x, 3);
-}
-
-__device__ __host__ __forceinline__ void roundCosThetaBoundsForStability(
-	Float &minCosTheta, Float &maxCosTheta) {
-	minCosTheta = _reducePrecisionForCosTheta(minCosTheta);
-	maxCosTheta = _reducePrecisionForCosTheta(maxCosTheta);
-}
-__device__ __host__ __forceinline__ Float roundCosThetaForStability(Float cosTheta,
-	Float minCosTheta, Float maxCosTheta) {
-	cosTheta = optix::clamp(cosTheta, minCosTheta, maxCosTheta);
-	return _reducePrecisionForCosTheta(cosTheta);
 }
 
 __device__ __host__ __forceinline__ double absorptionAndFloat3izationConstant(Float theLength, const Float sigma_s, const Float sigma_a, const Float mu) {
@@ -390,7 +412,6 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	Float sigma_sp = sigma_s * mu;
 	Float sigma_tp = sigma_sp + sigma_a;
 	
-
 	switch (zvMode) {
 	case EFrisvadEtAlZv: {
 		if (sigma_tp == 0 || sigma_sp == 0)
@@ -425,6 +446,8 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	* the half space!! (and 'cross' the actual real source "beam" if we
 	* elongate it).
 	* Maybe flip the Float3? (to get the half space on the other side...) */
+	optix_print("Effective normal %f %f %f zv %f \n", n0_effective.x, n0_effective.y, n0_effective.z, zv);
+
 	R_virt = R - zv * n0_effective;
 	u0_virt = u0 - 2 * dot(n0_effective, u0) * n0_effective;
 	if (optional_n0_effective)
@@ -447,7 +470,7 @@ __device__ __host__ __forceinline__ bool getTentativeIndexMatchedVirtualSourceDi
 	Float *optional_realSourceRelativeWeight = nullptr) 
 {
 	Float3 _u0_virt, n0_effective;
-	Float3 _u0 = MakeFloat3(0.0f / 0.0f);
+	Float3 _u0 = MakeFloat3(NAN);
 	bool rejectInternalIncoming = false; //u0 not sensible yet!
 	ZvMode zvMode = EClassicDiffusion; //only one that does not depend on u0
 	if (!getVirtualDipoleSource(sigma_s, sigma_a, mu, m_eta, n0, _u0, nL, uL, R, s,

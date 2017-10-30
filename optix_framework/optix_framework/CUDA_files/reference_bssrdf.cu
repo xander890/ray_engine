@@ -29,7 +29,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 {
 	uint idx = launch_index.x;
 	optix::uint t = ref_frame_number * launch_dim.x + idx; 
-	hash(t);
+	tea_hash(t);
 	 
 	const float incident_power = 1.0f;
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
