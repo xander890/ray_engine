@@ -8,6 +8,7 @@
 #include "logger.h"
 #include "render_task.h"
 #include "bssrdf_parameter_manager.h"
+#include "full_bssrdf_host_device_common.h"
 class ImmediateGUI;
 
 
@@ -56,6 +57,7 @@ private:
 	optix::TextureSampler mBSSRDFHemisphereTex = nullptr;
 	float mScaleMultiplier = 1.f;
 	int mShowFalseColors = 1;
+	int mFresnelMode = BSSRDF_RENDER_MODE_FULL_BSSRDF;
 	std::unique_ptr<ImmediateGUI> gui;
 
 	BSSRDFParameterManager mParametersSimulation;

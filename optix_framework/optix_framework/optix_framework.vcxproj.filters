@@ -610,6 +610,7 @@
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="bssrdf_parameter_manager.h" />
+    <ClInclude Include="full_bssrdf_host_device_common.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

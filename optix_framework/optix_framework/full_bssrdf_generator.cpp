@@ -222,6 +222,7 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 
 			m_context["show_false_colors"]->setUint(mShowFalseColors);
 			m_context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
+			m_context["reference_bssrdf_fresnel_mode"]->setInt(mFresnelMode);
 
 			void* source = mCurrentBssrdfRenderer->get_output_buffer()->map();
 
@@ -286,9 +287,13 @@ void FullBSSRDFGenerator::post_draw_callback()
 	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
 
 	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors); 
+	
+	ImmediateGUIDraw::Combo("Fresnel mode", &mFresnelMode, "Full BSSRDF\0Fresnel only\0Full BSSRDF, no Fresnel" , 3);
+
 	ImmediateGUIDraw::SameLine();
 	ImmediateGUIDraw::Checkbox("Pause", (bool*)&mPaused);
 	ImmediateGUIDraw::Checkbox("Fast Mode", (bool*)&mFastMode);
+
 
 	const char * comboelements[2] = { "Render BSSRDF", "Show Existing Empirical BSSRDF" };
 	if (ImmediateGUIDraw::Combo("Select Render mode", (int*)&mCurrentRenderMode, comboelements, 2, 2))

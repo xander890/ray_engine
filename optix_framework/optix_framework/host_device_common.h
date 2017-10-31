@@ -104,6 +104,3 @@ using BufPtr3D = BufPtr<T, 3>;
 #define optix_print printf
 #define optix_assert assert
 #endif
-
-#define BSSRDF_OUTPUT_PLANE 0
-#define BSSRDF_OUTPUT_HEMISPHERE 1

@@ -704,6 +704,7 @@ echo Done.</Command>
     <ClInclude Include="forward_dipole_truncnorm.h" />
     <ClInclude Include="forward_dipole_utils.h" />
     <ClInclude Include="full_bssrdf_generator.h" />
+    <ClInclude Include="full_bssrdf_host_device_common.h" />
     <ClInclude Include="glm.h" />
     <ClInclude Include="GLFWDisplay.h" />
     <ClInclude Include="HDRLoader.h" />

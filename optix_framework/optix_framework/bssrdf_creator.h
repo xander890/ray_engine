@@ -2,6 +2,7 @@
 #include <string>
 #include <host_device_common.h>
 #include <scattering_properties.h>
+#include <full_bssrdf_host_device_common.h>
 
 class BSSRDFRenderer
 {

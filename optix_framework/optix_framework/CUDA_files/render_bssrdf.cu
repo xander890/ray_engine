@@ -1,10 +1,12 @@
 #include <device_common_data.h>
+#include <full_bssrdf_host_device_common.h>
 #include <color_helpers.h>
 #include <ray_trace_helpers.h>
 #include <environment_map.h>
 #include <math_helpers.h>
 #include <colormap.h>
 #include <photon_trace_reference_bssrdf.h>
+#include <scattering_properties.h>
 using namespace optix;
 
 // Window variables
@@ -13,7 +15,9 @@ rtDeclareVariable(unsigned int, show_false_colors, , );
 rtDeclareVariable(float, reference_scale_multiplier, , );
 rtDeclareVariable(TexPtr, resulting_flux_tex, , );
 rtDeclareVariable(int, reference_bssrdf_output_shape, , ) = BSSRDF_OUTPUT_HEMISPHERE;
-rtDeclareVariable(float, ior, , );
+rtDeclareVariable(int, reference_bssrdf_fresnel_mode, , ) = BSSRDF_RENDER_MODE_FULL_BSSRDF;
+rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
+
 
 RT_PROGRAM void render_ref()
 {
@@ -26,15 +30,27 @@ RT_PROGRAM void render_ref()
 		float phi_o = atan2f(ip.y, ip.x);
 		float l = length(ip);
 
-
 		if (l >= 1)
 		{
 			output_buffer[launch_index] = make_float4(0);
 		}
 		else
 		{
-			float2 coords = get_normalized_hemisphere_buffer_coordinates(l * M_PIf * 0.5f, phi_o);
-			float val = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, coords.x, coords.y).x;
+			float theta_o = l * M_PIf * 0.5f;
+			float2 coords = get_normalized_hemisphere_buffer_coordinates(theta_o, phi_o);
+			float cos_theta_o = cosf(theta_o);
+			float S = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, coords.x, coords.y).x;
+			float T21 = 1.0f - fresnel_R(cos_theta_o, reference_bssrdf_rel_ior);
+
+			float val;
+			switch (reference_bssrdf_fresnel_mode)
+			{
+			case BSSRDF_RENDER_MODE_FRESNEL_OUT_ONLY: val = T21; break;
+			case BSSRDF_RENDER_MODE_REMOVE_FRESNEL: val = S / T21; break;
+			default:
+			case BSSRDF_RENDER_MODE_FULL_BSSRDF: val = S; break;
+			}
+
 			if (show_false_colors == 1)
 				output_buffer[launch_index] = make_float4(jet(val), 1);
 			else
@@ -43,12 +59,12 @@ RT_PROGRAM void render_ref()
 	}
 	else
 	{
-		float fresnel_integral = C_phi(ior) * 4 * M_PIf;
+		float fresnel_integral = C_phi(reference_bssrdf_rel_ior) * 4 * M_PIf;
 		float R21;
 		optix::float3 w21; 
 		const optix::float3 no = optix::make_float3(0,0,1);
 		const optix::float3 wo = no;
-		refract(wo, no, 1 / ior , w21, R21);
+		refract(wo, no, 1 / reference_bssrdf_rel_ior, w21, R21);
 		float T21 = 1.0f - R21;
 
 		float S_shown = reference_scale_multiplier * fresnel_integral / T21 * optix::rtTex2D<float4>(resulting_flux_tex, uv.x, uv.y).x;

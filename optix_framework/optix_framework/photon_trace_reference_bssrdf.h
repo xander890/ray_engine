@@ -1,4 +1,5 @@
 #pragma once
+#include "full_bssrdf_host_device_common.h"
 #include <device_common_data.h>
 #include <random.h>
 #include <sampling_helpers.h>
