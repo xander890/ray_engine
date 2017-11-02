@@ -495,7 +495,7 @@ void FullBSSRDFGenerator::start_rendering()
 	Logger::info << "Theta i: " << tostring(mParametersSimulation.parameters[theta_i_index]) << std::endl;
 	current_render_task->start();
 
-	mExporter = std::make_unique<BSSRDFExporter>(current_render_task->get_destination_file(), mParametersOriginal, mCurrentBssrdfRenderer->get_size().x, mCurrentBssrdfRenderer->get_size().y);
+	mExporter = std::make_unique<BSSRDFExporter>(current_render_task->get_destination_file(), mParametersOriginal, mCurrentBssrdfRenderer->get_size().y, mCurrentBssrdfRenderer->get_size().x);
 	
 	mState = ParameterState({ 0,0,0,0,0,0 });
 

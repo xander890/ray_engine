@@ -14,6 +14,15 @@ std::map<size_t, std::string> BSSRDFParameterManager::parameter_names = {
 };
 #undef stringify_pair
 
+std::map<size_t, std::vector<float>> BSSRDFParameterManager::original_parameters = {
+	{ theta_i_index,{ 0, 15, 30, 45, 60, 70, 80, 88 } },
+	{ r_index,{ 0.01f, 0.05f, 0.1f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 4.0f, 8.0f, 10.0f } },
+	{ theta_s_index,{ 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180 } },
+	{ albedo_index,{ 0.01f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 0.99f } },
+	{ g_index,{ -0.9f, -0.7f, -0.5f, -0.3f, 0.0f, 0.3f, 0.5f, 0.7f, 0.9f, 0.95f, 0.99f } },
+	{ eta_index,{ 1.0f, 1.1f, 1.2f, 1.3f, 1.4f } }
+};
+
 
 size_t flatten_index(const std::vector<size_t>& idx, const std::vector<size_t>& size)
 {
