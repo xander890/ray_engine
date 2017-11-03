@@ -47,6 +47,9 @@
     <ClCompile Include="Randomizer.cpp">
       <Filter>Misc</Filter>
     </ClCompile>
+    <ClCompile Include="Interface.cpp">
+      <Filter>Properties</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glass.h">
@@ -94,5 +97,6 @@
     <ClInclude Include="mt_random.h">
       <Filter>Misc</Filter>
     </ClInclude>
+    <ClInclude Include="optprops_common.h" />
   </ItemGroup>
 </Project>

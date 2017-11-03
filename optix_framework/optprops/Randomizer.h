@@ -2,8 +2,9 @@
 #define RANDOMIZER_H
 
 #include <valarray>
+#include "optprops_common.h"
 
-class Randomizer
+class OPTPROPS_API Randomizer
 {
 public:
   Randomizer(unsigned long seed = 5489UL);

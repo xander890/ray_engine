@@ -108,7 +108,7 @@ static const double spectrum_rgb[][4] = {
 
 static const int spectrum_rgb_samples = sizeof(spectrum_rgb) / sizeof(spectrum_rgb[0]);
 
-inline unsigned int get_nearest_rgb_index(double wavelength)
+inline OPTPROPS_API unsigned int get_nearest_rgb_index(double wavelength)
 {
   unsigned int i = (spectrum_rgb_samples - 1)/2;
   double n = spectrum_rgb_samples/2.0;
@@ -125,7 +125,7 @@ inline unsigned int get_nearest_rgb_index(double wavelength)
   return i;
 }
 
-inline const double* get_nearest_rgb(double wavelength)
+inline OPTPROPS_API const double* get_nearest_rgb(double wavelength)
 {
   return spectrum_rgb[get_nearest_rgb_index(wavelength)];
 }

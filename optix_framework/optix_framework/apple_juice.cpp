@@ -261,7 +261,7 @@ Medium apple_juice(double C)
     //  cin.get();
     //}
   }
-  m.name = "AppleJuice";
-  m.turbid = C > 0.0;
+  m.set_name("AppleJuice");
+  m.set_turbid(C > 0.0);
   return m;
 }

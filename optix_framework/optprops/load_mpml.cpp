@@ -122,10 +122,10 @@ void handle_Material(XmlElement& elem)
 {
   name = elem.atts["name"];
   current = &(*media)[name];
-  current->name = name;
+  current->set_name(name);
 
   Interface* iface = &(*interfaces)[name];
-  iface->name = name;
+  iface->set_name(name);
   iface->med_in = current;
 
   elem.process_elements();
@@ -158,7 +158,7 @@ void handle_RefractiveIndex(XmlElement& elem)
 
 void handle_Scattering(XmlElement& elem)
 {
-  current->turbid = true;
+  current->set_turbid(true);
   current->scatter_unit = parseScatteringUnitAttrib(elem.atts["unit"]);
   elem.process_elements();
 }
@@ -184,7 +184,7 @@ void handle_Interface(XmlElement& elem)
 {
   name = elem.atts["name"];
   Interface* iface = &(*interfaces)[name];
-  iface->name = name;
+  iface->set_name(name);
   iface->med_in = &(*media)[elem.atts["inside"]];
   iface->med_out = &(*media)[elem.atts["outside"]];
 }

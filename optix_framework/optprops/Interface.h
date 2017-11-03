@@ -13,9 +13,12 @@ class Interface
 public:
   Interface() : med_in(0), med_out(0) { }
 
-  std::string name;
+  OPTPROPS_API std::string get_name();
+  OPTPROPS_API void set_name(const std::string & name);
   Medium* med_in;
   Medium* med_out;
+private:
+	std::string name;
 };
 
 #endif

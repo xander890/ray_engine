@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <valarray>
+#include "optprops_common.h"
 
 template<class T>
 unsigned int cdf_bsearch(T xi, const std::vector<T>& cdf_table)

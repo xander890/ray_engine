@@ -4,7 +4,7 @@
 
 #ifndef SPECTRUM2XYZ_H
 #define SPECTRUM2XYZ_H
-
+#include "optprops_common.h"
 /* 
    CIE XYZ color-matching functions
    From Principles of Digital Image Synthesis by Andrew Glassner
@@ -98,7 +98,7 @@ static const double CIE_xyz[][5] = {
 
 static const unsigned int CIE_xyz_samples = sizeof(CIE_xyz)/sizeof(CIE_xyz[0]);
 
-inline unsigned int get_nearest_xyz_index(double wavelength)
+inline OPTPROPS_API unsigned int get_nearest_xyz_index(double wavelength)
 {
   unsigned int i = (CIE_xyz_samples - 1)/2;
   double n = CIE_xyz_samples/2.0;
@@ -115,7 +115,7 @@ inline unsigned int get_nearest_xyz_index(double wavelength)
   return i;
 }
 
-inline const double* get_nearest_xyz(double wavelength)
+inline OPTPROPS_API const double* get_nearest_xyz(double wavelength)
 {
   return CIE_xyz[get_nearest_xyz_index(wavelength)];
 }

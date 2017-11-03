@@ -76,7 +76,7 @@ Medium water(double T, double S)
     ior[i] = complex<double>(water_ior_real_part(lambda, T, S), ior_imag);
   }
 
-  m.name = "water";
+  m.set_name("water");
   return m;  
 }
 

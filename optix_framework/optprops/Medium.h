@@ -8,13 +8,13 @@
 #include <string>
 #include <valarray>
 #include <complex>
-
+#include "optprops_common.h"
 enum ColorType { mono, rgb, xyz, spectrum };
 enum ScatteringUnit { per_meter, per_cm, per_mm };
 enum SpectralUnit { kilometers, meters, millimeters, micrometers, nanometers, angstrom, electron_volt };
 
-double unit_to_iso(double value, SpectralUnit u);
-double unit_to_iso(double value, ScatteringUnit u);
+double OPTPROPS_API unit_to_iso(double value, SpectralUnit u);
+double OPTPROPS_API unit_to_iso(double value, ScatteringUnit u);
 
 template<class T> 
 class Color : public std::valarray<T>
@@ -89,14 +89,11 @@ T Color<T>::get_linear(double lambda) const
   return static_cast<T>((*this)[idx]*(1.0 - v) + (*this)[idx]*v);
 }
 
-class Medium
+class OPTPROPS_API Medium
 {
 public:
   Medium() : turbid(false), emissive(false), scatter_unit(per_meter) { }
 
-  std::string name;
-  bool turbid;
-  bool emissive;
   ScatteringUnit scatter_unit;
   Color< std::complex<double> >& get_ior(ColorType type) { return ior[type]; }
   Color<double>& get_emission(ColorType type) { return emission[type]; }
@@ -128,7 +125,18 @@ public:
 
   void wavelength_to_rgb(double wavelength);
 
+  bool is_turbid();
+  bool is_emissive();
+  std::string get_name();
+  
+  void set_name(const std::string & name);
+  void set_turbid(bool is_turbid);
+  void set_emissive(bool is_emissive);
+
 private:
+  std::string name;
+  bool turbid;
+  bool emissive;
   Color< std::complex<double> > ior[4];
   Color<double> emission[4];
   Color<double> extinction[4];    

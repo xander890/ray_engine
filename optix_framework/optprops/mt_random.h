@@ -2,7 +2,8 @@
 #define MT_RANDOM_H
 
 #include "Randomizer.h"
-extern Randomizer randomizer;
+#include "optprops_common.h"
+extern OPTPROPS_API Randomizer randomizer;
 
 // generates a random number on [0,1]-real-interval
 inline double mt_random()

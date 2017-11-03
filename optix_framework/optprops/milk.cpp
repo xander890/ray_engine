@@ -286,7 +286,7 @@ Medium milk(LogNormalParticleDistrib& fat,    // Distribution of fat globules
     //  cin.get();
     //}
   }
-  m.name = "milk";
-  m.turbid = true;
+  m.set_name("milk");
+  m.set_turbid(true);
   return m;
 }

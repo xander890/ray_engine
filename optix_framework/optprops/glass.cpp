@@ -53,41 +53,41 @@ namespace
 Medium deep_crown_glass()
 {
   Medium m = schott_glass(deep_crown);
-  m.name = "deep_crown_glass";
+  m.set_name("deep_crown_glass");
   return m;
 }
 
 Medium crown_glass()
 {
   Medium m = schott_glass(crown);
-  m.name = "crown_glass";
+  m.set_name("crown_glass");
   return m;
 }
 
 Medium crown_flint_glass()
 {
   Medium m = schott_glass(crown_flint);
-  m.name = "crown_flint_glass";
+  m.set_name("crown_flint_glass");
   return m;
 }
 
 Medium light_flint_glass()
 {
   Medium m = schott_glass(light_flint);
-  m.name = "light_flint_glass";
+  m.set_name("light_flint_glass");
   return m;
 }
 
 Medium dense_barium_flint_glass()
 {
   Medium m = schott_glass(dense_barium_flint);
-  m.name = "dense_barium_flint_glass";
+  m.set_name("dense_barium_flint_glass");
   return m;
 }
 
 Medium dense_flint_glass()
 {
   Medium m = schott_glass(dense_flint);
-  m.name = "dense_flint_glass";
+  m.set_name("dense_flint_glass");
   return m;
 }

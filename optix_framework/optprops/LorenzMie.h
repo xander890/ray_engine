@@ -22,7 +22,7 @@
 
 #ifndef LORENZMIE_H
 #define LORENZMIE_H
-
+#include "optprops_common.h"
 #include <complex>
 #include <valarray>
 
@@ -65,7 +65,7 @@ namespace LorenzMie
   //                   dependent, this argument can be
   //                   given to replace p.refrac_idx
   // 
-  void optical_props(ParticleDistrib* p, 
+  void OPTPROPS_API optical_props(ParticleDistrib* p, 
                      double wavelength, 
                      const std::complex<double>& host_refrac,
                      const std::complex<double>* particle_refrac = 0);
@@ -87,7 +87,7 @@ namespace LorenzMie
   // host_refrac     - refractive index of the host medium
   // particle_refrac - refractive index of the particle
   //
-  void particle_props(double& C_t, double& C_s, double& C_a, 
+  void OPTPROPS_API particle_props(double& C_t, double& C_s, double& C_a,
                       double& g, double& ior,
                       double radius, double wavelength,
                       const std::complex<double>& host_refrac,

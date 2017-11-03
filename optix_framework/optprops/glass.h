@@ -7,11 +7,11 @@
 
 #include "Medium.h"
 
-Medium deep_crown_glass();
-Medium crown_glass();
-Medium crown_flint_glass();
-Medium light_flint_glass();
-Medium dense_barium_flint_glass();
-Medium dense_flint_glass();
+OPTPROPS_API Medium deep_crown_glass();
+OPTPROPS_API Medium crown_glass();
+OPTPROPS_API Medium crown_flint_glass();
+OPTPROPS_API Medium light_flint_glass();
+OPTPROPS_API Medium dense_barium_flint_glass();
+OPTPROPS_API Medium dense_flint_glass();
 
 #endif // GLASS_H

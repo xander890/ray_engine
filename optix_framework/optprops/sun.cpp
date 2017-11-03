@@ -136,7 +136,7 @@ Medium mean_solar_irrad()
     double pos = (lambda - A[0][idx])/(A[0][idx + 1] - A[0][idx]);
     emission[i] = (A[1][idx]*(1.0 - pos) + A[1][idx + 1]*pos)*1.0e-3;    // per nanometer
   }
-  m.name = "sun";
+  m.set_name("sun");
   m.emissive = true;
   return m;
 }
@@ -173,6 +173,6 @@ Medium direct_sun(double day, double time, double latitude, const Vec3f& up, Vec
 Medium atmosphere(double day, double time, double latitude, const Vec3f& up, Vec3f& direction)
 {
   Medium m = solar_irrad(day, time, latitude, up, direction);
-  m.name = "atmosphere";
+  m.set_name("atmosphere");
   return m;
 }

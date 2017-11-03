@@ -9,6 +9,7 @@
 #include "CGLA/Vec3f.h"
 #include "CGLA/Quatf.h"
 #include "mt_random.h"
+#include "optprops_common.h"
 
 // Given a direction vector v sampled on the hemisphere
 // over a surface point with the z-axis as its normal,

@@ -39,8 +39,8 @@ Medium blackbody(double T)         // temperature [K]
     emission[i] = 2.0*M_PI*c*c*h/(CGLA::int_pow(lambda, 5)*(exp(h*c/(lambda*k*T)) - 1.0))*25.0e-9;
   }
 
-  m.name = "blackbody";
-  m.emissive = true;
+  m.set_name("blackbody");
+  m.set_emissive(true);
   return m;
 }
 
@@ -59,6 +59,6 @@ Medium incandescent(double power,         // power [W]
   for(unsigned int i = 0; i < emission.size(); ++i)
     emission[i] *= filament_area/bulb_area;
 
-  m.name = "incandescent";
+  m.set_name("incandescent");
   return m;
 }

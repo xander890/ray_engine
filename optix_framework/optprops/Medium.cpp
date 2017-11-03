@@ -731,3 +731,33 @@ void Medium::wavelength_to_rgb(double wavelength)
   }
   fill_rgb_data();
 }
+
+bool Medium::is_turbid()
+{
+	return turbid;
+}
+
+bool Medium::is_emissive()
+{
+	return emissive;
+}
+
+std::string Medium::get_name()
+{
+	return name;
+}
+
+void Medium::set_name(const std::string & name)
+{
+	this->name = name;
+}
+
+void Medium::set_turbid(bool is_turbid)
+{
+	turbid = is_turbid;
+}
+
+void Medium::set_emissive(bool is_emissive)
+{
+	emissive = is_emissive;
+}

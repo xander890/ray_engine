@@ -151,7 +151,7 @@ namespace Util
         }
         
         get_first(head, elem.name);
-        elem.name = trim(elem.name);
+        elem.name =trim(elem.name);
         parse_attribs(head, elem.atts);
         
         if(has_body)
