@@ -79,7 +79,7 @@ private:
 	std::string mExternalFilePath = "test.bssrdf";
 
 	std::unique_ptr<RenderTask> current_render_task;
-	bool mSimulate = 0;
+	bool mSimulate = 1;
 	void set_render_mode(RenderMode m, bool isSimulated);
 	bool start_offline_rendering = false;
 };
