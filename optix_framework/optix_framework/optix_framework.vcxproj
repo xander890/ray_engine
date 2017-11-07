@@ -79,9 +79,6 @@ xcopy /y /d "..\dll\assimp.dll" "$(OutDir)"
 xcopy /y /d "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d "..\dll\xerces-c_3_1.dll" "$(OutDir)"
-echo Copying configuration specific ($(Configuration)) dlls...
-xcopy /y /d "..\dll\$(Configuration)\*.dll" "$(OutDir)"
-xcopy /y /d "..\dll\$(Configuration)\*.pdb" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
 xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"</Command>
     </PostBuildEvent>
@@ -142,9 +139,6 @@ xcopy /y /d "..\dll\assimp.dll" "$(OutDir)"
 xcopy /y /d "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d "..\dll\xerces-c_3_1.dll" "$(OutDir)"
-echo Copying configuration specific ($(Configuration)) dlls...
-xcopy /y /d "..\dll\$(Configuration)\*.dll" "$(OutDir)"
-xcopy /y /d "..\dll\$(Configuration)\*.pdb" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
 xcopy /y /d "$(ProjectDir)PTX_files\*.*" "$(OutDir)PTX_files"</Command>
       <Message>Copying OptiX and CUDA DLLs to output folder..</Message>
