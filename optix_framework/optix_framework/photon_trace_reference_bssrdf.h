@@ -160,7 +160,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 	return false;
 }
 
-#define PLANAR_SCENE_SIZE 8.0f
+#define PLANAR_SCENE_SIZE 2.0f
 __forceinline__ __device__ optix::float2 get_normalized_planar_buffer_coordinates(const optix::float2 & coord)
 {
 	return (coord + make_float2(PLANAR_SCENE_SIZE)) / (2 * PLANAR_SCENE_SIZE);

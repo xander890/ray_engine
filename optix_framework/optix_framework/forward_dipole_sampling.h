@@ -16,7 +16,7 @@ __device__ __host__ __forceinline__   Float sampleLengthAbsorption(const float s
 	Float &s, unsigned int & t) {
 	if (sigma_a == 0)
 		return 0.0;
-	s = -log(rnd_tea(t)) / sigma_a;
+	s = -log(RND_FUNC_FWD_DIP(t)) / sigma_a;
 	Float pdf = sigma_a*exp(-sigma_a*s);
 	FSAssert(isfinite(s));
 	FSAssert(s >= 0);
@@ -338,6 +338,7 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 	if (p == 0)
 		return 0;
 	Float3 R_p1 = R*p;
+	optix_print("p %f, R %f %f %f, Ul %f %f %f\n", p, R.x, R.y, R.z, uL.x, uL.y, uL.z); 
 	Float R2minusRdotUL_p1 = dot(R_p1, R_p1) - dot(R_p1, uL);
 	Float beta = 3. / 2. * R2minusRdotUL_p1;
 	if (beta <= 0)
@@ -381,9 +382,9 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 		theCdf = clamp(theCdf, 0., 1.);
 		return theCdf;
 	};
-	double u = rnd_tea(t);
+	double u = RND_FUNC_FWD_DIP(t);
 	auto target = [=](double ps) { return cdf(ps) - u; };
-
+	optix_print("\ncdf(0.5) %f, u %f (sa %f sb %f c %f r2minus %f)\n", cdf(0.5f), u, sA, sB, C, R2minusRdotUL_p1);
 	// Bracket the root
 	double lo = 0;
 	if (!isfinite(target(lo)) || target(lo) > 0) {
@@ -419,8 +420,8 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 
 
 // Strategy weights, must sum to one
-#define lengthSample_w1 0.5 /* short length limit */
-#define lengthSample_w2 0.5 /* long length limit */
+#define lengthSample_w1 0.0 /* short length limit */
+#define lengthSample_w2 1.0 /* long length limit */
 #define lengthSample_w3 0.0 /* absorption */
 
 // If d_in is unknown, it is set to NULL
@@ -444,7 +445,7 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 	* TODO: Smart MIS weight? (Need length-marginalized 'realSourceWeight'
 	* from getTentativeIndexMatchedVirtualSourceDisp then.) */
 	Float3 R_effective, R_other;
-	if (rnd_tea(t) < 0.5) {
+	if (RND_FUNC_FWD_DIP(t) < 0.5) {
 		R_effective = R;
 		R_other = R_virt;
 	}
@@ -454,7 +455,7 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 	}
 	Float p1, p2, p3;
 	p1 = p2 = p3 = -1;
-	const Float u = rnd_tea(t);
+	const Float u = RND_FUNC_FWD_DIP(t);
 	if (u < lengthSample_w1) {
 		p1 = sampleLengthShortLimit(sigma_s, mu, R, u0, uL, s, t);
 		if (p1 == 0)

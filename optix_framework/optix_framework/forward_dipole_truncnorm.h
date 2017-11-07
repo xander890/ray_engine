@@ -2,8 +2,6 @@
 #include "forward_dipole_utils.h"
 #include "random.h"
 
-#define RND_FUNC rnd_tea
-
 __device__ __host__ __forceinline__ Float2 squareToStdNormal(const Float2 &sample) {
 	Float r = sqrt(-2 * log(1 - sample.x)),
 		phi = 2 * M_PI * sample.y;
@@ -12,8 +10,8 @@ __device__ __host__ __forceinline__ Float2 squareToStdNormal(const Float2 &sampl
 }
 
 __device__ __host__ __forceinline__   Float stdnorm(unsigned int & t) {
-	float xx = RND_FUNC(t);
-	float yy = RND_FUNC(t);
+	float xx = RND_FUNC_FWD_DIP(t);
+	float yy = RND_FUNC_FWD_DIP(t);
 	return squareToStdNormal(MakeFloat2(xx, yy)).x;
 }
 
@@ -108,11 +106,11 @@ __device__ __host__ __forceinline__   Float UseAlg2(const Float low, ///< lower 
 
 	// Loop Until Valid Draw
 	while (valid == 0) {
-		Float e = -log(RND_FUNC(t));
+		Float e = -log(RND_FUNC_FWD_DIP(t));
 		z = low + e / alpha;
 
 		rho = exp(-pow(alpha - z, 2) / 2);
-		u = RND_FUNC(t);
+		u = RND_FUNC_FWD_DIP(t);
 		if (u <= rho) {
 			// Keep Successes
 			valid = 1;
@@ -148,7 +146,7 @@ __device__ __host__ __forceinline__   Float UseAlg3(const Float low, ///< lower 
 
 	// Loop Until Valid Draw
 	while (valid == 0) {
-		z = low + RND_FUNC(t) * (high - low);
+		z = low + RND_FUNC_FWD_DIP(t) * (high - low);
 		if (0 < low) {
 			rho = exp((pow(low, 2) - pow(z, 2)) / 2);
 		}
@@ -160,7 +158,7 @@ __device__ __host__ __forceinline__   Float UseAlg3(const Float low, ///< lower 
 			rho = exp(-pow(z, 2) / 2);
 		}
 
-		u = RND_FUNC(t);
+		u = RND_FUNC_FWD_DIP(t);
 		if (u <= rho) {
 			valid = 1;
 		}
@@ -190,7 +188,7 @@ __device__ __host__ __forceinline__   Float truncnorm(const Float mean,
 	}
 
 	if (isinf(sd)) {
-		return low + RND_FUNC(t) * (high - low);
+		return low + RND_FUNC_FWD_DIP(t) * (high - low);
 	}
 
 	SAssert(sd > 0);

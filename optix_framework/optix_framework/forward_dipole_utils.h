@@ -3,6 +3,7 @@
 #include "double_support_optix.h"
 #define M_PI           3.14159265358979323846  /* pi */
 
+#define RND_FUNC_FWD_DIP rnd_tea
 
 /* Reject incoming directions that come from within the actual geometry
 * (i.e. w.r.t. the actual local Float3 at the incoming point instead of,
@@ -33,7 +34,7 @@
 #endif
 
 
-
+ 
 #ifdef SINGLE_PRECISION
 # define MTS_FWDSCAT_DIRECTION_MIN_MU 1e-3
 #else
@@ -372,7 +373,7 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 		else {
 			if (optix::length(cross(n0, R)) == 0)
 				return false;
-			n0_effective = cross(R, cross(n0, R));
+			n0_effective = normalize(cross(normalize(R), normalize(cross(n0, R))));
 			FSAssert(dot(n0_effective, n0) > -Epsilon);
 		}
 		break;
@@ -388,7 +389,7 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 		else {
 			if (optix::length(cross(sumFloat3, R)) == 0)
 				return false;
-			n0_effective = cross(R, cross(sumFloat3, R));
+			n0_effective = normalize(cross(normalize(R), normalize(cross(sumFloat3, R))));
 		}
 		break; }
 	case EUnmodifiedIncoming:
@@ -446,7 +447,7 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	* the half space!! (and 'cross' the actual real source "beam" if we
 	* elongate it).
 	* Maybe flip the Float3? (to get the half space on the other side...) */
-	optix_print("Effective normal %f %f %f zv %f \n", n0_effective.x, n0_effective.y, n0_effective.z, zv);
+	//optix_print("Effective normal %f %f %f zv %f \n", n0_effective.x, n0_effective.y, n0_effective.z, zv);
 
 	R_virt = R - zv * n0_effective;
 	u0_virt = u0 - 2 * dot(n0_effective, u0) * n0_effective;

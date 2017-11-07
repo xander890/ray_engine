@@ -182,39 +182,46 @@ __device__ __host__ __forceinline__ Float evalDipole(
 __host__ __device__ __inline__ void test_forward_dipole_cuda()
 {
 	const Float3 xi = MakeFloat3(0., 0., 0.);
-	const Float3 xo = MakeFloat3(1., 0., 0.);
+	const Float3 xo = MakeFloat3(0.03, 0., 0.);
 	const Float3 ni = MakeFloat3(0., 0., 1.);
 	const Float3 no = MakeFloat3(0., 0., 1.);
-	const Float3 w12 = MakeFloat3(0., 0., -1.);
-	const Float3 w21 = MakeFloat3(0., 0., -1.);
-	float sigma_s = 1;
-	float sigma_a = 0.01f;
-	float mu = 1 - 0.0f;
+	const Float3 d_in = MakeFloat3(0., 0., -1.);
+	const Float3 d_out = MakeFloat3(0., 0., 1.);
+
+	const Float3 d_in_refr = MakeFloat3(0., 0., -1.);
+	const Float3 d_out_refr = MakeFloat3(0., 0., 1.);
+	float sigma_s = 400.0f;
+	float sigma_a = 10.0f;
+	float mu = 1 - 0.9f;
 	float eta = 1.0f;
 	Float3 R = xo - xi;
 	unsigned int seed = 1023;
 	unsigned int samples = 100;
-	Float S = 0.0;
-	for (unsigned int i = 0; i < samples; i++)
+	Float s_test = 0.03;
+	TangentPlaneMode tangent = TangentPlaneMode::EFrisvadEtAl;
+	Float S = evalDipole(sigma_s, sigma_a, mu, eta,
+		ni, d_in_refr,
+		no, d_out_refr,
+		R, s_test,
+		false,
+		false,
+		tangent,
+		ZvMode::EFrisvadEtAlZv,
+		false,
+		ERealAndVirt
+	);
+
+	Float ss = 0.0f;
+	int N = 10;
+	optix_print("%f %f %f\n", rnd_tea(seed), rnd_tea(seed), rnd_tea(seed));
+	for (int i = 0; i < N; i++)
 	{
-		TangentPlaneMode tangent = TangentPlaneMode::EUnmodifiedIncoming;
-		Float s;
-		float wi = sampleLengthDipole(sigma_s, sigma_a, mu, eta, w12, ni, R, nullptr, no, tangent, s, seed);
-		optix_print("Sampled s: %e, w: %e\n", s, wi);
-		S += evalDipole(sigma_s, sigma_a, mu, eta,
-			no, normalize(w21),
-			ni, normalize(w12),
-			R, s,
-			false,
-			false,
-			tangent,
-			ZvMode::EFrisvadEtAlZv,
-			false,
-			EVirt
-		);
+		Float sss = 0.0;
+		sampleLengthDipole(sigma_s, sigma_a, mu, eta, d_out, no, R, &d_in, ni, tangent, sss, seed);
+		ss += sss;
 	}
-	S /= samples;
-	optix_print("Dipole test: %e\n ", S);
+
+	optix_print("Dipole test: %e %e\n ", S, ss/N);
 }
 
 __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const float3& ni, const float3& w12,
@@ -230,6 +237,13 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 	unsigned int seed = 1023;
 	unsigned int samples = 10;
 
+	const Float3 n_in = MakeFloat3(ni);
+	const Float3 n_out = MakeFloat3(no);
+	const Float3 d_in = MakeFloat3(w12);
+	const Float3 d_out = MakeFloat3(w21);
+
+	optix_print("DOTS %f %f", dot(ni, w12), dot(no, w21));
+
 	for (int k = 0; k < 3; k++)
 	{
 		float sigma_s = optix::get_channel(k, properties.scattering);
@@ -241,11 +255,11 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 		for (unsigned int i = 0; i < samples; i++)
 		{
 			Float s = 0.0f;
-			float wi = sampleLengthDipole(sigma_s, sigma_a, mu, eta, MakeFloat3(w12), MakeFloat3(ni), R, nullptr, MakeFloat3(no), tangent, s, seed);
+			float wi = sampleLengthDipole(sigma_s, sigma_a, mu, eta, d_out, n_out, R, &d_in, n_in, tangent, s, seed);
 			optix_print("Sampled s: %f, w: %f, i: %d\n", s, wi,i );
-			S += fmaxf(0,evalDipole(sigma_s, sigma_a, mu, eta,
-				MakeFloat3(no), -MakeFloat3(w21),
-				MakeFloat3(ni), MakeFloat3(w12),
+			S += evalDipole(sigma_s, sigma_a, mu, eta,
+				n_in, d_in,
+				n_out, d_out,
 				R, s,
 				false,
 				false,
@@ -253,7 +267,7 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 				ZvMode::EFrisvadEtAlZv,
 				false,
 				ERealAndVirt
-			)) * wi;
+			) * wi;
 		}
 		optix::get_channel(k, res) = S / samples;
 	}
