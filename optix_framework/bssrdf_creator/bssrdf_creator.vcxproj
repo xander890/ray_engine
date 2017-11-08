@@ -1,0 +1,247 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <RootNamespace>bssrdf_creator</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectGuid>{77DD2278-68D0-4472-B183-14A68EE383F7}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LibraryPath>..\lib64\;"..\glfw-3.2.1\lib-vc2015";"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
+    <OutDir>../build/</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LibraryPath>..\lib64\;"..\glfw-3.2.1\lib-vc2015";"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
+    <OutDir>../build/</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;..\optix_framework;"..\OptiX SDK 4.1.1\include";..\GL;..\nfd;..\optprops;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>$(Configuration)\optix_framework.lib;winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>cd $(ProjectDir)
+echo Copying OptiX, freeglut and CUDA DLLs to output folder..
+xcopy /y /d /f  "..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
+xcopy /y /d /f  "..\dll\assimp.dll" "$(OutDir)"
+xcopy /y /d /f "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
+xcopy /y /d /f "..\dll\glew32.dll" "$(OutDir)"
+xcopy /y /d /f "..\dll\xerces-c_3_1.dll" "$(OutDir)"
+echo Copying all PTX files from project directory to output directory..
+xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(OutDir)PTX_files"
+xcopy /y /d /f "$(ProjectDir)\PTX_files\*.*" "$(OutDir)PTX_files"</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>echo Creating directories "PTX_files" if they don't exist yet...
+if not exist "$(OutDir)PTX_files" mkdir "$(OutDir)PTX_files"
+if not exist "$(ProjectDir)PTX_files" mkdir "$(ProjectDir)PTX_files"
+echo Done.</Command>
+    </PreBuildEvent>
+    <CudaCompile>
+      <NvccCompilation>ptx</NvccCompilation>
+    </CudaCompile>
+    <CudaCompile>
+      <CudaRuntime>Shared</CudaRuntime>
+    </CudaCompile>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CompileOut>$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
+      <Include>$(SolutionDir)optix\include;$(SolutionDir)GL;$(SolutionDir)nfd;$(SolutionDir)optprops;</Include>
+      <CodeGeneration>compute_35,sm_35</CodeGeneration>
+      <FastMath>true</FastMath>
+      <GPUDebugInfo>false</GPUDebugInfo>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;..\optix_framework;"..\OptiX SDK 4.1.1\include";..\GL;..\nfd;..\optprops;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>$(Configuration)\optix_framework.lib;winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>cd $(ProjectDir)
+echo Copying OptiX, freeglut and CUDA DLLs to output folder..
+xcopy /y /d /f  "..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
+xcopy /y /d /f  "..\dll\assimp.dll" "$(OutDir)"
+xcopy /y /d /f "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
+xcopy /y /d /f "..\dll\glew32.dll" "$(OutDir)"
+xcopy /y /d /f "..\dll\xerces-c_3_1.dll" "$(OutDir)"
+echo Copying all PTX files from project directory to output directory..
+xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(OutDir)PTX_files"
+xcopy /y /d /f "$(ProjectDir)\PTX_files\*.*" "$(OutDir)PTX_files"</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>echo Creating directories "PTX_files" if they don't exist yet...
+if not exist "$(OutDir)PTX_files" mkdir "$(OutDir)PTX_files"
+if not exist "$(ProjectDir)PTX_files" mkdir "$(ProjectDir)PTX_files"
+echo Done.</Command>
+    </PreBuildEvent>
+    <CudaCompile>
+      <NvccCompilation>ptx</NvccCompilation>
+    </CudaCompile>
+    <CudaCompile>
+      <CudaRuntime>Shared</CudaRuntime>
+    </CudaCompile>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CompileOut>$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
+      <Include>$(SolutionDir)optix\include;$(SolutionDir)GL;$(SolutionDir)nfd;$(SolutionDir)optprops;</Include>
+      <CodeGeneration>compute_35,sm_35</CodeGeneration>
+      <FastMath>true</FastMath>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="bssrdf_creator.cpp" />
+    <ClCompile Include="bssrdf_loader.cpp" />
+    <ClCompile Include="bssrdf_parameter_manager.cpp" />
+    <ClCompile Include="full_bssrdf_generator.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="reference_bssrdf.cpp" />
+    <ClCompile Include="reference_bssrdf_gpu.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bssrdf_creator.h" />
+    <ClInclude Include="bssrdf_loader.h" />
+    <ClInclude Include="bssrdf_parameter_manager.h" />
+    <ClInclude Include="full_bssrdf_generator.h" />
+    <ClInclude Include="full_bssrdf_host_device_common.h" />
+    <ClInclude Include="photon_trace_reference_bssrdf.h" />
+    <ClInclude Include="photon_trace_structs.h" />
+    <ClInclude Include="reference_bssrdf.h" />
+    <ClInclude Include="reference_bssrdf_gpu.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="CUDA_files\planar_bssrdf.cu">
+      <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
+      <FastMath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</FastMath>
+      <FastMath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</FastMath>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\reference_bssrdf.cu">
+      <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
+      <FastMath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</FastMath>
+      <FastMath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</FastMath>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu">
+      <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
+      <FastMath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</FastMath>
+      <FastMath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</FastMath>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\render_bssrdf.cu">
+      <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
+      <FastMath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</FastMath>
+      <FastMath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</FastMath>
+    </CudaCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />
+  </ImportGroup>
+</Project>

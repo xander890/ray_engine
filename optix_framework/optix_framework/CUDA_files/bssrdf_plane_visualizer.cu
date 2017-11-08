@@ -4,7 +4,6 @@
 #include <environment_map.h>
 #include <math_helpers.h>
 #include <colormap.h>
-#include <photon_trace_reference_bssrdf.h>
 #include <scattering_properties.h>
 #include <bssrdf.h>
 #include "optical_helper.h"

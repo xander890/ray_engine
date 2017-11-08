@@ -46,9 +46,6 @@
     <CudaCompile Include="debug_camera.cu">
       <Filter>CUDA_files\Cameras</Filter>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\planar_bssrdf.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
     <CudaCompile Include="CUDA_files\bssrdf_plane_visualizer.cu">
       <Filter>CUDA_files</Filter>
     </CudaCompile>
@@ -85,21 +82,9 @@
     <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu">
       <Filter>CUDA_files\Standard Shaders</Filter>
     </CudaCompile>
-    <CudaCompile Include="CUDA_files\reference_bssrdf.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\reference_bssrdf_gpu.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="CUDA_files\render_bssrdf.cu">
-      <Filter>CUDA_files</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="obj_scene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scattering_material.cpp">
@@ -254,22 +239,10 @@
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="transform.cpp" />
-    <ClCompile Include="reference_bssrdf.cpp">
-      <Filter>Source Files\Shaders</Filter>
-    </ClCompile>
-    <ClCompile Include="reference_bssrdf_gpu.cpp">
-      <Filter>Source Files\Shaders</Filter>
-    </ClCompile>
     <ClCompile Include="bssrdf_visualizer.cpp">
       <Filter>Source Files\Shaders</Filter>
     </ClCompile>
-    <ClCompile Include="full_bssrdf_generator.cpp" />
-    <ClCompile Include="bssrdf_loader.cpp" />
-    <ClCompile Include="bssrdf_creator.cpp">
-      <Filter>Source Files\BSSRDF</Filter>
-    </ClCompile>
     <ClCompile Include="forward_dipole_test.cpp" />
-    <ClCompile Include="bssrdf_parameter_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -282,9 +255,6 @@
       <Filter>Header Files\Optix</Filter>
     </ClInclude>
     <ClInclude Include="intersection_refinement.h">
-      <Filter>Header Files\Optix</Filter>
-    </ClInclude>
-    <ClInclude Include="random.h">
       <Filter>Header Files\Optix</Filter>
     </ClInclude>
     <ClInclude Include="rendering_method.h">
@@ -451,10 +421,10 @@
       <Filter>Header Files\Lights</Filter>
     </ClInclude>
     <ClInclude Include="PerlinNoise.h">
-      <Filter>Header Files\Noise</Filter>
+      <Filter>Header Files\Sampling</Filter>
     </ClInclude>
     <ClInclude Include="simplex_noise.h">
-      <Filter>Header Files\Noise</Filter>
+      <Filter>Header Files\Sampling</Filter>
     </ClInclude>
     <ClInclude Include="device_mesh_data.h">
       <Filter>Header Files\Lights</Filter>
@@ -556,9 +526,6 @@
     <ClInclude Include="reference_bssrdf_gpu.h">
       <Filter>Header Files\Shaders</Filter>
     </ClInclude>
-    <ClInclude Include="md5.h">
-      <Filter>Header Files\Optix</Filter>
-    </ClInclude>
     <ClInclude Include="quantized_diffusion.h">
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
@@ -574,24 +541,14 @@
     <ClInclude Include="bssrdf.h">
       <Filter>Header Files\BSSRDFs</Filter>
     </ClInclude>
-    <ClInclude Include="photon_trace_reference_bssrdf.h">
-      <Filter>Header Files\BSSRDFs</Filter>
-    </ClInclude>
-    <ClInclude Include="photon_trace_structs.h">
-      <Filter>Header Files\BSSRDFs</Filter>
-    </ClInclude>
     <ClInclude Include="string_utils.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="quantized_diffusion_helpers.h">
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
-    <ClInclude Include="bssrdf_loader.h" />
     <ClInclude Include="forward_dipole.h">
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
-    </ClInclude>
-    <ClInclude Include="bssrdf_creator.h">
-      <Filter>Header Files\BSSRDFs</Filter>
     </ClInclude>
     <ClInclude Include="forward_dipole_sampling.h">
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
@@ -609,10 +566,14 @@
     <ClInclude Include="double_support_optix.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="bssrdf_parameter_manager.h" />
-    <ClInclude Include="full_bssrdf_host_device_common.h" />
+    <ClInclude Include="random.h">
+      <Filter>Header Files\Sampling</Filter>
+    </ClInclude>
     <ClInclude Include="sampler.h">
-      <Filter>Header Files\Optix</Filter>
+      <Filter>Header Files\Sampling</Filter>
+    </ClInclude>
+    <ClInclude Include="md5.h">
+      <Filter>Header Files\Sampling</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -712,9 +673,6 @@
     <Filter Include="Source Files\Background">
       <UniqueIdentifier>{81ead0c4-2cf4-4af4-b294-afdf9420143d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Noise">
-      <UniqueIdentifier>{b0d3829a-04f0-4fbc-ba66-91347e402bec}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Noise">
       <UniqueIdentifier>{4f0e5784-dadf-4084-aacc-fcc8572cf0af}</UniqueIdentifier>
     </Filter>
@@ -747,6 +705,9 @@
     </Filter>
     <Filter Include="CUDA_files\Standard Shaders">
       <UniqueIdentifier>{a95124f8-9506-47c9-9dec-ef857f5e3107}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Sampling">
+      <UniqueIdentifier>{b0d3829a-04f0-4fbc-ba66-91347e402bec}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

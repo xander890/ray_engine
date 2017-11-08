@@ -72,7 +72,6 @@ __device__ __inline__ void get_glass_rays(const optix::float3& wo, const float i
 {
 	cos_theta_signed = dot(normal, -wo);
 	float eta = cos_theta_signed < 0.0f ? 1.0f / ior : ior;
-	float recip_eta = 1.0f / eta;
 	normal = normal*copysignf(1.0f, cos_theta_signed);
 
 	optix::float3 refr_dir;

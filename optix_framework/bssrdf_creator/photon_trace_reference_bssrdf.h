@@ -75,7 +75,6 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);
 	const optix::float3 no = ni;
-	const float n1_over_n2 = 1.0f / n2_over_n1;
 
 	// We count executions to allow stop/resuming of this function.
 	int i;
@@ -211,7 +210,6 @@ __forceinline__ __device__ bool scatter_photon_planar(optix::float3& xp, optix::
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);
 	const optix::float3 no = ni;
-	const float n1_over_n2 = 1.0f / n2_over_n1;
 
 	// We count executions to allow stop/resuming of this function.
 	int i;
