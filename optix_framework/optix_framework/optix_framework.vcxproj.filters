@@ -727,9 +727,6 @@
     <Filter Include="Source Files\GUI\imgui">
       <UniqueIdentifier>{660f06d2-4ec3-41ca-be30-24ecd9ce6105}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Legacy">
-      <UniqueIdentifier>{a0c731e9-6497-4524-bc5e-268efba27f6f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Display">
       <UniqueIdentifier>{207aae66-3c20-4781-88c4-84cf11f7ef5e}</UniqueIdentifier>
     </Filter>

@@ -231,18 +231,21 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 	//test_forward_dipole_cuda();
 	//return make_float3(0);
 
-	TangentPlaneMode tangent = TangentPlaneMode::EUnmodifiedIncoming;
+	TangentPlaneMode tangent = TangentPlaneMode::EFrisvadEtAl;
 	Float3 R = MakeFloat3(xo - xi);
 	optix::float3 res;
+
+#ifdef __CUDACC__
+	unsigned int seed = tea<16>(launch_index.x, launch_index.y);
+#else
 	unsigned int seed = 1023;
-	unsigned int samples = 10;
+#endif
+	unsigned int samples = 1;
 
 	const Float3 n_in = MakeFloat3(ni);
 	const Float3 n_out = MakeFloat3(no);
 	const Float3 d_in = MakeFloat3(w12);
 	const Float3 d_out = MakeFloat3(w21);
-
-	optix_print("DOTS %f %f", dot(ni, w12), dot(no, w21));
 
 	for (int k = 0; k < 3; k++)
 	{
@@ -256,7 +259,6 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 		{
 			Float s = 0.0f;
 			float wi = sampleLengthDipole(sigma_s, sigma_a, mu, eta, d_out, n_out, R, &d_in, n_in, tangent, s, seed);
-			optix_print("Sampled s: %f, w: %f, i: %d\n", s, wi,i );
 			S += evalDipole(sigma_s, sigma_a, mu, eta,
 				n_in, d_in,
 				n_out, d_out,

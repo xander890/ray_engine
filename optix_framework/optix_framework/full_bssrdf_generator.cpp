@@ -102,7 +102,7 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
 {
 	m_context->setPrintEnabled(false);
-	test_forward_dipole();
+	//test_forward_dipole();
 	m_context->setPrintBufferSize(200);
 	m_context->setPrintLaunchIndex(0, 0, 0);
 	Folders::init();
@@ -287,40 +287,52 @@ void FullBSSRDFGenerator::post_draw_callback()
 	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
 
 	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors); 
-	
-	ImmediateGUIDraw::Combo("Fresnel mode", &mFresnelMode, "Full BSSRDF\0Fresnel only\0Full BSSRDF, no Fresnel" , 3);
-
 	ImmediateGUIDraw::SameLine();
 	ImmediateGUIDraw::Checkbox("Pause", (bool*)&mPaused);
 	ImmediateGUIDraw::Checkbox("Fast Mode", (bool*)&mFastMode);
 
 
-	const char * comboelements[2] = { "Render BSSRDF", "Show Existing Empirical BSSRDF" };
-	if (ImmediateGUIDraw::Combo("Select Render mode", (int*)&mCurrentRenderMode, comboelements, 2, 2))
-	{
+	ImmediateGUIDraw::Text("Render mode:        ");
+	ImmediateGUIDraw::SameLine();
+	bool changed_render = ImmediateGUIDraw::RadioButton("Render BSSRDF", (int*)&mCurrentRenderMode, RenderMode::RENDER_BSSRDF);
+	ImmediateGUIDraw::SameLine();
+	changed_render |= ImmediateGUIDraw::RadioButton("Show Existing", (int*)&mCurrentRenderMode, RenderMode::SHOW_EXISTING_BSSRDF);
+	if(changed_render)
 		set_render_mode(mCurrentRenderMode, mSimulate);
-	}
 
 	if (mCurrentRenderMode == RENDER_BSSRDF)
 	{
-		const char * opts1[2] = { "BSSRDF model", "Path traced"};
-		static int def1 = static_cast<int>(mSimulate);
+		static int sim = mSimulate;
+		ImmediateGUIDraw::Text("Simulation type:    ");
+		ImmediateGUIDraw::SameLine();
+		bool changed_simul = ImmediateGUIDraw::RadioButton("Path traced", &sim, 1);
+		ImmediateGUIDraw::SameLine();
+		changed_simul |= ImmediateGUIDraw::RadioButton("Dipole", &sim, 0);
+		if (changed_simul)
+			set_render_mode(mCurrentRenderMode, sim == 0 ? false : true);
 
-		if (ImmediateGUIDraw::Combo("Simulation type", &def1 , opts1, 2, 2))
+
+		static BSSRDFRenderer::OutputShape shape = mCurrentBssrdfRenderer->get_shape();
+		ImmediateGUIDraw::Text("Simulation shape:   ");
+		ImmediateGUIDraw::SameLine();
+		bool changed_shape = ImmediateGUIDraw::RadioButton("Hemisphere", (int*)&shape, BSSRDFRenderer::HEMISPHERE);
+		ImmediateGUIDraw::SameLine();
+		changed_shape |= ImmediateGUIDraw::RadioButton("Plane", (int*)&shape, BSSRDFRenderer::PLANE);
+		if (changed_shape)
 		{
-			set_render_mode(mCurrentRenderMode, def1 == 0? false : true);
-		}
-
-		const char * opts2[2] = { "Plane", "Hemisphere" };
-		static BSSRDFRenderer::OutputShape def2 = BSSRDFRenderer::HEMISPHERE;
-
-		if (ImmediateGUIDraw::Combo("Render type", (int*)&def2, opts2, 2, 2))
-		{
-			mCurrentBssrdfRenderer->set_shape(def2);
+			mCurrentBssrdfRenderer->set_shape(shape);
 			delete[] mCurrentHemisphereData;
 			mCurrentHemisphereData = new float[mCurrentBssrdfRenderer->get_storage_size()];
 			mBSSRDFBufferTexture->setSize(mCurrentBssrdfRenderer->get_size().x, mCurrentBssrdfRenderer->get_size().y);
 		}
+
+		ImmediateGUIDraw::Text("Fresnel coefficient:");
+		ImmediateGUIDraw::SameLine();
+		ImmediateGUIDraw::RadioButton("Fresnel + BSSRDF", &mFresnelMode, BSSRDF_RENDER_MODE_FULL_BSSRDF);
+		ImmediateGUIDraw::SameLine();
+		ImmediateGUIDraw::RadioButton("Fresnel", &mFresnelMode, BSSRDF_RENDER_MODE_FRESNEL_OUT_ONLY);
+		ImmediateGUIDraw::SameLine();
+		ImmediateGUIDraw::RadioButton("BSSRDF", &mFresnelMode, BSSRDF_RENDER_MODE_REMOVE_FRESNEL);
 
 		if (!mSimulate)
 		{
