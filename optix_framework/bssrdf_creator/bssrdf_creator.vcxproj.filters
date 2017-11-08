@@ -77,4 +77,7 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Xml Include="config.xml" />
+  </ItemGroup>
 </Project>
