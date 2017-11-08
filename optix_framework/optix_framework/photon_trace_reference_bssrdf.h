@@ -10,8 +10,22 @@
 #include "phase_function.h"
 
 #define RND_FUNC rnd_tea
+
+// FIXME, we need to remove this or find a better way to express it without overhauling all the parameters.
+rtDeclareVariable(float2, plane_size, , );
+
 //#define EXTINCTION_DISTANCE_RR
 //#define INCLUDE_SINGLE_SCATTERING
+
+__forceinline__ __device__ void get_reference_scene_geometry(const float theta_i, const float r, const float theta_s, optix::float3 & xi, optix::float3 & wi, optix::float3 & ni, optix::float3 & xo, optix::float3 & no)
+{
+	wi = normalize(optix::make_float3(-sinf(theta_i), 0, cosf(theta_i)));
+	// Geometry
+	xi = optix::make_float3(0, 0, 0);
+	ni = optix::make_float3(0, 0, 1);
+	xo = xi + r * optix::make_float3(cos(theta_s), -sin(theta_s), 0);
+	no = ni;
+}
 
 // Simple util to do plane ray intersection.
 __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_origin, const optix::float3 & plane_normal, const optix::Ray & ray, float & intersection_distance)
@@ -160,15 +174,14 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 	return false;
 }
 
-#define PLANAR_SCENE_SIZE 2.0f
 __forceinline__ __device__ optix::float2 get_normalized_planar_buffer_coordinates(const optix::float2 & coord)
 {
-	return (coord + make_float2(PLANAR_SCENE_SIZE)) / (2 * PLANAR_SCENE_SIZE);
+	return (coord + plane_size/2) / plane_size;
 }
 
 __forceinline__ __device__ optix::float2 get_planar_buffer_coordinates(const optix::float2 & normalized_coord)
 {
-	return (normalized_coord * (2 * PLANAR_SCENE_SIZE)) - make_float2(PLANAR_SCENE_SIZE);
+	return (normalized_coord * plane_size) - plane_size/2;
 }
 
 

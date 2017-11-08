@@ -34,7 +34,7 @@ RT_PROGRAM void render_ref()
 		{
 			output_buffer[launch_index] = make_float4(0);
 		}
-		else
+		else 
 		{
 			float theta_o = l * M_PIf * 0.5f;
 			float2 coords = get_normalized_hemisphere_buffer_coordinates(theta_o, phi_o);
@@ -67,15 +67,25 @@ RT_PROGRAM void render_ref()
 		refract(wo, no, 1 / reference_bssrdf_rel_ior, w21, R21);
 		float T21 = 1.0f - R21;
 
-		float S_shown = reference_scale_multiplier * fresnel_integral / T21 * optix::rtTex2D<float4>(resulting_flux_tex, uv.x, uv.y).x;
+		float S = optix::rtTex2D<float4>(resulting_flux_tex, uv.x, uv.y).x;
+		float S_shown = reference_scale_multiplier * fresnel_integral / T21 * S;
 
 		float t = clamp((log(S_shown + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);
 		float h = clamp((1.0 - t)*2.0f, 0.0f, 0.65f);
 
 		optix::float4 res = make_float4(S_shown);
 		if (show_false_colors)
-			res = optix::make_float4(jet(S_shown),1);
-//			res = optix::make_float4(hsv2rgb(h, 1.0, 1.0), 1.0);
+		{
+			// Jet, but with FD17 Color visualization:
+			float Slog = log10(S);
+			Slog = (Slog + 7.0f) / 8.0f; // Between -7 and 1
+			Slog = clamp(Slog, 0.0f, 1.0f);
+			res = optix::make_float4(jet(Slog), 1);
+			// Standard matlab Jet
+			//res = optix::make_float4(jet(S_shown), 1);
+			// Jeppe visualization
+			//			res = optix::make_float4(hsv2rgb(h, 1.0, 1.0), 1.0);
+		}
 		output_buffer[launch_index] = res;
 	}
 	

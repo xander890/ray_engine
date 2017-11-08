@@ -16,6 +16,7 @@
 #include "forward_dipole_test.h"
 #pragma warning(disable : 4996)
 
+#define WINDOW_SIZE 800
 
 void get_default_material(const std::string & mat, float & theta_i, float & r, float & theta_s, float & albedo, float & extinction, float & g, float & n2_over_n1)
 {
@@ -134,15 +135,15 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 
 	if (GLFWDisplay::isDisplayAvailable())
 	{
-		result_buffer = create_glbo_buffer < optix::float4 >(m_context, RT_BUFFER_INPUT_OUTPUT, 1024 * 1024);
+		result_buffer = create_glbo_buffer < optix::float4 >(m_context, RT_BUFFER_INPUT_OUTPUT, WINDOW_SIZE * WINDOW_SIZE);
 	}
 	else
 	{
-		result_buffer = create_buffer < optix::float4 >(m_context, RT_BUFFER_INPUT_OUTPUT, 1024 * 1024);
+		result_buffer = create_buffer < optix::float4 >(m_context, RT_BUFFER_INPUT_OUTPUT, WINDOW_SIZE * WINDOW_SIZE);
 	}
 
 	result_buffer->setFormat(RT_FORMAT_FLOAT4);
-	result_buffer->setSize(1024, 1024);
+	result_buffer->setSize(WINDOW_SIZE, WINDOW_SIZE);
 
 	mBSSRDFBufferTexture = m_context->createBuffer(RT_BUFFER_INPUT);
 	mBSSRDFBufferTexture->setFormat(RT_FORMAT_FLOAT);
@@ -176,7 +177,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	mParametersSimulation.parameters[albedo_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "albedo", mParametersOriginal.parameters[albedo_index], "Eta indices to scan.");
 	
 	mExternalBSSRDFBuffer = m_context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, 1);
-
+	
 }
 
 void normalize(float * data, size_t size)
@@ -220,9 +221,11 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 		{
 			mCurrentBssrdfRenderer->render();
 
+			m_context["plane_size"]->setFloat(mPlaneSize);
 			m_context["show_false_colors"]->setUint(mShowFalseColors);
 			m_context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
 			m_context["reference_bssrdf_fresnel_mode"]->setInt(mFresnelMode);
+
 
 			void* source = mCurrentBssrdfRenderer->get_output_buffer()->map();
 
@@ -246,6 +249,7 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 			RTsize w, h;
 			result_buffer->getSize(w, h);
 			m_context["ior"]->setFloat(mCurrentBssrdfRenderer->mIor);
+			m_context["reference_bssrdf_theta_o"]->setFloat(deg2rad(mPlaneRenderingThetao));
 			m_context->launch(entry_point_output, w, h);
 		}
 
@@ -351,7 +355,18 @@ void FullBSSRDFGenerator::post_draw_callback()
 			}
 		}
 
+		static float theta_o = 0.0f;
+
+		if (shape == BSSRDFRenderer::PLANE)
+		{
+			ImmediateGUIDraw::SliderFloat("Outgoing light angle (deg.)", &mPlaneRenderingThetao, 0, 90);
+		}
 		mCurrentBssrdfRenderer->on_draw(true);
+
+		if (shape == BSSRDFRenderer::PLANE)
+		{
+			ImmediateGUIDraw::InputFloat2("Plane Size", &mPlaneSize.x);
+		}
 		const char * opts[6] = {"A","B","C","D","E", "F"};
 		static int def = 0;
 		if (ImmediateGUIDraw::Combo("Default material", &def, opts, 6,6))

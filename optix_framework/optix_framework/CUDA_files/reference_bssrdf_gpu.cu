@@ -9,12 +9,11 @@
 #include <photon_trace_structs.h>
 using namespace optix;
 
-rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux, , );
+rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux, , ); 
 rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux_intermediate, , );
 
 rtDeclareVariable(BufPtr1D<PhotonSample>, photon_buffer, , );
 rtDeclareVariable(BufPtr1D<int>, photon_counter, , );
-
 
 rtDeclareVariable(unsigned int, maximum_iterations, , ) = 1e5;
 rtDeclareVariable(unsigned int, batch_iterations, , ) = 1e3;
@@ -49,15 +48,8 @@ RT_PROGRAM void reference_bssrdf_gpu()
 	extinction = reference_bssrdf_material_params->extinction.x;
 	g = reference_bssrdf_material_params->meancosine.x;
 
-	const float theta_i_rad = theta_i;
-	const float theta_s_rad = -theta_s;
-	const optix::float3 wi = normalize(optix::make_float3(-sinf(theta_i_rad), 0, cosf(theta_i_rad)));
-
-	// Geometry
-	const optix::float3 xi = optix::make_float3(0, 0, 0);
-	const optix::float3 ni = optix::make_float3(0, 0, 1);
-	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), -sin(theta_s), 0);
-	const optix::float3 no = ni;
+	optix::float3 xi, wi, ni, xo, no;
+	get_reference_scene_geometry(theta_i, r, theta_s, xi, wi, ni, xo, no);
 
 	PhotonSample p = photon_buffer[idx];
 

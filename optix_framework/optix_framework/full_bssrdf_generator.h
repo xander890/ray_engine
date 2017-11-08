@@ -82,5 +82,7 @@ private:
 	bool mSimulate = 1;
 	void set_render_mode(RenderMode m, bool isSimulated);
 	bool start_offline_rendering = false;
+	float mPlaneRenderingThetao = 0.0f;
+	optix::float2 mPlaneSize = optix::make_float2(2, 2);
 };
 

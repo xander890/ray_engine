@@ -240,7 +240,7 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 #else
 	unsigned int seed = 1023;
 #endif
-	unsigned int samples = 1;
+	unsigned int samples = 200;
 
 	const Float3 n_in = MakeFloat3(ni);
 	const Float3 n_out = MakeFloat3(no);

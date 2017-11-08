@@ -42,13 +42,9 @@ RT_PROGRAM void reference_bssrdf_camera()
 	extinction = reference_bssrdf_material_params->extinction.x;
 	g = reference_bssrdf_material_params->meancosine.x;
 
-	const optix::float3 wi = normalize(optix::make_float3(-sinf(theta_i), 0, cosf(theta_i)));
+	optix::float3 xi, wi, ni, xo, no;
+	get_reference_scene_geometry(theta_i, r, theta_s, xi, wi, ni, xo, no);
 
-	// Geometry
-	const optix::float3 xi = optix::make_float3(0, 0, 0);
-	const optix::float3 ni = optix::make_float3(0, 0, 1);
-	const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), -sin(theta_s), 0);
-	const optix::float3 no = ni;
 
 	// Refraction 
 
