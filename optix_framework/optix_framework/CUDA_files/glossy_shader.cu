@@ -150,8 +150,6 @@ RT_PROGRAM void shade()
 	hit_pos = ray.origin + t_hit * ray.direction;
 	hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
 
-	uint& t = prd_radiance.seed;
-
 	if (prd_radiance.depth < max_depth)
 	{
 		HitInfo data(hit_pos, brdf_normal);
@@ -163,7 +161,7 @@ RT_PROGRAM void shade()
 			for (int j = 0; j < N; j++)
 			{
 				float3 wi, L; int sh;
-				evaluate_direct_light(data.hit_point, data.hit_normal, wi, L, sh,t, i);
+				evaluate_direct_light(data.hit_point, data.hit_normal, wi, L, sh, prd_radiance.sampler, i);
 				
 				float3 f_d = get_brdf(hit_pos, brdf_normal, wi, wo);
 				direct += L * f_d;
@@ -175,7 +173,7 @@ RT_PROGRAM void shade()
 		for (int j = 0; j < N; j++)
 		{
 			float3 wi, L; //int sh;
-			sample_environment(wi, L, data, t);
+			sample_environment(wi, L, data, prd_radiance.sampler);
 			float cos_theta = dot(wi, brdf_normal);
 			if (cos_theta <= 0.0) continue;
 			float3 f_d = get_brdf(hit_pos, brdf_normal, wi, wo);
@@ -196,21 +194,17 @@ RT_PROGRAM void shade()
 		float prob = luminance_NTSC(k_d);
 		prd_radiance.flags |= RayFlags::HIT_DIFFUSE_SURFACE;
 		float3 indirect = make_float3(0.0f);
-		float random = rnd(t);
+		float random = prd_radiance.sampler->next1D();
 
 		if (random < prob)
 		{
 			PerRayData_radiance prd = prd_radiance;
 			prd.depth = prd_radiance.depth + 1;
-			prd.seed = t;
-			float xi1 = rnd(t);
-			float xi2 = rnd(t);
-			float3 hemi_vec = sample_hemisphere_cosine(make_float2(xi1, xi2), brdf_normal);
+			float3 hemi_vec = sample_hemisphere_cosine(prd_radiance.sampler->next2D(), brdf_normal);
 			optix::Ray ray_t = optix::make_Ray(hit_pos, hemi_vec,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 			rtTrace(top_object, ray_t, prd);
 			float3 f_d = get_brdf(hit_pos, brdf_normal, hemi_vec, wo) * M_PIf;
 			indirect = prd.result * f_d / max(1e-6,prob); //Cosine cancels out
-			prd_radiance.seed = prd.seed;
 		}
 
 		prd_radiance.result = emission + direct + env + indirect;

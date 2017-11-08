@@ -19,13 +19,13 @@ __forceinline__ __device__
 int no_light_size() { return 1; }
 
 __forceinline__ __device__
-void evaluate_no_light(const float3& test, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index) { radiance = make_float3(1, 0, 0); }
+void evaluate_no_light(const float3& test, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index) { radiance = make_float3(1, 0, 0); }
 
 __forceinline__ __device__
 int singular_light_size() { return singular_lights.size(); }
 
 __forceinline__ __device__
-void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index)
+void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index)
 {
     SingularLightData l = singular_lights[light_index];
     wi = (l.type == LightType::POINT)? l.direction - hit_point  : -l.direction ;
@@ -46,15 +46,12 @@ void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal
 __forceinline__ __device__
 int area_light_size() { return area_lights.size() > 0? 1 : 0; } // This means that we will randomly sample from triangle lights instead of going though all of them.
 
-__device__ __inline__ void evaluate_area_light_inline(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index, float tmin = scene_epsilon)
+__device__ __inline__ void evaluate_area_light_inline(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index, float tmin = scene_epsilon)
 {
     //	assert(data != NULL);
-    float zeta1 = rnd(seed);
-    seed = lcg(seed);
-    float zeta2 = rnd(seed);
-    seed = lcg(seed);
-    float zeta3 = rnd(seed);
-    seed = lcg(seed);
+    float zeta1 = sampler->next1D();
+    float zeta2 = sampler->next1D();
+    float zeta3 = sampler->next1D();
     TriangleLight triangle = area_lights[(int)(area_lights.size()* zeta1)];
     optix::float3 point = sample_point_triangle(zeta2, zeta3, triangle.v1, triangle.v2, triangle.v3);
     optix::float3 to_light_un = point - hit_point;
@@ -67,17 +64,17 @@ __device__ __inline__ void evaluate_area_light_inline(const float3& hit_point, c
 }
 
 __forceinline__ __device__
-void evaluate_area_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index)
+void evaluate_area_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index)
 {
     //	assert(data != NULL);
-    evaluate_area_light_inline(hit_point, hit_normal, wi, radiance, casts_shadows, seed, light_index, scene_epsilon);
+    evaluate_area_light_inline(hit_point, hit_normal, wi, radiance, casts_shadows, sampler, light_index, scene_epsilon);
 }
 
 /***
 Cosine- hemisphere uniform sampling of the environment light map.
 */
 
-__device__ __inline__ void evaluate_environment_light(optix::float3& wi, optix::float3 & radiance, int & casts_shadows, const HitInfo & data, unsigned int& seed)
+__device__ __inline__ void evaluate_environment_light(optix::float3& wi, optix::float3 & radiance, int & casts_shadows, const HitInfo & data, TEASampler * sampler)
 {
     const optix::float3& hit_point = data.hit_point;
     const optix::float3& normal = data.hit_normal;
@@ -86,13 +83,10 @@ __device__ __inline__ void evaluate_environment_light(optix::float3& wi, optix::
     // the prd_shadow pipeline to have a more efficient way of sampling the color of the enviroment
     // lighting. It will slow down other passes anyway (amybe have another ray type?)
 
-    optix::uint& t = seed;
 
     optix::float3 color = optix::make_float3(0.0f);
 
-    float zeta1 = rnd(t);
-    float zeta2 = rnd(t);
-    optix::float3 smp = sample_hemisphere_cosine(optix::make_float2(zeta1, zeta2), normal);
+    optix::float3 smp = sample_hemisphere_cosine(sampler->next2D(), normal);
     float3 emission = optix::make_float3(0.0f);
     float V = trace_shadow_ray(hit_point, smp, scene_epsilon, RT_DEFAULT_MAX, emission);
     if (V == 1.0f) // I did not hit anything == environment light;
@@ -106,16 +100,13 @@ __device__ __inline__ void evaluate_environment_light(optix::float3& wi, optix::
     casts_shadows = 1;
 }
 
-__device__ __inline__ void evaluate_area_light_no_sr(float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index, const float3& hit_point, const float3& normal, float tmin)
+__device__ __inline__ void evaluate_area_light_no_sr(float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index, const float3& hit_point, const float3& normal, float tmin)
 {
     //	assert(data != NULL);
 
-    float zeta1 = rnd(seed);
-    seed = lcg(seed);
-    float zeta2 = rnd(seed);
-    seed = lcg(seed);
-    float zeta3 = rnd(seed);
-    seed = lcg(seed);
+    float zeta1 = sampler->next1D();
+    float zeta2 = sampler->next1D();
+    float zeta3 = sampler->next1D();
     TriangleLight triangle = area_lights[static_cast<int>(area_lights.size()* zeta1)];
     optix::float3 point = sample_point_triangle(zeta2, zeta3, triangle.v1, triangle.v2, triangle.v3);
     optix::float3 to_light_un = point - hit_point;
@@ -127,15 +118,15 @@ __device__ __inline__ void evaluate_area_light_no_sr(float3& wi, float3 & radian
     wi = normalize(hit_point - point);
 }
 
-__device__ __inline__ void evaluate_direct_light(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, unsigned int& seed, unsigned int& light_index, float tmin = scene_epsilon)
+__device__ __inline__ void evaluate_direct_light(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index, float tmin = scene_epsilon)
 {
     switch (light_type)
     {
-    case LightType::AREA:  evaluate_area_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index);  break;
+    case LightType::AREA:  evaluate_area_light(hit_point, normal, wi, radiance, casts_shadows, sampler, light_index);  break;
     default:
     case LightType::SKY:
     case LightType::POINT:
-    case LightType::DIRECTIONAL:   evaluate_singular_light(hit_point, normal, wi, radiance, casts_shadows, seed, light_index); break;
+    case LightType::DIRECTIONAL:   evaluate_singular_light(hit_point, normal, wi, radiance, casts_shadows, sampler, light_index); break;
     }
 }
 
@@ -153,29 +144,26 @@ __device__ __forceinline__ int light_size()
     }
 }
 
-__device__ __inline__ void sample_light(const float3& position, const float3 & normal, const uint& ray_depth, uint& seed, float3 & wi, float3 & Li)
+__device__ __inline__ void sample_light(const float3& position, const float3 & normal, const uint& ray_depth, TEASampler* sampler, float3 & wi, float3 & Li)
 {
 	if (importance_sample_area_lights == 0)
 	{
-		float zeta1 = rnd(seed);
-		float zeta2 = rnd(seed);
-		optix::float3 smp = sample_hemisphere_cosine(optix::make_float2(zeta1, zeta2), normal);
+		optix::float3 smp = sample_hemisphere_cosine(sampler->next2D(), normal);
 		wi = normalize(smp);
 
 		PerRayData_radiance prd = get_empty();
 		prd.flags = RayFlags::USE_EMISSION;
 		prd.depth = ray_depth + 1;
-		prd.seed = seed;
+		prd.sampler = sampler;
 		optix::Ray ray = optix::make_Ray(position, wi,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 
 		rtTrace(top_object, ray, prd);
-		seed = prd.seed;
 		Li = prd.result * M_PIf;
 	}
 	else
 	{
 		int casts_shadows = 0;
 		unsigned int light_index;
-		evaluate_direct_light(position, normal, wi, Li, casts_shadows, seed, light_index);
+		evaluate_direct_light(position, normal, wi, Li, casts_shadows, sampler, light_index);
 	}
 }

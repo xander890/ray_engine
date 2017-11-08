@@ -81,10 +81,10 @@ RT_PROGRAM void shade()
 
 		rtTrace(top_object, reflected_ray, prd_refl);
 		color += R * prd_refl.result;
-		prd_refract.seed = prd_refl.seed;
+		prd_refract.sampler = prd_refl.sampler;
 		rtTrace(top_object, refracted_ray, prd_refract);
 		color += (1 - R) * prd_refract.result;
-		prd_radiance.seed = prd_refract.seed;
+		prd_radiance.sampler = prd_refract.sampler;
 	}
 	prd_radiance.result = color;
 }
@@ -104,7 +104,6 @@ RT_PROGRAM void shade_path_tracing(void)
 		float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 		float3 hit_pos = ray.origin + t_hit*ray.direction;
 		hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
-		uint t = prd_radiance.seed;
 
 		PerRayData_radiance prd_new_ray = prepare_new_pt_payload(prd_radiance);
 
@@ -141,7 +140,7 @@ RT_PROGRAM void shade_path_tracing(void)
 		if (prd_radiance.colorband == -1)
 		{
 			// Selecting a random color channel.
-			band = int(rnd(t) * 3.0f);
+			band = int(prd_radiance.sampler->next1D() * 3.0f);
 			w = 3.0f;
 		}
 		else
@@ -163,8 +162,8 @@ RT_PROGRAM void shade_path_tracing(void)
 		prd_new_ray.colorband = band;
 
 		// Glass russian roulette
-		float xi = rnd(t);
-		prd_new_ray.seed = t;
+		float xi = prd_radiance.sampler->next1D();
+		prd_new_ray.sampler = prd_radiance.sampler;
 		if (xi < R)
 		{
 			rtTrace(top_object, reflected_ray, prd_new_ray);
@@ -184,7 +183,6 @@ RT_PROGRAM void shade_path_tracing(void)
 		float component = get_band(spectral_color, band);
 		get_band(color, band) = component;
 #endif
-		prd_radiance.seed = prd_new_ray.seed;
 	}
 
 

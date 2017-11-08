@@ -85,7 +85,7 @@ RT_PROGRAM void shade_path_tracing()
 	{
 		beam_T = expf(-t_hit*material.scattering_properties.absorption);
 		float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
-		if (rnd(prd_new_ray.seed) >= prob)
+		if (prd_new_ray.sampler->next1D() >= prob)
 		{
 			prd_radiance.result = make_float3(0);
 			return;
@@ -93,12 +93,11 @@ RT_PROGRAM void shade_path_tracing()
 		beam_T /= max(10e-6,prob);
 	}
 
-    float xi = rnd(prd_new_ray.seed);
+    float xi = prd_new_ray.sampler->next1D();
 	optix::Ray & ray = (xi < R) ? reflected_ray : refracted_ray;
 	rtTrace(top_object, ray, prd_new_ray);
 	color = prd_new_ray.result;    
 	color *= beam_T;
-    prd_radiance.seed = prd_new_ray.seed;
 
 	optix_print("Glass - (Bounce: %d) Color: %f %f %f (R: %f) Costheta: %f\n", prd_radiance.depth, color.x, color.y, color.z, R, cos_theta);
   }

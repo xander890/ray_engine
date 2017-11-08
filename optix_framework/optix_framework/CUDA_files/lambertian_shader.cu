@@ -101,7 +101,6 @@ RT_PROGRAM void shade()
 	float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	//float3 ffnormal = faceforward(normal, -ray.direction, normal);
 	float3 hit_pos = ray.origin + t_hit * ray.direction;
-	uint& t = prd_radiance.seed;
 
 	if (prd_radiance.depth < max_depth)
 	{
@@ -113,7 +112,7 @@ RT_PROGRAM void shade()
 			for (int j = 0; j < N; j++)
 			{
 				float3 wi, L; int sh;
-				evaluate_direct_light(hit_pos, normal, wi, L, sh, t, i);
+				evaluate_direct_light(hit_pos, normal, wi, L, sh, prd_radiance.sampler, i);
 				direct += L;
 			}
 		}
@@ -124,7 +123,7 @@ RT_PROGRAM void shade()
 		{
 			float3 wi, L; //int sh;
 			//evaluate_environment_light(wi, L, sh, data, t);
-			sample_environment(wi, L, data, t);
+			sample_environment(wi, L, data, prd_radiance.sampler);
 			float cos_theta = dot(wi, normal);
 			if (cos_theta <= 0.0) continue;
 			env += L * cos_theta;
@@ -145,21 +144,17 @@ RT_PROGRAM void shade()
 		float prob = dot(k_d, make_float3(0.33333f));
 		prd_radiance.flags |= RayFlags::HIT_DIFFUSE_SURFACE;
 		float3 indirect = make_float3(0.0f);
-		float random = rnd(t);
+		float random = prd_radiance.sampler->next1D();
 	    if(random < prob)
 		{
-			float xi1 = rnd(t);
-			float xi2 = rnd(t);
-			float3 hemi_vec = sample_hemisphere_cosine(make_float2(xi1, xi2), normal);
+			float3 hemi_vec = sample_hemisphere_cosine(prd_radiance.sampler->next2D(), normal);
 			PerRayData_radiance prd = prepare_new_pt_payload(prd_radiance);
-			prd.seed = t;
 			prd.colorband = prd_radiance.colorband;
 			
 			optix::Ray ray = optix::make_Ray(hit_pos, hemi_vec,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 
 			rtTrace(top_object, ray, prd);
 			indirect = prd.result / prob * M_PIf; // Cosine cancels out
-			prd_radiance.seed = prd.seed;
 			prd_radiance.colorband = prd.colorband;
 		}
 	

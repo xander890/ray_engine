@@ -747,6 +747,7 @@ echo Done.</Command>
     <ClInclude Include="reference_bssrdf_gpu.h" />
     <ClInclude Include="render_task.h" />
     <ClInclude Include="sampled_bssrdf.h" />
+    <ClInclude Include="sampler.h" />
     <ClInclude Include="SampleScene.h" />
     <ClInclude Include="simplex_noise.h" />
     <ClInclude Include="approximate_directional_dipole.h" />

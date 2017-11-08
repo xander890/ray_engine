@@ -42,7 +42,6 @@ RT_PROGRAM void shade()
 		optix::Ray new_ray(hit_pos, new_dir,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 		rtTrace(top_object, new_ray, prd_new);
 		prd_radiance.result = prd_new.result; 
-		prd_radiance.seed = prd_new.seed;		
 	}
 	else
 	{

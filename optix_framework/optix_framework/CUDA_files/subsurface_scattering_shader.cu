@@ -57,8 +57,7 @@ RT_PROGRAM void shade()
     const MaterialDataCommon & material = get_material(xo);
     const ScatteringMaterialProperties& props = material.scattering_properties;
     float recip_ior = 1.0f / material.relative_ior;
-    uint t = prd_radiance.seed;
-    float reflect_xi = rnd(t);
+    float reflect_xi = prd_radiance.sampler->next1D();
     prd_radiance.result = make_float3(0.0f);
 
 #ifdef TRANSMIT
@@ -69,7 +68,7 @@ RT_PROGRAM void shade()
     {
 		beam_T = get_beam_transmittance(t_hit, props);
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
-        if (rnd(t) >= prob) return;
+        if (prd_radiance.sampler->next1D() >= prob) return;
         beam_T /= prob;
         recip_ior = material.relative_ior;
         cos_theta_o = -cos_theta_o;
@@ -82,12 +81,9 @@ RT_PROGRAM void shade()
     if (reflect_xi >= R)
     {
 		PerRayData_radiance prd_refracted = prepare_new_pt_payload(prd_radiance);
-		prd_refracted.seed = t;
 		 
 		Ray refracted(xo, wt,  RayType::RADIANCE, scene_epsilon);
 		rtTrace(top_object, refracted, prd_refracted);
-
-		t = prd_refracted.seed;
 		prd_radiance.result += prd_refracted.result*beam_T;
 
         if (!inside)
@@ -124,7 +120,7 @@ RT_PROGRAM void shade()
             // Russian roulette
             float dist = length(xo - sample.pos);
             float exp_term = exp(-dist * chosen_transport_rr);
-            if (rnd(t) < exp_term)
+            if (prd_radiance.sampler->next1D() < exp_term)
             {
                 accumulate += T12*sample.L*bssrdf(sample.pos, sample.normal, w12, xo, no, w21, props) / exp_term;
             }
@@ -145,12 +141,9 @@ RT_PROGRAM void shade()
     {
 		float3 wr = -reflect(wo, no);
         PerRayData_radiance prd_reflected = prepare_new_pt_payload(prd_radiance);
-		prd_reflected.seed = t;
 		Ray reflected(xo, wr,  RayType::RADIANCE, scene_epsilon);
         rtTrace(top_object, reflected, prd_reflected);	
-		t = prd_reflected.seed;
         prd_radiance.result += prd_reflected.result;
     }
-	prd_radiance.seed = t;
 #endif
 }

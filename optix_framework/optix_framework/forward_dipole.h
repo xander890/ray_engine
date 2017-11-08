@@ -178,7 +178,6 @@ __device__ __host__ __forceinline__ Float evalDipole(
 	}
 }
 
-
 __host__ __device__ __inline__ void test_forward_dipole_cuda()
 {
 	const Float3 xi = MakeFloat3(0., 0., 0.);
@@ -228,9 +227,6 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 	const float3& xo, const float3& no, const float3& w21,
 	const ScatteringMaterialProperties& properties)
 {
-	//test_forward_dipole_cuda();
-	//return make_float3(0);
-
 	TangentPlaneMode tangent = TangentPlaneMode::EFrisvadEtAl;
 	Float3 R = MakeFloat3(xo - xi);
 	optix::float3 res;

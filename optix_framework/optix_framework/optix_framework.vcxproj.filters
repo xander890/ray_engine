@@ -611,6 +611,9 @@
     </ClInclude>
     <ClInclude Include="bssrdf_parameter_manager.h" />
     <ClInclude Include="full_bssrdf_host_device_common.h" />
+    <ClInclude Include="sampler.h">
+      <Filter>Header Files\Optix</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">

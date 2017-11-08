@@ -43,7 +43,7 @@ __forceinline__ __device__ void absorbing_glass()
 		float R, cos_theta;
 		get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
 
-		float xi = rnd(prd_radiance.seed);
+		float xi = prd_radiance.sampler->next1D();
 		
 		if (xi < R)
 		{
@@ -52,7 +52,8 @@ __forceinline__ __device__ void absorbing_glass()
 			prd_new.flags |= RayFlags::USE_EMISSION;
 			prd_new.result = make_float3(0);
 			rtTrace(top_object, reflected_ray, prd_new);
-			prd_radiance.seed = prd_new.seed;
+			// SAMPLER DELETE
+			prd_radiance.sampler = prd_new.sampler;
 			prd_radiance.result = prd_new.result;
 		}
 		else

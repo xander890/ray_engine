@@ -45,7 +45,7 @@ __device__ __inline__ float get_asymmetry(const optix::float3 & pos, int colorba
     return *(&props.meancosine.x + colorband);
 }
 
-__device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& t)
+__device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASampler * sampler)
 {
     // Input: 
     // ray: initial position and direction
@@ -76,13 +76,13 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
         rtTrace(top_object, ray, prd_ray); // Calculating depth of the ray.
         extinction = get_extinction(ray.origin, colorband);
         float s = prd_ray.depth;
-        float log_xi = log(rnd(t));
+        float log_xi = log(sampler->next1D());
 
 #define NEW_HETEROGENOUS
 #ifdef NEW_HETEROGENOUS
         int N_samples = (int)floor(s / delta_t);
         float tau = 0.0f;
-        float offset = rnd(t);
+        float offset = sampler->next1D();
         float ti = offset / N_samples;
         
         // Ray marching to find the real optical depth for heterogenous materials.
@@ -113,14 +113,14 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, uint& 
 
             // New ray direction 
             g = get_asymmetry(ray.origin, colorband);
-            ray.direction = sample_HG(ray.direction, g, t);
+            ray.direction = sample_HG(ray.direction, g, sampler->next2D());
         }
         else // Intersection hit
             return true;
 
         albedo = get_albedo(ray.origin, colorband);
         // Break if absorbed
-        if (rnd(t) > albedo)
+        if (sampler->next1D() > albedo)
             return false;
     }
 }
@@ -150,8 +150,7 @@ RT_PROGRAM void shade()
     float n1_over_n2 = 1.0f / material.relative_ior;
     float cos_theta_in = dot(normal, w_i);
     float3 beam_T = make_float3(1.0f);
-    uint& t = prd_radiance.seed;
-
+	
     // Russian roulette with absorption if arrived from dense medium
     bool inside = cos_theta_in < 0.0f;
     if (inside)
@@ -164,7 +163,7 @@ RT_PROGRAM void shade()
     {
         beam_T = expf(-t_hit*props.absorption);
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
-        if (rnd(t) >= prob) return;
+        if (prd_radiance.sampler->next1D() >= prob) return;
         beam_T /= prob;
     }
 
@@ -177,7 +176,7 @@ RT_PROGRAM void shade()
     // Sample new ray inside or outside
     ++prd_radiance.depth;
     prd_radiance.flags |= RayFlags::USE_EMISSION;
-    float xi = rnd(t);
+    float xi = prd_radiance.sampler->next1D();
     if ((xi < R && inside) || (xi > R && !inside))
     {
         // Sample a color and set properties
@@ -185,7 +184,7 @@ RT_PROGRAM void shade()
         float weight;
         if (prd_radiance.colorband == -1)
         {
-            colorband = int(3.0f*rnd(t));
+            colorband = int(3.0f*prd_radiance.sampler->next1D());
             prd_radiance.colorband = colorband;
             weight = 3.0;
         }
@@ -200,7 +199,7 @@ RT_PROGRAM void shade()
         float3 dir_inside = inside ? reflected_dir : refracted_dir;
         Ray ray_inside(hit_pos, dir_inside,  RayType::SHADOW, scene_epsilon, RT_DEFAULT_MAX);
 
-        if (scatter_inside(ray_inside, colorband, t))
+        if (scatter_inside(ray_inside, colorband, prd_radiance.sampler))
         {
             // Switch to radiance ray and intersect with boundary
             ray_inside.ray_type =  RayType::RADIANCE;

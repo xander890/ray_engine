@@ -44,10 +44,10 @@ RT_PROGRAM void sample_camera()
 {
     uint idx = launch_index.x;
     PositionSample& sample = sampling_output_buffer[idx];
-    uint t = tea<16>(idx, frame);
+    TEASampler sampler(idx, frame);
     // sample a triangle
     uint triangles = sampling_vindex_buffer.size();
-    uint sm = (int)(rnd_tea(t) * triangles);
+    uint sm = (int)(sampler.next1D() * triangles);
     //uint sm = cdf_bsearch(rnd(t));
     int3 idx_vxt = sampling_vindex_buffer[sm];
     float3 v0 = sampling_vertex_buffer[idx_vxt.x];
@@ -57,8 +57,8 @@ RT_PROGRAM void sample_camera()
     float area = 0.5*length(perp_triangle);
 
     // sample a point in the triangle
-    float xi1 = sqrt(rnd_tea(t));
-    float xi2 = rnd_tea(t);
+    float xi1 = sqrt(sampler.next1D());
+    float xi2 = sampler.next1D();
     float u = 1.0f - xi1;
     float v = (1.0f - xi2)*xi1;
     float w = xi1*xi2;
@@ -86,10 +86,10 @@ RT_PROGRAM void sample_camera()
 
     float3 Le = make_float3(0.0f);
     uint lights = light_size();
-    uint light_idx = (lights + 1)*rnd(t);
+    uint light_idx = (lights + 1)*sampler.next1D();
 
 
-	sample_light(sample.pos, sample.normal, 0, t, light_vector, light_radiance);
+	sample_light(sample.pos, sample.normal, 0, &sampler, light_vector, light_radiance);
 
     float cos_theta = dot(light_vector, sample.normal);
     Le += light_radiance;        

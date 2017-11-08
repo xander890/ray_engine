@@ -73,7 +73,7 @@ static __host__ __device__ __inline__ float hash_tdf(const optix::float3 idx, fl
 	beta = (signf(-p) + optix::make_float4(1.0f)) * optix::make_float4(0.5f) * m;
 	n = (p + beta);
 
-	return floor(fracf(dot(n / m, optix::make_float4(1.0f, -1.0f, 1.0f, -1.0f))) * hash_num);
+	return floor(fracf(optix::dot(n / m, optix::make_float4(1.0f, -1.0f, 1.0f, -1.0f))) * hash_num);
 }
 
 //

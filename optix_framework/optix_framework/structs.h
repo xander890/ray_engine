@@ -3,8 +3,7 @@
 
 #pragma once
 #include <optix_world.h>
-
-
+#include "sampler.h"
 
 struct MPMLMedium
 {
@@ -44,7 +43,7 @@ struct PerRayData_radiance
   optix::float3 result;
   unsigned int depth;
   int colorband;
-  unsigned int seed;
+  TEASampler * sampler;
   unsigned int flags;
 };
 

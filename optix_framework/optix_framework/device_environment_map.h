@@ -50,7 +50,7 @@ __forceinline__ __device__ unsigned int cdf_bsearch_conditional(float xi, uint o
     return middle;
 }
 
-__forceinline__ __device__ void sample_environment(optix::float3& wi, optix::float3& radiance, const HitInfo& data, unsigned int& seed)
+__forceinline__ __device__ void sample_environment(optix::float3& wi, optix::float3& radiance, const HitInfo& data, TEASampler * sampler)
 {
     const optix::float3& hit_point = data.hit_point;
     const optix::float3& normal = data.hit_normal;
@@ -66,7 +66,7 @@ __forceinline__ __device__ void sample_environment(optix::float3& wi, optix::flo
             auto marginal_pdf = envmap_importance_sampling->marginal_pdf;
             auto conditional_pdf = envmap_importance_sampling->conditional_pdf;
 
-            float xi1 = rnd(seed), xi2 = rnd(seed);
+            float xi1 = sampler->next1D(), xi2 = sampler->next1D();
 
             uint v_idx = cdf_bsearch_marginal(xi1);
             float dv = v_idx > 0 && v_idx < count.y
@@ -104,9 +104,8 @@ __forceinline__ __device__ void sample_environment(optix::float3& wi, optix::flo
             return;
         }
     }
-    float zeta1 = rnd(seed);
-    float zeta2 = rnd(seed);
-    optix::float3 smp = sample_hemisphere_cosine(optix::make_float2(zeta1, zeta2), normal);
+
+	optix::float3 smp = sample_hemisphere_cosine(sampler->next2D(), normal);
     wi = normalize(smp);
     float3 emission = optix::make_float3(0.0f);
     float V = trace_shadow_ray(hit_point, wi, scene_epsilon, RT_DEFAULT_MAX, emission);

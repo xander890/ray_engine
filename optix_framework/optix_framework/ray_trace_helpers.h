@@ -11,7 +11,7 @@ __inline__ __device__ PerRayData_radiance get_empty()
 	r.colorband = -1;
 	r.result = make_float3(0.0f);
 	r.flags = 0;
-	r.seed = 0;
+	r.sampler = nullptr;
 	r.depth = 0;
 	return r;
 }
@@ -22,7 +22,7 @@ __inline__ __device__ PerRayData_radiance init_copy(PerRayData_radiance & to_cop
 	r.colorband = to_copy.colorband;
 	r.result = to_copy.result;
 	r.flags = to_copy.flags;
-	r.seed = to_copy.seed;
+	r.sampler = to_copy.sampler;
 	r.depth = to_copy.depth;
 	return r;
 }
@@ -33,7 +33,7 @@ __inline__ __device__ PerRayData_radiance prepare_new_pt_payload(PerRayData_radi
 	r.colorband = to_copy.colorband;
 	r.result = make_float3(0);
 	r.flags = to_copy.flags | RayFlags::USE_EMISSION;
-	r.seed = to_copy.seed;
+	r.sampler = to_copy.sampler;
 	r.depth = to_copy.depth + 1;
 	return r;
 }
