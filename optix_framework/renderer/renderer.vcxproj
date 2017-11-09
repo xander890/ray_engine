@@ -18,6 +18,7 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup> <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck> </PropertyGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8364F8E7-0FF8-44E8-957D-DB402E351FF1}</ProjectGuid>
     <RootNamespace>renderer</RootNamespace>
@@ -101,6 +102,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(Configuration)\optix_framework.lib;winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
       <Command>cd $(ProjectDir)
@@ -111,10 +113,12 @@ xcopy /y /d /f "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d /f "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d /f "..\dll\xerces-c_3_1.dll" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
+xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(ProjectDir)PTX_files"
 xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(OutDir)PTX_files"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>echo Creating directories "PTX_files" if they don't exist yet...
+if not exist "$(ProjectDir)PTX_files" mkdir "$(ProjectDir)PTX_files"
 if not exist "$(OutDir)PTX_files" mkdir "$(OutDir)PTX_files"
 echo Done.</Command>
     </PreBuildEvent>
@@ -149,6 +153,7 @@ echo Done.</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>$(Configuration)\optix_framework.lib;winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
       <Command>cd $(ProjectDir)
@@ -159,10 +164,12 @@ xcopy /y /d /f "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d /f "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d /f "..\dll\xerces-c_3_1.dll" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
+xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(ProjectDir)PTX_files"
 xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(OutDir)PTX_files"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>echo Creating directories "PTX_files" if they don't exist yet...
+if not exist "$(ProjectDir)PTX_files" mkdir "$(ProjectDir)PTX_files"
 if not exist "$(OutDir)PTX_files" mkdir "$(OutDir)PTX_files"
 echo Done.</Command>
     </PreBuildEvent>

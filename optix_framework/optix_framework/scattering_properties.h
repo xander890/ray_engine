@@ -1,17 +1,6 @@
 #pragma once
 #include <optix_world.h>
 #include "host_device_common.h"
-
-#define IMPROVED_ENUM_NAME ScatteringDipole
-#define IMPROVED_ENUM_LIST	ENUMITEM_VALUE(STANDARD_DIPOLE_BSSRDF,0) \
-							ENUMITEM_VALUE(DIRECTIONAL_DIPOLE_BSSRDF,1) \
-							ENUMITEM_VALUE(QUANTIZED_DIFFUSION_BSSRDF,2) \
-							ENUMITEM_VALUE(PHOTON_BEAM_DIFFUSION_BSSRDF,3) \
-							ENUMITEM_VALUE(APPROX_STANDARD_DIPOLE_BSSRDF,4) \
-							ENUMITEM_VALUE(APPROX_DIRECTIONAL_DIPOLE_BSSRDF,5) \
-							ENUMITEM_VALUE(FORWARD_SCATTERING_DIPOLE_BSSRDF,6) 
-#include "improved_enum.def"
-
 #include "optical_helper.h"
 
 struct ScatteringMaterialProperties
@@ -20,7 +9,6 @@ struct ScatteringMaterialProperties
 	optix::float3 absorption					DEFAULT(optix::make_float3(1));
     optix::float3 scattering					DEFAULT(optix::make_float3(0));
     optix::float3 meancosine					DEFAULT(optix::make_float3(0));
-	ScatteringDipole::Type	selected_bssrdf		DEFAULT(ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF);
 
     // derived parameters, no need to initialize
     optix::float3 extinction;
@@ -42,15 +30,6 @@ struct ScatteringMaterialProperties
     optix::float3 one_over_three_ext;
 	float C_phi_norm; // 1 / (4 * C_phi(1 / eta)) = 1 / (1 - 2 * C1(1/eta)) 
 	optix::float3 deltaEddExtinction;
-
-	optix::float3 approx_property_A		DEFAULT(optix::make_float3(1));
-	int pad0;
-	optix::float3 approx_property_s		DEFAULT(optix::make_float3(1));
-	float sampling_mfp_s;
-	BufPtr1D<optix::float3> precomputed_bssrdf;
-	float max_dist_bssrdf;
-	int precomputed_bssrdf_size;
-	int use_precomputed_qd;
 };
 
 __host__ __device__ __forceinline__ void fill_scattering_parameters(ScatteringMaterialProperties & properties, const float scale, const float ior, const optix::float3 & absorption, const optix::float3 & scattering, const optix::float3 & asymmetry)

@@ -132,3 +132,41 @@ inline void clear_buffer(optix::Buffer & buf)
 	memset(buff, 0, size * element_size);
 	buf->unmap();
 }
+
+inline optix::Buffer clone_buffer(optix::Buffer & buf, unsigned int type)
+{
+	RTsize element_size = buf->getElementSize();
+	unsigned int dimensionality = buf->getDimensionality();
+	RTsize dims[3];
+	buf->getSize(dimensionality, &dims[0]);
+	RTsize size = 1;
+	for (unsigned int i = 0; i < dimensionality; i++)
+		size *= dims[i];
+
+	optix::Buffer ret = buf->getContext()->createBuffer(type);
+
+	// Format
+	RTformat format = buf->getFormat();
+	ret->setFormat(format);
+	if(format == RT_FORMAT_USER)
+		ret->setElementSize(element_size);
+
+	// Size
+	if(dimensionality == 1)
+		ret->setSize(dims[0]);
+	else if (dimensionality == 2)
+		ret->setSize(dims[0], dims[1]);
+	else if (dimensionality == 3)
+		ret->setSize(dims[0], dims[1], dims[2]);
+
+	// Mipmaps
+	ret->setMipLevelCount(buf->getMipLevelCount());
+
+	// And finally, data
+	void * buf_ptr = buf->map();
+	void * ret_ptr = ret->map();
+	memcpy(ret_ptr, buf_ptr, size*element_size);
+	buf->unmap();
+	ret->unmap();
+	return ret;
+}

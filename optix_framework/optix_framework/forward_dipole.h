@@ -195,7 +195,6 @@ __host__ __device__ __inline__ void test_forward_dipole_cuda()
 	float eta = 1.0f;
 	Float3 R = xo - xi;
 	unsigned int seed = 1023;
-	unsigned int samples = 100;
 	Float s_test = 0.03;
 	TangentPlaneMode tangent = TangentPlaneMode::EFrisvadEtAl;
 	Float S = evalDipole(sigma_s, sigma_a, mu, eta,

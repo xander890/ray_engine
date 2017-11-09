@@ -18,11 +18,7 @@ ScatteringMaterial::ScatteringMaterial(optix::float3 absorption, optix::float3 s
 	this->scattering = scattering;
 	this->asymmetry = meancosine;
 	mStandardMaterial = DefaultScatteringMaterial::Count; // Custom
-	properties.approx_property_A = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_A", make_float3(1), "Approximate value A for approximate dipoles.");
-	properties.approx_property_s = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_s", make_float3(1), "Approximate value A for approximate dipoles.");
-	properties.selected_bssrdf = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_full_string()).c_str()));
-	properties.use_precomputed_qd = 1;
-	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + ScatteringDipole::get_full_string()).c_str()));
+	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + SamplingMfpType::get_full_string()).c_str()));
 	dirty = true;
 }
 
@@ -31,10 +27,6 @@ ScatteringMaterial::ScatteringMaterial(DefaultScatteringMaterial material, float
 	scale = prop_scale;
 	mStandardMaterial = static_cast<int>(material);
 	getDefaultMaterial(material);
-	properties.approx_property_A = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_A", properties.approx_property_A, "Approximate value A for approximate dipoles.");
-	properties.approx_property_s = ConfigParameters::get_parameter<optix::float3>("bssrdf", "approximate_s", properties.approx_property_s, "Approximate value A for approximate dipoles.");
-	properties.selected_bssrdf = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(properties.selected_bssrdf), (std::string("Selected dipole. Values: ") + ScatteringDipole::get_full_string()).c_str()));
-	properties.use_precomputed_qd = 1;
 	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + SamplingMfpType::get_full_string()).c_str()));
 	dirty = true;
 }
@@ -48,7 +40,6 @@ ScatteringMaterial& ScatteringMaterial::operator=(const ScatteringMaterial& cp)
     scale = cp.scale;
     dirty = true;
     mStandardMaterial = cp.mStandardMaterial;
-	properties.selected_bssrdf = cp.properties.selected_bssrdf;
     return *this;
 }
 
@@ -60,7 +51,6 @@ ScatteringMaterial::ScatteringMaterial(const ScatteringMaterial& cp)
     name = cp.name;
     scale = cp.scale;
     mStandardMaterial = cp.mStandardMaterial;
-	properties.selected_bssrdf = cp.properties.selected_bssrdf;
 	dirty = true;
 }
 
@@ -220,21 +210,6 @@ bool ScatteringMaterial::on_draw(std::string id)
 {
 	ImGui::Separator();
 	ImGui::Text("Scattering properties:");
-	std::string dipoles = "";
-	ScatteringDipole::Type t = ScatteringDipole::first();
-	do
-	{
-		dipoles += prettify(ScatteringDipole::to_string(t)) + '\0';
-		t = ScatteringDipole::next(t);
-	} while (t != ScatteringDipole::NotValidEnumItem);
-
-	#define ID_STRING(x,id) (std::string(x) + "##" + id + x).c_str()
-	if (ImmediateGUIDraw::Combo(ID_STRING("Dipole", id), (int*)&properties.selected_bssrdf, dipoles.c_str(), ScatteringDipole::count()))
-	{
-		dirty = true;
-	}
-
-	dirty |= ImmediateGUIDraw::Checkbox(ID_STRING("Use quantized", id), (bool*)&properties.use_precomputed_qd);
 
 	std::vector<std::string> vv;
 	for (int i = 0; i < defaultMaterials.size(); i++)
@@ -245,46 +220,30 @@ bool ScatteringMaterial::on_draw(std::string id)
 	std::vector<const char*> v;
 	for (auto& c : vv) v.push_back(c.c_str());
 	static int mat = mStandardMaterial;
+#define ID_STRING(x,id) (std::string(x) + "##" + id + x).c_str()
 
-	bool is_approximate = properties.selected_bssrdf == ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF || properties.selected_bssrdf == ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF;
-	if (is_approximate)
+	if (ImmediateGUIDraw::InputFloat3(ID_STRING("Absorption", id), (float*)&absorption))
 	{
-		if (ImmediateGUIDraw::InputFloat3(ID_STRING("A", id), (float*)&properties.approx_property_A))
-		{
-			dirty = true;
-			mat = DefaultScatteringMaterial::Count;
-		}
-		if (ImmediateGUIDraw::InputFloat3(ID_STRING("s", id), (float*)&properties.approx_property_s))
-		{
-			dirty = true;
-			mat = DefaultScatteringMaterial::Count;
-		}
+		dirty = true;
+		mat = DefaultScatteringMaterial::Count;
 	}
-	else
+	if (ImmediateGUIDraw::InputFloat3(ID_STRING("Scattering", id), (float*)&scattering))
 	{
-
-		if (ImmediateGUIDraw::InputFloat3(ID_STRING("Absorption", id), (float*)&absorption))
-		{
-			dirty = true;
-			mat = DefaultScatteringMaterial::Count;
-		}
-		if (ImmediateGUIDraw::InputFloat3(ID_STRING("Scattering", id), (float*)&scattering))
-		{
-			dirty = true;
-			mat = DefaultScatteringMaterial::Count;
-		}
-
-		if (ImmediateGUIDraw::InputFloat3(ID_STRING("Asymmetry", id), (float*)&asymmetry))
-		{
-			dirty = true;
-			mat = DefaultScatteringMaterial::Count;
-		}
-
-		if (ImmediateGUIDraw::InputFloat(ID_STRING("Scale", id), (float*)&scale))
-		{
-			dirty = true;
-		}
+		dirty = true;
+		mat = DefaultScatteringMaterial::Count;
 	}
+
+	if (ImmediateGUIDraw::InputFloat3(ID_STRING("Asymmetry", id), (float*)&asymmetry))
+	{
+		dirty = true;
+		mat = DefaultScatteringMaterial::Count;
+	}
+
+	if (ImmediateGUIDraw::InputFloat(ID_STRING("Scale", id), (float*)&scale))
+	{
+		dirty = true;
+	}
+	
 
 	if (ImmediateGUIDraw::Combo(ID_STRING("Change material", id), &mat, v.data(), (int)v.size(), (int)v.size()))
 	{
@@ -301,21 +260,7 @@ bool ScatteringMaterial::on_draw(std::string id)
 #undef ID_STRING
 }
 
-float computeSamplingMfp(SamplingMfpType::Type e, const optix::float3& t)
-{
-	switch (e)
-	{
-	case SamplingMfpType::X: return t.x;
-	case SamplingMfpType::Y: return t.y;
-	case SamplingMfpType::Z: return t.z;
-	case SamplingMfpType::MIN: return optix::fminf(t);
-	case SamplingMfpType::MAX: return optix::fmaxf(t);
-	case SamplingMfpType::MEAN: return optix::dot(t, optix::make_float3(0.333f));
-	case SamplingMfpType::NotValidEnumItem: 
-	default:
-		return 0;
-	}
-}
+
 
 void ScatteringMaterial::computeCoefficients(float ior)
 {
@@ -323,7 +268,6 @@ void ScatteringMaterial::computeCoefficients(float ior)
 
 	Logger::info << "Will sample using MFP: " << SamplingMfpType::to_string(mSamplingType) << std::endl;
 	properties.sampling_mfp_tr = computeSamplingMfp(mSamplingType, properties.transport);
-	properties.sampling_mfp_s = computeSamplingMfp(mSamplingType, properties.approx_property_s);
 	dirty = false;
 }
 

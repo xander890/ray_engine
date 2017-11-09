@@ -3,6 +3,8 @@
 #include <host_device_common.h>
 #include <scattering_properties.h>
 #include <full_bssrdf_host_device_common.h>
+#include <bssrdf_properties.h>
+#include <bssrdf_host.h>
 
 class BSSRDFRenderer
 {
@@ -93,13 +95,13 @@ class BSSRDFRendererModel : public BSSRDFRenderer
 public:
 	BSSRDFRendererModel(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::uint2 & shape_size = optix::make_uint2(160, 40), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFRenderer(ctx, shape, shape_size)
 	{
-		mScatteringDipole = dipole;
+		mBSSRDF = std::move(BSSRDF::create(ctx, dipole));
 	}
 
 	void init() override;
 	void render() override;
 	bool on_draw(bool show_material_params) override;
 	void load_data() override;
-	void set_dipole(ScatteringDipole::Type dip) { mScatteringDipole = dip;  }
-	ScatteringDipole::Type mScatteringDipole;
+	void set_dipole(ScatteringDipole::Type dip);
+	std::unique_ptr<BSSRDF> mBSSRDF = nullptr;
 };

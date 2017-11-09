@@ -35,6 +35,22 @@ enum DefaultScatteringMaterial
     Count = 17
 };
 
+inline float computeSamplingMfp(SamplingMfpType::Type e, const optix::float3& t)
+{
+	switch (e)
+	{
+	case SamplingMfpType::X: return t.x;
+	case SamplingMfpType::Y: return t.y;
+	case SamplingMfpType::Z: return t.z;
+	case SamplingMfpType::MIN: return optix::fminf(t);
+	case SamplingMfpType::MAX: return optix::fmaxf(t);
+	case SamplingMfpType::MEAN: return optix::dot(t, optix::make_float3(0.333f));
+	case SamplingMfpType::NotValidEnumItem:
+	default:
+		return 0;
+	}
+}
+
 class ScatteringMaterial
 {
 public:

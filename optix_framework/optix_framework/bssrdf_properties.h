@@ -10,10 +10,36 @@
 						   ENUMITEM_VALUE(BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES,4) 
 #include "improved_enum.def"
 
+#define IMPROVED_ENUM_NAME ScatteringDipole
+#define IMPROVED_ENUM_LIST	ENUMITEM_VALUE(STANDARD_DIPOLE_BSSRDF,0) \
+							ENUMITEM_VALUE(DIRECTIONAL_DIPOLE_BSSRDF,1) \
+							ENUMITEM_VALUE(QUANTIZED_DIFFUSION_BSSRDF,2) \
+							ENUMITEM_VALUE(PHOTON_BEAM_DIFFUSION_BSSRDF,3) \
+							ENUMITEM_VALUE(APPROX_STANDARD_DIPOLE_BSSRDF,4) \
+							ENUMITEM_VALUE(APPROX_DIRECTIONAL_DIPOLE_BSSRDF,5) \
+							ENUMITEM_VALUE(FORWARD_SCATTERING_DIPOLE_BSSRDF,6) 
+#include "improved_enum.def"
+
 #define BSSRDF_SHADERS_SHOW_ALL 0
 #define BSSRDF_SHADERS_SHOW_REFRACTION 1
 #define BSSRDF_SHADERS_SHOW_REFLECTION 2
 #define BSSRDF_SHADERS_SHOW_COUNT 3
+
+struct ApproximateBSSRDFProperties
+{
+	optix::float3 approx_property_A		DEFAULT(optix::make_float3(1));
+	int pad0;
+	optix::float3 approx_property_s		DEFAULT(optix::make_float3(1));
+	float sampling_mfp_s;
+};
+
+struct QuantizedDiffusionProperties
+{
+	BufPtr1D<optix::float3> precomputed_bssrdf;
+	float max_dist_bssrdf       DEFAULT(10.0f);
+	int precomputed_bssrdf_size DEFAULT(1024);
+	int use_precomputed_qd		DEFAULT(1);
+};
 
 struct BSSRDFSamplingProperties
 {

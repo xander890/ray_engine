@@ -340,16 +340,8 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 		if (!mSimulate)
 		{
-			std::string dipoles = "";
-			ScatteringDipole::Type t = ScatteringDipole::first();
-			do
-			{
-				dipoles += prettify(ScatteringDipole::to_string(t)) + '\0';
-				t = ScatteringDipole::next(t);
-			} while (t != ScatteringDipole::NotValidEnumItem);
-
-			static ScatteringDipole::Type dipole = ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF;
-			if (ImmediateGUIDraw::Combo("Dipole", (int*)&dipole, dipoles.c_str(), ScatteringDipole::count()))
+			static ScatteringDipole::Type dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF;
+			if (BSSRDF::dipole_selector_gui(dipole))
 			{
 				std::dynamic_pointer_cast<BSSRDFRendererModel>(mCurrentBssrdfRenderer)->set_dipole(dipole);
 			}

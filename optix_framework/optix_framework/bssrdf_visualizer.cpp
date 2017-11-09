@@ -18,6 +18,24 @@ mCameraHeight(camera_height)
 
 }
 
+BSSRDFPlaneRenderer::BSSRDFPlaneRenderer(BSSRDFPlaneRenderer & copy) : Shader(copy)
+{
+	auto type = copy.mBSSRDF->get_type();
+	mBSSRDF = BSSRDF::create(context, type);
+
+	mCameraWidth = copy.mCameraWidth;
+	mCameraHeight = copy.mCameraHeight;
+
+	// Gui
+	mShowFalseColors = copy.mShowFalseColors;
+	mAngle = copy.mAngle;
+	mMult = copy.mMult;
+	mChannel = copy.mChannel;
+
+	mParameters = clone_buffer(copy.mParameters, RT_BUFFER_INPUT); 
+	
+}
+
 void BSSRDFPlaneRenderer::initialize_shader(optix::Context ctx)
 {
 	Shader::initialize_shader(ctx);
@@ -34,13 +52,15 @@ void BSSRDFPlaneRenderer::initialize_shader(optix::Context ctx)
 	BufPtr<ScatteringMaterialProperties> id = BufPtr<ScatteringMaterialProperties>(mParameters->getId());
 	context["planar_bssrdf_material_params"]->setUserData(sizeof(BufPtr<ScatteringMaterialProperties>), &id);
 
+	mBSSRDF = BSSRDF::create(context, ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF);
+
 	reset();
 
 }
 
 void BSSRDFPlaneRenderer::initialize_mesh(Mesh& object)
 {
-
+	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
 }
 
 void BSSRDFPlaneRenderer::pre_trace_mesh(Mesh& object)
@@ -55,6 +75,7 @@ void BSSRDFPlaneRenderer::post_trace_mesh(Mesh & object)
 
 bool BSSRDFPlaneRenderer::on_draw()
 {
+	mBSSRDF->on_draw();
 	ImmediateGUIDraw::SliderInt("Angle of incoming light", &mAngle, -89, 89);
 	ImmediateGUIDraw::InputFloat("Scalar multiplier", &mMult);
 	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors);
@@ -70,6 +91,8 @@ void BSSRDFPlaneRenderer::load_data(Mesh & object)
 	*cc = object.get_main_material()->get_data().scattering_properties;
 	mParameters->unmap();
 	context["reference_bssrdf_theta_i"]->setFloat(deg2rad(static_cast<float>(mAngle)));
-	context["reference_bssrdf_rel_ior"]->setFloat(object.get_main_material()->get_data().relative_ior);		
+	context["reference_bssrdf_rel_ior"]->setFloat(object.get_main_material()->get_data().relative_ior);	
+	mBSSRDF->load(object.get_main_material()->get_data().scattering_properties);
+	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
 	context["channel_to_show"]->setUint(mChannel);
 }

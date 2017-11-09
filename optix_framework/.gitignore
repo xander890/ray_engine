@@ -35,6 +35,7 @@ optix_framework/result_optix.raw
 optix_framework/result_optix.txt
 optix_framework/imgui.ini
 *.bssrdf
+*.ptx
 
 # Visual Studio 2015 cache/options directory
 .vs/

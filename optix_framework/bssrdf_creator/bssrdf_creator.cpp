@@ -141,6 +141,12 @@ void BSSRDFRendererModel::init()
 
 }
 
+void BSSRDFRendererModel::set_dipole(ScatteringDipole::Type dipole)
+{
+	mBSSRDF.reset();
+	mBSSRDF = BSSRDF::create(context, dipole);
+}
+
 void BSSRDFRendererModel::render()
 {
 	if (!mInitialized)
@@ -164,7 +170,9 @@ void BSSRDFRendererModel::load_data()
 {
 	BSSRDFRenderer::load_data();
 	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());
-	cc->selected_bssrdf = mScatteringDipole;
+	mBSSRDF->load(*cc);
+	auto type = mBSSRDF->get_type();
+	context["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &type);
 	mProperties->unmap();
 }
 

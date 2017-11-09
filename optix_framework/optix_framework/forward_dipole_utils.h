@@ -246,7 +246,6 @@ __device__ __host__ __forceinline__ Float fresnelDiffuseReflectance(Float eta) {
 			+ 4.98554f * invEta4
 			- 1.36881f * invEta5;
 	}
-	return 0.0f;
 }
 
 __device__ __host__ __forceinline__ Float fresnelDielectricExt(Float cosThetaI_, Float &cosThetaT_, Float eta) {

@@ -14,6 +14,8 @@ SampledBSSRDF::SampledBSSRDF(const SampledBSSRDF & cp) : Shader(cp)
 	mPropertyBuffer = create_buffer<BSSRDFSamplingProperties>(context);
 	properties = std::make_unique<BSSRDFSamplingProperties>();
 	*properties = *cp.properties;
+	auto type = cp.mBSSRDF->get_type();
+	mBSSRDF = BSSRDF::create(context, type);
 }
 
 void SampledBSSRDF::initialize_shader(optix::Context ctx)
@@ -22,6 +24,7 @@ void SampledBSSRDF::initialize_shader(optix::Context ctx)
 	mPropertyBuffer = create_buffer<BSSRDFSamplingProperties>(context);
 	properties->sampling_method = BssrdfSamplingType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "sampling_method", BssrdfSamplingType::to_string(properties->sampling_method), "Sampling method for illum 14. Available : " + BssrdfSamplingType::get_full_string()));
 	Logger::info << "Using enum " << BssrdfSamplingType::to_string(properties->sampling_method) << std::endl;
+	mBSSRDF = BSSRDF::create(context, ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF);
 }
 
 void SampledBSSRDF::initialize_mesh(Mesh& object)
@@ -29,7 +32,8 @@ void SampledBSSRDF::initialize_mesh(Mesh& object)
 	Shader::initialize_mesh(object);
 	BufPtr<BSSRDFSamplingProperties> bufptr(mPropertyBuffer->getId());
  	object.mMaterial["bssrdf_sampling_properties"]->setUserData(sizeof(BufPtr<BSSRDFSamplingProperties>), &bufptr);
-
+	mBSSRDF->load(object.get_main_material()->get_data().scattering_properties);
+	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
 }
 
 void SampledBSSRDF::load_data(Mesh & object)
@@ -39,14 +43,28 @@ void SampledBSSRDF::load_data(Mesh & object)
 		Logger::info << "Reloading shader" << std::endl;
 		initialize_buffer<BSSRDFSamplingProperties>(mPropertyBuffer, *properties);
 		context["samples_per_pixel"]->setUint(mSamples);
+		mBSSRDF->load(object.get_main_material()->get_data().scattering_properties);
+		object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
 	}
 	mHasChanged = false;
 }
 
 bool SampledBSSRDF::on_draw()
 {
+	static ScatteringDipole::Type dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF;
+	if (BSSRDF::dipole_selector_gui(dipole))
+	{
+		mHasChanged = true;
+		mBSSRDF.reset();
+		mBSSRDF = BSSRDF::create(context, dipole);
+	}
+	ImmediateGUIDraw::Text("BSSRDF properties:");
+	mBSSRDF->on_draw();
+
+
 	std::vector<const char*> elems{ "Camera based (Mertens et. al)", "Tangent plane (with distance)" , "Tangent plane (with probes)", "MIS axis (no probes)",  "MIS axis + probes (King et al.)" };
 	
+
 	if (ImmediateGUIDraw::Combo("Sampling technique", (int*)&properties->sampling_method, elems.data(), (int)elems.size(), (int)elems.size()))
 	{
 		mHasChanged = true;

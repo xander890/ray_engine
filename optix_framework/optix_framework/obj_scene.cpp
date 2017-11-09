@@ -22,7 +22,6 @@
 #include <ImageLoader.h>
 #include "presampled_surface_bssrdf.h"
 #include "GLFWDisplay.h"
-#include "aisceneloader.h"
 #include "shader_factory.h"
 #include "Medium.h"
 #include "mesh.h"

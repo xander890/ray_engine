@@ -123,7 +123,6 @@
     <ClCompile Include="sphere.cpp">
       <Filter>Source Files\Procedural</Filter>
     </ClCompile>
-    <ClCompile Include="aisceneloader.cpp" />
     <ClCompile Include="parameter_parser.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -243,6 +242,15 @@
       <Filter>Source Files\Shaders</Filter>
     </ClCompile>
     <ClCompile Include="forward_dipole_test.cpp" />
+    <ClCompile Include="quantized_diffusion_host.cpp">
+      <Filter>Source Files\BSSRDF</Filter>
+    </ClCompile>
+    <ClCompile Include="approximate_dipoles_host.cpp">
+      <Filter>Source Files\BSSRDF</Filter>
+    </ClCompile>
+    <ClCompile Include="bssrdf_host.cpp">
+      <Filter>Source Files\BSSRDF</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="obj_scene.h">
@@ -308,7 +316,6 @@
     <ClInclude Include="sphere.h">
       <Filter>Header Files\Procedural</Filter>
     </ClInclude>
-    <ClInclude Include="aisceneloader.h" />
     <ClInclude Include="brdf_utils.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
@@ -435,9 +442,6 @@
     <ClInclude Include="sampled_bssrdf.h">
       <Filter>Header Files\Shaders</Filter>
     </ClInclude>
-    <ClInclude Include="bssrdf_sampling_properties.h">
-      <Filter>Header Files\HostDeviceStructs</Filter>
-    </ClInclude>
     <ClInclude Include="immediate_gui.h">
       <Filter>Header Files\GUI</Filter>
     </ClInclude>
@@ -517,14 +521,8 @@
     <ClInclude Include="phase_function.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="reference_bssrdf.h">
-      <Filter>Header Files\Shaders</Filter>
-    </ClInclude>
     <ClInclude Include="colormap.h">
       <Filter>Header Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="reference_bssrdf_gpu.h">
-      <Filter>Header Files\Shaders</Filter>
     </ClInclude>
     <ClInclude Include="quantized_diffusion.h">
       <Filter>Header Files\BSSRDFs\Dipoles</Filter>
@@ -575,6 +573,21 @@
     <ClInclude Include="md5.h">
       <Filter>Header Files\Sampling</Filter>
     </ClInclude>
+    <ClInclude Include="bssrdf_host.h">
+      <Filter>Header Files\BSSRDFs</Filter>
+    </ClInclude>
+    <ClInclude Include="bssrdf_properties.h">
+      <Filter>Header Files\HostDeviceStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="quantized_diffusion_host.h">
+      <Filter>Header Files\BSSRDFs</Filter>
+    </ClInclude>
+    <ClInclude Include="approximate_dipoles_host.h">
+      <Filter>Header Files\BSSRDFs</Filter>
+    </ClInclude>
+    <ClInclude Include="forward_dipole_host.h">
+      <Filter>Header Files\BSSRDFs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CUDA_files">
@@ -603,9 +616,6 @@
     </Filter>
     <Filter Include="Source Files\Methods">
       <UniqueIdentifier>{971f1609-3b66-4a81-bc35-3428474432e4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Configuration">
-      <UniqueIdentifier>{1aeed6de-5585-41f5-b749-d8d5f53aff06}</UniqueIdentifier>
     </Filter>
     <Filter Include="CUDA_files\Miss Programs">
       <UniqueIdentifier>{14f73944-7fef-44c9-9375-6348ec8a4ef3}</UniqueIdentifier>
@@ -815,10 +825,5 @@
     <Object Include="models\table_checkerboard.obj">
       <Filter>Models</Filter>
     </Object>
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="config.xml">
-      <Filter>Configuration</Filter>
-    </Xml>
   </ItemGroup>
 </Project>

@@ -10,6 +10,7 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup> <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck> </PropertyGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7F37516E-A601-4A80-AF24-D0788679FA92}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -94,7 +95,8 @@
       <HostDebugInfo>false</HostDebugInfo>
       <Optimization>O3</Optimization>
       <GPUDebugInfo>false</GPUDebugInfo>
-      <AdditionalCompilerOptions> /Gm </AdditionalCompilerOptions>
+      <AdditionalCompilerOptions>
+      </AdditionalCompilerOptions>
       <CompileOut>$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
     </CudaCompile>
     <PreBuildEvent>
@@ -150,14 +152,12 @@ echo Done.</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="aisceneloader.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="ambient_occlusion.cpp" />
     <ClCompile Include="apple_juice.cpp" />
+    <ClCompile Include="approximate_dipoles_host.cpp" />
     <ClCompile Include="box.cpp" />
     <ClCompile Include="brdf_utils.cpp" />
+    <ClCompile Include="bssrdf_host.cpp" />
     <ClCompile Include="bssrdf_visualizer.cpp" />
     <ClCompile Include="camera_host.cpp" />
     <ClCompile Include="chull.cpp" />
@@ -196,6 +196,7 @@ echo Done.</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="quantized_diffusion_host.cpp" />
     <ClCompile Include="RawLoader.cpp" />
     <ClCompile Include="rendering_method.cpp" />
     <ClCompile Include="render_task.cpp" />
@@ -218,10 +219,6 @@ echo Done.</Command>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
@@ -231,26 +228,18 @@ echo Done.</Command>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\constant_shader.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <GenerateLineInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateLineInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
@@ -263,21 +252,17 @@ echo Done.</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">box.cu.ptx</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v6.5/bin/nvcc.exe" "CUDA_files/box.cu" -ptx -o "PTX_files/box.cu.ptx" -ccbin "C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin" -m64 -D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --use_fast_math --compiler-options /D_USE_MATH_DEFINES -DNVCC -I"C:/ProgramData/NVIDIA Corporation/OptiX SDK 3.7.0/include"</Command>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </MaxRegCount>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <FastMath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</FastMath>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
@@ -291,47 +276,35 @@ echo Done.</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v6.5/bin/nvcc.exe" "CUDA_files/constantbg.cu" -ptx -o "PTX_files/constantbg.cu.ptx" -ccbin "C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin" -m64 -D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --use_fast_math --compiler-options /D_USE_MATH_DEFINES -DNVCC -I"C:/ProgramData/NVIDIA Corporation/OptiX SDK 3.7.0/include"</Command>
       <FileType>Document</FileType>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </MaxRegCount>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\depth_ray.cu">
       <UseHostInclude Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</UseHostInclude>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\environment_map_background.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
@@ -341,23 +314,15 @@ echo Done.</Command>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\glass_shader.cu">
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
@@ -367,73 +332,53 @@ echo Done.</Command>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\dispersion_shader.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\metal_shader.cu">
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\mirror_shader.cu">
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\normal_shader.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
@@ -449,20 +394,16 @@ echo Done.</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v6.5/bin/nvcc.exe" "CUDA_files/phong.cu" -ptx -o "PTX_files/phong.cu.ptx" -ccbin "C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin" -m64 -D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --use_fast_math --compiler-options /D_USE_MATH_DEFINES -DNVCC -I"C:/ProgramData/NVIDIA Corporation/OptiX SDK 3.7.0/include" -include "phong.h" --disable-warnings</Command>
       <FileType>Document</FileType>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </MaxRegCount>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
@@ -477,107 +418,83 @@ echo Done.</Command>
       <FileType>Document</FileType>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <MaxRegCount Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </MaxRegCount>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\sample_camera.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\sky_model_background.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\subsurface_scattering_shader.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\tonemap_camera.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\triangle_mesh.cu">
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Static</CudaRuntime>
+      <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GPUDebugInfo>
       <HostDebugInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</HostDebugInfo>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">O3</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Static</CudaRuntime>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </CodeGeneration>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
@@ -586,31 +503,19 @@ echo Done.</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu">
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="debug_camera.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
@@ -619,36 +524,26 @@ echo Done.</Command>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">O3</Optimization>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
     <CudaCompile Include="subsurface_scattering_sampled.cu">
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </CodeGeneration>
       <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </CodeGeneration>
-      <Include Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Include>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="aisceneloader.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="ambient_occlusion.h" />
     <ClInclude Include="apple_juice.h" />
+    <ClInclude Include="approximate_dipoles_host.h" />
     <ClInclude Include="approximate_standard_dipole.h" />
     <ClInclude Include="area_light.h" />
     <ClInclude Include="box.h" />
     <ClInclude Include="bssrdf.h" />
-    <ClInclude Include="bssrdf_sampling_properties.h" />
+    <ClInclude Include="bssrdf_host.h" />
+    <ClInclude Include="bssrdf_properties.h" />
     <ClInclude Include="bssrdf_visualizer.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="camera_host.h" />
@@ -661,6 +556,7 @@ echo Done.</Command>
     <ClInclude Include="double_support_optix.h" />
     <ClInclude Include="environment_map_background.h" />
     <ClInclude Include="forward_dipole.h" />
+    <ClInclude Include="forward_dipole_host.h" />
     <ClInclude Include="forward_dipole_sampling.h" />
     <ClInclude Include="forward_dipole_test.h" />
     <ClInclude Include="forward_dipole_tom748.h" />
@@ -708,9 +604,8 @@ echo Done.</Command>
     <ClInclude Include="directional_dipole.h" />
     <ClInclude Include="quantized_diffusion.h" />
     <ClInclude Include="quantized_diffusion_helpers.h" />
+    <ClInclude Include="quantized_diffusion_host.h" />
     <ClInclude Include="RawLoader.h" />
-    <ClInclude Include="reference_bssrdf.h" />
-    <ClInclude Include="reference_bssrdf_gpu.h" />
     <ClInclude Include="render_task.h" />
     <ClInclude Include="sampled_bssrdf.h" />
     <ClInclude Include="sampler.h" />
@@ -857,11 +752,6 @@ echo Done.</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </Object>
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="config.xml">
-      <SubType>Designer</SubType>
-    </Xml>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

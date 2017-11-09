@@ -15,7 +15,7 @@ __device__ optix::float3 approx_bssrdf(const float3& x, const float3& w12, const
 	const float r_sqr = dot(x, x);
 	const float r = sqrtf(r_sqr);
 	float3 x_norm = x / r;
-	const float3 s = properties.approx_property_s;
+	const float3 s = approx_std_bssrdf_props.approx_property_s;
 	float3 R = approximate_standard_dipole_bssrdf(r, properties);
 	float3 S = R * (make_float3(1.0f) + dot(x_norm, w12 + w21) * s + dot(x_norm, w12)*dot(x_norm, w21) * s * s);
 	return S; // R is already divided by the extra PI

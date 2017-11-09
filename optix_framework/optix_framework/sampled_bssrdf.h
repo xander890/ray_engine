@@ -1,11 +1,13 @@
 #pragma once
 #include "shader.h"
 #include <memory>
-#include <bssrdf_sampling_properties.h>
+#include <bssrdf_properties.h>
 #include <optix_utils.h>
+#include <bssrdf_host.h>
 
 class SampledBSSRDF : public Shader
 {
+
 public:
 	virtual ~SampledBSSRDF() = default;
 	SampledBSSRDF(const ShaderInfo& shader_info);
@@ -24,4 +26,5 @@ public:
 
 	unsigned int mSamples = 1;
 	bool mHasChanged = true;
+	std::unique_ptr<BSSRDF> mBSSRDF;
 };

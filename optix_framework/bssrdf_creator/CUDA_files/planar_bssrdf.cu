@@ -67,7 +67,6 @@ RT_PROGRAM void reference_bssrdf_camera()
 	refract(wo, no, n1_over_n2, w21, R21); 
 	float T21 = 1.0f - R21;  
 	w21 = -w21;
-	planar_bssrdf_material_params->use_precomputed_qd = false;
 	optix::float3 S = T12 * bssrdf(xi, ni, w12, xo, no, w21, *planar_bssrdf_material_params) * T21;
 	planar_resulting_flux_intermediate[launch_index] = S.x;
 } 

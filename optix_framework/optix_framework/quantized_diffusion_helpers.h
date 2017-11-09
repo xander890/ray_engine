@@ -90,7 +90,7 @@ __host__ __forceinline__ void precompute_quantized_diffusion(optix::float3* dest
 		for (int k = 0; k < 3; k++)
 		{
 			optix::float4 props = optix::make_float4(optix::get_channel(k, properties.scattering), optix::get_channel(k, properties.absorption), optix::get_channel(k, properties.meancosine), 1.0f);
-			optix::get_channel(k, dest[i]) = quantized_diffusion<double>(step * i, props, C);
+			optix::get_channel(k, dest[i]) = (float)quantized_diffusion<double>(step * i, props, C);
 		}	
 	}	
 }

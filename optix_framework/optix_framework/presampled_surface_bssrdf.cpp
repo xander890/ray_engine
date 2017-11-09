@@ -6,6 +6,17 @@
 
 using namespace optix;
 
+PresampledSurfaceBssrdf::PresampledSurfaceBssrdf(PresampledSurfaceBssrdf & copy) : Shader(copy)
+{
+	entry_point = copy.entry_point; // They can share the same entry point 
+	mSampleBuffer = clone_buffer(copy.mSampleBuffer, RT_BUFFER_INPUT);
+	mSamples = 1000;
+	mArea = copy.mArea;
+	mCdfBuffer = clone_buffer(copy.mCdfBuffer, RT_BUFFER_INPUT);
+	auto type = copy.mBSSRDF->get_type();
+	mBSSRDF = BSSRDF::create(context, type);
+}
+
 void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
 {
     Shader::initialize_shader(ctx);
@@ -31,6 +42,7 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
     mSampleBuffer->setFormat(RT_FORMAT_USER);
     mSampleBuffer->setElementSize(sizeof(PositionSample));
     mSampleBuffer->setSize(mSamples);
+	mBSSRDF = BSSRDF::create(context, ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF);
 }
 
 void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
@@ -71,6 +83,8 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
 		mCdfBuffer->unmap();
     delete[] cdf;
 
+	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
+
 	Shader::initialize_mesh(object);
 }
 
@@ -92,6 +106,8 @@ void PresampledSurfaceBssrdf::load_data(Mesh & obj)
 	object["sampling_output_buffer"]->setUserData(sizeof(BufPtr<PositionSample>), &buf);
 	object["total_area"]->setFloat(mArea);
 	object["area_cdf"]->setBuffer(mCdfBuffer);
+	mBSSRDF->load(obj.get_main_material()->get_data().scattering_properties);
+	obj.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
 	context["sampling_vertex_buffer"]->setBuffer(g["vertex_buffer"]->getBuffer());
 	context["sampling_normal_buffer"]->setBuffer(g["normal_buffer"]->getBuffer());
 	context["sampling_vindex_buffer"]->setBuffer(g["vindex_buffer"]->getBuffer());
@@ -101,6 +117,16 @@ void PresampledSurfaceBssrdf::load_data(Mesh & obj)
 bool PresampledSurfaceBssrdf::on_draw()
 {
 	bool changed = false;
+
+	static ScatteringDipole::Type dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF;
+	if (BSSRDF::dipole_selector_gui(dipole))
+	{
+		changed = true;
+		mBSSRDF.reset();
+		mBSSRDF = BSSRDF::create(context, dipole);
+	}
+	ImmediateGUIDraw::Text("BSSRDF properties:");
+	mBSSRDF->on_draw();
 	if (ImmediateGUIDraw::InputInt("Area samples", (int*)&mSamples))
 	{
 		changed = true;
