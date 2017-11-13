@@ -9,6 +9,7 @@
 #include <bssrdf_properties.h>
 #include <quantized_diffusion.h>
 #include <photon_beam_diffusion.h>
+#define INCLUDE_PROGRAMS_ONLY
 #include <forward_dipole.h>
 
 using optix::float3;

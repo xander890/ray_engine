@@ -112,6 +112,7 @@ xcopy /y /d /f "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d /f "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d /f "..\dll\xerces-c_3_1.dll" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
+xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(ProjectDir)PTX_files"
 xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(OutDir)PTX_files"
 xcopy /y /d /f "$(ProjectDir)\PTX_files\*.*" "$(OutDir)PTX_files"</Command>
     </PostBuildEvent>
@@ -177,6 +178,7 @@ xcopy /y /d /f "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
 xcopy /y /d /f "..\dll\glew32.dll" "$(OutDir)"
 xcopy /y /d /f "..\dll\xerces-c_3_1.dll" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
+xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(ProjectDir)PTX_files"
 xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(OutDir)PTX_files"
 xcopy /y /d /f "$(ProjectDir)\PTX_files\*.*" "$(OutDir)PTX_files"</Command>
     </PostBuildEvent>

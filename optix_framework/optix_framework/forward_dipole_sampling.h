@@ -426,18 +426,16 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 
 // If d_in is unknown, it is set to NULL
 __device__ __host__ __forceinline__  Float sampleLengthDipole(
-	const float sigma_s,
-	const float sigma_a,
-	const float mu,
-	const float m_eta, 
-	const Float3 &uL, const Float3 &nL, const Float3 &R,
-	const Float3 *u0, const Float3 &n0,
-	TangentPlaneMode tangentMode, Float &s, unsigned int & t) {
+	const ForwardDipoleMaterial material,
+	const ForwardDipoleProperties props,
+	Float3 uL, Float3 nL, Float3 R,
+	const Float3 *u0, Float3 n0,
+	Float &s, unsigned int & t) {
 
 	Float3 R_virt;
 
-	if (!getTentativeIndexMatchedVirtualSourceDisp(sigma_s, sigma_a, mu, m_eta,
-		n0, nL, uL, R, NAN, tangentMode, R_virt))
+	if (!getTentativeIndexMatchedVirtualSourceDisp(material.sigma_s, material.sigma_a, material.mu, material.m_eta,
+		n0, nL, uL, R, NAN, props.tangentMode, R_virt))
 		return 0.0;
 
 	/* For R-dependent functions that don't take the dipole into account
@@ -457,31 +455,31 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 	p1 = p2 = p3 = -1;
 	const Float u = RND_FUNC_FWD_DIP(t);
 	if (u < lengthSample_w1) {
-		p1 = sampleLengthShortLimit(sigma_s, mu, R, u0, uL, s, t);
+		p1 = sampleLengthShortLimit(material.sigma_s, material.mu, R, u0, uL, s, t);
 		if (p1 == 0)
 			return 0.0f;
 	}
 	else if (u < lengthSample_w1 + lengthSample_w2) {
-		p2 = sampleLengthLongLimit(sigma_s, sigma_a, mu, R_effective, uL, s, t);
+		p2 = sampleLengthLongLimit(material.sigma_s, material.sigma_a, material.mu, R_effective, uL, s, t);
 		if (p2 == 0)
 			return 0.0f;
 	}
 	else if (u < lengthSample_w1 + lengthSample_w2 + lengthSample_w3) {
-		p3 = sampleLengthAbsorption(sigma_a, s, t);
+		p3 = sampleLengthAbsorption(material.sigma_a, s, t);
 		if (p3 == 0)
 			return 0.0f;
 	}
 	
 	if (p1 == -1)
-		p1 = (lengthSample_w1 == 0 ? 0 : pdfLengthShortLimit(sigma_s, mu, R, u0, uL, s));
+		p1 = (lengthSample_w1 == 0 ? 0 : pdfLengthShortLimit(material.sigma_s, material.mu, R, u0, uL, s));
 	if (p2 == -1)
-		p2 = (lengthSample_w2 == 0 ? 0 : pdfLengthLongLimit(sigma_s, sigma_a, mu, R_effective, uL, s));
+		p2 = (lengthSample_w2 == 0 ? 0 : pdfLengthLongLimit(material.sigma_s, material.sigma_a, material.mu, R_effective, uL, s));
 	if (p3 == -1)
-		p3 = (lengthSample_w3 == 0 ? 0 : pdfLengthAbsorption(sigma_a, s));
+		p3 = (lengthSample_w3 == 0 ? 0 : pdfLengthAbsorption(material.sigma_a, s));
 
 	// Handle the MIS probabilities of having sampled based on R_other
 	if (lengthSample_w2 != 0)
-		p2 = 0.5 * (p2 + pdfLengthLongLimit(sigma_s, sigma_a, mu, R_other, uL, s));
+		p2 = 0.5 * (p2 + pdfLengthLongLimit(material.sigma_s, material.sigma_a, material.mu, R_other, uL, s));
 
 	return 1.0 / (lengthSample_w1 * p1
 		+ lengthSample_w2 * p2

@@ -4,5 +4,7 @@
 class ForwardDipole : public BSSRDF
 {
 public:
-	ForwardDipole(optix::Context & ctx) : BSSRDF(ctx, ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF) {}
+	ForwardDipole(optix::Context & ctx);
+	void load(const ScatteringMaterialProperties & props) override {}
+	void on_draw() override {}
 };

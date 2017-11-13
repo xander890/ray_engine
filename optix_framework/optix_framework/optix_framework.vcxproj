@@ -10,7 +10,9 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup> <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck> </PropertyGroup>
+  <PropertyGroup>
+    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+  </PropertyGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7F37516E-A601-4A80-AF24-D0788679FA92}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -167,6 +169,7 @@ echo Done.</Command>
     <ClCompile Include="dialogs.cpp" />
     <ClCompile Include="environment_map_background.cpp" />
     <ClCompile Include="folders.cpp" />
+    <ClCompile Include="forward_dipole_host.cpp" />
     <ClCompile Include="glm.cpp" />
     <ClCompile Include="GLFWDisplay.cpp" />
     <ClCompile Include="HDRLoader.cpp" />
@@ -316,6 +319,9 @@ echo Done.</Command>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
       <Include Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Include>
+    </CudaCompile>
+    <CudaCompile Include="CUDA_files\forward_dipole.cu">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">InheritFromHost</Optimization>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\glass_shader.cu">
       <CudaRuntime Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Shared</CudaRuntime>
@@ -556,6 +562,7 @@ echo Done.</Command>
     <ClInclude Include="double_support_optix.h" />
     <ClInclude Include="environment_map_background.h" />
     <ClInclude Include="forward_dipole.h" />
+    <ClInclude Include="forward_dipole_defines.h" />
     <ClInclude Include="forward_dipole_host.h" />
     <ClInclude Include="forward_dipole_sampling.h" />
     <ClInclude Include="forward_dipole_test.h" />

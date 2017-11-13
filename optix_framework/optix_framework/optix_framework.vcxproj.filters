@@ -82,6 +82,9 @@
     <CudaCompile Include="CUDA_files\volume_shader_heterogenous.cu">
       <Filter>CUDA_files\Standard Shaders</Filter>
     </CudaCompile>
+    <CudaCompile Include="CUDA_files\forward_dipole.cu">
+      <Filter>CUDA_files</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="obj_scene.cpp">
@@ -241,7 +244,6 @@
     <ClCompile Include="bssrdf_visualizer.cpp">
       <Filter>Source Files\Shaders</Filter>
     </ClCompile>
-    <ClCompile Include="forward_dipole_test.cpp" />
     <ClCompile Include="quantized_diffusion_host.cpp">
       <Filter>Source Files\BSSRDF</Filter>
     </ClCompile>
@@ -249,6 +251,12 @@
       <Filter>Source Files\BSSRDF</Filter>
     </ClCompile>
     <ClCompile Include="bssrdf_host.cpp">
+      <Filter>Source Files\BSSRDF</Filter>
+    </ClCompile>
+    <ClCompile Include="forward_dipole_host.cpp">
+      <Filter>Source Files\BSSRDF</Filter>
+    </ClCompile>
+    <ClCompile Include="forward_dipole_test.cpp">
       <Filter>Source Files\BSSRDF</Filter>
     </ClCompile>
   </ItemGroup>
@@ -587,6 +595,9 @@
     </ClInclude>
     <ClInclude Include="forward_dipole_host.h">
       <Filter>Header Files\BSSRDFs</Filter>
+    </ClInclude>
+    <ClInclude Include="forward_dipole_defines.h">
+      <Filter>Header Files\BSSRDFs\Dipoles</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
