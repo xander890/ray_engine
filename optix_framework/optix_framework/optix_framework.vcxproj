@@ -48,15 +48,15 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)\lib64\$(Configuration)\</OutDir>
-    <LibraryPath>..\lib64\;"..\glfw-3.2.1\lib-vc2015";"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <OutDir>$(SolutionDir)\build\static\$(Configuration)\</OutDir>
+    <LibraryPath>..\externals\glew\lib64\;"..\externals\xerces\lib64";"..\externals\glfw-3.2.1\lib-vc2015";"..\externals\OptiX\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)\lib64\$(Configuration)\</OutDir>
-    <LibraryPath>..\lib64\;"..\glfw-3.2.1\lib-vc2015";"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <OutDir>$(SolutionDir)\build\static\$(Configuration)\</OutDir>
+    <LibraryPath>..\externals\glew\lib64\;"..\externals\xerces\lib64";"..\externals\glfw-3.2.1\lib-vc2015";"..\externals\OptiX\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -65,14 +65,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;"..\OptiX SDK 4.1.1\include";;..\GL;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\externals\cereal-1.2.2\include;"..\externals\OptiX\include";..\externals\xercesc;..\externals\glew;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\externals\glfw-3.2.1\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;$(Configuration)\nfd.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
@@ -87,7 +87,7 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <AdditionalDeps>
       </AdditionalDeps>
-      <Include>$(SolutionDir)optix\include;$(SolutionDir)GL;$(SolutionDir)nfd;$(SolutionDir)optprops;$(SolutionDir)sutil;$(CudaToolkitIncludeDir);$(SolutionDir)\assimp\include;%(AdditionalDeps)</Include>
+      <Include>$(SolutionDir)optix\include;..\externals\glew;$(SolutionDir)nfd;$(SolutionDir)optprops;$(SolutionDir)sutil;$(CudaToolkitIncludeDir);%(AdditionalDeps)</Include>
       <FastMath>true</FastMath>
       <AdditionalOptions>-gencode=arch=compute_35,code=\"sm_35,compute_35\" -D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options  /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
       <NvccCompilation>ptx</NvccCompilation>
@@ -117,7 +117,7 @@ echo Done.</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NOMINMAX;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;"..\OptiX SDK 4.1.1\include";;..\GL;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\externals\cereal-1.2.2\include;"..\externals\OptiX\include";..\externals\xercesc;;..\externals\glew;..\nfd;..\optprops;..\sutil;$(CudaToolkitIncludeDir);..\externals\glfw-3.2.1\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalOptions>/Fp %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -127,7 +127,7 @@ echo Done.</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;$(Configuration)\nfd.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
@@ -137,7 +137,7 @@ echo Done.</Command>
     </PostBuildEvent>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <Include>$(SolutionDir)optix\include;$(SolutionDir)GL;$(SolutionDir)nfd;$(SolutionDir)optprops;$(SolutionDir)sutil;$(SolutionDir)\assimp\include;%(AdditionalDeps)</Include>
+      <Include>$(SolutionDir)optix\include;..\externals\glew;$(SolutionDir)nfd;$(SolutionDir)optprops;$(SolutionDir)sutil;%(AdditionalDeps)</Include>
       <CudaRuntime>Shared</CudaRuntime>
       <NvccCompilation>ptx</NvccCompilation>
       <CodeGeneration>compute_35,sm_35</CodeGeneration>

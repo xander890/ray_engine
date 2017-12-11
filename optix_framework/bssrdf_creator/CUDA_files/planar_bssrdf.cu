@@ -9,7 +9,7 @@
 #include <material.h>
 #include <bssrdf.h>
 using namespace optix;
-
+ 
 rtDeclareVariable(BufPtr2D<float>, planar_resulting_flux, , );
 rtDeclareVariable(BufPtr2D<float>, planar_resulting_flux_intermediate, , );
  
@@ -39,18 +39,18 @@ RT_PROGRAM void reference_bssrdf_camera()
 	float theta_s = reference_bssrdf_theta_s;
 	float r = reference_bssrdf_radius;
 
-	optix::float3 xi, wi, ni, xo, no;
+	optix::float3 xi, wi, ni, xo, no; 
 	get_reference_scene_geometry(theta_i, r, theta_s, xi, wi, ni, xo, no);
 	  
 	optix::float3 wo;
 	  
 	if (reference_bssrdf_output_shape == BSSRDF_OUTPUT_HEMISPHERE) 
-	{ 
+	{   
 		float2 angles = get_normalized_hemisphere_buffer_angles(uv.y, uv.x);
 		wo = optix::make_float3(sinf(angles.y) * cosf(angles.x), sinf(angles.y) * sinf(angles.x), cosf(angles.y));
 	}
 	else  
-	{   
+	{      
 		wo = normalize(optix::make_float3(sinf(reference_bssrdf_theta_o), 0, cosf(reference_bssrdf_theta_o)));
 		optix::float2 plan = get_planar_buffer_coordinates(uv);
 		xo = make_float3(plan.x, plan.y, 0);

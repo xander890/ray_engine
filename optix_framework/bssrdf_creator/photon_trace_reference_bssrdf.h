@@ -40,10 +40,11 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_orig
 __forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(float theta_o, float phi_o)
 {
 	const float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
-	const float theta_o_normalized = cosf(theta_o); //theta_o / (M_PIf * 0.5f);
+	// Uniform sampling of hemisphere
+	const float theta_o_normalized = cosf(theta_o);
 	optix_assert(theta_o_normalized >= 0.0f);
 	optix_assert(theta_o_normalized < 1.0f);
-	optix_assert(phi_o_normalized < 1.0f);
+	optix_assert(phi_o_normalized < 1.0f); 
 	optix_assert(phi_o_normalized >= 0.0f);
 	return optix::make_float2(phi_o_normalized, theta_o_normalized);
 }
@@ -51,14 +52,15 @@ __forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordi
 __forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(float theta_o_normalized, float phi_o_normalized)
 {
 	const float phi_o = phi_o_normalized * (2.0f * M_PIf);
-	const float theta_o = acosf(theta_o_normalized); //theta_o / (M_PIf * 0.5f);
+	// Uniform sampling of hemisphere
+	const float theta_o = acosf(theta_o_normalized);
 	return optix::make_float2(phi_o, theta_o);
 }
 
-__forceinline__ __device__ void store_values_in_buffer(const float cos_theta_o, const float phi_o, const float flux_E, BufPtr2D<float> & resulting_flux)
+__forceinline__ __device__ void store_values_in_buffer(const float theta_o, const float phi_o, const float flux_E, BufPtr2D<float> & resulting_flux)
 {
 	const optix::size_t2 bins = resulting_flux.size();
-	optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(acosf(cos_theta_o), phi_o);
+	optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(theta_o, phi_o);
 	optix::uint2 idxs = make_uint2(coords * make_float2(bins));
 	optix_assert(flux_E >= 0.0f);
 	optix_assert(!isnan(flux_E));
@@ -122,6 +124,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 				const float F_t = 1 - F_r;
 								
 				optix_assert(F_t < 1.0f);
+				optix_assert(cos_theta_o >= 0);
 
 				const float phi_21 = atan2f(d_vec.y, d_vec.x);		
 				// The outgoing azimuthal angle is the same as the refracted vector, since the refracted vector 
@@ -144,7 +147,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 #else				
 				if (i > 0)
 				{
-					store_values_in_buffer(cos_theta_o, phi_o, flux_E, resulting_flux);
+					store_values_in_buffer(acosf(cos_theta_o), phi_o, flux_E, resulting_flux);
 				}
 #endif
 				optix_print("(%d) Scattering.  %f\n", i, flux_E);

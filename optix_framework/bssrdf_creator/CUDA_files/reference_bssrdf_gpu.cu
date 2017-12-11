@@ -8,9 +8,9 @@
 #include <material.h>
 #include <photon_trace_structs.h>
 using namespace optix;
-
-rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux, , ); 
-rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux_intermediate, , );
+ 
+rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux, , );     
+rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux_intermediate, , );  
 
 rtDeclareVariable(BufPtr1D<PhotonSample>, photon_buffer, , );
 rtDeclareVariable(BufPtr1D<int>, photon_counter, , );

@@ -70,12 +70,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>..\lib64\;"..\glfw-3.2.1\lib-vc2015";"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <LibraryPath>$(SolutionDir)\build\static\$(Configuration)\;..\externals\glew\lib64\;..\externals\xercesc\lib64;"..\externals\glfw-3.2.1\lib-vc2015";"..\externals\OptiX\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
     <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
     <OutDir>../build/</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LibraryPath>..\lib64\;"..\glfw-3.2.1\lib-vc2015";"..\OptiX SDK 4.1.1\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <LibraryPath>$(SolutionDir)\build\static\$(Configuration)\;..\externals\glew\lib64\;..\externals\xercesc\lib64;"..\externals\glfw-3.2.1\lib-vc2015";"..\externals\OptiX\lib64";$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
     <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
     <OutDir>../build/</OutDir>
   </PropertyGroup>
@@ -94,23 +94,22 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;..\optix_framework;"..\OptiX SDK 4.1.1\include";..\GL;..\nfd;..\optprops;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\externals\cereal-1.2.2\include;..\optix_framework;"..\externals\OptiX\include";..\externals\xercesc;..\externals\glew;..\nfd;..\optprops;$(CudaToolkitIncludeDir);..\externals\glfw-3.2.1\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(Configuration)\optix_framework.lib;winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>optix_framework.lib;winmm.lib;nfd.lib;xerces-c_3.lib;opengl32.lib;gel.lib;optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
       <Command>cd $(ProjectDir)
-echo Copying OptiX, freeglut and CUDA DLLs to output folder..
-xcopy /y /d /f  "..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
-xcopy /y /d /f  "..\dll\assimp.dll" "$(OutDir)"
-xcopy /y /d /f "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
-xcopy /y /d /f "..\dll\glew32.dll" "$(OutDir)"
-xcopy /y /d /f "..\dll\xerces-c_3_1.dll" "$(OutDir)"
+echo Copying OptiX and CUDA DLLs to output folder..
+xcopy /y /d /f  "..\externals\OptiX\bin64\*.dll" "$(OutDir)"
+xcopy /y /d /f "..\externals\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
+xcopy /y /d /f "..\externals\glew\dll\glew32.dll" "$(OutDir)"
+xcopy /y /d /f "..\externals\xercesc\dll\xerces-c_3_1.dll" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
 xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(ProjectDir)PTX_files"
 xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(OutDir)PTX_files"
@@ -131,7 +130,7 @@ echo Done.</Command>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CompileOut>$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <Include>$(SolutionDir)optix\include;$(SolutionDir)GL;$(SolutionDir)nfd;$(SolutionDir)optprops;</Include>
+      <Include>$(SolutionDir)optix\include;..\externals\glew;$(SolutionDir)nfd;$(SolutionDir)optprops;</Include>
       <CodeGeneration>compute_35,sm_35</CodeGeneration>
       <FastMath>true</FastMath>
       <GPUDebugInfo>false</GPUDebugInfo>
@@ -158,25 +157,24 @@ echo Done.</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)cereal-1.2.2\include;..\optix_framework;"..\OptiX SDK 4.1.1\include";..\GL;..\nfd;..\optprops;$(CudaToolkitIncludeDir);..\glfw-3.2.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\externals\cereal-1.2.2\include;..\optix_framework;"..\externals\OptiX\include";..\externals\xercesc;..\externals\glew;..\nfd;..\optprops;$(CudaToolkitIncludeDir);..\externals\glfw-3.2.1\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(Configuration)\optix_framework.lib;winmm.lib;$(Configuration)\nfd.lib;assimp.lib;xerces-c_3.lib;opengl32.lib;$(Configuration)\gel.lib;$(Configuration)\optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>optix_framework.lib;winmm.lib;nfd.lib;xerces-c_3.lib;opengl32.lib;gel.lib;optprops.lib;optix.1.lib;optixu.1.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
       <Command>cd $(ProjectDir)
-echo Copying OptiX, freeglut and CUDA DLLs to output folder..
-xcopy /y /d /f  "..\OptiX SDK 4.1.1\bin64\*.dll" "$(OutDir)"
-xcopy /y /d /f  "..\dll\assimp.dll" "$(OutDir)"
-xcopy /y /d /f "..\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
-xcopy /y /d /f "..\dll\glew32.dll" "$(OutDir)"
-xcopy /y /d /f "..\dll\xerces-c_3_1.dll" "$(OutDir)"
+echo Copying OptiX and CUDA DLLs to output folder..
+xcopy /y /d /f  "..\externals\OptiX\bin64\*.dll" "$(OutDir)"
+xcopy /y /d /f "..\externals\glfw-3.2.1\lib-vc2015\glfw3.dll" "$(OutDir)"
+xcopy /y /d /f "..\externals\glew\dll\glew32.dll" "$(OutDir)"
+xcopy /y /d /f "..\externals\xercesc\dll\xerces-c_3_1.dll" "$(OutDir)"
 echo Copying all PTX files from project directory to output directory..
 xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(ProjectDir)PTX_files"
 xcopy /y /d /f "$(SolutionDir)optix_framework\PTX_files\*.*" "$(OutDir)PTX_files"
@@ -197,7 +195,7 @@ echo Done.</Command>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CompileOut>$(ProjectDir)PTX_files\%(Filename)%(Extension).ptx</CompileOut>
-      <Include>$(SolutionDir)optix\include;$(SolutionDir)GL;$(SolutionDir)nfd;$(SolutionDir)optprops;</Include>
+      <Include>$(SolutionDir)optix\include;..\externals\glew;$(SolutionDir)nfd;$(SolutionDir)optprops;</Include>
       <CodeGeneration>compute_35,sm_35</CodeGeneration>
       <FastMath>true</FastMath>
     </CudaCompile>

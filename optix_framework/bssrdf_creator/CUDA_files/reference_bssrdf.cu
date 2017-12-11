@@ -7,7 +7,7 @@
 #include <md5.h>
 #include <material.h>
 using namespace optix;
-
+ 
 rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux, , );
 rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux_intermediate, , );
 
@@ -53,13 +53,13 @@ RT_PROGRAM void reference_bssrdf_camera()
 	refract(wi, ni, n1_over_n2, w12);
 
 	float flux_t = incident_power / ((float)reference_bssrdf_samples_per_frame);
-	optix::float3 xp = xi;
+	optix::float3 xp = xi; 
 	optix::float3 wp = w12;
 
 	if (!scatter_photon(reference_bssrdf_output_shape, xp, wp, flux_t, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, t, 0, maximum_iterations))
-	{
-		optix_print("Max iterations reached. Distance %f (%f mfps)\n", length(xp - xo), length(xp - xo) / r);
-	}
+	{ 
+		optix_print("Max iterations reached. Distance %f (%f mfps)\n", length(xp - xo), length(xp - xo) / r);  
+	}  
 }
 
 RT_PROGRAM void post_process_bssrdf()

@@ -118,7 +118,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
-	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPU>(m_context, BSSRDFRenderer::HEMISPHERE, optix::make_uint2(160, 40), (int)10e5);
+	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPU>(m_context, BSSRDFRenderer::HEMISPHERE, optix::make_uint2(160, 100), (int)10e5);
 	mBssrdfReferenceSimulator->init();
 
 	mBssrdfModelSimulator = std::make_shared<BSSRDFRendererModel>(m_context);

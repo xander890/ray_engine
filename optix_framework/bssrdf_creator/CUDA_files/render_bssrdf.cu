@@ -11,7 +11,7 @@ using namespace optix;
 
 // Window variables
 rtBuffer<float4, 2> output_buffer;
-rtDeclareVariable(unsigned int, show_false_colors, , );
+rtDeclareVariable(unsigned int, show_false_colors, , ); 
 rtDeclareVariable(float, reference_scale_multiplier, , );
 rtDeclareVariable(TexPtr, resulting_flux_tex, , );
 rtDeclareVariable(int, reference_bssrdf_output_shape, , ) = BSSRDF_OUTPUT_HEMISPHERE;
@@ -30,14 +30,14 @@ RT_PROGRAM void render_ref()
 		float phi_o = atan2f(ip.y, ip.x);
 		float l = length(ip);
 
-		if (l >= 1)
+		if (l >= 1) 
 		{
-			output_buffer[launch_index] = make_float4(0);
+			output_buffer[launch_index] = make_float4(0); 
 		}
 		else 
 		{
-			float theta_o = l * M_PIf * 0.5f;
-			float2 coords = get_normalized_hemisphere_buffer_coordinates(theta_o, phi_o);
+			float theta_o = M_PIf * 0.5f * l;
+			float2 coords = get_normalized_hemisphere_buffer_coordinates(theta_o, phi_o);  
 			float cos_theta_o = cosf(theta_o);
 			float S = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, coords.x, coords.y).x;
 			float T21 = 1.0f - fresnel_R(cos_theta_o, reference_bssrdf_rel_ior);
