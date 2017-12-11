@@ -23,7 +23,7 @@
 #include "presampled_surface_bssrdf.h"
 #include "GLFWDisplay.h"
 #include "shader_factory.h"
-#include "Medium.h"
+#include "optprops/Medium.h"
 #include "mesh.h"
 #include "host_material.h"
 #include "environment_map_background.h"

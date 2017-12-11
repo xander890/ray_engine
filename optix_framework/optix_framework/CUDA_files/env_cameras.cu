@@ -3,11 +3,11 @@
 // Copyright (c) DTU Informatics 2011
 
 #include <device_common_data.h>
-#include "../math_helpers.h"
-#include "../color_helpers.h"
+#include "math_helpers.h"
+#include "color_helpers.h"
 #include "merl_common.h"
 #include <device_environment_map.h>
-#include "../environment_map.h"
+#include "environment_map.h"
 using namespace optix;
 
 RT_PROGRAM void env_luminance_camera()

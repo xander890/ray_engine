@@ -1,0 +1,233 @@
+set(HEADERS_IMGUI
+imgui/imconfig.h
+imgui/imgui.h
+imgui/imgui_impl_glfw_gl3.h
+imgui/imgui_internal.h
+imgui/stb_rect_pack.h
+imgui/stb_textedit.h
+imgui/stb_truetype.h
+
+)
+
+
+set(HEADERS
+    ambient_occlusion.h
+    apple_juice.h
+    approximate_dipoles_host.h
+    approximate_directional_dipole.h
+    approximate_standard_dipole.h
+    area_light.h
+    box.h
+    brdf_utils.h
+    bssrdf.h
+    bssrdf_host.h
+    bssrdf_properties.h
+    bssrdf_visualizer.h
+    buffer_triangle_mesh.h
+    camera.h
+    camera_host.h
+    chull.h
+    colormap.h
+    color_helpers.h
+    constant_background.h
+    cputimer.h
+    default_shader.h
+    device_common_data.h
+    device_environment_map.h
+    device_mesh_data.h
+    dialogs.h
+    directional_dipole.h
+    distribution1d.h
+    double_support_optix.h
+    enums.h
+    environment_map.h
+    environment_map_background.h
+    folders.h
+    forward_dipole.h
+    forward_dipole_defines.h
+    forward_dipole_host.h
+    forward_dipole_sampling.h
+    forward_dipole_test.h
+    forward_dipole_tom748.h
+    forward_dipole_truncnorm.h
+    forward_dipole_utils.h
+    GLFWDisplay.h
+    glm.h
+    glossy.h
+    HDRLoader.h
+    Header.h
+    host_device_common.h
+    host_material.h
+    ImageLoader.h
+    immediate_gui.h
+    indexofrefractionmatcher.h
+    intersection_refinement.h
+    light.h
+    light_host.h
+    logger.h
+    material.h
+    material_device.h
+    material_library.h
+    math_helpers.h
+    md5.h
+    merl_common.h
+    mesh.h
+    miss_program.h
+    Mouse.h
+    obj_loader.h
+    obj_scene.h
+    optical_helper.h
+    optixhelpers.h
+    optix_common.h
+    optix_helpers.h
+    optix_serialize.h
+    optix_utils.h
+    parameter_parser.h
+    parserstringhelpers.h
+    path_tracing.h
+    PerlinNoise.h
+    phase_function.h
+    phong.h
+    photon_beam_diffusion.h
+    plint.h
+    PPMLoader.h
+    presampled_surface_bssrdf.h
+    procedural_mesh.h
+    quantized_diffusion.h
+    quantized_diffusion_helpers.h
+    quantized_diffusion_host.h
+    random.h
+    RawLoader.h
+    ray_trace_helpers.h
+    rendering_method.h
+    render_task.h
+    sampled_bssrdf.h
+    sampler.h
+    SampleScene.h
+    sampling_helpers.h
+    scattering_material.h
+    scattering_properties.h
+    shader.h
+    shader_factory.h
+    simplex_noise.h
+    simple_tracing.h
+    singular_light.h
+    sky_model.h
+    sphere.h
+    standard_dipole.h
+    stringhelpers.h
+    string_utils.h
+    structs.h
+    structs_device.h
+    transform.h
+    volume_path_tracer.h
+)
+
+set(SRCS_IMGUI
+imgui/imgui.cpp
+imgui/imgui_demo.cpp
+imgui/imgui_draw.cpp
+imgui/imgui_impl_glfw_gl3.cpp
+)
+
+set(SRCS    
+    ambient_occlusion.cpp
+    apple_juice.cpp
+    approximate_dipoles_host.cpp
+    box.cpp
+    brdf_utils.cpp
+    bssrdf_host.cpp
+    bssrdf_visualizer.cpp
+    camera_host.cpp
+    chull.cpp
+    constant_background.cpp
+    cputimer.cpp
+    default_shader.cpp
+    dialogs.cpp
+    environment_map_background.cpp
+    folders.cpp
+    forward_dipole_host.cpp
+    forward_dipole_test.cpp
+    GLFWDisplay.cpp
+    glm.cpp
+    glossy.cpp
+    HDRLoader.cpp
+    host_material.cpp
+    ImageLoader.cpp
+    immediate_gui.cpp
+    light_host.cpp
+    logger.cpp
+    material_library.cpp
+    mesh.cpp
+    miss_program.cpp
+    Mouse.cpp
+    obj_loader.cpp
+    obj_scene.cpp
+    parameter_parser.cpp
+    path_tracing.cpp
+    PerlinNoise.cpp
+    plint.cpp
+    PPMLoader.cpp
+    presampled_surface_bssrdf.cpp
+    procedural_mesh.cpp
+    quantized_diffusion_host.cpp
+    RawLoader.cpp
+    rendering_method.cpp
+    render_task.cpp
+    sampled_bssrdf.cpp
+    SampleScene.cpp
+    scattering_material.cpp
+    shader.cpp
+    shader_factory.cpp
+    simplex_noise.cpp
+    simple_tracing.cpp
+    sky_model.cpp
+    sphere.cpp
+    transform.cpp
+    )
+
+set(CUDA_SOURCES
+CUDA_files/absorbing_glass.cu
+CUDA_files/box.cu
+CUDA_files/bssrdf_plane_visualizer.cu
+CUDA_files/chull.cu
+CUDA_files/constant_background.cu
+CUDA_files/constant_shader.cu
+CUDA_files/depth_ray.cu
+CUDA_files/dispersion_shader.cu
+CUDA_files/debug_camera.cu
+CUDA_files/environment_map_background.cu
+CUDA_files/env_cameras.cu
+CUDA_files/forward_dipole.cu
+CUDA_files/glass_shader.cu
+CUDA_files/glossy_shader.cu
+CUDA_files/lambertian_shader.cu
+CUDA_files/metal_shader.cu
+CUDA_files/mirror_shader.cu
+CUDA_files/normal_shader.cu
+CUDA_files/pinhole_camera.cu
+CUDA_files/sample_camera.cu
+CUDA_files/sky_model_background.cu
+CUDA_files/sphere.cu
+CUDA_files/subsurface_scattering_shader.cu
+CUDA_files/subsurface_scattering_sampled.cu
+CUDA_files/tonemap_camera.cu
+CUDA_files/triangle_mesh.cu
+CUDA_files/volume_shader.cu
+CUDA_files/volume_shader_heterogenous.cu
+)
+    
+source_group("Headers" FILES ${HEADERS})
+source_group("Source Files" FILES ${SRCS})
+source_group("Imgui" FILES ${HEADERS_IMGUI} ${SRCS_IMGUI})
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+generate_ptx(framework ${HEADERS} ${CUDA_SOURCES} ${OPTIONS})
+
+    
+add_library( framework STATIC
+             ${SRCS} ${HEADERS} ${HEADERS_IMGUI} ${SRCS_IMGUI} ${CUDA_SOURCES} ${generated})
+
+             
+target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw cereal glew xercesc )
+target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})  

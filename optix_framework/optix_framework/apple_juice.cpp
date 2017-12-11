@@ -4,7 +4,7 @@
 #include <complex>
 #include <algorithm>
 #include "optprops/cdf_bsearch.h"
-#include "LorenzMie.h"
+#include "optprops/LorenzMie.h"
 
 using namespace std;
 using namespace LorenzMie;

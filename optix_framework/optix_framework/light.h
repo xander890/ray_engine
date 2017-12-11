@@ -136,11 +136,11 @@ __device__ __forceinline__ int light_size()
 {
     switch (light_type)
     {
-    case LightType::AREA: return area_light_size();  break;
+    case LightType::AREA: return area_light_size();  
     default:
     case LightType::SKY:
 	case LightType::POINT: 
-    case LightType::DIRECTIONAL: return singular_light_size(); break;
+    case LightType::DIRECTIONAL: return singular_light_size(); 
     }
 }
 

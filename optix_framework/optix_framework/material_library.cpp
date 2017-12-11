@@ -1,9 +1,9 @@
 #include "material_library.h"
-#include "Medium.h"
-#include "load_mpml.h"
-#include "Interface.h"
+#include "optprops/Medium.h"
+#include "optprops/load_mpml.h"
+#include "optprops/Interface.h"
 #include <optix_math.h>
-#include "glass.h"
+#include "optprops/glass.h"
 #include "logger.h"
 
 using namespace std;
