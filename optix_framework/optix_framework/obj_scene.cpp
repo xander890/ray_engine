@@ -34,7 +34,7 @@
 #include <sampled_bssrdf.h>
 #include "render_task.h"
 #include "volume_path_tracer.h"
-#include "glfw/glfw3.h"
+#include "GLFW/glfw3.h"
 #include "optix_serialize.h"
 #include "scattering_material.h"
 #include "math_helpers.h"

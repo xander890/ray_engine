@@ -28,7 +28,8 @@ __host__ __device__ __forceinline__ bool catastrophicCancellation(double a, doub
 
 __device__ __host__ __forceinline__ bool isfinite(Float3 & v)
 {
-	return isfinite(v.x) && isfinite(v.y) && isfinite(v.z);
+    Float3 vv = v;
+	return isfinite(vv.x) && isfinite(vv.y) && isfinite(vv.z);
 }
 
 template<typename T>

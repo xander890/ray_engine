@@ -19,6 +19,10 @@
 
 #include <climits>
 
+#ifndef __unix__
+#define strdup _strdup
+#endif
+
 /* defines */
 #define T(x) model->triangles[(x)]
 
@@ -205,7 +209,7 @@ _glmAddGroup(GLMmodel* model, char* name)
   group = _glmFindGroup(model, name);
   if (!group) {
     group = (GLMgroup*)malloc(sizeof(GLMgroup));
-    group->name = _strdup(name);
+    group->name = strdup(name);
     group->material = 0;
     group->mtlname = 0;
     group->numtriangles = 0;
@@ -254,7 +258,7 @@ _glmDirName(char* path)
   char* s1;
   char* s2;
 
-  dir = _strdup(path);
+  dir = strdup(path);
 
   s1 = strrchr(dir, '\\');
   s2 = strrchr(dir, '/');
@@ -381,7 +385,7 @@ _glmReadMTL(GLMmodel* model, char* name)
     model->materials[i].dissolve_map_scaling[0] = 0;
     model->materials[i].dissolve_map_scaling[1] = 0;
   }
-//  model->materials[0].name = _strdup("NO_ASSIGNED_MATERIAL");
+//  model->materials[0].name = strdup("NO_ASSIGNED_MATERIAL");
 
   /* now, read in the data */
   nummaterials = 0;
@@ -400,7 +404,7 @@ _glmReadMTL(GLMmodel* model, char* name)
         fgets(buf, sizeof(buf), file);
         sscanf(buf, "%s %s", buf, buf);
         nummaterials++;
-        model->materials[nummaterials - 1].name = _strdup(buf);
+        model->materials[nummaterials - 1].name = strdup(buf);
         break;
       case 'N':
 		  {
@@ -615,8 +619,8 @@ _glmFirstPass(GLMmodel* model, FILE* file)
 
 
   GLMgroup* group;      /* current group */
-  char*     current_group_base_name = _strdup(default_group_name);
-  char*     current_material_name = _strdup(default_material_name);
+  char*     current_group_base_name = strdup(default_group_name);
+  char*     current_material_name = strdup(default_material_name);
   int       v, n, t;
   char      buf[2048];
 
@@ -668,7 +672,7 @@ _glmFirstPass(GLMmodel* model, FILE* file)
       case 'm':
         fgets(buf, sizeof(buf), file);
         sscanf(buf, "%s %s", buf, buf);
-        model->mtllibname = _strdup(buf);
+        model->mtllibname = strdup(buf);
         if (_glmReadMTL(model, buf)) {
 
           break; /* Dont bail if MTL file not found */
@@ -684,7 +688,7 @@ _glmFirstPass(GLMmodel* model, FILE* file)
         fgets(buf, sizeof(buf), file);
         sscanf(buf, "%s %s", buf, buf);
         if (current_material_name) free(current_material_name);
-        current_material_name = _strdup(buf);
+        current_material_name = strdup(buf);
         sprintf(buf, "%s_MAT_%s",
             current_group_base_name, current_material_name);
         group = _glmAddGroup(model, buf);
@@ -697,7 +701,7 @@ _glmFirstPass(GLMmodel* model, FILE* file)
         fgets(buf, sizeof(buf), file);
         sscanf(buf, "%s", buf);
         if (current_group_base_name) free(current_group_base_name);
-        current_group_base_name = _strdup(buf);
+        current_group_base_name = strdup(buf);
         sprintf(buf, "%s_MAT_%s",
             current_group_base_name, current_material_name);
         group = _glmAddGroup(model, buf);
@@ -821,8 +825,8 @@ _glmSecondPass(GLMmodel* model, FILE* file)
   numvertices = numnormals = numtexcoords = 1;
   numtriangles = 0;
   material = 0;
-  grpname = _strdup(default_group_name);
-  mtlname = _strdup(default_material_name);
+  grpname = strdup(default_group_name);
+  mtlname = strdup(default_material_name);
   while(fscanf(file, "%s", buf) != EOF) {
     switch(buf[0]) {
       case '#':       /* comment */
@@ -869,14 +873,14 @@ _glmSecondPass(GLMmodel* model, FILE* file)
         fgets(buf, sizeof(buf), file);
         sscanf(buf, "%s %s", buf, buf);
         if (mtlname) free(mtlname);
-        mtlname  = _strdup(buf);
+        mtlname  = strdup(buf);
         material = _glmFindMaterial(model, buf);
         sprintf(buf, "%s_MAT_%s",
             grpname, mtlname);
         group = _glmFindGroup(model, buf);
         group->material = material;
         if (group->mtlname) free(group->mtlname);
-        group->mtlname = _strdup(mtlname);
+        group->mtlname = strdup(mtlname);
         break;
       case 'o': 
         /* eat up rest of line */
@@ -887,13 +891,13 @@ _glmSecondPass(GLMmodel* model, FILE* file)
         fgets(buf, sizeof(buf), file);
         sscanf(buf, "%s", buf);
         if (grpname) free(grpname);
-        grpname = _strdup(buf);
+        grpname = strdup(buf);
         sprintf(buf, "%s_MAT_%s",
             grpname, mtlname);
         group = _glmFindGroup(model, buf);
         group->material = material;
         if (group->mtlname) free(group->mtlname);
-        group->mtlname = _strdup(mtlname);
+        group->mtlname = strdup(mtlname);
         break;
       case 'f':       /* face */
         v = n = t = 0;
@@ -1660,7 +1664,7 @@ glmReadOBJ(const char* filename)
 
   /* allocate a new model */
   model = (GLMmodel*)malloc(sizeof(GLMmodel));
-  model->pathname      = _strdup(filename);
+  model->pathname      = strdup(filename);
   model->mtllibname    = NULL;
   model->numvertices   = 0;
   model->vertices      = NULL;

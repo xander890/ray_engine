@@ -1,13 +1,13 @@
 #pragma once
 #include "material.h"
 #include <memory>
-#include <cereal\access.hpp>
-#include <cereal\cereal.hpp>
+#include <cereal/access.hpp>
+#include <cereal/cereal.hpp>
 
 struct ObjMaterial;
 class ScatteringMaterial;
 
-class MaterialHost : std::enable_shared_from_this<MaterialHost>
+class MaterialHost : public std::enable_shared_from_this<MaterialHost>
 {
 public:
 	MaterialHost(optix::Context& ctx, ObjMaterial& data);

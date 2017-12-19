@@ -229,5 +229,5 @@ add_library( framework STATIC
              ${SRCS} ${HEADERS} ${HEADERS_IMGUI} ${SRCS_IMGUI} ${CUDA_SOURCES} ${generated})
 
              
-target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw cereal glew xercesc )
+target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw cereal ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${XercesC_LIBRARIES} )
 target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})  

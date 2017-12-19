@@ -43,8 +43,8 @@ DOMDocument * createEmptyParameterSheet()
              XMLString::transcode("core"));
     // Pointer to our DOMDocument.
     DOMDocument*        pDOMDocument = nullptr;
-	pDOMDocument = p_DOMImplementation->createDocument(L"schemas.example.com/2008/", 
-		L"ex:Optix_Framework_Parameters", 0);
+	pDOMDocument = p_DOMImplementation->createDocument(XMLString::transcode("schemas.example.com/2008/"), 
+		XMLString::transcode("ex:Optix_Framework_Parameters"), 0);
 	DOMElement * pRootElement = nullptr;
 	pRootElement = pDOMDocument->getDocumentElement();
 

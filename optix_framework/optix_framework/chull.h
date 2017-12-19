@@ -2,8 +2,8 @@
 #ifndef chull_h__
 #define chull_h__
 
-#include <optixu\optixu_aabb.h>
-#include <optixu\optixpp_namespace.h>
+#include <optixu/optixu_aabb.h>
+#include <optixu/optixpp_namespace.h>
 #include <vector>
 #include "procedural_mesh.h"
 

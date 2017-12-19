@@ -6,6 +6,7 @@
 #include "shader_factory.h"
 #include "immediate_gui.h"
 #include "optix_utils.h"
+#include <memory>
 
 using namespace optix;
 using namespace std;

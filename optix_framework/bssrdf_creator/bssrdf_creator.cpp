@@ -1,7 +1,7 @@
 #include "bssrdf_creator.h"
 #include "immediate_gui.h"
 #include "optix_utils.h"
-#include "GL\glew.h"
+#include "GL/glew.h"
 #include "folders.h"
 #include <sstream>
 

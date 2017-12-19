@@ -19,7 +19,7 @@
 * SUCH DAMAGES
 */
 
-#include "RAWLoader.h"
+#include "RawLoader.h"
 
 #include <math.h>
 #include <fstream>

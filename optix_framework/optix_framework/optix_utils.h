@@ -1,6 +1,7 @@
 #pragma once
 #include "optix_world.h"
-#include "GL\glew.h"
+#include "GL/glew.h"
+#include <cstring>
 
 template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsigned int type, unsigned int size)
 {

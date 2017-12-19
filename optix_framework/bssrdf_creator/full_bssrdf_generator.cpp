@@ -9,9 +9,9 @@
 #include "dialogs.h"
 #include <sstream>
 #include "reference_bssrdf_gpu.h"
-#include "GL\glew.h"
+#include "GL/glew.h"
 #include "cputimer.h"
-#include "GLFW\glfw3.h"
+#include "GLFW/glfw3.h"
 #include "GLFWDisplay.h"
 #include "forward_dipole_test.h"
 #pragma warning(disable : 4996)

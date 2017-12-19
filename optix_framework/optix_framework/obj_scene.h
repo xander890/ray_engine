@@ -13,6 +13,7 @@
 #include <SampleScene.h>
 #include "enums.h"
 #include <functional>
+#include <camera_host.h>
 
 class MissProgram;
 class ImmediateGUI;
@@ -21,7 +22,6 @@ struct TriangleLight;
 class Mesh;
 class MaterialHost;
 class RenderingMethod;
-class Camera;
 struct MPMLMedium;
 
 

@@ -1,8 +1,8 @@
 #ifndef procedural_mesh_h__
 #define procedural_mesh_h__
 
-#include <optixu\optixu_aabb.h>
-#include <optixu\optixpp_namespace.h>
+#include <optixu/optixu_aabb.h>
+#include <optixu/optixpp_namespace.h>
 #include <vector>
 #include <map>
 #include <functional>

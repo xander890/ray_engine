@@ -4,8 +4,7 @@
 #include <memory>
 #include <optix_world.h>
 #include "enums.h"
-
-struct CameraData;
+#include "camera.h"
 
 class Camera
 {

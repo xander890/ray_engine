@@ -4,21 +4,14 @@
 #include <iostream>
 #include <string>
 
+
 class Logger {
 
 public:
 	explicit Logger(std::ostream& _out, const char * _color_symbol, const char * _color_string) : out(&_out), color_symbol(_color_symbol), color_string(_color_string) {}
 
-	template<typename T>
-	std::string get_str(const T&  v) { return std::to_string(v); }
-
-	template<>
-	std::string get_str(const std::string & v) { return v; }
-
-	template<typename T>
-	Logger& operator<<(const T v)  
-	{ 
-		
+	Logger& operator<<(const std::string& a)
+	{
 		if (start_of_line)
 		{
 			std::string color = is_color_enabled ? color_symbol : "";
@@ -26,17 +19,46 @@ public:
 			*out << color << "[" << color_string << "] " << color_end;
 			start_of_line = false;
 		}
-		std::string a = get_str<T>(v);
+		*out << a;
+		if (a.back() == '\n')
+			start_of_line = true;
+		return *this;
+	}
+
+	Logger& operator<<(const char* a)
+	{
+		if (start_of_line)
+		{
+			std::string color = is_color_enabled ? color_symbol : "";
+			std::string color_end = is_color_enabled ? RESET : "";
+			*out << color << "[" << color_string << "] " << color_end;
+			start_of_line = false;
+		}
+		*out << a;
+		return *this;
+	}
+
+	template<typename T>
+	Logger& operator<<(const T v)  
+	{ 	
+		if (start_of_line)
+		{
+			std::string color = is_color_enabled ? color_symbol : "";
+			std::string color_end = is_color_enabled ? RESET : "";
+			*out << color << "[" << color_string << "] " << color_end;
+			start_of_line = false;
+		}
+		std::string a = std::to_string(v);
 		*out << a;
 		if (a.back() == '\n')
 			start_of_line = true;
 		return *this; 
 	}
 
-	template<> Logger& operator<<<const char*>(const char* v)
-	{
-		return this->operator<<<std::string>(std::string(v));
-	}
+//	Logger& operator<<<const char*>(const char* v)
+//	{
+	//	return this->operator<<<std::string>(std::string(v));
+	//}
 
 
 	Logger& operator<<(std::ostream& (*F)(std::ostream&)) { F(*out); start_of_line = true;  return *this; }

@@ -18,4 +18,5 @@ endif (WIN32)
 
 if (UNIX)
 ADD_LIBRARY( nfd STATIC ${SRCS} ${HEADERS} nfd_gtk.c )
+target_link_libraries(nfd ${GTK3_LIBRARIES})
 endif (UNIX)

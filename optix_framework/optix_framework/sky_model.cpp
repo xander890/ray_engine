@@ -5,7 +5,7 @@
 void SkyModel::update_data()
 {
     if (dot(north, up) != 0.0f)
-        throw std::exception("North and up are not perpendicular.");
+        throw std::runtime_error("North and up are not perpendicular.");
     day = ConfigParameters::get_parameter<int>("sky", "day", 12, "Default day for the sun model.");
     hour = ConfigParameters::get_parameter<int>("sky", "hour", 15, "Default hour of the day for the sun model.");
     latitude = M_PIf / 180.0f * ConfigParameters::get_parameter<float>("sky", "latitude", 45.0f, "Default latitude (deg) for the sun model.");

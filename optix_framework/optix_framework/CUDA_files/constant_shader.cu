@@ -21,7 +21,7 @@ RT_PROGRAM void any_hit_shadow() { rtTerminateRay(); }
 RT_PROGRAM void shade() 
 { 
     float3 hit_pos = ray.origin + t_hit * ray.direction;
-    MaterialDataCommon& mat = get_material(hit_pos);
+    MaterialDataCommon mat = get_material(hit_pos);
     float3 k_d = make_float3(rtTex2D<float4>(mat.diffuse_map, texcoord.x, texcoord.y));	
 	prd_radiance.result = k_d;
 }

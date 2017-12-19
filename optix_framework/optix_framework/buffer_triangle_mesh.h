@@ -1,11 +1,11 @@
 #ifndef BUFFER_TRIANGLE_MESH
 #define BUFFER_TRIANGLE_MESH
 
-#include "rasterizer\GLHeader.h"
+#include "rasterizer/GLHeader.h"
 #include <vector>
-#include "CGLA\Vec2f.h"
-#include "CGLA\Vec3f.h"
-#include "CGLA\Vec4f.h"
+#include "CGLA/Vec2f.h"
+#include "CGLA/Vec3f.h"
+#include "CGLA/Vec4f.h"
 //#include "ShaderProgram.h"
 //#include "Material.h"
 //#include "TriangleMesh.h"

@@ -21,7 +21,7 @@ __device__ __host__ __forceinline__   bool CheckSimple(const Float low, ///< low
 	const Float high ///< upper bound of distribution
 ) {
 	// Init Values Used in Inequality of Interest
-	Float val1 = (2 * sqrt(exp(1))) / (low + sqrt(pow(low, 2) + 4));
+	Float val1 = (2 * sqrt(exp(1.0))) / (low + sqrt(pow(low, 2) + 4));
 	Float val2 = exp((pow(low, 2) - low * sqrt(pow(low, 2) + 4)) / (4));
 	//
 
@@ -335,8 +335,8 @@ __device__ __host__ __forceinline__   Float truncnormPdf(const Float _mean,
 
 	if (sd == 0) {
 		double scale = hi - lo;
-		if (!isfinite(scale))
-			SLog(EError, "I currently only support finite intervals when sd==0");
+		//if (!isfinite(scale))
+		//	SLog(EError, "I currently only support finite intervals when sd==0");
 		double acceptedError = Epsilon * scale;
 		if (lo <= mean && mean <= hi)
 			return abs(z - mean) < acceptedError ? 1.0 : 0.0;

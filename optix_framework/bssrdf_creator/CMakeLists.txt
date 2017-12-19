@@ -39,9 +39,8 @@ generate_ptx(framework ${HEADERS} ${CUDA_SOURCES} ${OPTIONS})
 add_executable( ${APP_EXE}
                 ${SRCS} ${HEADERS} ${CUDA_SOURCES}  ${generated}) 
 
-find_package(OpenGL REQUIRED)
-                
-target_link_libraries(${APP_EXE} framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw cereal glew xercesc ${OPENGL_LIBRARIES})
+find_package(OpenGL REQUIRED)               
+target_link_libraries(${APP_EXE} framework optprops gel nfd optix ${CUDA_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} cereal ${XercesC_LIBRARIES} )
 
 macro(copy_dir target folder dest)
 add_custom_command(TARGET ${target} POST_BUILD

@@ -8,6 +8,10 @@
 
 using namespace std;
 
+#ifdef __unix
+#define fopen_s(pFile,filename,mode) ((*(pFile))=fopen((filename),  (mode)))==NULL
+#endif
+
 inline bool read_brdf(const char *filename, int& n, double*& brdf)
 {
     FILE *f;

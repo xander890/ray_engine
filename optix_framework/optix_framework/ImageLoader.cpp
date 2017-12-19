@@ -22,9 +22,10 @@
 #include <ImageLoader.h>
 #include <PPMLoader.h>
 #include <HDRLoader.h>
-#include <RAWLoader.h>
+#include <RawLoader.h>
 #include <fstream>
 #include <algorithm>
+#include <exception>
 
 
 //-----------------------------------------------------------------------------
@@ -88,7 +89,7 @@ optix::TextureSampler loadTexture( optix::Context context,
 	  }
 	  else
 	  {
-		  throw std::exception("Unable to find a compatible format. Please use .ppm, .hdr or .raw.");
+		  throw std::runtime_error("Unable to find a compatible format. Please use .ppm, .hdr or .raw.");
 	  }
 
   }

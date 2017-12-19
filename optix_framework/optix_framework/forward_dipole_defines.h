@@ -1,6 +1,8 @@
 #pragma once
 #include "host_device_common.h"
 #include "double_support_optix.h"
+#include "float.h"
+#include "math.h"
 #define M_PI           3.14159265358979323846  /* pi */
 
 #define RND_FUNC_FWD_DIP rnd_tea

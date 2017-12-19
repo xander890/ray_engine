@@ -1,6 +1,6 @@
 # At LEAST 2.8 but newer is better
+project(ray_engine)
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
-project(ray_engine VERSION 0.1 LANGUAGES CXX)
 
 # Must use GNUInstallDirs to install libraries into correct
 # locations on all platforms.
@@ -11,6 +11,20 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
   )
 
+if(WIN32)
+  set (CMAKE_CXX_STANDARD 11)
+else()
+set (CMAKE_CXX_STANDARD 14)
+add_compile_options(-fpermissive)
+FIND_PACKAGE(PkgConfig REQUIRED)
+PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
+INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
+LINK_DIRECTORIES(${GTK3_LIBRARY_DIRS})
+add_definitions (${GTK3_CFLAGS_OTHER})
+list(APPEND CUDA_NVCC_FLAGS "-std=c++11")
+
+endif()
+
 # Include all CMake Macros.
 include(Macros)
 # Determine information about the compiler
@@ -18,14 +32,21 @@ include (CompilerInfo)
 # Check for specific machine/compiler options.
 include (ConfigCompilerFlags)
 
+if(UNIX)
+find_package(XercesC)
+else()
 add_library(xercesc STATIC IMPORTED)
 set_property(TARGET xercesc PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/xercesc)
 set_property(TARGET xercesc PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/externals/xercesc/lib64/xerces-c_3.lib)
+endif()
 
+if(UNIX)
+find_package(GLEW)
+else()
 add_library(glew STATIC IMPORTED)
 set_property(TARGET glew PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew)
 set_property(TARGET glew PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew/lib64/glew32.lib)
-
+endif()
 
 option(CUDA_GENERATE_DEPENDENCIES_DURING_CONFIGURE "Generate dependencies during configure time instead of only during build time." OFF)
 find_package(CUDA 5.0 REQUIRED)
@@ -37,7 +58,6 @@ if(USING_WINDOWS_CL)
   list(APPEND CUDA_NVCC_FLAGS --compiler-options /D_USE_MATH_DEFINES)
 endif()
 
-message(WARNING ${OptiX_INSTALL_DIR} )
 find_package(OptiX REQUIRED)
 include_directories(
   ${OptiX_INCLUDE}

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <optixu\optixu_aabb.h>
-#include <optixu\optixpp_namespace.h>
+#include <optixu/optixu_aabb.h>
+#include <optixu/optixpp_namespace.h>
 #include <vector>
 #include "procedural_mesh.h"
 

@@ -7,6 +7,7 @@
 #include <ImageLoader.h>
 #include "host_material.h"
 #include "scattering_material.h"
+#include <algorithm>
 
 void GlossyShader::initialize_shader(optix::Context context)
 {
@@ -37,11 +38,12 @@ void GlossyShader::initialize_mesh(Mesh& object)
 
 	std::string n_ext = n + ".binary";
     MERLBrdf * mat = nullptr;
+    auto found = std::find(std::begin(brdf_names), std::end(brdf_names), n_ext);
     if (merl_database.count(n) != 0)
     {
         mat = &merl_database[n];
     }
-    else if (std::find(brdf_names.begin(), brdf_names.end(), n_ext) != brdf_names.end())
+    else if (found != brdf_names.end())
     {
         merl_database[n] = MERLBrdf();
         mat = &merl_database[n];

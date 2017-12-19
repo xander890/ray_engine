@@ -2,7 +2,7 @@
 #define IMGUI_DISABLE_TEST_WINDOWS
 #include "imgui/imgui_impl_glfw_gl3.h"
 
-#include<glfw\glfw3.h>
+#include<GLFW/glfw3.h>
 
 
 

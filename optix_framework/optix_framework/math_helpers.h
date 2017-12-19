@@ -41,7 +41,7 @@
 
 __host__ __device__ __inline__ float normalize_angle(float deg)
 {
-	return deg - 2 * M_PIf * std::floor(deg / (2 * M_PIf));
+	return deg - 2 * M_PIf * floor(deg / (2 * M_PIf));
 }
 
 __host__ __device__ __inline__ float deg2rad(float deg)
@@ -185,19 +185,14 @@ static __host__ __device__ __inline__ optix::float3 pow(const optix::float3 &val
 	return optix::make_float3(powf(value1.x, exp), powf(value1.y, exp), powf(value1.z, exp));
 }
 
-static __host__ __device__ __inline__ bool isnan(const optix::float3 &value1)
-{
-	return isnan(value1.x) || isnan(value1.y) || isnan(value1.z);
-}
-
 
 static __host__ __device__ __inline__ float step(const float &edge, const float &x)
 {
 	  return (x < edge)? 0.0f : 1.0f;
 }
 
-static __host__ __device__ __inline__ void sincosf(float x, float* sin_x, float* cos_x)
+static __host__ __device__ __inline__ void sincosf(float x, float& sin_x, float& cos_x)
 {
-	*sin_x = sinf(x);
-	*cos_x = cosf(x);
+	sin_x = sinf(x);
+	cos_x = cosf(x);
 }

@@ -23,7 +23,7 @@
 #include <optixu/optixu_matrix_namespace.h>
 #include <iostream>
 #include "math_helpers.h"
-#include <glfw\glfw3.h>
+#include <GLFW/glfw3.h>
 #include <cmath>
 #define ISFINITE std::isfinite
 
