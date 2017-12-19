@@ -103,4 +103,4 @@ source_group("Source Files" FILES ${SRCS})
 ADD_LIBRARY( gel STATIC
              ${SRCS} ${HEADERS})
 target_include_directories( gel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}) 
-target_link_libraries(gel glew )            
+target_link_libraries(gel ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} )            
