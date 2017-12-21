@@ -18,6 +18,7 @@
 #include <sampling_helpers.h>
 #include <camera.h>
 #include <device_environment_map.h>
+#include <neural_network_device_code.h>
 
 using namespace optix;
 
@@ -71,11 +72,48 @@ __device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, con
 }
 
 
-__device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float3 & disc_origin, const float3 & disc_normal, const float3 & disc_tangent, const float3 & disc_bitangent, optix::float2 & disc_sample, TEASampler * sampler, float3 & xi, float3 & ni, const float normal_bias = 0.0f, const float t_min = scene_epsilon)
+__device__ __forceinline__ void sample_point_on_normal_tangent_plane(
+        const float3 & xo,          // The points hit by the camera ray.
+        const float3 & no,          // The normal at the point.
+        const float3 & wo,          // The incoming ray direction.
+        const MaterialDataCommon & material,  // Material properties.
+        TEASampler * sampler,       // A rng.
+	    float3 & x_tangent,                // The candidate point 
+        float & integration_factor, // An factor that will be multiplied into the final result. For inverse pdfs. 
+        bool & has_candidate_wi,    // Returns true if the point has a candidate outgoing direction
+        float3 & proposed_wi)       // The candidate proposed direction.
 {
-	float3 sample_ray_origin = disc_origin + disc_tangent*disc_sample.x + disc_bitangent*disc_sample.y;
+	switch (bssrdf_sampling_properties->sampling_tangent_plane_technique)
+	{
+        case BssrdfSamplePointOnTangentTechnique::EXPONENTIAL_DISK:
+        {
+            optix::float3 to, bo;
+            create_onb(no, to, bo);
+	        const ScatteringMaterialProperties& props = material.scattering_properties;
+	        float chosen_sampling_mfp = get_sampling_mfp(props);
+	        float r, phi, pdf_disk;
+
+	        optix::float2 sample = optix::make_float2(sampler->next1D(), sampler->next1D());
+	        optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
+	        integration_factor *= r / pdf_disk;
+            x_tangent = xo + r * cosf(phi) * to + r * sinf(phi) * bo;
+            has_candidate_wi = false;
+
+        } break;
+        case BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING:
+        {
+            has_candidate_wi = true;
+            sample_neural_network(xo,no,wo,material, sampler, x_tangent, integration_factor, proposed_wi);        
+        } break;
+    }
+}
+
+
+__device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float3 & disc_point, const float3 & disc_normal, float3 & xi, float3 & ni, const float normal_bias = 0.0f, const float t_min = scene_epsilon)
+{
+	float3 sample_ray_origin = disc_point;
 	float3 sample_ray_dir = disc_normal;
-	sample_ray_origin += normal_bias * disc_normal; // Offsetting the ray origin along the normal. Useful to shoot rays "backwards" towards the surface
+	sample_ray_origin += normal_bias * disc_normal; // Offsetting the ray origin along the normal. to shoot rays "backwards" towards the surface
 	float t_max = RT_DEFAULT_MAX;
 	if (!trace_depth_ray(sample_ray_origin, sample_ray_dir, xi, ni, t_min, t_max))
 		return false;
@@ -83,34 +121,19 @@ __device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float
 	return true;
 }
 
-__device__ __forceinline__ int sample_inverse_cdf(float * cdf, int cdf_size, float xi)
-{
-	int c = 0;
-	for (int i = 0; i < cdf_size; i++)
-	{
-		c = xi > cdf[i] ? i : c;
-	}
-	return c;
-}
-
-__device__ __forceinline__ int choose_sampling_axis(TEASampler * sampler)
-{
-	float var = sampler->next1D();
-	float* mis_weights_cdf = reinterpret_cast<float*>(&bssrdf_sampling_properties->mis_weights_cdf);
-	return sample_inverse_cdf(mis_weights_cdf, 4, var);
-}
-
-__device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, TEASampler * sampler,
+__device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
 	float3 & xi, float3 & ni, float & integration_factor)
 {
+
+	const ScatteringMaterialProperties& props = material.scattering_properties;
 	float chosen_sampling_mfp = get_sampling_mfp(props);
 	float r, phi, pdf_disk;
 	optix::float2 sample = optix::make_float2(sampler->next1D(), sampler->next1D());
 	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
 
+    optix::float3 to, bo;
+    create_onb(no, to, bo);
 	float t_max = RT_DEFAULT_MAX;
-	optix::float3 to, bo;
-	create_onb(no, to, bo);
 	integration_factor = 1.0f;
 	float3 sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
 	float3 sample_ray_dir = normalize(sample_on_tangent_plane - camera_data.eye);
@@ -133,44 +156,32 @@ __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const f
 		float jacobian = max(1e-3, cos_alpha_tan) / max(1e-3, cos_alpha) * max(1e-3, dot(d, d)) / max(1e-3, dot(d_tan, d_tan));
 		integration_factor *= jacobian;
 	}
+
 	return true;
 }
-__device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, TEASampler * sampler,
-	float3 & xi, float3 & ni, float & integration_factor)
+__device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
+	float3 & xi, float3 & ni, float & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
 {
-	float chosen_sampling_mfp = get_sampling_mfp(props);
-	float r, phi, pdf_disk;
-	optix::float2 sample = optix::make_float2(sampler->next1D(), sampler->next1D());
-	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
 
-	optix::float3 to, bo;
-	create_onb(no, to, bo);
-	integration_factor = 1.0f;
+    optix::float3 xo_tangent;
+    sample_point_on_normal_tangent_plane(xo,no,wo,material,sampler, xo_tangent, integration_factor, has_candidate_wi, proposed_wi);
 
-	if (!sample_xi_ni_from_tangent_hemisphere(xo, -no, to, bo, disc_sample, sampler, xi, ni, -bssrdf_sampling_properties->d_max))
+	if (!sample_xi_ni_from_tangent_hemisphere(xo_tangent, -no, xi, ni, -bssrdf_sampling_properties->d_max))
 		return false;
 
-	integration_factor *= r / pdf_disk;
-	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
 	float inv_jac = max(bssrdf_sampling_properties->dot_no_ni_min, dot(normalize(no), normalize(ni)));
 
 	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor = inv_jac > 0.0f ? integration_factor / inv_jac : 0.0f;
+		integration_factor *= inv_jac > 0.0f ? 1 / inv_jac : 0.0f;
 	return true;
 }			
 
 
-__device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, TEASampler * sampler,
-	float3 & xi, float3 & ni, float & integration_factor)
+__device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
+	float3 & xi, float3 & ni, float & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
 {
-	float chosen_sampling_mfp = get_sampling_mfp(props);
-	float r, phi, pdf_disk;
-	optix::float2 sample = optix::make_float2(sampler->next1D(), sampler->next1D());
-	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
-
-	optix::float3 to, bo;
-	create_onb(no, to, bo);
-	integration_factor = 1.0f;
+    optix::float3 xo_tangent;
+    sample_point_on_normal_tangent_plane(xo,no,wo,material,sampler, xo_tangent, integration_factor, has_candidate_wi, proposed_wi);
 
 	const float pdf = 0.5f;
 
@@ -182,13 +193,10 @@ __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float
 	float3 used_no = no * verse_mult[verse];
 	integration_factor /= pdfs[verse]; // ...and for the chosen axis
 
-	if (!sample_xi_ni_from_tangent_hemisphere(xo + no * scene_epsilon * 2, used_no, to, bo, disc_sample, sampler, xi, ni, 0.0f, 0.0f))
+	if (!sample_xi_ni_from_tangent_hemisphere(xo_tangent, used_no, xi, ni, 0.0f, 0.0f))
 		return false;
 #undef TOP
 #undef BOTTOM
-
-	integration_factor *= r / pdf_disk;
-	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
 
 	float inv_jac = max(bssrdf_sampling_properties->dot_no_ni_min, dot(normalize(no), normalize(ni)));
 
@@ -197,9 +205,10 @@ __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float
 	return true;
 }
 
-__device__ __forceinline__ bool random_axis(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, TEASampler * sampler,
+__device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
 	float3 & xi, float3 & ni, float & integration_factor)
 {
+	const ScatteringMaterialProperties& props = material.scattering_properties;
 	float chosen_sampling_mfp = get_sampling_mfp(props);
 	float r, phi, pdf_disk;
 	optix::float2 sample = optix::make_float2(sampler->next1D(), sampler->next1D());
@@ -213,10 +222,9 @@ __device__ __forceinline__ bool random_axis(const float3 & xo, const float3 & no
 	int main_axis = sampler->next1D() * 3.0f;  
 	float inv_pdf_axis = 3.0f;
 
-	float verse_mult[2] = { 1, -1 };
-	int v = sampler->next1D() < 0.5f? 0 : 1;
+	float verse = sampler->next1D() < 0.5f? -1 : 1;
 
-	float3 probe_direction = verse_mult[v] * axes[main_axis];
+	float3 probe_direction = verse * axes[main_axis];
 	float inv_pdf = 2.0f * inv_pdf_axis;
 
 	optix::float3 chosen_axes[3] = { probe_direction, make_float3(0), make_float3(0) };
@@ -258,117 +266,16 @@ __device__ __forceinline__ bool random_axis(const float3 & xo, const float3 & no
 	return true;
 }
 
-__device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, TEASampler * sampler,
-	float3 & xi, float3 & ni, float & integration_factor)
+__device__ __forceinline__ bool importance_sample_position(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
+	float3 & xi, float3 & ni, float & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
 {
-	float chosen_sampling_mfp = get_sampling_mfp(props);
-	float r, phi, pdf_disk;
-	optix::float2 sample = optix::make_float2(sampler->next1D(), sampler->next1D());
-	optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
-
-	optix::float3 to, bo;
-	create_onb(no, to, bo);
-
-	optix::float3 axes[3] = { no, bo, to };
-
-	// We first choose an axis.
-	int main_axis = int(sampler->next1D() * 3.0f);
-	float pdf_axis = 1.0f/3.0f;
-	//integration_factor /= pdf_axis;
-	float3 disc_axis = axes[main_axis];
-
-	// Sampling the corresponding tangent plane.
-	float3 disc_t, disc_b;
-	create_onb(disc_axis, disc_t, disc_b);
-	float3 tangent_plane_xi = xo + disc_t*disc_sample.x + disc_b*disc_sample.y;
-	
-	optix_print("Sampling tangent plane %d\n", main_axis);
-
-	optix::float3 xo_xitan = xo - tangent_plane_xi;
-
-	int axis_1 = (main_axis + 1) % 3;
-	float r_axis_1 = optix::length(xo_xitan - dot(xo_xitan, axes[axis_1]) * axes[axis_1]);
-	float pdf_axis_1 = exponential_pdf_disk(r_axis_1, chosen_sampling_mfp);
-
-	int axis_2 = (main_axis + 2) % 3;
-	float r_axis_2 = optix::length(xo_xitan - dot(xo_xitan, axes[axis_2]) * axes[axis_2]);
-	float pdf_axis_2 = exponential_pdf_disk(r_axis_2, chosen_sampling_mfp);
-
-	float mis_weight = pdf_disk / (pdf_disk + pdf_axis_1 + pdf_axis_2);
-	
-	// Probe rays.
-	float pdf[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f };
-	float3 xis[6];
-	float3 nis[6];
-	float3 all_dirs[6];
-
-	tangent_plane_xi += disc_axis * scene_epsilon * 2; // Just to avoid problems on planar surfaces.
-	float verses[2] = { 1, -1 };
-	float norm = 0.0f;
-	for (int i = 0; i < 3; i++)
-	{
-		for (int j = 0; j < 2; j++)
-		{
-			float3 probe_direction = verses[j] * axes[i];
-			int idx = i * 2 + j;
-			all_dirs[idx] = probe_direction;
-
-			if (!trace_depth_ray(tangent_plane_xi, probe_direction, xis[idx], nis[idx], 0, RT_DEFAULT_MAX))
-			{
-				pdf[idx] = 0.0f;
-				continue;  
-			}
-			pdf[idx] = 1.0f; // max(0.0f, dot(nis[idx], probe_direction));
-			norm += pdf[idx];
-		}
-	}
-
-	if (norm == 0.0f)
-		return false;
-
-	// Calculating cdf from the pdf.
-	float cdf[7] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f, 0.0f };
-	for (int i = 1; i <= 6; i++)
-	{
-		pdf[i - 1] /= norm;
-		cdf[i] = cdf[i - 1] + pdf[i - 1];
-	} 
-
-	// Sampling the inverse cdf.
-	float var = sampler->next1D();
-	int axis = sample_inverse_cdf(&cdf[0], 7, var);
-	float3 ax = all_dirs[axis];
-
-	optix_print("Pdf    %f %f %f %f %f %f \n", pdf[0], pdf[1], pdf[2], pdf[3], pdf[4], pdf[5]);
-	optix_print("Cdf %f %f %f %f %f %f %f\n", cdf[0], cdf[1], cdf[2], cdf[3], cdf[4], cdf[5], cdf[6]);
-	optix_print("Chosen axis %d, (%f %f %f), pdf %f\n", axis, ax.x, ax.y, ax.z, var);
-
-	ni = nis[axis];
-	xi = xis[axis];
-
-	integration_factor = 1;
-	// MIS weight
-	integration_factor *= mis_weight;
-	// Pdf of the point (1/nk)
-	integration_factor /= pdf[axis];
-	// Disk pdf (cancels out partially with MIS weight)
-	integration_factor *= r / pdf_disk;
-	// Jacobian
-	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor *= abs(dot(ax, ni));
-	return true;
-}
-
-__device__ __forceinline__ bool importance_sample_position(const float3 & xo, const float3 & no, const float3 & wo, const ScatteringMaterialProperties& props, TEASampler * sampler,
-	float3 & xi, float3 & ni, float & integration_factor)
-{
+    has_candidate_wi = false;
 	switch (bssrdf_sampling_properties->sampling_method)
 	{
-	case BssrdfSamplingType::BSSRDF_SAMPLING_CAMERA_BASED:				return camera_based_sampling(xo, no, wo, props, sampler, xi, ni, integration_factor);	break;
-	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE:				return tangent_based_sampling(xo, no, wo, props, sampler, xi, ni, integration_factor);	break;
-	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES:	return tangent_no_offset(xo, no, wo, props, sampler, xi, ni, integration_factor);	break;
-	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS:					return random_axis(xo, no, wo, props, sampler, xi, ni, integration_factor);	break;
-	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES:		return axis_mis_probes(xo, no, wo, props, sampler, xi, ni, integration_factor);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_CAMERA_BASED:				return camera_based_sampling(xo, no, wo, material, sampler, xi, ni, integration_factor);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE:				return tangent_based_sampling(xo, no, wo, material, sampler, xi, ni, integration_factor, has_candidate_wi, proposed_wi);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES:	return tangent_no_offset(xo, no, wo, material, sampler, xi, ni, integration_factor, has_candidate_wi, proposed_wi);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS:					return axis_mis_probes(xo, no, wo, material, sampler, xi, ni, integration_factor);	break;
 	}
 }
 
@@ -436,9 +343,12 @@ __device__ __forceinline__ void _shade()
 
 	for (uint i = 0; i < N; i++)
 	{
-		float integration_factor;
+		float integration_factor = 1.0f;
 		float3 xi, ni;
-		if (!importance_sample_position(xo, no, wo, props, sampler, xi, ni, integration_factor))
+        bool has_candidate_wi;
+        float3 proposed_wi;
+
+		if (!importance_sample_position(xo, no, wo, material, sampler, xi, ni, integration_factor, has_candidate_wi, proposed_wi))
 		{
 			optix_print("Sample non valid.\n");
 			continue;
@@ -461,8 +371,16 @@ __device__ __forceinline__ void _shade()
 		// compute contribution if sample is non-zero
 		if (dot(L_i, L_i) > 0.0f)
 		{
+            float3 S_d;
+            if(bssrdf_sampling_properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
+            {
+                 S_d = make_float3(1);
+            }
+            else
+            {
+                 S_d = bssrdf(xi, ni, w12, xo, no, w21, props);
+            }
 
-			float3 S_d = bssrdf(xi, ni, w12, xo, no, w21, props);
 			L_d += L_i * S_d * T12 * integration_factor;
 			optix_print("Ld %f %f %f Li %f %f %f T12 %f int %f\n", L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
 		}

@@ -18,7 +18,7 @@ rtDeclareVariable(ScatteringDipole::Type, selected_bssrdf, , );
 __forceinline__ __device__ float3 bssrdf(const float3& _xi, const float3& _ni, const float3& _w12,
 	const float3& _xo, const float3& _no, const float3 & _w21,
 	const ScatteringMaterialProperties& properties)
-{
+{   
 	switch (selected_bssrdf)
 	{
 	case ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF:

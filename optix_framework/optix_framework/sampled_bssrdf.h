@@ -4,6 +4,7 @@
 #include <bssrdf_properties.h>
 #include <optix_utils.h>
 #include <bssrdf_host.h>
+#include "neural_network_sampler.h"
 
 class SampledBSSRDF : public Shader
 {
@@ -27,4 +28,5 @@ public:
 	unsigned int mSamples = 1;
 	bool mHasChanged = true;
 	std::unique_ptr<BSSRDF> mBSSRDF;
+    std::unique_ptr<NeuralNetworkSampler> mNNSampler;
 };

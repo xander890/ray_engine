@@ -2,12 +2,16 @@
 #include <optix_world.h>
 #include <host_device_common.h>
 
+#define IMPROVED_ENUM_NAME BssrdfSamplePointOnTangentTechnique
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(EXPONENTIAL_DISK,0) \
+						   ENUMITEM_VALUE(NEURAL_NETWORK_IMPORTANCE_SAMPLING,1) 
+#include "improved_enum.def"
+
 #define IMPROVED_ENUM_NAME BssrdfSamplingType
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(BSSRDF_SAMPLING_CAMERA_BASED,0) \
 						   ENUMITEM_VALUE(BSSRDF_SAMPLING_TANGENT_PLANE,1) \
 						   ENUMITEM_VALUE(BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES,2) \
-						   ENUMITEM_VALUE(BSSRDF_SAMPLING_MIS_AXIS,3) \
-						   ENUMITEM_VALUE(BSSRDF_SAMPLING_MIS_AXIS_AND_PROBES,4) 
+						   ENUMITEM_VALUE(BSSRDF_SAMPLING_MIS_AXIS,3)  
 #include "improved_enum.def"
 
 #define IMPROVED_ENUM_NAME ScatteringDipole
@@ -44,6 +48,7 @@ struct QuantizedDiffusionProperties
 struct BSSRDFSamplingProperties
 {
 	BssrdfSamplingType::Type        sampling_method				DEFAULT(BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE);
+    BssrdfSamplePointOnTangentTechnique::Type   sampling_tangent_plane_technique    DEFAULT(BssrdfSamplePointOnTangentTechnique::EXPONENTIAL_DISK);
 	int use_jacobian				DEFAULT(1);
 	float d_max						DEFAULT(1.0f);
 	float dot_no_ni_min				DEFAULT(0.001f);

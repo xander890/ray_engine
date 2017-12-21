@@ -10,4 +10,4 @@ ForwardDipole::ForwardDipole(optix::Context & context): BSSRDF(context, Scatteri
 	context["sampleLengthDipole"]->setInt(ray_gen_program_sample->getId());
 	context["evalMonopole"]->setInt(ray_gen_program_monopole->getId());
 	context["evalDipole"]->setInt(ray_gen_program_dipole->getId());
-}
+}  

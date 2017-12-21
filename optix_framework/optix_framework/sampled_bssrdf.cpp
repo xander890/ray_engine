@@ -16,6 +16,7 @@ SampledBSSRDF::SampledBSSRDF(const SampledBSSRDF & cp) : Shader(cp)
 	*properties = *cp.properties;
 	auto type = cp.mBSSRDF->get_type();
 	mBSSRDF = BSSRDF::create(context, type);
+    mNNSampler = std::make_unique<NeuralNetworkSampler>(context);
 }
 
 void SampledBSSRDF::initialize_shader(optix::Context ctx)
@@ -23,6 +24,7 @@ void SampledBSSRDF::initialize_shader(optix::Context ctx)
 	Shader::initialize_shader(ctx);
 	mPropertyBuffer = create_buffer<BSSRDFSamplingProperties>(context);
 	properties->sampling_method = BssrdfSamplingType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "sampling_method", BssrdfSamplingType::to_string(properties->sampling_method), "Sampling method for illum 14. Available : " + BssrdfSamplingType::get_full_string()));
+	properties->sampling_tangent_plane_technique = BssrdfSamplePointOnTangentTechnique::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "sampling_tangent_plane_technique", BssrdfSamplePointOnTangentTechnique::to_string(properties->sampling_tangent_plane_technique), "Sampling method for illum 14. Available : " + BssrdfSamplePointOnTangentTechnique::get_full_string()));
 	Logger::info << "Using enum " << BssrdfSamplingType::to_string(properties->sampling_method) << std::endl;
 	mBSSRDF = BSSRDF::create(context, ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF);
 }
@@ -45,6 +47,11 @@ void SampledBSSRDF::load_data(Mesh & object)
 		context["samples_per_pixel"]->setUint(mSamples);
 		mBSSRDF->load(object.get_main_material()->get_data().scattering_properties);
 		object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
+
+        if(properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
+        {
+            mNNSampler->load(object.get_main_material()->get_data().relative_ior,object.get_main_material()->get_data().scattering_properties);
+        }
 	}
 	mHasChanged = false;
 }
@@ -62,17 +69,34 @@ bool SampledBSSRDF::on_draw()
 	mBSSRDF->on_draw();
 
 
-	std::vector<const char*> elems{ "Camera based (Mertens et. al)", "Tangent plane (with distance)" , "Tangent plane (with probes)", "MIS axis (no probes)",  "MIS axis + probes (King et al.)" };
-	
+	std::vector<const char*> elems{ "Camera based (Mertens et. al)", "Tangent plane (with distance)" , "Tangent plane (with probes)", "MIS axis (King et al.)" };
 
 	if (ImmediateGUIDraw::Combo("Sampling technique", (int*)&properties->sampling_method, elems.data(), (int)elems.size(), (int)elems.size()))
 	{
 		mHasChanged = true;
 	}
+
+	std::vector<const char*> elems2{ "Use exponential distribution", "Use neural network" };
+
+
+	if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE || properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES)
+	{
+		if(ImmediateGUIDraw::Combo("Estimate point on tangent",  (int*)&properties->sampling_tangent_plane_technique, elems2.data(), (int)elems2.size(), (int)elems2.size()))
+        {
+            Logger::info << "Changing sampling tangent point to " << BssrdfSamplePointOnTangentTechnique::to_string(properties->sampling_tangent_plane_technique) << std::endl;
+            mHasChanged = true;
+        }
+
+        if(properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
+        {
+            mHasChanged = mNNSampler->on_draw();
+        }
+	}
+
 	mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->use_jacobian);
 	if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE)
 	{
-		mHasChanged |= ImmediateGUIDraw::DragFloat("Distance from surface", &properties->d_max, 0.1f, 0.0f, 1.0f);
+		mHasChanged |= ImmediateGUIDraw::InputFloat("Distance from surface", &properties->d_max);
 		mHasChanged |= ImGui::InputFloat("Min no ni", &properties->dot_no_ni_min);
 	}
 

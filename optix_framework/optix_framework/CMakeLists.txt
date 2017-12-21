@@ -73,6 +73,8 @@ set(HEADERS
     mesh.h
     miss_program.h
     Mouse.h
+    neural_network_sampler.h
+    neural_network_device_code.h
     obj_loader.h
     obj_scene.h
     optical_helper.h
@@ -160,6 +162,7 @@ set(SRCS
     mesh.cpp
     miss_program.cpp
     Mouse.cpp
+    neural_network_sampler.cpp
     obj_loader.cpp
     obj_scene.cpp
     parameter_parser.cpp

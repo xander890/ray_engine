@@ -78,6 +78,16 @@ __host__ __device__ __inline__ void rotate_to_normal(const optix::float3& normal
 	+ normal*v.z;
 }
 
+__host__ __device__ __inline__ optix::float3 spherical_to_cartesian(const float theta_o, const float phi_o)
+{
+	return optix::make_float3(cosf(phi_o)*sinf(theta_o), sinf(phi_o)*sinf(theta_o), cosf(theta_o));
+}
+ 
+__host__ __device__ __inline__ optix::float2 cartesian_to_spherical(const optix::float3& v)
+{
+    return optix::make_float2(acosf(v.z), atan2f(v.y, v.x));
+}
+
 
 
 __host__ __device__ __inline__ optix::float2 direction_to_uv_coord_cubemap(const optix::float3& direction, const optix::Matrix3x3& rotation = optix::Matrix3x3::identity())
