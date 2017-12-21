@@ -84,7 +84,7 @@ RT_PROGRAM void render_ref()
 			// Standard matlab Jet
 			//res = optix::make_float4(jet(S_shown), 1);
 			// Jeppe visualization
-			//			res = optix::make_float4(hsv2rgb(h, 1.0, 1.0), 1.0);
+			res = optix::make_float4(hsv2rgb(h, 1.0, 1.0), 1.0);
 		}
 		output_buffer[launch_index] = res;
 	}

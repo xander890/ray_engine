@@ -43,6 +43,7 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
     mSampleBuffer->setElementSize(sizeof(PositionSample));
     mSampleBuffer->setSize(mSamples);
 	mBSSRDF = BSSRDF::create(context, ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF);
+	mCdfBuffer = context->createBuffer(RT_BUFFER_INPUT);
 }
 
 void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)

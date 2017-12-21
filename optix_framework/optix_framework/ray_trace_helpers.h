@@ -9,7 +9,7 @@ __inline__ __device__ PerRayData_radiance get_empty()
 {
 	PerRayData_radiance r;
 	r.colorband = -1;
-	r.result = make_float3(0.0f);
+	r.result = optix::make_float3(0.0f);
 	r.flags = 0;
 	r.sampler = nullptr;
 	r.depth = 0;
@@ -31,7 +31,7 @@ __inline__ __device__ PerRayData_radiance prepare_new_pt_payload(PerRayData_radi
 {
 	PerRayData_radiance r;
 	r.colorband = to_copy.colorband;
-	r.result = make_float3(0);
+	r.result = optix::make_float3(0);
 	r.flags = to_copy.flags | RayFlags::USE_EMISSION;
 	r.sampler = to_copy.sampler;
 	r.depth = to_copy.depth + 1;

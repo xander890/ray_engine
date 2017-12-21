@@ -72,7 +72,7 @@ DOMDocument* read_from_file(const char * FullFilePath)
 	}
 	if (!doc)
 	{
-		Logger::error << "Unable to parse XML" << std::endl;
+		Logger::error << "Unable to parse XML " << FullFilePath << std::endl;
 		doc = createEmptyParameterSheet();
 	}
 

@@ -23,8 +23,7 @@ set(HEADERS
     bssrdf_host.h
     bssrdf_properties.h
     bssrdf_visualizer.h
-    buffer_triangle_mesh.h
-    camera.h
+        camera.h
     camera_host.h
     chull.h
     colormap.h
