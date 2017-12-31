@@ -93,14 +93,17 @@ __device__ __forceinline__ float3 photon_beam_diffusion_bssrdf(const BSSRDFGeome
     const ScatteringMaterialProperties& properties = material.scattering_properties;
 	optix::float4 C = make_float4(properties.C_phi_norm, properties.C_phi, properties.C_E, properties.A);
 	optix::float3 res;
-    float3 w12; 
-	float R12;
+	optix::float3 w12, w21;
+	float R12, R21;
+	bool include_fresnel_out = false;
 	refract(geometry.wi, geometry.ni, recip_ior, w12, R12);
+	refract(geometry.wo, geometry.no, recip_ior, w21, R21);
+	float F = include_fresnel_out? (1 - R21) : 1.0f;
 
 	for (int k = 0; k < 3; k++)
 	{
 		optix::float4 props = optix::make_float4(optix::get_channel(k, properties.scattering), optix::get_channel(k, properties.absorption), optix::get_channel(k, properties.meancosine), 1.0f);	
 		optix::get_channel(k, res) = pbd_bssrdf(geometry.xi, geometry.ni, w12, geometry.xo, geometry.no, props, C);
 	}
-	return res;
+	return res * (1 - R12) * F;
 }

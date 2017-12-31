@@ -129,7 +129,8 @@ RT_PROGRAM void shade()
                  geometry.xo = xo;
                  geometry.no = no;
                  geometry.wo = wo;
-                 accumulate += T12*sample.L*bssrdf(geometry, recip_ior, material) / exp_term;
+                 // INCLUDE _FALSE
+                 accumulate += sample.L*bssrdf(geometry, recip_ior, material) / exp_term;
             }
         }
 #endif

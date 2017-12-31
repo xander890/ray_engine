@@ -159,7 +159,13 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
         optix::get_channel(i, S) = interpolate_bssrdf_nearest<5>(values,i);
     }
     optix_print("S: %e %e %e\n", S.x, S.y, S.z);
-    return S;
+
+    optix::float3 w21;
+    float R21;
+    bool include_fresnel_out = false;
+    refract(geometry.wo, geometry.no, recip_ior, w21, R21);
+    float F = include_fresnel_out?  1.0f : 1.0f/(1.0f - R21);
+    return S * F;
 }
 
 

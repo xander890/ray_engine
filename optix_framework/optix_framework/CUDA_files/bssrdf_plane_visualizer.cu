@@ -47,7 +47,8 @@ RT_PROGRAM void render()
 
     MaterialDataCommon mat;
     mat.scattering_properties = planar_bssrdf_material_params[0];
-    
+
+	// FLAGS INCLUDE NOT
 	float3 S = T12 * fresnel_integral * bssrdf(geometry, 1.0f / reference_bssrdf_rel_ior, mat);
 	float S_shown = optix::get_channel(channel_to_show, S) * scale_multiplier;
 

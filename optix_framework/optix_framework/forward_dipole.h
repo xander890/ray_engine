@@ -238,10 +238,12 @@ namespace optix
 __device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
-    float3 w12, w21; 
-	float R12, R21;
-	refract(geometry.wi, geometry.ni, recip_ior, w12, R12);
-	refract(geometry.wo, geometry.no, recip_ior, w21, R21);
+    float3 w12, w21;
+    float R12, R21;
+    bool include_fresnel_out = false;
+    float F = include_fresnel_out? (1 - R21) : 1.0f;
+    refract(geometry.wi, geometry.ni, recip_ior, w12, R12);
+    refract(geometry.wo, geometry.no, recip_ior, w21, R21);
     w21 = -w21;
 
 	TangentPlaneMode tangent = TangentPlaneMode::EFrisvadEtAl;
@@ -289,5 +291,5 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & g
 		}
 		optix::get_channel(k, res) = S / samples;
 	}
-	return res;
+	return res * (1 - R12) * F;
 }

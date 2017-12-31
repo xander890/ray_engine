@@ -29,5 +29,13 @@ __device__ float3 standard_dipole_bssrdf(const BSSRDFGeometry & geometry, const 
 	float3 tr_v = properties.transport*d_v;
 	float3 S_v = corrected_mean_free*(1.0f + tr_v) / (d_v_sqr*d_v);
 	S_v *= expf(-tr_v);
-	return (S_r + S_v) * properties.reducedAlbedo / (4.0f * M_PIf * M_PIf);
+
+	optix::float3 _w12, w21;
+	float R12, R21;
+	bool include_fresnel_out = false;
+	refract(geometry.wi, geometry.ni, recip_ior, _w12, R12);
+	refract(geometry.wo, geometry.no, recip_ior, w21, R21);
+	float F = include_fresnel_out? (1 - R21) : 1.0f;
+
+	return (S_r + S_v) * properties.reducedAlbedo / (4.0f * M_PIf * M_PIf) * (1 - R12) * F;
 }

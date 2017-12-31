@@ -371,10 +371,10 @@ __device__ __forceinline__ void _shade()
 		// compute contribution if sample is non-zero
 		if (dot(L_i, L_i) > 0.0f)
 		{
-            float3 S_d;
+            float3 S;
             if(bssrdf_sampling_properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
             {
-                 S_d = make_float3(1);
+                 S = make_float3(1);
             }
             else
             {
@@ -385,11 +385,12 @@ __device__ __forceinline__ void _shade()
                  geometry.xo = xo;
                  geometry.no = no;
                  geometry.wo = wo;
-                 S_d = bssrdf(geometry, recip_ior, material);
+                 S = bssrdf(geometry, recip_ior, material);
             }
 
-			L_d += L_i * S_d * T12 * integration_factor;
-			optix_print("Sd %e %e %e Ld %f %f %f Li %f %f %f T12 %f int %f\n",  S_d.x, S_d.y, S_d.z, L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
+			// INCLUDE FALSE
+			L_d += L_i * S * integration_factor;
+			optix_print("Sd %e %e %e Ld %f %f %f Li %f %f %f T12 %f int %f\n",  S.x, S.y, S.z, L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
 		}
 #endif
 	}

@@ -56,20 +56,11 @@ RT_PROGRAM void reference_bssrdf_camera()
 	} 
 
 	const float n1_over_n2 = 1.0f / n2_over_n1;
-	float R12;
-	optix::float3 w12; 
-	refract(geometry.wi, geometry.ni, n1_over_n2, w12, R12); 
-	float T12 = 1.0f - R12; 
-	 
-	float R21;
-	optix::float3 w21;
-	refract(geometry.wo, geometry.no, n1_over_n2, w21, R21); 
-	float T21 = 1.0f - R21;  
-	w21 = -w21;
 
     MaterialDataCommon mat;
     mat.scattering_properties = planar_bssrdf_material_params[0];
-	optix::float3 S = T12 * bssrdf(geometry, n1_over_n2, mat) * T21;
+	// FLAGS INCLUDE YES
+	optix::float3 S = bssrdf(geometry, n1_over_n2, mat);
 	planar_resulting_flux_intermediate[launch_index] = S.x;
 } 
       

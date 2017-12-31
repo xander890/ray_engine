@@ -28,11 +28,13 @@ __device__ __forceinline__ float3 quantized_diffusion_bssrdf(const BSSRDFGeometr
 	optix::float4 C = optix::make_float4(properties.C_phi_norm, properties.C_phi, properties.C_E, properties.A);
 	float dist = optix::length(geometry.xo - geometry.xi);
 
-    float3 w12; 
-	float R12;
-	refract(geometry.wi, geometry.ni, recip_ior, w12, R12);	
-
+	optix::float3 w12, w21;
+	float R12, R21;
+	bool include_fresnel_out = false;
+	refract(geometry.wi, geometry.ni, recip_ior, w12, R12);
+	refract(geometry.wo, geometry.no, recip_ior, w21, R21);
 	optix::float3 res;
+	float F = include_fresnel_out? (1 - R21) : 1.0f;
 
 	optix_print("QD : %d %f %d\n", qd_properties->use_precomputed_qd, qd_properties->max_dist_bssrdf, qd_properties->precomputed_bssrdf_size);
 	if (qd_properties->use_precomputed_qd == 1)
@@ -55,6 +57,6 @@ __device__ __forceinline__ float3 quantized_diffusion_bssrdf(const BSSRDFGeometr
 		optix::float4 props = optix::make_float4(optix::get_channel(k, properties.scattering), optix::get_channel(k, properties.absorption), optix::get_channel(k, properties.meancosine), 1.0f);
 		optix::get_channel(k, res) += single_approx(geometry.xi, geometry.ni, w12, geometry.xo, geometry.no, props);
 	}
-	return res;
+	return res * (1 - R12) * F;
 
 }
