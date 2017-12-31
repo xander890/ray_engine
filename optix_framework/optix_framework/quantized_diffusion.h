@@ -9,7 +9,7 @@ using optix::float3;
 rtDeclareVariable(BufPtr1D<QuantizedDiffusionProperties>, qd_properties, , );
 
 __device__ __forceinline__ float single_approx(optix::float3 xi, optix::float3 ni, optix::float3 w12, optix::float3 xo, optix::float3 no, optix::float4 props) {
-  float sigma_s = props.x; float sigma_a = props.y; float g = props.z; float eta = props.w;
+  float sigma_s = props.x; float sigma_a = props.y; float g = props.z;
   float sigma_t = sigma_s + sigma_a;
   float sigma_s_p = sigma_s*(1.0f - g);
   float sigma_t_p = sigma_s_p + sigma_a;
@@ -22,7 +22,7 @@ __device__ __forceinline__ float single_approx(optix::float3 xi, optix::float3 n
   return sigma_s_p*d1*phase_HG(dot(w12, w21), g)*exp(-sigma_t_p*d1 - sigma_t*d2)/(d2*d2);
 }
 
-__device__ __forceinline__ float3 quantized_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material)
+__device__ __forceinline__ float3 quantized_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
 	optix::float4 C = optix::make_float4(properties.C_phi_norm, properties.C_phi, properties.C_E, properties.A);
@@ -30,7 +30,8 @@ __device__ __forceinline__ float3 quantized_diffusion_bssrdf(const BSSRDFGeometr
 
 	optix::float3 w12, w21;
 	float R12, R21;
-	bool include_fresnel_out = false;
+	bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
+
 	refract(geometry.wi, geometry.ni, recip_ior, w12, R12);
 	refract(geometry.wo, geometry.no, recip_ior, w21, R21);
 	optix::float3 res;

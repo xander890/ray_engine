@@ -3,11 +3,13 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
+#include "host_device_common.h"
 #include <device_common_data.h>
-#include <photon_trace_reference_bssrdf.h>
 #include <md5.h>
 #include <material.h>
+#include "empirical_bssrdf_utils.h"
 #include <bssrdf.h>
+#include "../photon_trace_reference_bssrdf.h"
 using namespace optix;
  
 rtDeclareVariable(BufPtr2D<float>, planar_resulting_flux, , );
@@ -59,8 +61,8 @@ RT_PROGRAM void reference_bssrdf_camera()
 
     MaterialDataCommon mat;
     mat.scattering_properties = planar_bssrdf_material_params[0];
-	// FLAGS INCLUDE YES
-	optix::float3 S = bssrdf(geometry, n1_over_n2, mat);
+    TEASampler sampler(launch_dim.x*launch_index.y + launch_index.x, frame);
+    optix::float3 S = bssrdf(geometry, n1_over_n2, mat, BSSRDFFlags::NO_FLAGS, &sampler);
 	planar_resulting_flux_intermediate[launch_index] = S.x;
 } 
       

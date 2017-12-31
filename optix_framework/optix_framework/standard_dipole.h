@@ -1,11 +1,13 @@
 #pragma once
 #include <device_common_data.h>
 #include <scattering_properties.h>
+#include <bssrdf_properties.h>
+#include "material.h"
 
 using optix::float3;
 
 __device__ float3 standard_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
-	const MaterialDataCommon& material)
+	const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
     float dist = optix::length(geometry.xo - geometry.xi);
@@ -32,7 +34,8 @@ __device__ float3 standard_dipole_bssrdf(const BSSRDFGeometry & geometry, const 
 
 	optix::float3 _w12, w21;
 	float R12, R21;
-	bool include_fresnel_out = false;
+	bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
+
 	refract(geometry.wi, geometry.ni, recip_ior, _w12, R12);
 	refract(geometry.wo, geometry.no, recip_ior, w21, R21);
 	float F = include_fresnel_out? (1 - R21) : 1.0f;

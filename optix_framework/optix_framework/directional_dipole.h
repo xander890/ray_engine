@@ -1,7 +1,10 @@
 #pragma once
 #include <device_common_data.h>
 #include <scattering_properties.h>
-  
+
+#include <bssrdf_properties.h>
+#include "material.h"
+
 __forceinline__  __device__ optix::float3 S_infinite(const optix::float3& _r_sqr, const float x_dot_w12, const float no_dot_w12, const float x_dot_no,
                              const ScatteringMaterialProperties& properties)
 {
@@ -32,10 +35,11 @@ __forceinline__ __device__ optix::float3 S_infinite_vec(const optix::float3& _r_
 
 
 __forceinline__ __device__ optix::float3 directional_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
-	const MaterialDataCommon& material)
+	const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
 	optix_print("BSSRDF: directional\n");
-	bool include_fresnel_out = false;
+	bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
+
 	const ScatteringMaterialProperties& properties = material.scattering_properties;
 	optix::float3 _w12, w21;
 	float R12, R21;

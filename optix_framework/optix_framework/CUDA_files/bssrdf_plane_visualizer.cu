@@ -37,10 +37,6 @@ RT_PROGRAM void render()
 	const float theta_i_rad = reference_bssrdf_theta_i;
 	geometry.wi = normalize(optix::make_float3(sinf(theta_i_rad), 0, cosf(theta_i_rad)));
 
-	optix::float3 w12;
-	float R12;  
-	refract(geometry.wi, geometry.ni, 1.0f / reference_bssrdf_rel_ior, w12, R12);
-	float T12 = 1.0f - R12;
 	float fresnel_integral = planar_bssrdf_material_params->C_phi * 4 * M_PIf;
 	 
 	optix_assert(channel_to_show >= 0 && channel_to_show < 3);
@@ -48,8 +44,8 @@ RT_PROGRAM void render()
     MaterialDataCommon mat;
     mat.scattering_properties = planar_bssrdf_material_params[0];
 
-	// FLAGS INCLUDE NOT
-	float3 S = T12 * fresnel_integral * bssrdf(geometry, 1.0f / reference_bssrdf_rel_ior, mat);
+    TEASampler sampler(launch_dim.x*launch_index.y + launch_index.x, frame);
+	float3 S = fresnel_integral * bssrdf(geometry, 1.0f / reference_bssrdf_rel_ior, mat, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, &sampler);
 	float S_shown = optix::get_channel(channel_to_show, S) * scale_multiplier;
 
 	float t = optix::clamp((logf(S_shown + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);

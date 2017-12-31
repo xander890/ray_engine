@@ -9,7 +9,7 @@ using optix::float3;
 
 // Implementation of bssrdf approximation
 __forceinline__ __device__ float3 approximate_directional_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
-	const MaterialDataCommon& material)
+	const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
     float3 w12, w21; 
 	float R12, R21;

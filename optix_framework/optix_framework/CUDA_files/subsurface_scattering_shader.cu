@@ -103,13 +103,6 @@ RT_PROGRAM void shade()
 
         // compute direction of the transmitted light
         const float3& wi = sample.dir;
-        float3 w12;
-		float R12;
-
-		refract(wi, n, recip_ior, w12, R12);
-
-		float T12 = 1.0f - R12;
-		float3 w21 = -wt;
 
 #ifdef TEST_SAMPLING
 		accumulate += make_float3(TEST_SAMPLING_W)*sample.L;
@@ -129,8 +122,7 @@ RT_PROGRAM void shade()
                  geometry.xo = xo;
                  geometry.no = no;
                  geometry.wo = wo;
-                 // INCLUDE _FALSE
-                 accumulate += sample.L*bssrdf(geometry, recip_ior, material) / exp_term;
+                 accumulate += sample.L*bssrdf(geometry, recip_ior, material, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, prd_radiance.sampler) / exp_term;
             }
         }
 #endif

@@ -385,10 +385,9 @@ __device__ __forceinline__ void _shade()
                  geometry.xo = xo;
                  geometry.no = no;
                  geometry.wo = wo;
-                 S = bssrdf(geometry, recip_ior, material);
+                 S = bssrdf(geometry, recip_ior, material, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, sampler);
             }
 
-			// INCLUDE FALSE
 			L_d += L_i * S * integration_factor;
 			optix_print("Sd %e %e %e Ld %f %f %f Li %f %f %f T12 %f int %f\n",  S.x, S.y, S.z, L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
 		}

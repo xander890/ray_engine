@@ -2,15 +2,17 @@
 #include <device_common_data.h>
 #include <scattering_properties.h>
 #include <math_helpers.h>
-
+#include <bssrdf_properties.h>
+#include "material.h"
 using optix::float3;
 
 rtDeclareVariable(ApproximateBSSRDFProperties, approx_std_bssrdf_props, , );
 
 __device__ float3 approximate_standard_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
-	const MaterialDataCommon& material)
+	const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
-	bool include_fresnel_out = false;
+	bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
+
     float r = optix::length(geometry.xo - geometry.xi);
 	float3 A = approx_std_bssrdf_props.approx_property_A;
 	float3 s = approx_std_bssrdf_props.approx_property_s;

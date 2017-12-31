@@ -14,11 +14,12 @@
 //#define INCLUDE_PROGRAMS_ONLY
 #include <forward_dipole.h>
 
+
 using optix::float3;
 rtDeclareVariable(ScatteringDipole::Type, selected_bssrdf, , );
 
 __forceinline__ __device__ float3 bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
-	const MaterialDataCommon& material)
+	const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {   
 	switch (selected_bssrdf)
 	{

@@ -9,7 +9,7 @@
 #include "optix_helpers.h"
 
 #ifdef INCLUDE_PROGRAMS_ONLY
-rtDeclareVariable(rtCallableProgramId<optix::float3(const BSSRDFGeometry, const float, const MaterialDataCommon)>, empirical_bssrdf, , );
+rtDeclareVariable(rtCallableProgramId<optix::float3(const BSSRDFGeometry, const float, const MaterialDataCommon, unsigned int, TEASampler *)>, empirical_bssrdf, , );
 #else
 
 rtDeclareVariable(EmpiricalDataBuffer, empirical_buffer, , );
@@ -107,7 +107,7 @@ __device__ __forceinline__ float interpolate_bssrdf(float values[N], const rtBuf
 }*/
 
 __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geometry, const float recip_ior,
-                                                        const MaterialDataCommon material)
+                                                        const MaterialDataCommon material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
     optix_print("EMPIRICAL\n");
 
@@ -162,7 +162,8 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
 
     optix::float3 w21;
     float R21;
-    bool include_fresnel_out = false;
+    bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
+
     refract(geometry.wo, geometry.no, recip_ior, w21, R21);
     float F = include_fresnel_out?  1.0f : 1.0f/(1.0f - R21);
     return S * F;

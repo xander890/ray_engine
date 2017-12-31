@@ -25,6 +25,19 @@
 							ENUMITEM_VALUE(EMPIRICAL_BSSRDF,7) 
 #include "improved_enum.def"
 
+
+namespace BSSRDFFlags
+{
+	enum Flags
+	{
+		NO_FLAGS                 = 0x00,
+		EXCLUDE_OUTGOING_FRESNEL = 0x01 // Add this glass if the outgoing fresnel term must not be included. If the bssrdf does not
+		// include a fresnel term, the term is simply divided on the result.
+		// This allows importance sampling refraction saving on divisions/ catastrophic cancellations.
+	};
+}
+
+
 #define BSSRDF_SHADERS_SHOW_ALL 0
 #define BSSRDF_SHADERS_SHOW_REFRACTION 1
 #define BSSRDF_SHADERS_SHOW_REFLECTION 2

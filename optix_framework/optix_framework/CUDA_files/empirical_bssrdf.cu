@@ -1,7 +1,7 @@
 #include "empirical_bssrdf_device.h"
 
 RT_CALLABLE_PROGRAM optix::float3 eval_empirical_bssrdf(const BSSRDFGeometry geometry, const float recip_ior,
-                                                            const MaterialDataCommon material)
+                                                            const MaterialDataCommon material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
     return eval_empbssrdf(geometry, recip_ior, material);
 }

@@ -17,6 +17,7 @@ rtDeclareVariable(rtCallableProgramId<Float(const ForwardDipoleMaterial, const F
 #else
 #include "forward_dipole_sampling.h"
 #include "optix_helpers.h"
+#include "sampler.h"
 
 __device__ __host__ __forceinline__ Float evalMonopole(
 	const ForwardDipoleMaterial material,
@@ -129,7 +130,6 @@ __device__ __host__ Float evalDipole(
 													  //}
 
 	optix_print("Start.\n");
-    optix_print("LLL %f %f\n", optix::length(n0), optix::length(nL));
 	Float3 R_virt;
 	Float3 u0_virt;
 	if (!getVirtualDipoleSource(material.sigma_s, material.sigma_a, material.mu, material.m_eta, n0, u0, nL, uL, R, length,
@@ -235,18 +235,17 @@ namespace optix
     __device__ __forceinline__ optix::float3 make_float3(const optix::float3 & c) { return c; }
 
 }
-__device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material)
+__device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
     float3 w12, w21;
     float R12, R21;
-    bool include_fresnel_out = false;
-    float F = include_fresnel_out? (1 - R21) : 1.0f;
+    bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
     refract(geometry.wi, geometry.ni, recip_ior, w12, R12);
     refract(geometry.wo, geometry.no, recip_ior, w21, R21);
+    float F = include_fresnel_out? (1 - R21) : 1.0f;
     w21 = -w21;
 
-	TangentPlaneMode tangent = TangentPlaneMode::EFrisvadEtAl;
 	Float3 R = MakeFloat3(geometry.xo - geometry.xi);
 	optix::float3 res;
 
@@ -279,7 +278,6 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & g
 		props.useEffectiveBRDF = false;
 		props.zvMode = ZvMode::EFrisvadEtAlZv;
 		float S = 0.0f;
-        optix_print("LLLA %f %f\n", optix::length(n_out), optix::length(n_in));
 		for (unsigned int i = 0; i < samples; i++)
 		{
 			Float s = 0.0f;
