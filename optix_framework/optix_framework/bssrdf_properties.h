@@ -21,7 +21,8 @@
 							ENUMITEM_VALUE(PHOTON_BEAM_DIFFUSION_BSSRDF,3) \
 							ENUMITEM_VALUE(APPROX_STANDARD_DIPOLE_BSSRDF,4) \
 							ENUMITEM_VALUE(APPROX_DIRECTIONAL_DIPOLE_BSSRDF,5) \
-							ENUMITEM_VALUE(FORWARD_SCATTERING_DIPOLE_BSSRDF,6) 
+							ENUMITEM_VALUE(FORWARD_SCATTERING_DIPOLE_BSSRDF,6) \
+							ENUMITEM_VALUE(EMPIRICAL_BSSRDF,7) 
 #include "improved_enum.def"
 
 #define BSSRDF_SHADERS_SHOW_ALL 0
@@ -43,6 +44,16 @@ struct QuantizedDiffusionProperties
 	float max_dist_bssrdf       DEFAULT(10.0f);
 	int precomputed_bssrdf_size DEFAULT(1024);
 	int use_precomputed_qd		DEFAULT(1);
+};
+
+struct BSSRDFGeometry
+{
+    optix::float3 xi;
+    optix::float3 wi;
+    optix::float3 ni;
+    optix::float3 xo;
+    optix::float3 wo;
+    optix::float3 no;
 };
 
 struct BSSRDFSamplingProperties

@@ -26,7 +26,7 @@ __host__ __device__ __forceinline__ bool catastrophicCancellation(double a, doub
 # define CancellationCheck(a, b) ((void) 0)
 #endif
 
-__device__ __host__ __forceinline__ bool isfinite(Float3 & v)
+__device__ __host__ __forceinline__ bool isfinited(Float3 & v)
 {
     Float3 vv = v;
 	return isfinite(vv.x) && isfinite(vv.y) && isfinite(vv.z);
@@ -290,12 +290,14 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	Float3 &u0_virt, Float3 &R_virt,
 	Float3 *optional_n0_effective = nullptr) {
 	Float3 n0_effective;
+    optix_print("L0 %f\n ", optix::length(n0));
 	switch (tangentMode) {
 	case EFrisvadEtAl:
 		/* Use the modified tangent plane of the directional dipole model
 		* of Frisvad et al */
 		if (optix::length(R) == 0) {
 			n0_effective = n0;
+            optix_print("L0\n");
 		}
 		else {
 			if (optix::length(cross(n0, R)) == 0)
@@ -326,7 +328,7 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	default:
 		Log(EError, "Unknown tangentMode: %d", tangentMode);
 	}
-	if (!isfinite(n0_effective)) {
+	if (!isfinited(n0_effective)) {
 		Log(EWarn, "Non-finite n0_effective: %f %f %f", n0_effective.x, n0_effective.y, n0_effective.z);
 		return false;
 	}
@@ -334,6 +336,7 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	if (rejectInternalIncoming && dot(n0_effective, u0) > 0)
 		return false;
 
+	optix_print("%f\n", optix::length(n0_effective) - 1);
 	FSAssert(abs(optix::length(n0_effective) - 1) < Epsilon);
 
 	Float zv;
@@ -407,7 +410,7 @@ __device__ __host__ __forceinline__ bool getTentativeIndexMatchedVirtualSourceDi
 		return false; // Won't be able to evaluate bssrdf transport anyway!
 	}
 	else {
-		FSAssert(isfinite(R_virt));
+		FSAssert(isfinited(R_virt));
 	}
 
 

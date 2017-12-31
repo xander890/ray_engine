@@ -31,27 +31,30 @@ __forceinline__ __device__ optix::float3 S_infinite_vec(const optix::float3& _r_
 }
 
 
-__forceinline__ __device__ optix::float3 directional_dipole_bssrdf(const optix::float3& _xi, const optix::float3& _ni, const optix::float3& _w12,
-                         const optix::float3& _xo, const optix::float3& _no,
-                         const ScatteringMaterialProperties& properties)
+__forceinline__ __device__ optix::float3 directional_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
+	const MaterialDataCommon& material)
 {
 	optix_print("BSSRDF: directional\n");
+    const ScatteringMaterialProperties& properties = material.scattering_properties;
+    float3 _w12; 
+	float R12;
+	refract(geometry.wi, geometry.ni, recip_ior, _w12, R12);
 
-	optix::float3 _x = _xo - _xi;
+	optix::float3 _x =  geometry.xo - geometry.xi;
 	optix::float3 _r_sqr = make_float3(dot(_x, _x));
 
 	// distance to the real source
 	optix::float3 _dr_sqr = _r_sqr;
 	float dot_x_w12 = dot(_x, _w12);
 	optix::float3 cos_beta = -sqrt(make_float3(_r_sqr.x - dot_x_w12 * dot_x_w12) / (_r_sqr + properties.de*properties.de));
-	float mu0 = -dot(_no, _w12);
+	float mu0 = -dot(geometry.no, _w12);
 	float edge = mu0 > 0.0f ? 1.0f : 0.0f;
 	optix::float3 _D_prime = mu0 * properties.D * edge + properties.one_over_three_ext * (1.0f - edge);
 	_dr_sqr += _D_prime * (_D_prime - 2*properties.de * cos_beta * edge);
 
 	// direction of the virtual source
-	optix::float3 _t = normalize(cross(_ni, _x));
-	optix::float3 _nistar = _r_sqr.x < 1.0e-12f ? _ni : cross(normalize(_x), _t);
+	optix::float3 _t = normalize(cross(geometry.ni, _x));
+	optix::float3 _nistar = _r_sqr.x < 1.0e-12f ? geometry.ni : cross(normalize(_x), _t);
 	optix::float3 _wv = _w12 - (2.0f * dot(_w12, _nistar)) * _nistar;
 
 	// distance to the virtual source
@@ -62,11 +65,11 @@ __forceinline__ __device__ optix::float3 directional_dipole_bssrdf(const optix::
 
 	// cosines of the virtual source
 	optix::float3 _x_dot_wv = make_float3(dot(_xoxv_r, _wv), dot(_xoxv_g, _wv), dot(_xoxv_b, _wv));
-	optix::float3 _x_dot_no = make_float3(dot(_xoxv_r, _no), dot(_xoxv_g, _no), dot(_xoxv_b, _no));
+	optix::float3 _x_dot_no = make_float3(dot(_xoxv_r, geometry.no), dot(_xoxv_g, geometry.no), dot(_xoxv_b, geometry.no));
 
 	// compute source contributions and return BSSRDF result
-	optix::float3 _Sr = S_infinite(_dr_sqr, dot_x_w12, -mu0, dot(_x, _no), properties);
-	optix::float3 _Sv = S_infinite_vec(_dv_sqr, _x_dot_wv, dot(_no, _wv), _x_dot_no, properties);
+	optix::float3 _Sr = S_infinite(_dr_sqr, dot_x_w12, -mu0, dot(_x, geometry.no), properties);
+	optix::float3 _Sv = S_infinite_vec(_dv_sqr, _x_dot_wv, dot(geometry.no, _wv), _x_dot_no, properties);
 	optix::float3 _Sd = _Sr - _Sv;
 	return max(_Sd, make_float3(0.0f)) * properties.global_coeff;
 }

@@ -88,17 +88,19 @@ __device__ __forceinline__ float pbd_bssrdf(optix::float3 xi, optix::float3 ni, 
 	return max(S_d, 0.0) / N;
 }
 
-__device__ __forceinline__ float3 photon_beam_diffusion_bssrdf(const float3& xi, const float3& ni, const float3& w12,
-	const float3& xo, const float3& no,
-	const ScatteringMaterialProperties& properties) 
+__device__ __forceinline__ float3 photon_beam_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material)
 {
+    const ScatteringMaterialProperties& properties = material.scattering_properties;
 	optix::float4 C = make_float4(properties.C_phi_norm, properties.C_phi, properties.C_E, properties.A);
 	optix::float3 res;
+    float3 w12; 
+	float R12;
+	refract(geometry.wi, geometry.ni, recip_ior, w12, R12);
 
 	for (int k = 0; k < 3; k++)
 	{
 		optix::float4 props = optix::make_float4(optix::get_channel(k, properties.scattering), optix::get_channel(k, properties.absorption), optix::get_channel(k, properties.meancosine), 1.0f);	
-		optix::get_channel(k, res) = pbd_bssrdf(xi, ni, w12, xo, no, props, C);
+		optix::get_channel(k, res) = pbd_bssrdf(geometry.xi, geometry.ni, w12, geometry.xo, geometry.no, props, C);
 	}
 	return res;
 }

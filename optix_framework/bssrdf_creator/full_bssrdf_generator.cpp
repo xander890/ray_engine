@@ -103,7 +103,7 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
 {
 	m_context->setPrintEnabled(false);
-	//test_forward_dipole();
+//	test_forward_dipole();
 	m_context->setPrintBufferSize(200);
 	m_context->setPrintLaunchIndex(0, 0, 0);
 	Folders::init();
@@ -547,13 +547,13 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 			mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
 			Logger::info <<  std::endl;
 			
-			ParameterState original_state = ParameterState({0,0,0,0,0,0});
+			std::vector<size_t> original_state;
 			if (!mParametersOriginal.get_index(theta_i, r, theta_s, albedo, g, eta, original_state))
 				Logger::error << "Index mismatch" << std::endl;
 
-			Logger::info << "Index: " << mState.tostring() << "(simulation) "<< original_state.tostring() << "(original) Parameters: eta " << eta << " g " << g << " albedo " << albedo << std::endl;
+			Logger::info << "Index: " << mState.tostring() << "(simulation) "<< ParameterState(original_state).tostring() << "(original) Parameters: eta " << eta << " g " << g << " albedo " << albedo << std::endl;
 			std::cout << "Average: " << std::scientific << average(mCurrentHemisphereData, mExporter->get_hemisphere_size()) << std::defaultfloat << std::endl;
-			mExporter->set_hemisphere(mCurrentHemisphereData, original_state.mData);
+			mExporter->set_hemisphere(mCurrentHemisphereData, original_state);
 			mState = mParametersSimulation.next(mState);
 			float extinction = 1.0f;
 

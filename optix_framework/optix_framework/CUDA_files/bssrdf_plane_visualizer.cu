@@ -26,25 +26,29 @@ RT_PROGRAM void render()
 	float2 ip = uv * 2 - make_float2(1); // [-1, 1], this is xd, yd
 
 	ip *= -2;
-	const optix::float3 xi = optix::make_float3(0, 0, 0);
-	const optix::float3 ni = optix::make_float3(0, 0, 1);
-	const optix::float3 xo = optix::make_float3(ip.x, ip.y, 0);
-	const optix::float3 no = optix::make_float3(0, 0, 1);
 
-	const optix::float3 w21 = no;
+    BSSRDFGeometry geometry;
+    geometry.xi = optix::make_float3(0, 0, 0);
+    geometry.ni = optix::make_float3(0, 0, 1);
+    geometry.xo = optix::make_float3(ip.x, ip.y, 0);
+    geometry.no = optix::make_float3(0, 0, 1);
+    geometry.wo = geometry.no;
 
 	const float theta_i_rad = reference_bssrdf_theta_i;
-	const optix::float3 wi = normalize(optix::make_float3(sinf(theta_i_rad), 0, cosf(theta_i_rad)));
+	geometry.wi = normalize(optix::make_float3(sinf(theta_i_rad), 0, cosf(theta_i_rad)));
 
 	optix::float3 w12;
 	float R12;  
-	refract(wi, ni, 1.0f / reference_bssrdf_rel_ior, w12, R12);
+	refract(geometry.wi, geometry.ni, 1.0f / reference_bssrdf_rel_ior, w12, R12);
 	float T12 = 1.0f - R12;
 	float fresnel_integral = planar_bssrdf_material_params->C_phi * 4 * M_PIf;
 	 
 	optix_assert(channel_to_show >= 0 && channel_to_show < 3);
 
-	float3 S = T12 * fresnel_integral * bssrdf(xi, ni, w12, xo, no, w12, *planar_bssrdf_material_params);
+    MaterialDataCommon mat;
+    mat.scattering_properties = planar_bssrdf_material_params[0];
+    
+	float3 S = T12 * fresnel_integral * bssrdf(geometry, 1.0f / reference_bssrdf_rel_ior, mat);
 	float S_shown = optix::get_channel(channel_to_show, S) * scale_multiplier;
 
 	float t = optix::clamp((logf(S_shown + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);

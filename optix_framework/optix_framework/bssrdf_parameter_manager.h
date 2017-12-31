@@ -63,6 +63,7 @@ class BSSRDFParameterManager
 {
 public:
 	BSSRDFParameterManager() : parameters(original_parameters) {}
+	BSSRDFParameterManager(std::map<size_t, std::vector<float>> p) : parameters(p) {}
 	std::map<size_t, std::vector<float>> parameters;
 
 	static std::map<size_t, std::string> parameter_names;
@@ -97,15 +98,26 @@ public:
 		return true;
 	}
 
-	bool get_index(const float theta_i, const float r, const float theta_s, const float albedo, const float g, const float eta, ParameterState & state)
+	bool get_index(const float theta_i, const float r, const float theta_s, const float albedo, const float g, const float eta, std::vector<size_t> & state)
 	{
 		bool success = true;
-		success &= get_single_index(theta_i, theta_i_index, state.mData[theta_i_index]);
-		success &= get_single_index(r, r_index, state.mData[r_index]);
-		success &= get_single_index(theta_s, theta_s_index, state.mData[theta_s_index]);
-		success &= get_single_index(albedo, albedo_index, state.mData[albedo_index]);
-		success &= get_single_index(g, g_index, state.mData[g_index]);
-		success &= get_single_index(eta, eta_index, state.mData[eta_index]);
+		state.resize(6);
+		success &= get_single_index(theta_i, theta_i_index, state[theta_i_index]);
+		success &= get_single_index(r, r_index, state[r_index]);
+		success &= get_single_index(theta_s, theta_s_index, state[theta_s_index]);
+		success &= get_single_index(albedo, albedo_index, state[albedo_index]);
+		success &= get_single_index(g, g_index, state[g_index]);
+		success &= get_single_index(eta, eta_index, state[eta_index]);
+		return success;
+	}
+
+	bool get_material_index(const float albedo, const float g, const float eta, std::vector<size_t> & state)
+	{
+		bool success = true;
+		state.resize(3);
+		success &= get_single_index(albedo, albedo_index, state[albedo_index]);
+		success &= get_single_index(g, g_index, state[g_index]);
+		success &= get_single_index(eta, eta_index, state[eta_index]);
 		return success;
 	}
 
@@ -146,7 +158,7 @@ public:
 		return r;
 	}
 
-	std::vector<size_t> BSSRDFParameterManager::get_dimensions() const
+	std::vector<size_t> get_dimensions() const
 	{
 		std::vector<size_t> dims(parameters.size());
 		for (int i = 0; i < dims.size(); i++)

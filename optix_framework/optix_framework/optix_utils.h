@@ -53,6 +53,16 @@ template<typename T> void initialize_buffer(optix::Buffer & buf, std::vector<T>&
     buf->unmap();
 }
 
+template<typename T> void fill_buffer(optix::Buffer & buf, const T & element)
+{
+	size_t size;
+	buf->getSize(size);
+	T * ar = reinterpret_cast<T*>(buf->map());
+	for(int i = 0; i < size; i++)
+		ar[i] = element;
+	buf->unmap();
+}
+
 template<typename T> void initialize_buffer(optix::Buffer & buf, std::initializer_list<T> data)
 {
     buf->setSize(data.size());

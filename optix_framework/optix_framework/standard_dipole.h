@@ -4,8 +4,11 @@
 
 using optix::float3;
 
-__device__ float3 standard_dipole_bssrdf(float dist, const ScatteringMaterialProperties& properties)
+__device__ float3 standard_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
+	const MaterialDataCommon& material)
 {
+    const ScatteringMaterialProperties& properties = material.scattering_properties;
+    float dist = optix::length(geometry.xo - geometry.xi);
 	optix_print("BSSRDF: standard\n");
 	float3 real_source = properties.three_D*properties.three_D;
 	float3 extrapolation = 4.0f*properties.A*properties.D;

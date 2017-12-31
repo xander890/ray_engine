@@ -76,7 +76,7 @@ void BSSRDFLoader::get_dimensions(std::vector<size_t>& dimensions)
 
 size_t BSSRDFLoader::get_material_slice_size()
 {
-	return get_hemisphere_size() * mDimensions[albedo_index] * mDimensions[g_index] * mDimensions[eta_index];
+	return get_hemisphere_size() * mDimensions[theta_i_index] * mDimensions[theta_s_index] * mDimensions[r_index];
 }
 
 size_t BSSRDFLoader::get_hemisphere_size()
@@ -134,7 +134,7 @@ bool BSSRDFLoader::load_hemisphere(float * bssrdf_data, const std::vector<size_t
 	}
 	else
 	{
-		Logger::info << "File found. " << std::endl;
+		Logger::info << "File found. Index " <<  flatten_index({ 0, 0, 0, idx[3], idx[4], idx[5] }, dims) << std::endl;
 	}
 
 	std::ifstream ifs(s, std::ofstream::in | std::ofstream::binary);

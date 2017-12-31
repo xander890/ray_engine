@@ -29,11 +29,11 @@ namespace
 void printUsageAndExit( const std::string& argv0 ) 
 {
 	std::cerr << "Usage  : " << argv0 << " [options] any_object.obj [another.obj ...]" << std::endl
-       << "options: --help           | -h            Print this usage message" << std::endl
+       << "options: --help            | -h            Print this usage message" << std::endl
        << "         --shader         | -sh <shader>  specify the closest hit program to be used for shading" << std::endl
 	   << "options: --rectangle <ox oy w h>     renctangle to render." << std::endl
 	   << std::endl;
-  
+
   GLFWDisplay::printUsage();
 
   exit(0);
@@ -56,9 +56,9 @@ int main( int argc, char** argv )
 	std::vector<std::string> additional_parameters;
 	bool nodisplay = false;
 
-	for ( int i = 1; i < argc; ++i ) 
+	for ( int i = 1; i < argc; ++i )
 	{
-	std::string arg( argv[i] );
+	std::string arg( argv[i]);
 	if (arg == "--no-display")
 	{
 		nodisplay = true;

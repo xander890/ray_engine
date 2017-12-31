@@ -1,6 +1,11 @@
 #pragma once
 #include "host_device_common.h"
+#include "bssrdf_properties.h"
 #include "scattering_properties.h"
+#include <material.h>
+#ifdef __CUDACC__
+#include <material_device.h>
+#endif
 
 #ifdef INCLUDE_PROGRAMS_ONLY
 #include "forward_dipole_defines.h"
@@ -11,6 +16,7 @@ rtDeclareVariable(rtCallableProgramId<Float(const ForwardDipoleMaterial, const F
 
 #else
 #include "forward_dipole_sampling.h"
+#include "optix_helpers.h"
 
 __device__ __host__ __forceinline__ Float evalMonopole(
 	const ForwardDipoleMaterial material,
@@ -90,7 +96,7 @@ __device__ __host__ __forceinline__ Float evalPlaneSource(
 	return result;
 }
 
-__device__ __host__ __forceinline__ Float evalDipole(
+__device__ __host__ Float evalDipole(
 	const ForwardDipoleMaterial material,
 	const ForwardDipoleProperties props,
 	Float3 n0, Float3 u0,
@@ -100,7 +106,7 @@ __device__ __host__ __forceinline__ Float evalDipole(
 
 	/* If reciprocal is requested, nL should be finite and uL_external should point
 	* along nL. */
-	FSAssert(!props.reciprocal || isfinite(nL));
+	FSAssert(!props.reciprocal || isfinited(nL));
 	FSAssert(!props.reciprocal || dot(uL, nL) >= -Epsilon); // positive with small margin for roundoff errors
 													  /* Handle eta != 1 case by 'refracting' the 'external' directions
 													  * u0_external and uL_external to 'internal' directions u0 and uL. We
@@ -123,7 +129,7 @@ __device__ __host__ __forceinline__ Float evalDipole(
 													  //}
 
 	optix_print("Start.\n");
-
+    optix_print("LLL %f %f\n", optix::length(n0), optix::length(nL));
 	Float3 R_virt;
 	Float3 u0_virt;
 	if (!getVirtualDipoleSource(material.sigma_s, material.sigma_a, material.mu, material.m_eta, n0, u0, nL, uL, R, length,
@@ -224,12 +230,22 @@ __host__ __device__ __inline__ void test_forward_dipole_cuda()
 	optix_print("Dipole test: %e %e\n ", S, ss / N);
 }
 
-__device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const float3& ni, const float3& w12,
-	const float3& xo, const float3& no, const float3& w21,
-	const ScatteringMaterialProperties& properties)
+namespace optix
 {
+    __device__ __forceinline__ optix::float3 make_float3(const optix::float3 & c) { return c; }
+
+}
+__device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material)
+{
+    const ScatteringMaterialProperties& properties = material.scattering_properties;
+    float3 w12, w21; 
+	float R12, R21;
+	refract(geometry.wi, geometry.ni, recip_ior, w12, R12);
+	refract(geometry.wo, geometry.no, recip_ior, w21, R21);
+    w21 = -w21;
+
 	TangentPlaneMode tangent = TangentPlaneMode::EFrisvadEtAl;
-	Float3 R = MakeFloat3(xo - xi);
+	Float3 R = MakeFloat3(geometry.xo - geometry.xi);
 	optix::float3 res;
 
 #ifdef __CUDACC__
@@ -237,10 +253,10 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 #else
 	unsigned int seed = 1023;
 #endif
-	unsigned int samples = 200;
+	unsigned int samples = 1;
 
-	const Float3 n_in = MakeFloat3(ni);
-	const Float3 n_out = MakeFloat3(no);
+	const Float3 n_in = MakeFloat3(normalize(geometry.ni));
+	const Float3 n_out = MakeFloat3(normalize(geometry.no));
 	const Float3 d_in = MakeFloat3(w12);
 	const Float3 d_out = MakeFloat3(w21);
 
@@ -261,7 +277,7 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const float3& xi, const 
 		props.useEffectiveBRDF = false;
 		props.zvMode = ZvMode::EFrisvadEtAlZv;
 		float S = 0.0f;
-
+        optix_print("LLLA %f %f\n", optix::length(n_out), optix::length(n_in));
 		for (unsigned int i = 0; i < samples; i++)
 		{
 			Float s = 0.0f;

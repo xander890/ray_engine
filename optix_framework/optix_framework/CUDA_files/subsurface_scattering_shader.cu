@@ -122,7 +122,14 @@ RT_PROGRAM void shade()
             float exp_term = exp(-dist * chosen_transport_rr);
             if (prd_radiance.sampler->next1D() < exp_term)
             {
-                accumulate += T12*sample.L*bssrdf(sample.pos, sample.normal, w12, xo, no, w21, props) / exp_term;
+                 BSSRDFGeometry geometry;
+                 geometry.xi = sample.pos;
+                 geometry.ni = sample.normal;
+                 geometry.wi = wi;
+                 geometry.xo = xo;
+                 geometry.no = no;
+                 geometry.wo = wo;
+                 accumulate += T12*sample.L*bssrdf(geometry, recip_ior, material) / exp_term;
             }
         }
 #endif

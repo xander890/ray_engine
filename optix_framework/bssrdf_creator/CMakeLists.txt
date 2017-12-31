@@ -1,8 +1,6 @@
 
 set(SRCS    
 bssrdf_creator.cpp
-bssrdf_loader.cpp
-bssrdf_parameter_manager.cpp
 full_bssrdf_generator.cpp
 main.cpp
 reference_bssrdf.cpp
@@ -18,8 +16,6 @@ CUDA_files/render_bssrdf.cu
 
 set(HEADERS
 bssrdf_creator.h
-bssrdf_loader.h
-bssrdf_parameter_manager.h
 full_bssrdf_generator.h
 full_bssrdf_host_device_common.h
 photon_trace_reference_bssrdf.h

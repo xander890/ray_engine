@@ -39,35 +39,37 @@ RT_PROGRAM void reference_bssrdf_camera()
 	float theta_s = reference_bssrdf_theta_s;
 	float r = reference_bssrdf_radius;
 
-	optix::float3 xi, wi, ni, xo, no; 
-	get_reference_scene_geometry(theta_i, r, theta_s, xi, wi, ni, xo, no);
+    BSSRDFGeometry geometry;
+	get_reference_scene_geometry(theta_i, r, theta_s, geometry.xi, geometry.wi, geometry.ni, geometry.xo, geometry.no);
 	  
-	optix::float3 wo;
 	  
 	if (reference_bssrdf_output_shape == BSSRDF_OUTPUT_HEMISPHERE) 
 	{   
 		float2 angles = get_normalized_hemisphere_buffer_angles(uv.y, uv.x);
-		wo = optix::make_float3(sinf(angles.y) * cosf(angles.x), sinf(angles.y) * sinf(angles.x), cosf(angles.y));
+		geometry.wo = optix::make_float3(sinf(angles.y) * cosf(angles.x), sinf(angles.y) * sinf(angles.x), cosf(angles.y));
 	}
 	else  
 	{      
-		wo = normalize(optix::make_float3(sinf(reference_bssrdf_theta_o), 0, cosf(reference_bssrdf_theta_o)));
+		geometry.wo = normalize(optix::make_float3(sinf(reference_bssrdf_theta_o), 0, cosf(reference_bssrdf_theta_o)));
 		optix::float2 plan = get_planar_buffer_coordinates(uv);
-		xo = make_float3(plan.x, plan.y, 0);
+		geometry.xo = make_float3(plan.x, plan.y, 0);
 	} 
 
 	const float n1_over_n2 = 1.0f / n2_over_n1;
 	float R12;
 	optix::float3 w12; 
-	refract(wi, ni, n1_over_n2, w12, R12); 
+	refract(geometry.wi, geometry.ni, n1_over_n2, w12, R12); 
 	float T12 = 1.0f - R12; 
 	 
 	float R21;
 	optix::float3 w21;
-	refract(wo, no, n1_over_n2, w21, R21); 
+	refract(geometry.wo, geometry.no, n1_over_n2, w21, R21); 
 	float T21 = 1.0f - R21;  
 	w21 = -w21;
-	optix::float3 S = T12 * bssrdf(xi, ni, w12, xo, no, w21, *planar_bssrdf_material_params) * T21;
+
+    MaterialDataCommon mat;
+    mat.scattering_properties = planar_bssrdf_material_params[0];
+	optix::float3 S = T12 * bssrdf(geometry, n1_over_n2, mat) * T21;
 	planar_resulting_flux_intermediate[launch_index] = S.x;
 } 
       

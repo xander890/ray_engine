@@ -28,6 +28,8 @@ bld/
 [Dd]ata/
 [Bb]uild/
 [Rr]esults/
+cmake-build-debug/
+cmake-build-release/
 
 optix_framework/PTX_files/
 optix_framework/out.ppm

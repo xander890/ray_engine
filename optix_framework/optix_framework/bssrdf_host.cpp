@@ -4,6 +4,7 @@
 #include "quantized_diffusion_host.h"
 #include "approximate_dipoles_host.h"
 #include "string_utils.h"
+#include "empirical_bssrdf_host.h"
 
 BSSRDF::BSSRDF(optix::Context & ctx, ScatteringDipole::Type type)
 {
@@ -35,6 +36,8 @@ std::unique_ptr<BSSRDF> BSSRDF::create(optix::Context & ctx, ScatteringDipole::T
 		return std::unique_ptr<BSSRDF>(new BSSRDF(ctx, ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF));
 	case ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF:
 		return std::unique_ptr<BSSRDF>(new ForwardDipole(ctx));
+	case ScatteringDipole::EMPIRICAL_BSSRDF:
+		return std::unique_ptr<BSSRDF>(new EmpiricalBSSRDF(ctx));
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
 	default:
 		return std::unique_ptr<BSSRDF>(new BSSRDF(ctx, ScatteringDipole::STANDARD_DIPOLE_BSSRDF));

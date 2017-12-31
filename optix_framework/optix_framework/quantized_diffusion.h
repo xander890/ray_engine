@@ -22,13 +22,16 @@ __device__ __forceinline__ float single_approx(optix::float3 xi, optix::float3 n
   return sigma_s_p*d1*phase_HG(dot(w12, w21), g)*exp(-sigma_t_p*d1 - sigma_t*d2)/(d2*d2);
 }
 
-__device__ __forceinline__ float3 quantized_diffusion_bssrdf(const float3& xi, const float3& ni, const float3& w12,
-	const float3& xo, const float3& no,
-	const ScatteringMaterialProperties& properties)
+__device__ __forceinline__ float3 quantized_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material)
 {
+    const ScatteringMaterialProperties& properties = material.scattering_properties;
 	optix::float4 C = optix::make_float4(properties.C_phi_norm, properties.C_phi, properties.C_E, properties.A);
-	float dist = optix::length(xo - xi);
-	
+	float dist = optix::length(geometry.xo - geometry.xi);
+
+    float3 w12; 
+	float R12;
+	refract(geometry.wi, geometry.ni, recip_ior, w12, R12);	
+
 	optix::float3 res;
 
 	optix_print("QD : %d %f %d\n", qd_properties->use_precomputed_qd, qd_properties->max_dist_bssrdf, qd_properties->precomputed_bssrdf_size);
@@ -50,7 +53,7 @@ __device__ __forceinline__ float3 quantized_diffusion_bssrdf(const float3& xi, c
 	for (int k = 0; k < 3; k++)
 	{
 		optix::float4 props = optix::make_float4(optix::get_channel(k, properties.scattering), optix::get_channel(k, properties.absorption), optix::get_channel(k, properties.meancosine), 1.0f);
-		optix::get_channel(k, res) += single_approx(xi, ni, w12, xo, no, props);
+		optix::get_channel(k, res) += single_approx(geometry.xi, geometry.ni, w12, geometry.xo, geometry.no, props);
 	}
 	return res;
 

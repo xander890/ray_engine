@@ -122,6 +122,12 @@ set(HEADERS
     structs_device.h
     transform.h
     volume_path_tracer.h
+    bssrdf_loader.h
+    bssrdf_parameter_manager.h
+        empirical_bssrdf_device.h
+        empirical_bssrdf_host.h
+        empirical_bssrdf_utils.h
+        improved_enum.def
 )
 
 set(SRCS_IMGUI
@@ -132,6 +138,8 @@ imgui/imgui_impl_glfw_gl3.cpp
 )
 
 set(SRCS    
+    bssrdf_loader.cpp
+    bssrdf_parameter_manager.cpp
     ambient_occlusion.cpp
     apple_juice.cpp
     approximate_dipoles_host.cpp
@@ -146,6 +154,7 @@ set(SRCS
     default_shader.cpp
     dialogs.cpp
     environment_map_background.cpp
+    empirical_bssrdf_host.cpp
     folders.cpp
     forward_dipole_host.cpp
     forward_dipole_test.cpp
@@ -217,6 +226,7 @@ CUDA_files/tonemap_camera.cu
 CUDA_files/triangle_mesh.cu
 CUDA_files/volume_shader.cu
 CUDA_files/volume_shader_heterogenous.cu
+CUDA_files/empirical_bssrdf.cu
 )
     
 source_group("Headers" FILES ${HEADERS})

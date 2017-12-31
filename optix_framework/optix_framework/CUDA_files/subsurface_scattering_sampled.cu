@@ -294,7 +294,7 @@ __device__ __forceinline__ void _shade()
 	float3 xo = ray.origin + t_hit*ray.direction;
 	float3 wo = -ray.direction;
 	float3 no = faceforward(n, wo, n);
-	const MaterialDataCommon & material = get_material(xo);
+	const MaterialDataCommon material = get_material(xo);
 	const ScatteringMaterialProperties& props = material.scattering_properties;
 	float recip_ior = 1.0f / material.relative_ior;
 	float reflect_xi = sampler->next1D();
@@ -362,11 +362,11 @@ __device__ __forceinline__ void _shade()
 		sample_light(xi, ni, 0, sampler, wi, L_i); // This returns pre-sampled w_i and L_i
 
 		// compute direction of the transmitted light
-		float3 w12; 
-		float R12;
-		refract(wi, ni, recip_ior, w12, R12);
+		
+        float3 w12; 
+	    float R12;
+	    refract(wi, ni, recip_ior, w12, R12);
 		float T12 = 1.0f - R12;
-		float3 w21 = -wt;
 
 		// compute contribution if sample is non-zero
 		if (dot(L_i, L_i) > 0.0f)
@@ -378,11 +378,18 @@ __device__ __forceinline__ void _shade()
             }
             else
             {
-                 S_d = bssrdf(xi, ni, w12, xo, no, w21, props);
+                 BSSRDFGeometry geometry;
+                 geometry.xi = xi;
+                 geometry.ni = ni;
+                 geometry.wi = wi;
+                 geometry.xo = xo;
+                 geometry.no = no;
+                 geometry.wo = wo;
+                 S_d = bssrdf(geometry, recip_ior, material);
             }
 
 			L_d += L_i * S_d * T12 * integration_factor;
-			optix_print("Ld %f %f %f Li %f %f %f T12 %f int %f\n", L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
+			optix_print("Sd %e %e %e Ld %f %f %f Li %f %f %f T12 %f int %f\n",  S_d.x, S_d.y, S_d.z, L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
 		}
 #endif
 	}

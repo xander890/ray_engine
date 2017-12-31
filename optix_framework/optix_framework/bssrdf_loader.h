@@ -15,6 +15,7 @@ class BSSRDFLoader
 {
 public:
 	BSSRDFLoader(const std::string & filename);
+	~BSSRDFLoader() {}
 	void get_dimensions(std::vector<size_t> & dimensions);
 	size_t get_material_slice_size();
 	size_t get_hemisphere_size();

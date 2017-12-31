@@ -45,12 +45,12 @@
 
 
 using namespace optix;
-#define Float double
-#define Float2 optix::double2
-#define Float3 optix::double3
+#define Float float
+#define Float2 optix::float2
+#define Float3 optix::float3
 #define Float3d optix::double3
-#define MakeFloat3 optix::make_double3
-#define MakeFloat2 optix::make_double2
+#define MakeFloat3 optix::make_float3
+#define MakeFloat2 optix::make_float2
 #define MakeFloat3d optix::make_double3
 
 #define Log(x,y,...) optix_print(y "\n", __VA_ARGS__)

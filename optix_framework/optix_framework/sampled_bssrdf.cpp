@@ -26,7 +26,10 @@ void SampledBSSRDF::initialize_shader(optix::Context ctx)
 	properties->sampling_method = BssrdfSamplingType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "sampling_method", BssrdfSamplingType::to_string(properties->sampling_method), "Sampling method for illum 14. Available : " + BssrdfSamplingType::get_full_string()));
 	properties->sampling_tangent_plane_technique = BssrdfSamplePointOnTangentTechnique::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "sampling_tangent_plane_technique", BssrdfSamplePointOnTangentTechnique::to_string(properties->sampling_tangent_plane_technique), "Sampling method for illum 14. Available : " + BssrdfSamplePointOnTangentTechnique::get_full_string()));
 	Logger::info << "Using enum " << BssrdfSamplingType::to_string(properties->sampling_method) << std::endl;
-	mBSSRDF = BSSRDF::create(context, ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF);
+	auto s = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF), "Default dipole. Available : " + ScatteringDipole::get_full_string()));
+	Logger::info << "Using dipole " << ScatteringDipole::to_string(s) << std::endl;
+	mBSSRDF = BSSRDF::create(context, s);
+
 }
 
 void SampledBSSRDF::initialize_mesh(Mesh& object)

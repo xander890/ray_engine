@@ -8,6 +8,7 @@
 #include "device_environment_map.h"
 #include "optical_helper.h"
 #include "phase_function.h"
+#include "empirical_bssrdf_utils.h"
 
 #define RND_FUNC rnd_tea
 
@@ -37,25 +38,7 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_orig
 	return intersection_distance > ray.tmin && intersection_distance < ray.tmax;
 }
 
-__forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(float theta_o, float phi_o)
-{
-	const float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
-	// Uniform sampling of hemisphere
-	const float theta_o_normalized = cosf(theta_o);
-	optix_assert(theta_o_normalized >= 0.0f);
-	optix_assert(theta_o_normalized < 1.0f);
-	optix_assert(phi_o_normalized < 1.0f); 
-	optix_assert(phi_o_normalized >= 0.0f);
-	return optix::make_float2(phi_o_normalized, theta_o_normalized);
-}
 
-__forceinline__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(float theta_o_normalized, float phi_o_normalized)
-{
-	const float phi_o = phi_o_normalized * (2.0f * M_PIf);
-	// Uniform sampling of hemisphere
-	const float theta_o = acosf(theta_o_normalized);
-	return optix::make_float2(phi_o, theta_o);
-}
 
 __forceinline__ __device__ void store_values_in_buffer(const float theta_o, const float phi_o, const float flux_E, BufPtr2D<float> & resulting_flux)
 {

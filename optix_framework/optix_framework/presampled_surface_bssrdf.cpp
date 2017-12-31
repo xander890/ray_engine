@@ -3,6 +3,7 @@
 #include "scattering_material.h"
 #include "immediate_gui.h"
 #include "optix_utils.h"
+#include "parameter_parser.h"
 
 using namespace optix;
 
@@ -36,13 +37,13 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
     context["sampling_vindex_buffer"]->setBuffer(empty_bufferi3);
     context["sampling_nindex_buffer"]->setBuffer(empty_bufferi3);
 
-
-
     mSampleBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
     mSampleBuffer->setFormat(RT_FORMAT_USER);
     mSampleBuffer->setElementSize(sizeof(PositionSample));
     mSampleBuffer->setSize(mSamples);
-	mBSSRDF = BSSRDF::create(context, ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF);
+
+	auto s = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF), "Default dipole. Available : " + ScatteringDipole::get_full_string()));
+	mBSSRDF = BSSRDF::create(context, s);
 	mCdfBuffer = context->createBuffer(RT_BUFFER_INPUT);
 }
 
