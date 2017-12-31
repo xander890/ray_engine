@@ -22,6 +22,5 @@ public:
 		return optix::make_float2(rnd_tea(seed), rnd_tea(seed));
 	}
 
-private:
 	unsigned int seed;
 };

@@ -24,22 +24,22 @@ __forceinline__ __device__ float3 bssrdf(const BSSRDFGeometry & geometry, const 
 	switch (selected_bssrdf)
 	{
 	case ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
-		return approximate_directional_dipole_bssrdf(geometry, recip_ior, material);
+		return approximate_directional_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
 	case ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF:
-		return directional_dipole_bssrdf(geometry, recip_ior, material);
+		return directional_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
 	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
-		return approximate_standard_dipole_bssrdf(geometry, recip_ior, material);
+		return approximate_standard_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
 	case ScatteringDipole::QUANTIZED_DIFFUSION_BSSRDF:
-		return quantized_diffusion_bssrdf(geometry, recip_ior, material);
+		return quantized_diffusion_bssrdf(geometry, recip_ior, material, flags, sampler);
 	case ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF:
-		return photon_beam_diffusion_bssrdf(geometry, recip_ior, material);
+		return photon_beam_diffusion_bssrdf(geometry, recip_ior, material, flags, sampler);
 	case ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF:
-		return forward_dipole_bssrdf(geometry, recip_ior, material);
+		return forward_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
     case ScatteringDipole::EMPIRICAL_BSSRDF:
-        return eval_empbssrdf(geometry, recip_ior, material);
+        return eval_empbssrdf(geometry, recip_ior, material, flags, sampler);
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
 	default:
-		return standard_dipole_bssrdf(geometry, recip_ior, material);
+		return standard_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
 	}
 }
 

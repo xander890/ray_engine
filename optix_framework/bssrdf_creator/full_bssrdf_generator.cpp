@@ -103,7 +103,7 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
 {
 	m_context->setPrintEnabled(false);
-//	test_forward_dipole();
+	test_forward_dipole();
 	m_context->setPrintBufferSize(200);
 	m_context->setPrintLaunchIndex(0, 0, 0);
 	Folders::init();

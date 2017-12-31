@@ -61,7 +61,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 
     MaterialDataCommon mat;
     mat.scattering_properties = planar_bssrdf_material_params[0];
-    TEASampler sampler(launch_dim.x*launch_index.y + launch_index.x, frame);
+    TEASampler sampler(launch_dim.x*launch_index.y + launch_index.x, 0);
     optix::float3 S = bssrdf(geometry, n1_over_n2, mat, BSSRDFFlags::NO_FLAGS, &sampler);
 	planar_resulting_flux_intermediate[launch_index] = S.x;
 } 

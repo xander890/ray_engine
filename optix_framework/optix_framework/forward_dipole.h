@@ -219,11 +219,12 @@ __host__ __device__ __inline__ void test_forward_dipole_cuda()
 
 	Float ss = 0.0f;
 	int N = 10;
+    TEASampler sampler(1024,1);
 	optix_print("%f %f %f\n", rnd_tea(seed), rnd_tea(seed), rnd_tea(seed));
 	for (int i = 0; i < N; i++)
 	{
 		Float sss = 0.0;
-		sampleLengthDipole(material, props, d_out, no, R, &d_in, ni, sss, seed);
+		sampleLengthDipole(material, props, d_out, no, R, &d_in, ni, sss, &sampler);
 		ss += sss;
 	}
 
@@ -249,11 +250,6 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & g
 	Float3 R = MakeFloat3(geometry.xo - geometry.xi);
 	optix::float3 res;
 
-#ifdef __CUDACC__
-	unsigned int seed = tea<16>(launch_index.x, launch_index.y);
-#else
-	unsigned int seed = 1023;
-#endif
 	unsigned int samples = 1;
 
 	const Float3 n_in = MakeFloat3(normalize(geometry.ni));
@@ -281,11 +277,8 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & g
 		for (unsigned int i = 0; i < samples; i++)
 		{
 			Float s = 0.0f;
-			float wi = sampleLengthDipole(material, props, d_out, n_out, R, &d_in, n_in, s, seed);
-			S += evalDipole(material, props,
-				n_in, d_in,
-				n_out, d_out,
-				R, s) * wi;
+			float wi = sampleLengthDipole(material, props, d_out, n_out, R, &d_in, n_in, s, sampler);
+			S += evalDipole(material, props, n_in, d_in, n_out, d_out, R, s) * wi;
 		}
 		optix::get_channel(k, res) = S / samples;
 	}

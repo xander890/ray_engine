@@ -290,6 +290,7 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	Float3 &u0_virt, Float3 &R_virt,
 	Float3 *optional_n0_effective = nullptr) {
 	Float3 n0_effective;
+
 	switch (tangentMode) {
 	case EFrisvadEtAl:
 		/* Use the modified tangent plane of the directional dipole model

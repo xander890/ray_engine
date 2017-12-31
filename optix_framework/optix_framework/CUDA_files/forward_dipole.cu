@@ -9,9 +9,9 @@ RT_CALLABLE_PROGRAM Float sampleLengthDipoleProgram(
 	const ForwardDipoleProperties props,
 	Float3 uL, Float3 nL, Float3 R,
 	const Float3 *u0, Float3 n0,
-	Float &s, unsigned int & t)
+	Float &s, TEASampler * sampler)
 {
-	return sampleLengthDipole(material, props, uL, nL, R, u0, n0, s, t);
+	return sampleLengthDipole(material, props, uL, nL, R, u0, n0, s, sampler);
 }
 
 RT_CALLABLE_PROGRAM Float evalMonopoleProgram(
@@ -39,6 +39,6 @@ __global__ void stub()
 	Float3 t;
 	Float s; unsigned int tt;
 	evalMonopoleProgram(mat, t, t, t, 0);
-	sampleLengthDipoleProgram(mat, props, t, t, t, &t, t, s, tt);
+	sampleLengthDipoleProgram(mat, props, t, t, t, &t, t, s, nullptr);
 	evalDipoleProgram(mat, props, t, t, t, t, t, 0);
 }

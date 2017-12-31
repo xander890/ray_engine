@@ -4,6 +4,7 @@
 #include "forward_dipole_truncnorm.h"
 #include <functional>
 #include "forward_dipole_tom748.h"
+#include "sampler.h"
 
 
 /**
@@ -13,10 +14,10 @@
 * than the target distribution), but extremely high variance is possible
 * for high albedo materials. */
 __device__ __host__ __forceinline__   Float sampleLengthAbsorption(const float sigma_a,
-	Float &s, unsigned int & t) {
+	Float &s, TEASampler * sampler) {
 	if (sigma_a == 0)
 		return 0.0;
-	s = -log(RND_FUNC_FWD_DIP(t)) / sigma_a;
+	s = -log(sampler->next1D()) / sigma_a;
 	Float pdf = sigma_a*exp(-sigma_a*s);
 	FSAssert(isfinite(s));
 	FSAssert(s >= 0);
@@ -36,7 +37,7 @@ __device__ __host__ __forceinline__   Float pdfLengthAbsorption(const float sigm
 __device__ __host__ __forceinline__   void implLengthShortLimitKnownU0(
 	const Float sigma_s,
 	const Float mu,
-	Float3 R, Float3 u0, Float3 uL, Float &s, unsigned int & seed, Float *pdf, bool use_sampler) {
+	Float3 R, Float3 u0, Float3 uL, Float &s, TEASampler * sampler, Float *pdf, bool use_sampler) {
 	double p = 0.5*sigma_s*mu;
 	double lRl = optix::length(R);
 	double r = lRl * p;
@@ -131,7 +132,7 @@ __device__ __host__ __forceinline__   void implLengthShortLimitKnownU0(
 
 	if (use_sampler) {
 		do {
-			t = truncnorm(mean, stddev, 0.0, INFINITY, seed);
+			t = truncnorm(mean, stddev, 0.0, INFINITY, sampler);
 		} while (t == 0);
 		ps = pow(t, -1. / 3.);
 		s = ps / p;
@@ -155,7 +156,7 @@ __device__ __host__ __forceinline__   void implLengthShortLimitKnownU0(
 __device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
 	const Float sigma_s,
 	const Float mu,
-	Float3 R, Float3 uL, Float &s, unsigned int & seed, Float *pdf, bool use_sampler) {
+	Float3 R, Float3 uL, Float &s, TEASampler * sampler, Float *pdf, bool use_sampler) {
 	// Working in p=1, transforming back at the end
 	Float p = 0.5*sigma_s*mu;
 	Float lRl = optix::length(R);
@@ -249,7 +250,7 @@ __device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
 	Float ps;
 	if (use_sampler) {
 		do {
-			invps = truncnorm(invps_mean, stddev, 0.0, INFINITY, seed);
+			invps = truncnorm(invps_mean, stddev, 0.0, INFINITY, sampler);
 		} while (invps == 0);
 		ps = 1 / invps;
 		s = ps / p;
@@ -273,20 +274,20 @@ __device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
 __device__ __host__ __forceinline__   void implLengthShortLimit(
 	const Float sigma_s,
 	const Float mu,
-	Float3 R, const Float3 *u0, Float3 uL, Float &s, unsigned int & t, Float *pdf, bool use_sampler) {
+	Float3 R, const Float3 *u0, Float3 uL, Float &s, TEASampler * sampler, Float *pdf, bool use_sampler) {
 	if (u0 == nullptr) {
-		implLengthShortLimitMargOverU0(sigma_s, mu, R, uL, s, t, pdf, use_sampler);
+		implLengthShortLimitMargOverU0(sigma_s, mu, R, uL, s, sampler, pdf, use_sampler);
 	}
 	else {
-		implLengthShortLimitKnownU0(sigma_s, mu, R, *u0, uL, s, t, pdf, use_sampler);
+		implLengthShortLimitKnownU0(sigma_s, mu, R, *u0, uL, s, sampler, pdf, use_sampler);
 	}
 }
 __device__ __host__ __forceinline__ Float sampleLengthShortLimit(
 	const Float sigma_s,
 	const Float mu,
-	Float3 R, const Float3 *u0, Float3 uL, Float &s, unsigned int & t) {
+	Float3 R, const Float3 *u0, Float3 uL, Float &s, TEASampler * sampler) {
 	Float pdf;
-	implLengthShortLimit(sigma_s, mu, R, u0, uL, s, t, &pdf, true);
+	implLengthShortLimit(sigma_s, mu, R, u0, uL, s, sampler, &pdf, true);
 	return pdf;
 }
 
@@ -298,7 +299,7 @@ __device__ __host__ __forceinline__   Float pdfLengthShortLimit(
 	Float3 R, const Float3 *u0, Float3 uL, Float s) {
 	Float pdf;
 	unsigned int t = 0;
-	implLengthShortLimit(sigma_s, mu, R, u0, uL, s, t , &pdf, false);
+	implLengthShortLimit(sigma_s, mu, R, u0, uL, s, nullptr, &pdf, false);
 	return pdf;
 }
 
@@ -333,7 +334,7 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 	const Float sigma_s,
 	const Float sigma_a,
 	const Float mu,
-	Float3 R, Float3 uL, Float &s, unsigned int & t) {
+	Float3 R, Float3 uL, Float &s, TEASampler * sampler) {
 	Float p = 0.5*sigma_s*mu;
 	if (p == 0)
 		return 0;
@@ -342,7 +343,7 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 	Float R2minusRdotUL_p1 = dot(R_p1, R_p1) - dot(R_p1, uL);
 	Float beta = 3. / 2. * R2minusRdotUL_p1;
 	if (beta <= 0)
-		return sampleLengthAbsorption(sigma_a, s, t);
+		return sampleLengthAbsorption(sigma_a, s, sampler);
 	double B = beta;
 	double A = sigma_a / p;
 	FSAssert(A>0);
@@ -382,7 +383,7 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 		theCdf = clamp(theCdf, 0., 1.);
 		return theCdf;
 	};
-	double u = RND_FUNC_FWD_DIP(t);
+	double u = sampler->next1D();
 	auto target = [=](double ps) { return cdf(ps) - u; };
 	optix_print("\ncdf(0.5) %f, u %f (sa %f sb %f c %f r2minus %f)\n", cdf(0.5f), u, sA, sB, C, R2minusRdotUL_p1);
 	// Bracket the root
@@ -430,7 +431,7 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 	const ForwardDipoleProperties props,
 	Float3 uL, Float3 nL, Float3 R,
 	const Float3 *u0, Float3 n0,
-	Float &s, unsigned int & t) {
+	Float &s, TEASampler * sampler) {
 
 	Float3 R_virt;
 
@@ -443,7 +444,7 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 	* TODO: Smart MIS weight? (Need length-marginalized 'realSourceWeight'
 	* from getTentativeIndexMatchedVirtualSourceDisp then.) */
 	Float3 R_effective, R_other;
-	if (RND_FUNC_FWD_DIP(t) < 0.5) {
+	if (sampler->next1D() < 0.5) {
 		R_effective = R;
 		R_other = R_virt;
 	}
@@ -453,19 +454,19 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 	}
 	Float p1, p2, p3;
 	p1 = p2 = p3 = -1;
-	const Float u = RND_FUNC_FWD_DIP(t);
+	const Float u = sampler->next1D();
 	if (u < lengthSample_w1) {
-		p1 = sampleLengthShortLimit(material.sigma_s, material.mu, R, u0, uL, s, t);
+		p1 = sampleLengthShortLimit(material.sigma_s, material.mu, R, u0, uL, s, sampler);
 		if (p1 == 0)
 			return 0.0f;
 	}
 	else if (u < lengthSample_w1 + lengthSample_w2) {
-		p2 = sampleLengthLongLimit(material.sigma_s, material.sigma_a, material.mu, R_effective, uL, s, t);
+		p2 = sampleLengthLongLimit(material.sigma_s, material.sigma_a, material.mu, R_effective, uL, s, sampler);
 		if (p2 == 0)
 			return 0.0f;
 	}
 	else if (u < lengthSample_w1 + lengthSample_w2 + lengthSample_w3) {
-		p3 = sampleLengthAbsorption(material.sigma_a, s, t);
+		p3 = sampleLengthAbsorption(material.sigma_a, s, sampler);
 		if (p3 == 0)
 			return 0.0f;
 	}

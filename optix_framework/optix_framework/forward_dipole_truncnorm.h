@@ -1,6 +1,7 @@
 #pragma once
 #include "forward_dipole_utils.h"
 #include "random.h"
+#include "sampler.h"
 
 __device__ __host__ __forceinline__ Float2 squareToStdNormal(const Float2 &sample) {
 	Float r = sqrt(-2 * log(1 - sample.x)),
@@ -9,9 +10,9 @@ __device__ __host__ __forceinline__ Float2 squareToStdNormal(const Float2 &sampl
 	return result * r;
 }
 
-__device__ __host__ __forceinline__   Float stdnorm(unsigned int & t) {
-	float xx = RND_FUNC_FWD_DIP(t);
-	float yy = RND_FUNC_FWD_DIP(t);
+__device__ __host__ __forceinline__   Float stdnorm(TEASampler * sampler) {
+	float xx = sampler->next1D();
+	float yy = sampler->next1D();
 	return squareToStdNormal(MakeFloat2(xx, yy)).x;
 }
 
@@ -54,7 +55,7 @@ __device__ __host__ __forceinline__   bool CheckRejectFromUniformInsteadOfNormal
 
 __device__ __host__ __forceinline__   Float UseAlg1(const Float low, ///< lower bound of distribution
 	const Float high, ///< upper bound of distribution
-	unsigned int & t
+	TEASampler * sampler
 ) {
 	// Init Valid Flag
 	int valid = 0;
@@ -66,7 +67,7 @@ __device__ __host__ __forceinline__   Float UseAlg1(const Float low, ///< lower 
 
 	// Loop Until Valid Draw
 	while (valid == 0) {
-		z = stdnorm(t);
+		z = stdnorm(sampler);
 
 		if (z <= high && z >= low) {
 			valid = 1;
@@ -88,7 +89,7 @@ __device__ __host__ __forceinline__   Float UseAlg1(const Float low, ///< lower 
 /// 'one-sided' bounded Gaussian.
 
 __device__ __host__ __forceinline__   Float UseAlg2(const Float low, ///< lower bound of distribution
-	unsigned int & t
+	TEASampler * sampler
 ) {
 	// Init Values
 	const Float alphastar = (low +
@@ -106,11 +107,11 @@ __device__ __host__ __forceinline__   Float UseAlg2(const Float low, ///< lower 
 
 	// Loop Until Valid Draw
 	while (valid == 0) {
-		Float e = -log(RND_FUNC_FWD_DIP(t));
+		Float e = -log(sampler->next1D());
 		z = low + e / alpha;
 
 		rho = exp(-pow(alpha - z, 2) / 2);
-		u = RND_FUNC_FWD_DIP(t);
+		u = sampler->next1D();
 		if (u <= rho) {
 			// Keep Successes
 			valid = 1;
@@ -132,7 +133,7 @@ __device__ __host__ __forceinline__   Float UseAlg2(const Float low, ///< lower 
 
 __device__ __host__ __forceinline__   Float UseAlg3(const Float low, ///< lower bound of distribution
 	const Float high, ///< upper bound of distribution
-	unsigned int & t
+	TEASampler * sampler
 ) {
 	// Init Valid Flag
 	int valid = 0;
@@ -146,7 +147,7 @@ __device__ __host__ __forceinline__   Float UseAlg3(const Float low, ///< lower 
 
 	// Loop Until Valid Draw
 	while (valid == 0) {
-		z = low + RND_FUNC_FWD_DIP(t) * (high - low);
+		z = low + sampler->next1D() * (high - low);
 		if (0 < low) {
 			rho = exp((pow(low, 2) - pow(z, 2)) / 2);
 		}
@@ -158,7 +159,7 @@ __device__ __host__ __forceinline__   Float UseAlg3(const Float low, ///< lower 
 			rho = exp(-pow(z, 2) / 2);
 		}
 
-		u = RND_FUNC_FWD_DIP(t);
+		u = sampler->next1D();
 		if (u <= rho) {
 			valid = 1;
 		}
@@ -174,7 +175,7 @@ __device__ __host__ __forceinline__   Float truncnorm(const Float mean,
 	const Float sd,
 	const Float low,
 	const Float high,
-	unsigned int & t
+	TEASampler * sampler
 ) {
 	if (low == high)
 		return low;
@@ -188,7 +189,7 @@ __device__ __host__ __forceinline__   Float truncnorm(const Float mean,
 	}
 
 	if (isinf(sd)) {
-		return low + RND_FUNC_FWD_DIP(t) * (high - low);
+		return low + sampler->next1D() * (high - low);
 	}
 
 	SAssert(sd > 0);
@@ -247,9 +248,9 @@ __device__ __host__ __forceinline__   Float truncnorm(const Float mean,
 	////////////
 	if (type == 1) {
 		if (CheckRejectFromUniformInsteadOfNormal(c_stdlow, c_stdhigh))
-			draw = UseAlg3(c_stdlow, c_stdhigh, t);
+			draw = UseAlg3(c_stdlow, c_stdhigh, sampler);
 		else
-			draw = UseAlg1(c_stdlow, c_stdhigh, t);
+			draw = UseAlg1(c_stdlow, c_stdhigh, sampler);
 	}
 
 	////////////
@@ -268,7 +269,7 @@ __device__ __host__ __forceinline__   Float truncnorm(const Float mean,
 	// Type 2 //
 	////////////
 	if (type == 2) {
-		draw = UseAlg2(c_stdlow, t);
+		draw = UseAlg2(c_stdlow, sampler);
 	}
 
 	////////////
@@ -288,7 +289,7 @@ __device__ __host__ __forceinline__   Float truncnorm(const Float mean,
 
 		if (CheckSimple(c_stdlow, c_stdhigh)) {
 			while (valid == 0) {
-				draw = UseAlg2(c_stdlow, t);
+				draw = UseAlg2(c_stdlow, sampler);
 				// use the simple
 				// algorithm if it is more
 				// efficient
@@ -298,7 +299,7 @@ __device__ __host__ __forceinline__   Float truncnorm(const Float mean,
 			}
 		}
 		else {
-			draw = UseAlg3(c_stdlow, c_stdhigh, t); // use the complex
+			draw = UseAlg3(c_stdlow, c_stdhigh, sampler); // use the complex
 														  // algorithm if the simple
 														  // is less efficient
 		}
