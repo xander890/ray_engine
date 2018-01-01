@@ -92,7 +92,7 @@ bool SampledBSSRDF::on_draw()
 
         if(properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
         {
-            mHasChanged = mNNSampler->on_draw();
+            mHasChanged |= mNNSampler->on_draw();
         }
 	}
 
