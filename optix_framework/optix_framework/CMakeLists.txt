@@ -11,6 +11,7 @@ imgui/stb_truetype.h
 
 
 set(HEADERS
+    cublas_test.h
     ambient_occlusion.h
     apple_juice.h
     approximate_dipoles_host.h
@@ -138,6 +139,7 @@ imgui/imgui_impl_glfw_gl3.cpp
 )
 
 set(SRCS    
+    cublas_test.cpp
     bssrdf_loader.cpp
     bssrdf_parameter_manager.cpp
     ambient_occlusion.cpp
@@ -240,6 +242,7 @@ generate_ptx(framework ${HEADERS} ${CUDA_SOURCES} ${OPTIONS})
 add_library( framework STATIC
              ${SRCS} ${HEADERS} ${HEADERS_IMGUI} ${SRCS_IMGUI} ${CUDA_SOURCES} ${generated})
 
-             
+CUDA_ADD_CUBLAS_TO_TARGET(framework)
+
 target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw cereal ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${XercesC_LIBRARIES} )
-target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})  
+target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
