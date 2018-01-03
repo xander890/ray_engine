@@ -84,7 +84,7 @@ function(generate_ptx target_name)
   CUDA_GET_SOURCES_AND_OPTIONS(source_files cmake_options options ${ARGN})
 
   # Create the rules to build the PTX from the CUDA files.
-  CUDA_WRAP_SRCS( "" PTX generated_files ${source_files} ${cmake_options}
+  CUDA_WRAP_SRCS( ${target_name} PTX generated_files ${source_files} ${cmake_options}
     OPTIONS ${options} )
     
   set(generated ${generated_files} PARENT_SCOPE)

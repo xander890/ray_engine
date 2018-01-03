@@ -17,7 +17,7 @@ public:
 static const char* const get_path_ptx(const std::string& base)
 {
 	static std::string path;
-	path = Folders::ptx_path + "/" + base + ".ptx";
+	path = Folders::ptx_path + "/framework_generated_" + base + ".ptx";
 	return path.c_str();
 }
 
