@@ -7,10 +7,14 @@
 class NeuralNetworkSampler
 {
 public:
-	NeuralNetworkSampler(optix::Context & ctx) : mContext(ctx) {}
+	NeuralNetworkSampler(optix::Context & ctx);
 	bool on_draw();
 	void load(float relative_ior, const ScatteringMaterialProperties & props);
 protected:
 	optix::Context mContext;
+
+        // Hypernetwork buffers
+        std::vector<optix::Buffer> mHyperNetworkWeights;
+        std::vector<optix::Buffer> mHyperNetworkBiases;
 };
 
