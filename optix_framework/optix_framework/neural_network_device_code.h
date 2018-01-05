@@ -393,8 +393,10 @@ __device__ __forceinline__ void sample_neural_network(
     optix_print("\n");
 
     // Also here sample normalization constant
-    float bssrdf_integral = 0.0f;
+    float bssrdf_integral = 1.0f;
     integration_factor *= bssrdf_integral;
+    // Multiplying over extinction as in the empbssrdf paper
+    integration_factor *= extinction;
 
     float r = map_interval(icdfnetwork_output[0], optix::make_float2(0,1), optix::make_float2(0.01f, 10.0f));           
     float theta_s = map_interval(icdfnetwork_output[1], optix::make_float2(0,1), optix::make_float2(0.0f, M_PIf));           

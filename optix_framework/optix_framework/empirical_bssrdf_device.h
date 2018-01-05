@@ -109,6 +109,7 @@ __device__ __forceinline__ float interpolate_bssrdf(float values[N], const rtBuf
 __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geometry, const float recip_ior,
                                                         const MaterialDataCommon material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
+
     optix_print("EMPIRICAL\n");
 
     float cos_theta_i = dot(geometry.wi, geometry.ni);
@@ -147,7 +148,7 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
     optix::float3 S;
     for(int i = 0; i < 3; i++)
     {
-        float extinction = 100;
+        float extinction = optix::get_channel(i, material.scattering_properties.extinction);
         float r = optix::length(x) * extinction;
         r = clamp(r, 0.01f, 10.0f);
         float values[5] = {theta_s, r, theta_i, theta_o, phi_o};
