@@ -272,11 +272,12 @@ __device__ __forceinline__ bool importance_sample_position(const float3 & xo, co
     has_candidate_wi = false;
 	switch (bssrdf_sampling_properties->sampling_method)
 	{
-	case BssrdfSamplingType::BSSRDF_SAMPLING_CAMERA_BASED:				return camera_based_sampling(xo, no, wo, material, sampler, xi, ni, integration_factor);	break;
-	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE:				return tangent_based_sampling(xo, no, wo, material, sampler, xi, ni, integration_factor, has_candidate_wi, proposed_wi);	break;
-	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES:	return tangent_no_offset(xo, no, wo, material, sampler, xi, ni, integration_factor, has_candidate_wi, proposed_wi);	break;
-	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS:					return axis_mis_probes(xo, no, wo, material, sampler, xi, ni, integration_factor);	break;
+	case BssrdfSamplingType::BSSRDF_SAMPLING_CAMERA_BASED:				return camera_based_sampling(xo, no, wo, material, sampler, xi, ni, integration_factor);
+	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE:				return tangent_based_sampling(xo, no, wo, material, sampler, xi, ni, integration_factor, has_candidate_wi, proposed_wi);
+	case BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES:	return tangent_no_offset(xo, no, wo, material, sampler, xi, ni, integration_factor, has_candidate_wi, proposed_wi);
+	case BssrdfSamplingType::BSSRDF_SAMPLING_MIS_AXIS:					return axis_mis_probes(xo, no, wo, material, sampler, xi, ni, integration_factor);
 	}
+    return false;
 }
 
 
@@ -290,6 +291,7 @@ __device__ __forceinline__ void _shade()
 	}
 
 	TEASampler * sampler = prd_radiance.sampler;
+
 	float3 n = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	float3 xo = ray.origin + t_hit*ray.direction;
 	float3 wo = -ray.direction;
@@ -339,7 +341,6 @@ __device__ __forceinline__ void _shade()
 
 	float3 L_d = make_float3(0.0f);
 	uint N = samples_per_pixel;
-	int count = 0;
 
 	for (uint i = 0; i < N; i++)
 	{

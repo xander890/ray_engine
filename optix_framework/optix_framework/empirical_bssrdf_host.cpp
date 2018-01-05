@@ -87,6 +87,10 @@ EmpiricalBSSRDF::EmpiricalBSSRDF(optix::Context & context): BSSRDF(context, Scat
 
 void EmpiricalBSSRDF::load(const ScatteringMaterialProperties & props)
 {
+    Logger::info << "Ab    : " << props.absorption.x << " " << props.absorption.y << " "<< props.absorption.z << std::endl;
+    Logger::info << "Scatt : " << props.scattering.x << " " << props.scattering.y << " "<< props.scattering.z << std::endl;
+    Logger::info << "Albedo: " << props.albedo.x << " " << props.albedo.y << " "<< props.albedo.z << std::endl;
+    Logger::info << "Ext   : " << props.extinction.x << " " << props.extinction.y << " "<< props.extinction.z << std::endl;
     if(!mInitialized)
     {
         Logger::info << "Loading new material for empirical bssrdf..." << std::endl;
