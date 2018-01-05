@@ -37,7 +37,7 @@ void SampledBSSRDF::initialize_mesh(Mesh& object)
 	Shader::initialize_mesh(object);
 	BufPtr<BSSRDFSamplingProperties> bufptr(mPropertyBuffer->getId());
  	object.mMaterial["bssrdf_sampling_properties"]->setUserData(sizeof(BufPtr<BSSRDFSamplingProperties>), &bufptr);
-	mBSSRDF->load(object.get_main_material()->get_data().scattering_properties);
+    mBSSRDF->load(object.get_main_material()->get_data().relative_ior, object.get_main_material()->get_data().scattering_properties);
 	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
 }
 
@@ -48,7 +48,7 @@ void SampledBSSRDF::load_data(Mesh & object)
 		Logger::info << "Reloading shader" << std::endl;
 		initialize_buffer<BSSRDFSamplingProperties>(mPropertyBuffer, *properties);
 		context["samples_per_pixel"]->setUint(mSamples);
-		mBSSRDF->load(object.get_main_material()->get_data().scattering_properties);
+        mBSSRDF->load(object.get_main_material()->get_data().relative_ior, object.get_main_material()->get_data().scattering_properties);
 		object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
 
         if(properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)

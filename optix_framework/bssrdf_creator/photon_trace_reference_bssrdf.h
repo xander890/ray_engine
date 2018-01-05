@@ -13,7 +13,7 @@
 #define RND_FUNC rnd_tea
 
 // FIXME, we need to remove this or find a better way to express it without overhauling all the parameters.
-rtDeclareVariable(float2, plane_size, , );
+rtDeclareVariable(optix::float2, plane_size, , );
 
 //#define EXTINCTION_DISTANCE_RR
 //#define INCLUDE_SINGLE_SCATTERING

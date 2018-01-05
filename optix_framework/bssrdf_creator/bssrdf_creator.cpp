@@ -170,7 +170,7 @@ void BSSRDFRendererModel::load_data()
 {
 	BSSRDFRenderer::load_data();
 	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());
-	mBSSRDF->load(*cc);
+	mBSSRDF->load(1.1f, *cc);
 	auto type = mBSSRDF->get_type();
 	context["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &type);
 	mProperties->unmap();

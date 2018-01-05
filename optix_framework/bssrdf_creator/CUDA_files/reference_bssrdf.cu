@@ -2,8 +2,8 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
-#include <device_common_data.h>
 #include <photon_trace_reference_bssrdf.h>
+#include <device_common_data.h>
 #include <md5.h>
 #include <material.h>
 using namespace optix;

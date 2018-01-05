@@ -56,7 +56,7 @@ struct QuantizedDiffusionProperties
 	BufPtr1D<optix::float3> precomputed_bssrdf;
 	float max_dist_bssrdf       DEFAULT(10.0f);
 	int precomputed_bssrdf_size DEFAULT(1024);
-	int use_precomputed_qd		DEFAULT(1);
+	int use_precomputed_qd		DEFAULT(0);
 };
 
 struct BSSRDFGeometry

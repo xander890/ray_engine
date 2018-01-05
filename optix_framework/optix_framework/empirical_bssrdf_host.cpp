@@ -85,14 +85,14 @@ EmpiricalBSSRDF::EmpiricalBSSRDF(optix::Context & context): BSSRDF(context, Scat
     mBSSRDFFile = Folders::data_folder + "/bssrdf/test.bssrdf";
 }
 
-void EmpiricalBSSRDF::load(const ScatteringMaterialProperties & props)
+void EmpiricalBSSRDF::load(const float relative_ior, const ScatteringMaterialProperties &props)
 {
-    Logger::info << "Ab    : " << props.absorption.x << " " << props.absorption.y << " "<< props.absorption.z << std::endl;
-    Logger::info << "Scatt : " << props.scattering.x << " " << props.scattering.y << " "<< props.scattering.z << std::endl;
-    Logger::info << "Albedo: " << props.albedo.x << " " << props.albedo.y << " "<< props.albedo.z << std::endl;
-    Logger::info << "Ext   : " << props.extinction.x << " " << props.extinction.y << " "<< props.extinction.z << std::endl;
     if(!mInitialized)
     {
+        Logger::info << "Ab    : " << props.absorption.x << " " << props.absorption.y << " "<< props.absorption.z << std::endl;
+        Logger::info << "Scatt : " << props.scattering.x << " " << props.scattering.y << " "<< props.scattering.z << std::endl;
+        Logger::info << "Albedo: " << props.albedo.x << " " << props.albedo.y << " "<< props.albedo.z << std::endl;
+        Logger::info << "Ext   : " << props.extinction.x << " " << props.extinction.y << " "<< props.extinction.z << std::endl;
         Logger::info << "Loading new material for empirical bssrdf..." << std::endl;
         prepare_buffers();
 
@@ -102,13 +102,15 @@ void EmpiricalBSSRDF::load(const ScatteringMaterialProperties & props)
         mDataBuffers.test = 50;
 
         std::vector<size_t> state;
-        mManager->get_material_index(0.2, 0.0f, 1.1f, state);
+        bool found = true;
 
         for(int i = 0; i < 3; i++)
         {
+            // We find the corresponding index for the material properties.
+            mManager->get_material_index(optix::getByIndex(props.albedo,i), optix::getByIndex(props.meancosine,i), relative_ior, state);
             optix::Buffer buf = mContext->getBufferFromId(mDataBuffers.buffers[i].getId());
             float * data = reinterpret_cast<float*>(buf->map());
-            mBSSRDFLoader->load_material_slice(data, state);
+            found &= mBSSRDFLoader->load_material_slice(data, state);
             buf->unmap();
 
             RTsize w;
@@ -118,5 +120,9 @@ void EmpiricalBSSRDF::load(const ScatteringMaterialProperties & props)
 
         mContext["empirical_buffer"]->setUserData(sizeof(EmpiricalDataBuffer), &mDataBuffers);
         Logger::info << "Loading complete." << std::endl;
+        if(!found)
+        {
+            mInitialized = false;
+        }
     }
 }

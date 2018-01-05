@@ -10,7 +10,7 @@ class EmpiricalBSSRDF : public BSSRDF
 public:
 	EmpiricalBSSRDF(optix::Context & ctx);
     ~EmpiricalBSSRDF() {}
-	void load(const ScatteringMaterialProperties & props) override;
+	void load(const float relative_ior, const ScatteringMaterialProperties &props) override;
 	void on_draw() override {}
 
 private:

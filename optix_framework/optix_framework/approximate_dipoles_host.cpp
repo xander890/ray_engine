@@ -15,7 +15,7 @@ ApproximateDipole::ApproximateDipole(optix::Context & ctx, ScatteringDipole::Typ
 }
 
 
-void ApproximateDipole::load(const ScatteringMaterialProperties & properties)
+void ApproximateDipole::load(const float relative_ior, const ScatteringMaterialProperties &properties)
 {
 	mContext["approx_std_bssrdf_props"]->setUserData(sizeof(ApproximateBSSRDFProperties), &mProperties);
 }

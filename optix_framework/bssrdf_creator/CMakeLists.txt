@@ -30,10 +30,11 @@ source_group("Source Files" FILES ${SRCS})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../optix_framework)
+CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 generate_ptx(framework ${HEADERS} ${CUDA_SOURCES} ${OPTIONS})
     
 add_executable( ${APP_EXE}
-                ${SRCS} ${HEADERS} ${CUDA_SOURCES}  ${generated}) 
+                ${SRCS} ${HEADERS} ${CUDA_SOURCES} ${generated}) 
 
 find_package(OpenGL REQUIRED)               
 target_link_libraries(${APP_EXE} framework optprops gel nfd optix ${CUDA_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} cereal ${XercesC_LIBRARIES} )

@@ -108,7 +108,7 @@ void PresampledSurfaceBssrdf::load_data(Mesh & obj)
 	object["sampling_output_buffer"]->setUserData(sizeof(BufPtr<PositionSample>), &buf);
 	object["total_area"]->setFloat(mArea);
 	object["area_cdf"]->setBuffer(mCdfBuffer);
-	mBSSRDF->load(obj.get_main_material()->get_data().scattering_properties);
+    mBSSRDF->load(obj.get_main_material()->get_data().relative_ior, obj.get_main_material()->get_data().scattering_properties);
 	obj.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
 	context["sampling_vertex_buffer"]->setBuffer(g["vertex_buffer"]->getBuffer());
 	context["sampling_normal_buffer"]->setBuffer(g["normal_buffer"]->getBuffer());

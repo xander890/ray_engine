@@ -5,7 +5,7 @@ class QuantizedDiffusion : public BSSRDF
 {
 public:
 	QuantizedDiffusion(optix::Context & ctx);
-	void load(const ScatteringMaterialProperties & props) override;
+	void load(const float relative_ior, const ScatteringMaterialProperties &props) override;
 	void on_draw() override;
 
 private:

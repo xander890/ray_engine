@@ -99,6 +99,11 @@ bool BSSRDFLoader::load_material_slice(float * bssrdf_data, const std::vector<si
 #ifdef USE_SMALL_FILES
 	size_t pos = 0;
 	std::string filename = get_filename(mFileName, idx, mParameters);
+	if (!file_exists(filename))
+	{
+		Logger::error << "File not found. " << filename << std::endl;
+		return false;
+	}
 	std::ifstream ifs;
 	ifs.open(filename, std::ofstream::in | std::ofstream::binary);
 	ifs.seekg(pos);
