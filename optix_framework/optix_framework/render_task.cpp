@@ -4,6 +4,7 @@
 #include <sstream>
 #include "dialogs.h"
 #include <climits>
+#include <vector>
 
 RenderTask::RenderTask(std::string destination_file, bool close_program_on_exit) : close_program_on_exit(close_program_on_exit), destination_file(destination_file)
 {
@@ -13,9 +14,8 @@ RenderTask::RenderTask(std::string destination_file, bool close_program_on_exit)
 bool RenderTask::on_draw()
 {
 	bool changed = false;
-	char InputBuf[256];
-	snprintf(InputBuf, "%s", get_destination_file().c_str());
-	ImmediateGUIDraw::InputText("Destination file", InputBuf, ImGuiInputTextFlags_ReadOnly);
+	std::vector<char> ss(destination_file.begin(), destination_file.end());
+	ImmediateGUIDraw::InputText("Destination file", ss.data(), ImGuiInputTextFlags_ReadOnly);
 	if (!is_active() && ImmediateGUIDraw::Button("Choose destination file..."))
 	{
 		std::string filePath;

@@ -101,7 +101,8 @@ RT_PROGRAM void exception()
 {
   const unsigned int code = rtGetExceptionCode();
   rtPrintf( "Caught exception 0x%X at launch index (%d,%d)\n", code, launch_index.x, launch_index.y );
-  output_buffer[launch_index] = make_float4(0.0, 0.0, 100000.0, 1.0f);
+  //output_buffer[launch_index] = make_float4(0.0, 0.0, 100000.0, 1.0f);
+  rtPrintExceptionDetails();
 }
 
 RT_PROGRAM void empty() {}

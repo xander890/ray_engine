@@ -71,7 +71,7 @@ __device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int
     }
     int index = ravel<N>(index_function, empirical_bssrdf_parameters_size);
     if( index > empirical_buffer_size) {
-        optix_print("Index is out of bounds! %d / %d\n", index, empirical_buffer_size);
+        printf("Index is out of bounds! %d / %d\n", index, empirical_buffer_size);
         return 0;
     }
     //optix_print("INDEX %d -- %e\n", index, empirical_buffer.buffers[slice][index]);
@@ -158,7 +158,7 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
         //optix_print("theta_o %f\n", theta_o);
         //optix_print("phi_o %f\n", phi_o);
 
-        optix::get_channel(i, S) = interpolate_bssrdf_nearest<5>(values,i) * extinction * 100000000;
+        optix::get_channel(i, S) = interpolate_bssrdf_nearest<5>(values,i) * extinction * 100000;
     }
     //optix_print("S: %e %e %e\n", S.x, S.y, S.z);
 

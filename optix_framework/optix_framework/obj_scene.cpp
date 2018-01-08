@@ -151,17 +151,21 @@ inline ObjScene::~ObjScene()
 	ObjScene::clean_up();
 }
 
+double to_milliseconds(std::chrono::high_resolution_clock::duration & dur)
+{
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count() / 1e6;
+}
+
 bool ObjScene::draw_gui()
 {
 	bool changed = false;
 	ImmediateGUIDraw::TextColored({ 255,0,0,1 }, "Rendering info ");
 	std::stringstream ss;
 	ss << "Current frame: " << to_string(m_frame) << std::endl;
-	ss << "Time (load):        " << to_string(render_time_load * 1000) << " ms (" << to_string(1.0 / render_time_load) << " FPS)"<< std::endl;
-	ss << "Time (pre trace):   " << to_string(render_time_pre_trace * 1000) << " ms (" << to_string(1.0 / render_time_pre_trace) << " FPS)" << std::endl;
-	ss << "Time (render):      " << to_string(render_time_main * 1000) << " ms (" << to_string(1.0 / render_time_main) << " FPS)" << std::endl;
-	ss << "Time (post trace):      " << to_string(render_time_post * 1000) << " ms (" << to_string(1.0 / render_time_post) << " FPS)" << std::endl;
-	ss << "Time (tonemap/dbg): " << to_string(render_time_tonemap * 1000) << " ms (" << to_string(1.0 / render_time_tonemap) << " FPS)";
+	ss << "Time (pre trace):   " << to_string(to_milliseconds(render_time_pre_trace)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_pre_trace)) << " FPS)" << std::endl;
+	ss << "Time (render):      " << to_string(to_milliseconds(render_time_main)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_main)) << " FPS)" << std::endl;
+	ss << "Time (post trace):  " << to_string(to_milliseconds(render_time_post)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_post)) << " FPS)" << std::endl;
+	ss << "Time (tonemap/dbg): " << to_string(to_milliseconds(render_time_tonemap)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_tonemap)) << " FPS)";
 	ImmediateGUIDraw::Text(ss.str().c_str());
 	static bool debug = debug_mode_enabled;
 	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
@@ -179,6 +183,9 @@ bool ObjScene::draw_gui()
 				returned_buffer = tonemap_output_buffer;
 			}
 		}
+
+		ImmediateGUIDraw::SameLine();
+		ImmediateGUIDraw::Checkbox("Pause", &mbPaused);
 
 		static int depth = context["max_depth"]->getInt();
 		if (ImmediateGUIDraw::InputInt("Maximum ray depth", &depth, 1, 10))
@@ -233,6 +240,11 @@ bool ObjScene::draw_gui()
 			set_debug_pixel(debug_pixel.x, debug_pixel.y);
 		}
 
+        if(ImmediateGUIDraw::Button("All pixels"))
+        {
+            m_context->setPrintLaunchIndex(-1,-1,-1);
+        }
+
 		if (ImmediateGUIDraw::Button("Center debug pixel"))
 		{
 			set_debug_pixel((int)(zoomed_area.x + zoomed_area.z / 2), (int)(zoomed_area.y + zoomed_area.w / 2));
@@ -241,9 +253,7 @@ bool ObjScene::draw_gui()
 		ImmediateGUIDraw::InputInt4("Zoom window", (int*)&zoom_debug_window);
 		
 		ImmediateGUIDraw::InputInt4("Zoom area", (int*)&zoomed_area);
-
-		ImmediateGUIDraw::Checkbox("Colored logs", &Logger::is_color_enabled);
-	}
+    }
 
 
 	if (ImmediateGUIDraw::CollapsingHeader("Tone mapping"))
@@ -368,7 +378,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(2000);
 	setDebugEnabled(debug_mode_enabled);
-	context->setPrintLaunchIndex(0, 0);
+	context->setPrintLaunchIndex(381,271);
 
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
@@ -576,7 +586,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
     material_ketchup = std::make_shared<MaterialHost>(context,params);
     execute_on_scene_elements([=](Mesh & m)
     {
-        m.add_material(material_ketchup);
+        //m.add_material(material_ketchup);
     });
 
 	context["show_difference_image"]->setInt(show_difference_image);
@@ -609,10 +619,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	display = true;
 	if (mbPaused)
 		return;
-
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
-
-	//Logger::debug({ "Merl correction factor: ", to_string(merl_correction.x), " ", to_string(merl_correction.y), " ", to_string(merl_correction.z) });
 
 	camera->update_camera(s_camera_data);
 	camera->set_into_gpu(context);
@@ -621,9 +628,9 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
     context["tonemap_multiplier"]->setFloat(tonemap_multiplier);
 	context["tonemap_exponent"]->setFloat(tonemap_exponent);
 
-	const double total0 = currentTime();
+	auto total0 = currentTime();
 
-	double t0 = currentTime();
+    auto t0 = currentTime();
 
 	if (m_camera_changed)
 	{
@@ -641,17 +648,17 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		m.load();
         m.pre_trace();
     });
-	double t1 = currentTime();
-	update_timer(render_time_pre_trace, t1 - t0);
+    auto t1 = currentTime();
+    render_time_pre_trace = t1-t0;
 
-	unsigned int width = camera->get_width();
+    unsigned int width = camera->get_width();
 	unsigned int height = camera->get_height();
 	
 	t0 = currentTime();
 	context->launch(camera->get_entry_point(), width, height);
 
 	t1 = currentTime();
-	update_timer(render_time_main, t1 - t0);
+    render_time_main = t1-t0;
 	// cout << "Elapsed (ray tracing): " << (time1 - time) * 1000 << endl;
 	// Apply tone mapping
 	t0 = currentTime();
@@ -663,7 +670,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		m.post_trace();
 	});
 	t1 = currentTime();
-	update_timer(render_time_post, t1 - t0);
+    render_time_post = t1-t0;
 
 
 	t0 = currentTime();
@@ -677,9 +684,9 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		context->launch(debug_entry_point, width, height);
 	}
 	t1 = currentTime();
-	update_timer(render_time_tonemap ,t1 - t0);
+    render_time_tonemap = t1-t0;
 
-	const double total1 = currentTime();
+	auto total1 = currentTime();
 
 	if (current_render_task->is_active())
 	{
@@ -689,11 +696,25 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 			ConfigParameters::dump_used_parameters(current_render_task->get_destination_file() + ".xml");
 			current_render_task->end();
 		}
-		current_render_task->update(static_cast<float>(total1 - total0));
+        auto l = total1 - total0;
+
+		current_render_task->update(to_milliseconds(l) / 1000.0);
 	}
 
 	collect_image(m_frame);
 
+	/*
+    for(int i = 0; i < 200; i++)
+    {
+        RTbuffer * x = new RTbuffer;
+        RTresult a = rtContextGetBufferFromId(m_context->get(), i, x);
+        if(a == RT_SUCCESS)
+        {
+            RTsize w;
+            m_context->getBufferFromId(i)->getSize(w);
+            Logger::info << i <<":" << w << std::endl;
+        }
+    }*/
 }
 
 Buffer ObjScene::get_output_buffer()

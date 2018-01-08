@@ -211,7 +211,7 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 
 	if (!mPaused)
 	{
-		double time = currentTime();
+		auto time = currentTime();
 
 		m_context["frame"]->setInt(frame);
 
@@ -242,7 +242,7 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 			mCurrentBssrdfRenderer->get_output_buffer()->unmap();
 		}
 
-		double time1 = currentTime();
+		auto time1 = currentTime();
 
 		if (!mFastMode)
 		{
@@ -254,7 +254,8 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 		}
 
 		frame++;
-		update_rendering(static_cast<float>(time1 - time));
+		auto dur = time1 - time;
+		update_rendering(std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count() / 1e9);
 	}
 }
 

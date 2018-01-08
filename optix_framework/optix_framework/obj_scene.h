@@ -14,6 +14,7 @@
 #include "enums.h"
 #include <functional>
 #include <camera_host.h>
+#include <chrono>
 
 class MissProgram;
 class ImmediateGUI;
@@ -144,16 +145,15 @@ private:
 
 	std::vector<std::string> parameters_override;
 
-	double render_time_main = 0.0;
-	double render_time_load = 0.0;
-	double render_time_pre_trace = 0.0;
-	double render_time_post = 0.0;
-	double render_time_tonemap = 0.0;
+	std::chrono::high_resolution_clock::duration render_time_main = std::chrono::high_resolution_clock::duration::zero();
+    std::chrono::high_resolution_clock::duration render_time_pre_trace = std::chrono::high_resolution_clock::duration::zero();
+    std::chrono::high_resolution_clock::duration render_time_post = std::chrono::high_resolution_clock::duration::zero();
+    std::chrono::high_resolution_clock::duration render_time_tonemap = std::chrono::high_resolution_clock::duration::zero();
 
 	bool mbPaused = false;
 
 	void transform_changed();
-	bool mImportanceSampleAreaLights = true;
+	bool mImportanceSampleAreaLights = false;
 
 	unsigned int tonemap_entry_point;
 	unsigned int debug_entry_point;

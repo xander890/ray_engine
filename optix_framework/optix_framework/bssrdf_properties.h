@@ -73,7 +73,7 @@ struct BSSRDFSamplingProperties
 {
 	BssrdfSamplingType::Type        sampling_method				DEFAULT(BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE);
     BssrdfSamplePointOnTangentTechnique::Type   sampling_tangent_plane_technique    DEFAULT(BssrdfSamplePointOnTangentTechnique::EXPONENTIAL_DISK);
-	int use_jacobian				DEFAULT(1);
+	int use_jacobian				DEFAULT(0);
 	float d_max						DEFAULT(1.0f);
 	float dot_no_ni_min				DEFAULT(0.001f);
 	optix::float3 mis_weights		DEFAULT(optix::make_float3(1.f, 0.f, 0.f));

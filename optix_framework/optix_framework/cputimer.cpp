@@ -5,7 +5,7 @@ static double inv_freq;
 static int freq_initialized = 0;
 static int use_high_res_timer = 0;
 
-double currentTime()
+std::chrono::time_point<std::chrono::high_resolution_clock> currentTime()
 {
-	return 0.0;
+	return std::chrono::high_resolution_clock::now();
 }

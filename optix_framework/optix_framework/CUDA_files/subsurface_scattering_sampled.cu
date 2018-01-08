@@ -360,6 +360,7 @@ __device__ __forceinline__ void _shade()
 #else
 		optix::float3 wi = make_float3(0);
 		optix::float3 L_i;
+        optix_print("Sampling complete, evaluating light...\n");
 		sample_light(xi, ni, 0, sampler, wi, L_i); // This returns pre-sampled w_i and L_i
 
 		// compute direction of the transmitted light
@@ -368,7 +369,7 @@ __device__ __forceinline__ void _shade()
 	    float R12;
 	    refract(wi, ni, recip_ior, w12, R12);
 		float T12 = 1.0f - R12;
-
+        optix_print("Sampling complete, evaluating bssrdf...\n");
 		// compute contribution if sample is non-zero
 		if (dot(L_i, L_i) > 0.0f)
 		{

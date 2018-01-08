@@ -24,7 +24,7 @@ void EmpiricalBSSRDF::prepare_buffers()
     for(int i = 0; i < 3; i++)
     {
         auto buf = create_buffer<float>(mContext, RT_BUFFER_INPUT_OUTPUT, s);
-        fill_buffer<float>(buf, 1.0f);
+        fill_buffer<float>(buf, 0.0f);
         mDataBuffers.buffers[i] = buf->getId();
     }
 
@@ -69,6 +69,8 @@ void EmpiricalBSSRDF::prepare_buffers()
 
     mManager = std::make_unique<BSSRDFParameterManager>(parameters);
     mInitialized = true;
+
+
 }
 
 EmpiricalBSSRDF::EmpiricalBSSRDF(optix::Context & context): BSSRDF(context, ScatteringDipole::EMPIRICAL_BSSRDF)
