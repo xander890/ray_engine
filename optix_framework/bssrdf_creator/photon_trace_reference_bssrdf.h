@@ -53,6 +53,7 @@ __forceinline__ __device__ void store_values_in_buffer(const float theta_o, cons
 // Returns true if the photon has been absorbed, false otherwise
 __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions)
 {
+	const float scattering = albedo * extinction;
 	// Defining geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
 	const optix::float3 ni = optix::make_float3(0, 0, 1);
@@ -62,10 +63,11 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 	int i;
 	for (i = starting_it; i < starting_it + executions; i++)
 	{
+#ifdef TERMINATE_ON_SMALL_FLUX
 		// If the flux is really small, we can stop here, the contribution is too small.
 		if (flux_t < 1e-12)
 			return true;
-
+#endif
 		const float rand = 1.0f - RND_FUNC(t); // RND_FUNC(t) in [0, 1). Avoids infinity when sampling exponential distribution.
 
 		// Sampling new distance for photon, testing if it intersects the interface
@@ -112,7 +114,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 				// w_12 points *towards* the surface, and the outgoing w_o points *away *from the surface.
 				const float phi_o = phi_21;
 
-				float flux_E = flux_t * albedo * phase_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len) * F_t;
+				float flux_E = flux_t * scattering * phase_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len) * F_t;
 #ifdef INCLUDE_GEOMETRIC_TERM
 				optix_print("Geometric.\n"); 
 				flux_E *= fabsf(optix::dot(d_vec, no)) / (d_vec_len*d_vec_len);
