@@ -74,7 +74,7 @@ include_directories(
 set(
     CUDA_NVCC_FLAGS
     ${CUDA_NVCC_FLAGS};
-    -O3 -gencode arch=compute_50,code=sm_50
+    -O3 -gencode arch=compute_60,code=sm_60
     )
     
 set(SAMPLES_PTX_DIR "${CMAKE_BINARY_DIR}/lib/ptx")

@@ -130,8 +130,6 @@ __device__ __inline__ void evaluate_direct_light(const float3& hit_point, const 
     }
 }
 
-
-
 __device__ __forceinline__ int light_size()
 {
     switch (light_type)

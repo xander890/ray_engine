@@ -28,8 +28,9 @@ rtDeclareVariable(int, reference_bssrdf_output_shape, , );
 RT_PROGRAM void reference_bssrdf_camera()
 {
 	uint idx = launch_index.x;
-	optix::uint t = ref_frame_number * launch_dim.x + idx; 
-	tea_hash(t);
+	SEED_TYPE t;
+	init_seed(t, ((unsigned long long)ref_frame_number) * launch_dim.x + idx);
+	RND_FUNC(t);
 	 
 	const float incident_power = 1.0f;
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;

@@ -23,7 +23,7 @@ public:
 		mUseMeshParameters = val;
 	}
 
-	HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader &);
+	HemisphereBSSRDFShader(HemisphereBSSRDFShader &);
 
 protected:
 	void init_output();

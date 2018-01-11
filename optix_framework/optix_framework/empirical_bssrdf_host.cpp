@@ -111,12 +111,20 @@ void EmpiricalBSSRDF::load(const float relative_ior, const ScatteringMaterialPro
             // We find the corresponding index for the material properties.
             mManager->get_material_index(optix::getByIndex(props.albedo,i), optix::getByIndex(props.meancosine,i), relative_ior, state);
             optix::Buffer buf = mContext->getBufferFromId(mDataBuffers.buffers[i].getId());
-            float * data = reinterpret_cast<float*>(buf->map());
-            found &= mBSSRDFLoader->load_material_slice(data, state);
-            buf->unmap();
-
             RTsize w;
             buf->getSize(w);
+
+            float * data = reinterpret_cast<float*>(buf->map());
+            found &= mBSSRDFLoader->load_material_slice(data, state);
+
+            float mx = 0.0f;
+            for(int i = 0; i < w; i++)
+            {
+                mx = std::max(mx, data[i]);
+            }
+            Logger::info << "Loaded bssrdf max " << mx << std::endl;
+
+            buf->unmap();
             mContext["empirical_buffer_size"]->setInt(w);
         }
 
@@ -126,5 +134,6 @@ void EmpiricalBSSRDF::load(const float relative_ior, const ScatteringMaterialPro
         {
             mInitialized = false;
         }
+        mContext["empirical_bssrdf_correction"]->setFloat(mCorrection);
     }
 }

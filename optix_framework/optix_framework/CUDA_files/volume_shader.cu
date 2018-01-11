@@ -56,7 +56,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASam
     float albedo = get_albedo(ray.origin, colorband);
     float g = get_asymmetry(ray.origin, colorband);
     float extinction = get_extinction(ray.origin, colorband);
-
+    optix_print("albedo %f, g %f, ext %f \n", albedo, g, extinction);
     // Input: 
     // ray: initial position and direction
     //
@@ -127,7 +127,9 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASam
             ray.direction = sample_HG(ray.direction, g, sampler->next2D());
         }
         else // Intersection hit
+        {
             return true;
+        }
 
 //        albedo = get_albedo(ray.origin, colorband);
         // Break if absorbed

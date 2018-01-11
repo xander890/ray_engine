@@ -180,17 +180,18 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	
 }
 
-void normalize(float * data, size_t size)
+float normalize(float * data, size_t size)
 {
 	float max_elem = 0.0f;
 	for (int i = 0; i < size; i++)
 	{
-		max_elem = fmaxf(max_elem, data[i]);
+		max_elem = std::max(max_elem, data[i]);
 	}
 	for (int i = 0; i < size; i++)
 	{
 		data[i] /= max_elem;
 	}
+	return max_elem;
 }
 
 float average(float * data, size_t size)
@@ -235,8 +236,11 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 				void* dest = mBSSRDFBufferTexture->map();
 				memcpy(dest, mCurrentHemisphereData, mCurrentBssrdfRenderer->get_size().x*mCurrentBssrdfRenderer->get_size().y * sizeof(float));
 
-				if (mCurrentBssrdfRenderer->get_shape() == BSSRDFRenderer::HEMISPHERE)
-					normalize((float*)dest, (int)mCurrentBssrdfRenderer->get_storage_size());
+				if (mCurrentBssrdfRenderer->get_shape() == BSSRDFRenderer::HEMISPHERE) {
+					float avg = average((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
+					float mx = normalize((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
+					printf("Current max %e, average %e\n", mx, avg);
+				}
 				mBSSRDFBufferTexture->unmap();
 			}
 			mCurrentBssrdfRenderer->get_output_buffer()->unmap();

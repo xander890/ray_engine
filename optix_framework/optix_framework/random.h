@@ -22,8 +22,7 @@
 
 #include <optix_world.h>
 #include "math_helpers.h"
-//#include "md5.h"
-
+#include "md5.h"
  // TEA algorithm https://www.csee.umbc.edu/~olano/class/635-11-2/lsebald1.pdf
 template<unsigned int N>
 static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsigned int val1 )
@@ -76,18 +75,22 @@ static __host__ __device__ __inline__ float hash_tdf(const optix::float3 idx, fl
 	return floor(fracf(optix::dot(n / m, optix::make_float4(1.0f, -1.0f, 1.0f, -1.0f))) * hash_num);
 }
 
-//
-//static __host__ __device__ __inline__ unsigned int hash(unsigned int &prev)
-//{
-//	optix::uint4 md5 = rand_md5(prev, 0);
-//	prev = md5.x;
-//	return prev & 0x7FFFFFFF;
-//}
-//
-//static __host__ __device__ __inline__ float rnd_accurate(unsigned int &prev)
-//{
-//	return ((float)hash(prev) / (float)0x80000000);
-//}
+union Seed64
+{
+    optix::uint2 seed;
+    unsigned long long l;
+};
+
+
+static __host__ __device__ __inline__ float rnd_accurate(Seed64 &prev)
+{
+	optix::uint4 md5 = rand_md5(prev.seed, 0);
+	prev.seed.x = md5.x;
+    prev.seed.y = md5.y;          //0x8000000000000000
+    unsigned long long l = prev.l & 0x7FFFFFFFFFFFFFFF;
+    double val = ((double)l) / ((double) 0x8000000000000000);
+    return (float)val;
+}
 
 static __host__ __device__ __inline__ unsigned int tea_hash(unsigned int &prev)
 {
@@ -99,6 +102,7 @@ static __host__ __device__ __inline__ float rnd_tea(unsigned int &prev)
 {
 	return ((float)tea_hash(prev) / (float)0x80000000);
 }
+
 
 
 #endif

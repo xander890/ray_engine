@@ -16,6 +16,7 @@ rtDeclareVariable(EmpiricalDataBuffer, empirical_buffer, , );
 rtDeclareVariable(int, empirical_buffer_size, , );
 rtDeclareVariable(EmpiricalParameterBuffer, empirical_bssrdf_parameters, , );
 rtDeclareVariable(BufPtr<int>, empirical_bssrdf_parameters_size, , );
+rtDeclareVariable(float, empirical_bssrdf_correction,,);
 
 template<int N>
 __host__ __device__ __forceinline__ int ravel(int idx[N], BufPtr<int>& size)
@@ -153,12 +154,12 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
         r = clamp(r, 0.01f, 10.0f);
         float values[5] = {theta_s, r, theta_i, theta_o, phi_o};
         //optix_print("theta_s %f\n", theta_s);
-        optix_print("r %f\n", r);
+        optix_print("r %f (ext %f - %f)\n", r, extinction, empirical_bssrdf_correction);
         //optix_print("theta_i %f\n", theta_i);
         //optix_print("theta_o %f\n", theta_o);
         //optix_print("phi_o %f\n", phi_o);
 
-        optix::get_channel(i, S) = interpolate_bssrdf_nearest<5>(values,i) * extinction * 100000;
+        optix::get_channel(i, S) = interpolate_bssrdf_nearest<5>(values,i) * extinction * empirical_bssrdf_correction;
     }
     //optix_print("S: %e %e %e\n", S.x, S.y, S.z);
 

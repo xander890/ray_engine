@@ -63,7 +63,7 @@ RT_PROGRAM void any_hit_shadow() {
 //	prd_radiance.result = color; 
 //}
 
-RT_PROGRAM void shade_path_tracing()
+__device__ __forceinline__ void _shade()
 {
   float3 color = make_float3(0.0f);
   const MaterialDataCommon & material = get_material();
@@ -103,3 +103,6 @@ RT_PROGRAM void shade_path_tracing()
   }
   prd_radiance.result = color;
 }
+
+RT_PROGRAM void shade() { _shade(); }
+RT_PROGRAM void shade_path_tracing() { _shade(); }

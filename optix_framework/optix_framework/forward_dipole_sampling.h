@@ -298,7 +298,6 @@ __device__ __host__ __forceinline__   Float pdfLengthShortLimit(
 	const Float mu,
 	Float3 R, const Float3 *u0, Float3 uL, Float s) {
 	Float pdf;
-	unsigned int t = 0;
 	implLengthShortLimit(sigma_s, mu, R, u0, uL, s, nullptr, &pdf, false);
 	return pdf;
 }

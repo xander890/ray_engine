@@ -77,7 +77,7 @@ public:
 	void add_override_material_file(std::string mat);
 private:
 	optix::Context context;
-	bool debug_mode_enabled = false;
+	bool debug_mode_enabled = true;
 
 	BackgroundType::EnumType current_miss_program;
 	bool collect_images = false;

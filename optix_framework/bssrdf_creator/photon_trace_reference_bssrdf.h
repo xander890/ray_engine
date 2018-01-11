@@ -1,6 +1,7 @@
 #pragma once
 #include "full_bssrdf_host_device_common.h"
 #include <device_common_data.h>
+#include "photon_trace_structs.h"
 #include <random.h>
 #include <sampling_helpers.h>
 #include <environment_map.h>
@@ -10,13 +11,9 @@
 #include "phase_function.h"
 #include "empirical_bssrdf_utils.h"
 
-#define RND_FUNC rnd_tea
 
 // FIXME, we need to remove this or find a better way to express it without overhauling all the parameters.
 rtDeclareVariable(optix::float2, plane_size, , );
-
-//#define EXTINCTION_DISTANCE_RR
-//#define INCLUDE_SINGLE_SCATTERING
 
 __forceinline__ __device__ void get_reference_scene_geometry(const float theta_i, const float r, const float theta_s, optix::float3 & xi, optix::float3 & wi, optix::float3 & ni, optix::float3 & xo, optix::float3 & no)
 {
@@ -39,7 +36,6 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_orig
 }
 
 
-
 __forceinline__ __device__ void store_values_in_buffer(const float theta_o, const float phi_o, const float flux_E, BufPtr2D<float> & resulting_flux)
 {
 	const optix::size_t2 bins = resulting_flux.size();
@@ -47,6 +43,7 @@ __forceinline__ __device__ void store_values_in_buffer(const float theta_o, cons
 	optix::uint2 idxs = make_uint2(coords * make_float2(bins));
 	optix_assert(flux_E >= 0.0f);
 	optix_assert(!isnan(flux_E));
+	optix_print("Storing flux %f\n", flux_E);
 
 	// Atomic add to avoid thread conflicts
 	if (!isnan(flux_E))
@@ -54,7 +51,7 @@ __forceinline__ __device__ void store_values_in_buffer(const float theta_o, cons
 }
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
+__forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions)
 {
 	// Defining geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
@@ -95,6 +92,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 			const float d_vec_len = optix::length(d_vec);
 			d_vec = d_vec / d_vec_len; // Normalizing
 
+//optix_print("## %f\n", optix::dot(d_vec, no));
 			optix_assert(optix::dot(d_vec, no) > 0.0f);
 
 
@@ -114,15 +112,13 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 				// w_12 points *towards* the surface, and the outgoing w_o points *away *from the surface.
 				const float phi_o = phi_21;
 
-#ifdef EXTINCTION_DISTANCE_RR
-				if (RND_FUNC(t) < 1.0f - expf(-extinction*d_vec_len))
-					return true;
+				float flux_E = flux_t * albedo * phase_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len) * F_t;
+#ifdef INCLUDE_GEOMETRIC_TERM
+				optix_print("Geometric.\n"); 
+				flux_E *= fabsf(optix::dot(d_vec, no)) / (d_vec_len*d_vec_len);
+#endif 
+				optix_print("flux_t %f, albedo %f, p %f, exp %f, F %f\n",  flux_t, albedo , phase_HG(optix::dot(d_vec, wp), g) , expf(-extinction*d_vec_len) , F_t);
 
-				// The two exponentials cancel out when dividing out by the pdf, the extinction term remains.
-				const float flux_E = flux_t * albedo * phase_HG(optix::dot(d_vec, wp), g)  * F_t / extinction; 
-#else
-				const float flux_E = flux_t * albedo * phase_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len) * F_t;
-#endif
 				// Not including single scattering, so i == 0 is not considered.
 
 #ifdef INCLUDE_SINGLE_SCATTERING
@@ -190,7 +186,7 @@ __forceinline__ __device__ void store_values_in_buffer_planar(const optix::float
 
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_planar(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
+__forceinline__ __device__ bool scatter_photon_planar(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions)
 {
 	// Defining geometry
 	const optix::float3 xi = optix::make_float3(0, 0, 0);
@@ -209,7 +205,7 @@ __forceinline__ __device__ bool scatter_photon_planar(optix::float3& xp, optix::
 
 											   // Sampling new distance for photon, testing if it intersects the interface
 		const float d = -log(rand) / extinction;
-		optix::Ray ray = optix::make_Ray(xp, wp, 0, scene_epsilon, d);
+		optix::Ray ray = optix::make_Ray(xp, wp, 0, 0, d);
 		optix_assert(xp.z < 1e-6);
 		optix_assert(xp.z > -INFINITY);
 
@@ -255,7 +251,7 @@ __forceinline__ __device__ bool scatter_photon_planar(optix::float3& xp, optix::
 	return false;
 }
 
-__forceinline__ __device__ bool scatter_photon(int mode, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, optix::uint & t, int starting_it, int executions)
+__forceinline__ __device__ bool scatter_photon(int mode, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions)
 {
 	return (mode == BSSRDF_OUTPUT_HEMISPHERE) ? scatter_photon_hemisphere(xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t, starting_it, executions) :
 		scatter_photon_planar(xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t, starting_it, executions);

@@ -18,7 +18,6 @@ rtDeclareVariable(BufPtr1D<int>, photon_counter, , );
 rtDeclareVariable(unsigned int, maximum_iterations, , ) = 1e5;
 rtDeclareVariable(unsigned int, batch_iterations, , ) = 1e3;
 rtDeclareVariable(unsigned int, ref_frame_number, , ) = 1e5;
-rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
 // Window variables
 
 rtDeclareVariable(float, reference_bssrdf_theta_i, , );
@@ -47,6 +46,7 @@ RT_PROGRAM void reference_bssrdf_gpu()
 	albedo = reference_bssrdf_material_params->albedo.x;
 	extinction = reference_bssrdf_material_params->extinction.x;
 	g = reference_bssrdf_material_params->meancosine.x;
+	optix_print("a %f, e %f, g %f\n", albedo, extinction, g);
 
 	optix::float3 xi, wi, ni, xo, no;
 	get_reference_scene_geometry(theta_i, r, theta_s, xi, wi, ni, xo, no);
@@ -56,9 +56,14 @@ RT_PROGRAM void reference_bssrdf_gpu()
 	if (p.status == PHOTON_STATUS_NEW)
 	{
 		optix_print("New photon.\n");
-		p.t = ref_frame_number * launch_dim.x + idx;
-		tea_hash(p.t);
-		// Refraction      
+
+        if(ref_frame_number == 0) {
+            init_seed(p.t, ((unsigned long long) ref_frame_number) * launch_dim.x + idx);
+        }
+		RND_FUNC(p.t);
+        if(idx == 0)
+            printf("%llu %f\n", p.t.l, RND_FUNC(p.t));
+		// Refraction
 		const float n1_over_n2 = 1.0f / n2_over_n1;
 		optix::float3 w12;
 		refract(wi, ni, n1_over_n2, w12);
@@ -67,8 +72,8 @@ RT_PROGRAM void reference_bssrdf_gpu()
 		p.xp = xi; 
 		p.wp = w12;  
 		p.i = 0;
-		p.status = PHOTON_STATUS_SCATTERING; 
-		atomicAdd(&photon_counter[ref_frame_number], 1); 
+		p.status = PHOTON_STATUS_SCATTERING;
+		atomicAdd(&photon_counter[ref_frame_number], 1);
 	}
 	 
 	if (scatter_photon(reference_bssrdf_output_shape, p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
@@ -89,16 +94,19 @@ RT_PROGRAM void reference_bssrdf_gpu()
 			photon_buffer[idx] = p; 
 		}
 	}
+    photon_buffer[idx].t = p.t;
 
 }
 
 RT_PROGRAM void reference_bssrdf_gpu_post()
 {
-	unsigned int photons = 0;
+	unsigned long long photons = 0;
 	for (int i = 0; i < photon_counter.buf.size(); i++)
 	{
+        //optix_print("Photons %d --> %d %d\n", i, photon_counter[i], photons);
 		photons += photon_counter[i];
 	}
+    optix_print("Photons %llu (%f)\n", photons, reference_resulting_flux_intermediate[launch_index]);
 	reference_resulting_flux[launch_index] = reference_resulting_flux_intermediate[launch_index] / photons;
 }
 
