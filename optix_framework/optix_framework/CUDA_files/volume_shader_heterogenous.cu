@@ -123,6 +123,7 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASam
         if (sampler->next1D() > albedo)
             return false;
     }
+    return false;
 }
 
 

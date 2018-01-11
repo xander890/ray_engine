@@ -30,5 +30,5 @@ private:
     std::string mBSSRDFFile;
     std::unique_ptr<BSSRDFLoader> mBSSRDFLoader = nullptr;
     std::unique_ptr<BSSRDFParameterManager> mManager = nullptr;
-	float mCorrection = 1;
+	float mCorrection = DEFAULT_EMPIRICAL_CORRECTION;
 };

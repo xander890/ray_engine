@@ -79,7 +79,7 @@ __device__ __forceinline__ void sample_point_on_normal_tangent_plane(
         const MaterialDataCommon & material,  // Material properties.
         TEASampler * sampler,       // A rng.
 	    float3 & x_tangent,                // The candidate point 
-        float & integration_factor, // An factor that will be multiplied into the final result. For inverse pdfs. 
+        float3 & integration_factor, // An factor that will be multiplied into the final result. For inverse pdfs.
         bool & has_candidate_wi,    // Returns true if the point has a candidate outgoing direction
         float3 & proposed_wi)       // The candidate proposed direction.
 {
@@ -95,7 +95,7 @@ __device__ __forceinline__ void sample_point_on_normal_tangent_plane(
 
 	        optix::float2 sample = optix::make_float2(sampler->next1D(), sampler->next1D());
 	        optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
-	        integration_factor *= r / pdf_disk;
+	        integration_factor *= make_float3(r / pdf_disk);
             x_tangent = xo + r * cosf(phi) * to + r * sinf(phi) * bo;
             has_candidate_wi = false;
 
@@ -103,7 +103,18 @@ __device__ __forceinline__ void sample_point_on_normal_tangent_plane(
         case BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING:
         {
             has_candidate_wi = true;
-            sample_neural_network(xo,no,wo,material, sampler, x_tangent, integration_factor, proposed_wi);        
+			// Sampling neural network with specific colorband.
+			// TODO implement Hero wavelength sampling here.
+			int colorband = int(sampler->next1D() * 3.0);
+			float nn_integration_factor = 1.0f;
+
+			// FIXME remove this when multiple nns are implemented...
+			sample_neural_network(xo,no,wo, material, 0, sampler, x_tangent, nn_integration_factor, proposed_wi);
+			integration_factor *= nn_integration_factor; // Pdf of choosing wavelength.
+
+			// ...and uncomment this.
+            //sample_neural_network(xo,no,wo, material, colorband, sampler, x_tangent, nn_integration_factor, proposed_wi);
+			//get_channel(colorband, integration_factor) *= 3.0f * nn_integration_factor; // Pdf of choosing wavelength.
         } break;
     }
 }
@@ -122,7 +133,7 @@ __device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float
 }
 
 __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
-	float3 & xi, float3 & ni, float & integration_factor)
+	float3 & xi, float3 & ni, float3 & integration_factor)
 {
 
 	const ScatteringMaterialProperties& props = material.scattering_properties;
@@ -134,7 +145,7 @@ __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const f
     optix::float3 to, bo;
     create_onb(no, to, bo);
 	float t_max = RT_DEFAULT_MAX;
-	integration_factor = 1.0f;
+	integration_factor = make_float3(1.0f);
 	float3 sample_on_tangent_plane = xo + to*disc_sample.x + bo*disc_sample.y;
 	float3 sample_ray_dir = normalize(sample_on_tangent_plane - camera_data.eye);
 	float3 sample_ray_origin = camera_data.eye;
@@ -143,7 +154,7 @@ __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const f
 		return false;
 
 	integration_factor *= r / pdf_disk;
-	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor);
+	optix_print("r: %f, pdf_disk %f, inte %f\n", r, pdf_disk, integration_factor.x);
 
 	if (bssrdf_sampling_properties->use_jacobian == 1)
 	{
@@ -160,7 +171,7 @@ __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const f
 	return true;
 }
 __device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
-	float3 & xi, float3 & ni, float & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
+	float3 & xi, float3 & ni, float3 & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
 {
 
     optix::float3 xo_tangent;
@@ -178,7 +189,7 @@ __device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const 
 
 
 __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
-	float3 & xi, float3 & ni, float & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
+	float3 & xi, float3 & ni, float3 & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
 {
     optix::float3 xo_tangent;
     sample_point_on_normal_tangent_plane(xo,no,wo,material,sampler, xo_tangent, integration_factor, has_candidate_wi, proposed_wi);
@@ -201,12 +212,12 @@ __device__ __forceinline__ bool tangent_no_offset(const float3 & xo, const float
 	float inv_jac = max(bssrdf_sampling_properties->dot_no_ni_min, dot(normalize(no), normalize(ni)));
 
 	if (bssrdf_sampling_properties->use_jacobian == 1)
-		integration_factor = inv_jac > 0.0f ? integration_factor / inv_jac : 0.0f;
+		integration_factor = inv_jac > 0.0f ? integration_factor / inv_jac : make_float3(0.0f);
 	return true;
 }
 
 __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
-	float3 & xi, float3 & ni, float & integration_factor)
+	float3 & xi, float3 & ni, float3 & integration_factor)
 {
 	const ScatteringMaterialProperties& props = material.scattering_properties;
 	float chosen_sampling_mfp = get_sampling_mfp(props);
@@ -262,12 +273,12 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 
 	float weight = 1.0f / (wi0 + wi1 + wi2);
 
-	integration_factor = inv_pdf * weight;
+	integration_factor = make_float3(inv_pdf * weight);
 	return true;
 }
 
 __device__ __forceinline__ bool importance_sample_position(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, TEASampler * sampler,
-	float3 & xi, float3 & ni, float & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
+	float3 & xi, float3 & ni, float3 & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
 {
     has_candidate_wi = false;
 	switch (bssrdf_sampling_properties->sampling_method)
@@ -302,7 +313,6 @@ __device__ __forceinline__ void _shade()
 	float reflect_xi = sampler->next1D();
 	prd_radiance.result = make_float3(0.0f);
 
-#ifdef TRANSMIT
 	float3 beam_T = make_float3(1.0f);
 	float cos_theta_o = dot(wo, n);
 	bool inside = cos_theta_o < 0.0f;
@@ -349,76 +359,78 @@ __device__ __forceinline__ void _shade()
 
 		if (!inside)
 		{
-#else
-	float cos_theta_o = dot(wo, no);
-	float R = fresnel_R(cos_theta_o, recip_ior);
-#endif
 
-	float3 L_d = make_float3(0.0f);
-	uint N = samples_per_pixel;
+			float3 L_d = make_float3(0.0f);
+			uint N = samples_per_pixel;
 
-	for (uint i = 0; i < N; i++)
-	{
-		float integration_factor = 1.0f;
-		float3 xi, ni;
-        bool has_candidate_wi;
-        float3 proposed_wi;
+			for (uint i = 0; i < N; i++)
+			{
+				float3 integration_factor = make_float3(1.0f);
+				float3 xi, ni;
+				bool has_candidate_wi;
+				float3 proposed_wi;
 
-		if (!importance_sample_position(xo, no, wo, material, sampler, xi, ni, integration_factor, has_candidate_wi, proposed_wi))
-		{
-			optix_print("Sample non valid.\n");
-			continue;
+				if (!importance_sample_position(xo, no, wo, material, sampler, xi, ni, integration_factor, has_candidate_wi, proposed_wi))
+				{
+					optix_print("Sample non valid.\n");
+					continue;
+				}
+
+				optix::float3 wi = make_float3(0);
+				optix::float3 L_i;
+
+				optix_print("Sampling complete, evaluating light...\n");
+				if(has_candidate_wi)
+				{
+					wi = proposed_wi;
+					PerRayData_radiance prd_extra = get_empty();
+					prd_extra.flags = RayFlags::USE_EMISSION;
+					prd_extra.depth = prd_radiance.depth + 1;
+					prd_extra.sampler = sampler;
+					optix::Ray ray = optix::make_Ray(xi, wi, RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+					rtTrace(top_object, ray, prd_extra);
+					L_i = prd_extra.result;
+				}
+				else
+				{
+					sample_light(xi, ni, 0, sampler, wi, L_i); // This returns pre-sampled w_i and L_i
+				}
+
+				// compute direction of the transmitted light
+
+				float3 w12;
+				float R12;
+				refract(wi, ni, recip_ior, w12, R12);
+				float T12 = 1.0f - R12;
+				optix_print("Sampling complete, evaluating bssrdf...\n");
+				// compute contribution if sample is non-zero
+				if (dot(L_i, L_i) > 0.0f)
+				{
+					float3 S;
+					if(bssrdf_sampling_properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
+					{
+						 S = make_float3(1);
+					}
+					else
+					{
+						 BSSRDFGeometry geometry;
+						 geometry.xi = xi;
+						 geometry.ni = ni;
+						 geometry.wi = wi;
+						 geometry.xo = xo;
+						 geometry.no = no;
+						 geometry.wo = wo;
+						 S = bssrdf(geometry, recip_ior, material, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, sampler);
+					}
+
+					L_d += L_i * S * integration_factor;
+					optix_print("Sd %e %e %e Ld %f %f %f Li %f %f %f T12 %f int %f\n",  S.x, S.y, S.z, L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
+				}
+
+			}
+			prd_radiance.result += L_d / (float)N;
 		}
-		
-#ifdef TEST_SAMPLING
-		L_d += make_float3(integration_factor * TEST_SAMPLING_W);
-#else
-		optix::float3 wi = make_float3(0);
-		optix::float3 L_i;
-        optix_print("Sampling complete, evaluating light...\n");
-		sample_light(xi, ni, 0, sampler, wi, L_i); // This returns pre-sampled w_i and L_i
-
-		// compute direction of the transmitted light
-		
-        float3 w12; 
-	    float R12;
-	    refract(wi, ni, recip_ior, w12, R12);
-		float T12 = 1.0f - R12;
-        optix_print("Sampling complete, evaluating bssrdf...\n");
-		// compute contribution if sample is non-zero
-		if (dot(L_i, L_i) > 0.0f)
-		{
-            float3 S;
-            if(bssrdf_sampling_properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
-            {
-                 S = make_float3(1);
-            }
-            else
-            {
-                 BSSRDFGeometry geometry;
-                 geometry.xi = xi;
-                 geometry.ni = ni;
-                 geometry.wi = wi;
-                 geometry.xo = xo;
-                 geometry.no = no;
-                 geometry.wo = wo;
-                 S = bssrdf(geometry, recip_ior, material, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, sampler);
-            }
-
-			L_d += L_i * S * integration_factor;
-			optix_print("Sd %e %e %e Ld %f %f %f Li %f %f %f T12 %f int %f\n",  S.x, S.y, S.z, L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);
-		}
-#endif
 	}
-#ifdef TRANSMIT
-		prd_radiance.result += L_d / (float)N;
-		}
-	}
-#else
-	float T21 = 1.0f - R;
-	prd_radiance.result += T21*accumulate / (float)count;
-#endif
-
 }
 
 RT_PROGRAM void shade() { _shade(); }

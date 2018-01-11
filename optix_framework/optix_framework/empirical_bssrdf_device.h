@@ -107,61 +107,30 @@ __device__ __forceinline__ float interpolate_bssrdf(float values[N], const rtBuf
     return interpolated;
 }*/
 
+
+
 __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geometry, const float recip_ior,
                                                         const MaterialDataCommon material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
 {
-
     optix_print("EMPIRICAL\n");
-
-    float cos_theta_i = dot(geometry.wi, geometry.ni);
-    float theta_i = acosf(cos_theta_i);
-
-    optix::float3 x = geometry.xo - geometry.xi;
-    optix::float3 x_norm = normalize(x);
-    float cos_theta_o = dot(geometry.no, geometry.wo);
-    optix::float3 x_bar = -normalize(geometry.wi - cos_theta_i * geometry.ni);
-
-    if(fabs(theta_i) <= 1e-6f)
-    {
-        x_bar = x_norm;
-    }
-
-    optix::float3 z_bar = normalize(cross(geometry.ni, x_bar));
-    float theta_s = -atan2(dot(z_bar, x_norm),dot(x_bar, x_norm));
-
-    // theta_s mirroring.
-    if(theta_s < 0) {
-        theta_s = abs(theta_s);
-        z_bar = -z_bar;
-    }
-
-    optix::float3 xo_bar = normalize(geometry.wo - cos_theta_o * geometry.no);
-    float theta_o = acosf(cos_theta_o);
-    float phi_o = atan2f(dot(z_bar,xo_bar), dot(x_bar,xo_bar));
-
-    phi_o = normalize_angle(phi_o);
-
-            optix_assert(theta_i >= 0 && theta_i <= M_PIf/2);
-            optix_assert(theta_s >= 0 && theta_s <= M_PIf);
-            optix_assert(theta_o >= 0 && theta_o <= M_PIf/2);
-            optix_assert(phi_o >= 0 &&  phi_o < 2*M_PIf);
+    float theta_i, r, theta_s, theta_o, phi_o;
+    empirical_bssrdf_get_geometry(geometry, theta_i,  r, theta_s, theta_o, phi_o);
 
     optix::float3 S;
     for(int i = 0; i < 3; i++)
     {
         float extinction = optix::get_channel(i, material.scattering_properties.extinction);
-        float r = optix::length(x) * extinction;
-        r = clamp(r, 0.01f, 10.0f);
-        float values[5] = {theta_s, r, theta_i, theta_o, phi_o};
+        float r_s = r * extinction;
+        r_s = clamp(r, 0.01f, 10.0f);
+        float values[5] = {theta_s, r_s, theta_i, theta_o, phi_o};
         //optix_print("theta_s %f\n", theta_s);
-        optix_print("r %f (ext %f - %f)\n", r, extinction, empirical_bssrdf_correction);
+        optix_print("r %f (ext %f - %f)\n", r_s, extinction, empirical_bssrdf_correction);
         //optix_print("theta_i %f\n", theta_i);
         //optix_print("theta_o %f\n", theta_o);
         //optix_print("phi_o %f\n", phi_o);
 
         optix::get_channel(i, S) = interpolate_bssrdf_nearest<5>(values,i) * extinction * empirical_bssrdf_correction;
     }
-    //optix_print("S: %e %e %e\n", S.x, S.y, S.z);
 
     optix::float3 w21;
     float R21;

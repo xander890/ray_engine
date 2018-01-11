@@ -104,3 +104,6 @@ using BufPtr3D = BufPtr<T, 3>;
 #define optix_print printf
 #define optix_assert assert
 #endif
+
+// FIXME temporary, remove me.
+#define DEFAULT_EMPIRICAL_CORRECTION 1000.0f

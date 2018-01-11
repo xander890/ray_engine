@@ -2,9 +2,13 @@
 #include <math_helpers.h>
 #include <random.h>
 #include <optical_helper.h>
+#include <optix_helpers.h>
 #include <ray_trace_helpers.h>
 #include <scattering_properties.h>
 #include <sampling_helpers.h>
+#include "material.h"
+#include "bssrdf_properties.h"
+#include "empirical_bssrdf_utils.h"
 
 // HyperNetwork parameters
 rtDeclareVariable(int, hypernetwork_num_layers, , );
@@ -325,21 +329,22 @@ __device__ __forceinline__ float map_interval(float point, optix::float2 interva
 }
 
 __device__ __forceinline__ void sample_neural_network(
-        const float3 & xo,          // The points hit by the camera ray.
-        const float3 & no,          // The normal at the point.
-        const float3 & wo,          // The incoming ray direction.
+        const optix::float3 & xo,          // The points hit by the camera ray.
+        const optix::float3 & no,          // The normal at the point.
+        const optix::float3 & wo,          // The incoming ray direction.
         const MaterialDataCommon & material,  // Material properties.
+        const int colorband,        // Specific colorband frequency.
         TEASampler * sampler,       // A rng.
-	    float3 & x_tangent,                // The candidate point 
+        optix::float3 & x_tangent,                // The candidate point
         float & integration_factor, // An factor that will be multiplied into the final result. For inverse pdfs. 
-        float3 & proposed_wi)   
-{   
+        optix::float3 & proposed_wi)
+{
     // Gathering scattering parameters.
     // For now only red channel.
-    float albedo = material.scattering_properties.albedo.x;
-    float extinction = material.scattering_properties.extinction.x;
+    float albedo = optix::get_channel(colorband, material.scattering_properties.albedo);
+    float extinction = optix::get_channel(colorband, material.scattering_properties.extinction);
     float eta = material.relative_ior;
-    float g = material.scattering_properties.meancosine.x;
+    float g = optix::get_channel(colorband,  material.scattering_properties.meancosine);
 
     float cos_theta_i = dot(wo, no);
     float theta_i = acosf(cos_theta_i);        
@@ -350,6 +355,7 @@ __device__ __forceinline__ void sample_neural_network(
     float x3 = sampler->next1D();
     float x4 = sampler->next1D();
 
+    // FIXME code should be available about colorband from now on.
     // Get hypernetwork output for the specified optical parameters. A set of
     // optical parameters are passed to the hypernetwork which will generate
     // parameters for the iCDF network.
@@ -393,7 +399,8 @@ __device__ __forceinline__ void sample_neural_network(
     optix_print("\n");
 
     // Also here sample normalization constant
-    float bssrdf_integral = 1.0f;
+    float bssrdf_integral = 1e-4f; // FIXME implement proper integrals from generated dataset.
+    bssrdf_integral *= DEFAULT_EMPIRICAL_CORRECTION;
     integration_factor *= bssrdf_integral;
     // Multiplying over extinction as in the empbssrdf paper
     integration_factor *= extinction;
@@ -412,10 +419,28 @@ __device__ __forceinline__ void sample_neural_network(
     integration_factor *= 2;
 
     // Note that the tangent vector has to be aligned to wo in order to get a consistent framae for theta_s.
-    float3 to = normalize(wo - cos_theta_i * no);
-    float3 bo = cross(to, no);
+    optix::float3 to = normalize(wo - cos_theta_i * no);
+    optix::float3 bo = cross(to, no);
     x_tangent = xo + r * cosf(theta_s) * to + r * sinf(theta_s) * bo;
 
     proposed_wi = spherical_to_cartesian(theta_o, phi_o);
 
+#define TEST_GEOMETRY
+#ifdef TEST_GEOMETRY
+    // FIXME still wrong values.
+    BSSRDFGeometry geom;
+    geom.xi = x_tangent;
+    geom.xo = xo;
+    geom.ni = no;
+    geom.no = no;
+    geom.wi = proposed_wi;
+    geom.wo = wo;
+    float theta_i_test, r_test, theta_s_test, theta_o_test, phi_o_test;
+    empirical_bssrdf_get_geometry(geom, theta_i_test,  r_test, theta_s_test, theta_o_test, phi_o_test);
+    optix_print("original %f, evaluated %f\n", theta_i, theta_i_test);
+    optix_print("original %f, evaluated %f\n", theta_s, theta_s_test);
+    optix_print("original %f, evaluated %f\n", r, r_test);
+    optix_print("original %f, evaluated %f\n", theta_o, theta_o_test);
+    optix_print("original %f, evaluated %f\n", phi_o, phi_o_test);
+#endif
 }
