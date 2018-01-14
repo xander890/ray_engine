@@ -1,15 +1,8 @@
 #include "full_bssrdf_generator.h"
 #include "optix_utils.h"
 #include "immediate_gui.h"
-#include <bssrdf_creator.h>
-#include "parserstringhelpers.h"
-#include <fstream>
-#include "parameter_parser.h"
-#include "folders.h"
 #include "dialogs.h"
-#include <sstream>
-#include "reference_bssrdf_gpu.h"
-#include "GL/glew.h"
+#include <fstream>
 #include "cputimer.h"
 #include "GLFW/glfw3.h"
 #include "GLFWDisplay.h"
@@ -118,7 +111,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
-	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPU>(m_context, BSSRDFRenderer::HEMISPHERE, optix::make_uint2(160, 100), (int)10e5);
+	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPU>(m_context, BSSRDFRenderer::HEMISPHERE, optix::make_int2(160, 40), (int)10e5);
 	mBssrdfReferenceSimulator->init();
 
 	mBssrdfModelSimulator = std::make_shared<BSSRDFRendererModel>(m_context);
@@ -519,7 +512,7 @@ void FullBSSRDFGenerator::start_rendering()
 	Logger::info << "Theta i: " << tostring(mParametersSimulation.parameters[theta_i_index]) << std::endl;
 	current_render_task->start();
 
-	mExporter = std::make_unique<BSSRDFExporter>(current_render_task->get_destination_file(), mParametersOriginal, mCurrentBssrdfRenderer->get_size().y, mCurrentBssrdfRenderer->get_size().x);
+	mExporter = std::make_unique<BSSRDFExporter>(current_render_task->get_destination_file(), mParametersSimulation, mCurrentBssrdfRenderer->get_size().y, mCurrentBssrdfRenderer->get_size().x);
 	
 	mState = ParameterState({ 0,0,0,0,0,0 });
 
@@ -558,7 +551,7 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 
 			Logger::info << "Index: " << mState.tostring() << "(simulation) "<< ParameterState(original_state).tostring() << "(original) Parameters: eta " << eta << " g " << g << " albedo " << albedo << std::endl;
 			std::cout << "Average: " << std::scientific << average(mCurrentHemisphereData, mExporter->get_hemisphere_size()) << std::defaultfloat << std::endl;
-			mExporter->set_hemisphere(mCurrentHemisphereData, original_state);
+			mExporter->set_hemisphere(mCurrentHemisphereData, mState.mData);
 			mState = mParametersSimulation.next(mState);
 			float extinction = 1.0f;
 

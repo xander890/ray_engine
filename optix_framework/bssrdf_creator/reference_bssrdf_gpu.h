@@ -5,7 +5,7 @@
 class ReferenceBSSRDFGPU : public BSSRDFRendererSimulated
 {
 public:
-	ReferenceBSSRDFGPU(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::uint2 & shape_size = optix::make_uint2(160, 40), const unsigned int samples = (int)1e8) : BSSRDFRendererSimulated(ctx, shape, shape_size, samples)
+	ReferenceBSSRDFGPU(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const unsigned int samples = (int)1e8) : BSSRDFRendererSimulated(ctx, shape, shape_size, samples)
 	{
 	}
 

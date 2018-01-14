@@ -42,6 +42,30 @@ __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buff
 	return optix::make_float2(phi_o, theta_o);
 }
 
+__forceinline__ __device__ bool compare_geometries(const BSSRDFGeometry & g1, const BSSRDFGeometry & g2)
+{
+	bool e0 = fabsf(optix::length(g1.xi - g2.xi)) < 1e-6;
+	bool e1 = fabsf(optix::length(g1.xo - g2.xo)) < 1e-6;
+	bool e2 = fabsf(optix::length(g1.ni - g2.ni)) < 1e-6;
+	bool e3 = fabsf(optix::length(g1.no - g2.no)) < 1e-6;
+	bool e4 = fabsf(optix::length(g1.wi - g2.wi)) < 1e-6;
+	bool e5 = fabsf(optix::length(g1.wo - g2.wo)) < 1e-6;
+	return e0 & e1 & e2 & e3 & e4 & e5;
+}
+
+__forceinline__ __device__ void empirical_bssrdf_build_geometry(const optix::float3& xi, const optix::float3& x, const optix::float3& n, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
+{
+	geometry.no = geometry.ni = n;
+	geometry.wi = sinf(theta_i) * (-x) + cosf(theta_i) * n;
+	const optix::float3 z = cross(x, n);
+	const optix::float3 xoxi = cosf(theta_s) * x + sinf(theta_s) * (-z);
+	geometry.xo = xi + xoxi;
+	geometry.xi = xi;
+
+	const optix::float3 wo_s = optix::make_float3(sinf(theta_o) * cosf(phi_o), sinf(theta_o) * cosf(phi_o), cosf(theta_o));
+	geometry.wo = x * wo_s.x + z * wo_s.y + geometry.no * wo_s.z;
+}
+
 __forceinline__ __device__ void empirical_bssrdf_get_geometry(const BSSRDFGeometry & geometry, float& theta_i, float &r, float& theta_s, float& theta_o, float& phi_o)
 {
 	float cos_theta_i = dot(geometry.wi, geometry.ni);
@@ -72,8 +96,16 @@ __forceinline__ __device__ void empirical_bssrdf_get_geometry(const BSSRDFGeomet
 
 	phi_o = normalize_angle(phi_o);
 	r = optix::length(x);
-			optix_assert(theta_i >= 0 && theta_i <= M_PIf/2);
-			optix_assert(theta_s >= 0 && theta_s <= M_PIf);
-			optix_assert(theta_o >= 0 && theta_o <= M_PIf/2);
-			optix_assert(phi_o >= 0 &&  phi_o < 2*M_PIf);
+	optix_assert(theta_i >= 0 && theta_i <= M_PIf/2);
+	optix_assert(theta_s >= 0 && theta_s <= M_PIf);
+	optix_assert(theta_o >= 0 && theta_o <= M_PIf/2);
+	optix_assert(phi_o >= 0 &&  phi_o < 2*M_PIf);
+
+#define TEST_INVERSE
+#ifdef TEST_INVERSE
+	BSSRDFGeometry gg;
+	empirical_bssrdf_build_geometry(geometry.xi, x_bar, geometry.ni, theta_i, r, theta_s, theta_o, phi_o, gg);
+	bool res = compare_geometries(gg, geometry);
+	optix_print("Geometryies: %s\n", res? "yes" : "no");
+#endif
 }

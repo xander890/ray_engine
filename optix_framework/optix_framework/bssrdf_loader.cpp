@@ -322,7 +322,7 @@ std::string BSSRDFExporter::create_header()
 	ss << "#eta\tg\talbedo\ttheta_s\tr\ttheta_i\tphi_o\ttheta_o" << std::endl;
 
 	std::string params;
-	parameters_to_string(BSSRDFParameterManager::original_parameters, BSSRDFParameterManager::parameter_names, params);
+	parameters_to_string(mManager.parameters, BSSRDFParameterManager::parameter_names, params);
 	ss << params;
 
 	ss << bssrdf_delimiter << std::endl;
