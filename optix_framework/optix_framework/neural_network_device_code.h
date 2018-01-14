@@ -28,6 +28,17 @@ rtDeclareVariable(int, hypernetwork_layer3_in_size, ,);
 rtDeclareVariable(int, hypernetwork_layer3_out_size, ,);
 rtBuffer<float> hypernetwork_layer3_biases;
 
+rtDeclareVariable(int, integral_texture, ,);
+
+__device__ __forceinline__ float get_interpolated_integral(const float albedo, const float g, const float theta_i)
+{
+    const float albedo_normalized = albedo;
+    const float g_normalized = g; // FIXME if using negative gs with (g + 1) / 2
+    const float theta_i_normalized = theta_i * 2 / M_PIf;
+    optix::float4 value = optix::rtTex3D<optix::float4>(integral_texture, albedo_normalized, g_normalized, theta_i_normalized);
+    return value.x;
+}
+
 __device__ __forceinline__ void mat_mul(int rows, int cols, int inner, float *a, float *b, float *c)
 {
     for (int i = 0; i < rows; ++i)
@@ -400,6 +411,7 @@ __device__ __forceinline__ void sample_neural_network(
 
     // Also here sample normalization constant
     float bssrdf_integral = 1e-4f; // FIXME implement proper integrals from generated dataset.
+    // float bssrdf_integral = get_interpolated_integral(albedo, g, theta_i);
     bssrdf_integral *= DEFAULT_EMPIRICAL_CORRECTION;
     integration_factor *= bssrdf_integral;
     // Multiplying over extinction as in the empbssrdf paper
@@ -437,7 +449,7 @@ __device__ __forceinline__ void sample_neural_network(
     geom.wo = wo;
     float theta_i_test, r_test, theta_s_test, theta_o_test, phi_o_test;
     empirical_bssrdf_get_geometry(geom, theta_i_test,  r_test, theta_s_test, theta_o_test, phi_o_test);
-    optix_print("original %f, evaluated %f\n", theta_i, theta_i_test);
+    optix_print("original %f, evaluated %f\n", theta_o, theta_i_test);
     optix_print("original %f, evaluated %f\n", theta_s, theta_s_test);
     optix_print("original %f, evaluated %f\n", r, r_test);
     optix_print("original %f, evaluated %f\n", theta_o, theta_o_test);

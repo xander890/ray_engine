@@ -1,5 +1,6 @@
 #include "neural_network_sampler.h"
 #include "logger.h"
+#include "optix_utils.h"
 #include <Eigen/Dense>
 #include <fstream>
 
@@ -105,6 +106,53 @@ NeuralNetworkSampler::NeuralNetworkSampler(optix::Context & ctx) : mContext(ctx)
                 ++layer_index;
             }
         }
+        fclose(fp);
+    }
+
+    std::string integral_filename("integrals.bin");
+    std::string integral_path = filepath + integral_filename;
+
+    // Check if the integrals exist or not
+    if (exists(integral_path.c_str())) {
+        // Reading the dimensions of the array first
+        FILE *fp = fopen(integral_path.c_str(), "rb");
+        int dimensionality;
+        fread(&dimensionality, sizeof(int), 1, fp);
+        assert(dimensionality == 4);
+        // Now we read the dimensionality of each size of the array.
+        int * dimensions = new int[dimensionality];
+        fread(&dimensions[0], sizeof(int), 4, fp);
+
+        //printf("%d %d %d %d\n", dimensions[0], dimensions[1], dimensions[2], dimensions[3]);
+        // We support only one dimension in eta, to allow a 3d texture for sampling.
+        assert(dimensions[0] == 1);
+
+        RTsize buffer_dims[3];
+        size_t total_size = 1;
+        for(int i = 0; i < 3; i++)
+        {
+            buffer_dims[i] = dimensions[i+1];
+            total_size *= dimensions[i+1];
+        }
+
+        // Creating buffer to hold the data.
+        optix::Buffer integral_data = ctx->createBuffer(RT_BUFFER_INPUT);
+        integral_data->setFormat(RT_FORMAT_FLOAT);
+        integral_data->setSize(3, &buffer_dims[0]);
+        float* data = (float*)integral_data->map();
+        fread(&data, sizeof(float), total_size, fp);
+
+        // Creating texture.
+        optix::TextureSampler texture = ctx->createTextureSampler();
+        texture->setBuffer(integral_data);
+        texture->setFilteringModes(RT_FILTER_LINEAR,RT_FILTER_LINEAR,RT_FILTER_NONE);
+        texture->setIndexingMode(RT_TEXTURE_INDEX_NORMALIZED_COORDINATES);
+        texture->setReadMode(RT_TEXTURE_READ_ELEMENT_TYPE);
+        texture->setWrapMode(0, RT_WRAP_CLAMP_TO_EDGE);
+        texture->setWrapMode(1, RT_WRAP_CLAMP_TO_EDGE);
+        texture->setWrapMode(2, RT_WRAP_CLAMP_TO_EDGE);
+        ctx["integral_texture"]->setInt(texture->getId());
+
         fclose(fp);
     }
 }
