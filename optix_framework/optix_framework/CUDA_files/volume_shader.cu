@@ -8,6 +8,7 @@
 #include "light.h"
 #include <material_device.h>
 #include "phase_function.h"
+#include "volume_path_tracing_common.h"
 
 using namespace optix;
 
@@ -22,6 +23,7 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
  
 rtDeclareVariable(unsigned int, N, , );
 rtDeclareVariable(unsigned int, maximum_volume_steps, , );
+rtDeclareVariable(unsigned int, volume_pt_mode, , );
 
 //#define USE_SIMILARITY
 #define SIMILARITY_STEPS 10
@@ -108,7 +110,14 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASam
     }
     return !absorbed;
 #else
-    for (int i = 0; i < maximum_volume_steps; i++)
+    int steps = maximum_volume_steps;
+
+    if(volume_pt_mode == VOLUME_PT_SINGLE_SCATTERING_ONLY)
+    {
+        steps = 2;
+    }
+
+    for (int i = 0; i < steps; i++)
     {
         //extinction = get_extinction(ray.origin, colorband);
         // Sample new distance
@@ -128,6 +137,10 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASam
         }
         else // Intersection hit
         {
+            if(volume_pt_mode == VOLUME_PT_MULTIPLE_SCATTERING_ONLY && steps < 2)
+            {
+                return false;
+            }
             return true;
         }
 

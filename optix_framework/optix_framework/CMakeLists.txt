@@ -129,7 +129,7 @@ set(HEADERS
         empirical_bssrdf_host.h
         empirical_bssrdf_utils.h
         improved_enum.def
-)
+        volume_path_tracing_common.h)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp
