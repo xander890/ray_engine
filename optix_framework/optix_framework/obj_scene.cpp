@@ -403,7 +403,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	ShaderInfo info3 = ShaderInfo(13, "volume_shader_heterogenous.cu", "Volume path tracer (het.)"); 
 	ShaderFactory::add_shader(std::make_unique<VolumePathTracer>(info3));
 	
-	ShaderInfo info2 = ShaderInfo(14, "subsurface_scattering_sampled.cu", "Sampled BSSRDF"); 
+	ShaderInfo info2 = ShaderInfo(14, "subsurface_scattering_sampled_default.cu", "Sampled BSSRDF");
 	ShaderFactory::add_shader(std::make_unique<SampledBSSRDF>(info2));
 
 	ShaderInfo info6 = ShaderInfo(22, "empty.cu", "BSSRDF Visualizer");

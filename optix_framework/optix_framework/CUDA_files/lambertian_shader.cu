@@ -26,7 +26,6 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
-rtDeclareVariable(CameraData, camera_data, , );
 
 
 // Monte carlo variables

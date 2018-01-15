@@ -18,8 +18,6 @@ void Shader::initialize_mesh(Mesh & object)
     set_hit_programs(object);
 }
 
-
-
 void Shader::pre_trace_mesh(Mesh & object)
 {
     return;
@@ -60,6 +58,10 @@ void Shader::set_hit_programs(Mesh& object)
     object.mMaterial->setClosestHitProgram( RayType::DEPTH, chitd);
 	object.mMaterial->setClosestHitProgram( RayType::ATTRIBUTE, chita);
 	object.mMaterial->setAnyHitProgram( RayType::SHADOW, ahit);
+}
+
+void Shader::set_source(const std::string &source) {
+	shader_path = source;
 }
 
 

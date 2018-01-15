@@ -145,6 +145,17 @@ void Mesh::set_shader(int illum)
 	mReloadMaterials = true;
 }
 
+
+void Mesh::set_shader(const std::string &source) {
+	if(mShader != nullptr)
+	{
+		mShader->set_source(source);
+		mReloadShader = true;
+		mReloadMaterials = true;
+	}
+}
+
+
 void Mesh::create_and_bind_optix_data()
 {
     bool bind = false;

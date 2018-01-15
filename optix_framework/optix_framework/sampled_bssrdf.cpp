@@ -35,6 +35,8 @@ void SampledBSSRDF::initialize_shader(optix::Context ctx)
 
 void SampledBSSRDF::initialize_mesh(Mesh& object)
 {
+    mCurrentShaderSource = get_current_shader_source();
+    mReloadShader = true;
 	Shader::initialize_mesh(object);
 	BufPtr<BSSRDFSamplingProperties> bufptr(mPropertyBuffer->getId());
  	object.mMaterial["bssrdf_sampling_properties"]->setUserData(sizeof(BufPtr<BSSRDFSamplingProperties>), &bufptr);
@@ -52,9 +54,16 @@ void SampledBSSRDF::load_data(Mesh & object)
         mBSSRDF->load(object.get_main_material()->get_data().relative_ior, object.get_main_material()->get_data().scattering_properties);
 		object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
 
-        if(properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
+		bool isNN = properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING;
+        if(isNN)
         {
             mNNSampler->load(object.get_main_material()->get_data().relative_ior,object.get_main_material()->get_data().scattering_properties);
+        }
+
+        if(mReloadShader)
+        {
+            object.set_shader(mCurrentShaderSource);
+            mReloadShader = false;
         }
 	}
 	mHasChanged = false;
@@ -68,6 +77,9 @@ bool SampledBSSRDF::on_draw()
 		mHasChanged = true;
 		mBSSRDF.reset();
 		mBSSRDF = BSSRDF::create(context, dipole);
+        std::string new_shader = get_current_shader_source();
+        mReloadShader = new_shader != mCurrentShaderSource;
+        mCurrentShaderSource = new_shader;
 	}
 	ImmediateGUIDraw::Text("BSSRDF properties:");
 	mBSSRDF->on_draw();
@@ -83,12 +95,16 @@ bool SampledBSSRDF::on_draw()
 	std::vector<const char*> elems2{ "Use exponential distribution", "Use neural network" };
 
 
-	if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE || properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE_TWO_PROBES)
+	if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE)
 	{
 		if(ImmediateGUIDraw::Combo("Estimate point on tangent",  (int*)&properties->sampling_tangent_plane_technique, elems2.data(), (int)elems2.size(), (int)elems2.size()))
         {
+            bool isNN = properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING;
             Logger::info << "Changing sampling tangent point to " << BssrdfSamplePointOnTangentTechnique::to_string(properties->sampling_tangent_plane_technique) << std::endl;
             mHasChanged = true;
+            std::string new_shader = get_current_shader_source();
+            mReloadShader = new_shader != mCurrentShaderSource;
+            mCurrentShaderSource = new_shader;
         }
 
         if(properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
@@ -111,5 +127,11 @@ bool SampledBSSRDF::on_draw()
 	mHasChanged |= ImGui::InputInt("Samples per pixel", (int*)&mSamples);
 
 	return mHasChanged;
+}
+
+std::string SampledBSSRDF::get_current_shader_source() {
+    bool isNN = properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING;
+    std::string ret = mBSSRDF->get_type() == ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF? "subsurface_scattering_sampled_forward_dipole.cu" : "subsurface_scattering_sampled_default.cu";
+    return isNN? "subsurface_scattering_sampled_neural_network.cu" : ret;
 }
 

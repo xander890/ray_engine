@@ -9,7 +9,7 @@ public:
 	virtual ~VolumePathTracer() = default;
 	VolumePathTracer(const ShaderInfo& shader_info) : Shader(shader_info) {}
 
-	virtual void VolumePathTracer::initialize_shader(optix::Context ctx) override
+	virtual void initialize_shader(optix::Context ctx) override
 	{
 		Shader::initialize_shader(ctx);
 		max_vol_samples = ConfigParameters::get_parameter<int>("config", "maximum_volume_steps", max_vol_samples, "Maximum rays in VPT.");

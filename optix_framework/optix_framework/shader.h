@@ -40,6 +40,7 @@ public:
 
     int get_illum() const { return illum; }
     std::string get_name() const { return shader_name; }
+	void set_source(const std::string & source);
 
 protected:
 

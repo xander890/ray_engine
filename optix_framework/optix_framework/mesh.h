@@ -39,6 +39,7 @@ public:
 
     void set_method(RenderingMethodType::EnumType method);
     void set_shader(int illum);
+	void set_shader(const std::string & source);
 
     void add_material(std::shared_ptr<MaterialHost> material);
 

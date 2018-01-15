@@ -27,6 +27,11 @@ public:
 
 	unsigned int mSamples = 1;
 	bool mHasChanged = true;
+	bool mReloadShader = false;
+    std::string mCurrentShaderSource;
 	std::unique_ptr<BSSRDF> mBSSRDF;
     std::unique_ptr<NeuralNetworkSampler> mNNSampler;
+
+private:
+    std::string get_current_shader_source();
 };

@@ -125,11 +125,14 @@ set(HEADERS
     volume_path_tracer.h
     bssrdf_loader.h
     bssrdf_parameter_manager.h
-        empirical_bssrdf_device.h
-        empirical_bssrdf_host.h
-        empirical_bssrdf_utils.h
-        improved_enum.def
-        volume_path_tracing_common.h)
+    empirical_bssrdf_device.h
+    empirical_bssrdf_host.h
+    empirical_bssrdf_utils.h
+    improved_enum.def
+    volume_path_tracing_common.h 
+    subsurface_scattering_sampled_common.h
+    subsurface_scattering_sampled.h
+)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp
@@ -223,7 +226,9 @@ CUDA_files/sample_camera.cu
 CUDA_files/sky_model_background.cu
 CUDA_files/sphere.cu
 CUDA_files/subsurface_scattering_shader.cu
-CUDA_files/subsurface_scattering_sampled.cu
+CUDA_files/subsurface_scattering_sampled_default.cu
+CUDA_files/subsurface_scattering_sampled_neural_network.cu
+CUDA_files/subsurface_scattering_sampled_forward_dipole.cu
 CUDA_files/tonemap_camera.cu
 CUDA_files/triangle_mesh.cu
 CUDA_files/volume_shader.cu
