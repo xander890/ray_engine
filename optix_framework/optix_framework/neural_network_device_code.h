@@ -408,7 +408,7 @@ __device__ __forceinline__ void sample_neural_network(
 
     // Also here sample normalization constant
     float bssrdf_integral = 1e-4f; // FIXME implement proper integrals from generated dataset.
-    // float bssrdf_integral = get_interpolated_integral(albedo, g, theta_i);
+    bssrdf_integral = get_interpolated_integral(albedo, g, theta_i);
     bssrdf_integral *= DEFAULT_EMPIRICAL_CORRECTION;
     integration_factor *= bssrdf_integral;
     // Multiplying over extinction as in the empbssrdf paper

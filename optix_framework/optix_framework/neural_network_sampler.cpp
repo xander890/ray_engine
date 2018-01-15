@@ -140,7 +140,15 @@ NeuralNetworkSampler::NeuralNetworkSampler(optix::Context & ctx) : mContext(ctx)
         integral_data->setFormat(RT_FORMAT_FLOAT);
         integral_data->setSize(3, &buffer_dims[0]);
         float* data = (float*)integral_data->map();
-        fread(&data, sizeof(float), total_size, fp);
+        fread(&data[0], sizeof(float), total_size, fp);
+
+        printf("Integral:\n");
+        for(int i = 0; i < total_size; i++)
+        {
+            printf("%e ", data[i]);
+        }
+        printf("\n");
+
         integral_data->unmap();
 
         // Creating texture.
