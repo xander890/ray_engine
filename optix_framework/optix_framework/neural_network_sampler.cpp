@@ -141,6 +141,7 @@ NeuralNetworkSampler::NeuralNetworkSampler(optix::Context & ctx) : mContext(ctx)
         integral_data->setSize(3, &buffer_dims[0]);
         float* data = (float*)integral_data->map();
         fread(&data, sizeof(float), total_size, fp);
+        integral_data->unmap();
 
         // Creating texture.
         optix::TextureSampler texture = ctx->createTextureSampler();

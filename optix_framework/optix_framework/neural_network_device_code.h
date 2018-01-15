@@ -348,17 +348,16 @@ __device__ __forceinline__ void sample_neural_network(
         TEASampler * sampler,       // A rng.
         optix::float3 & x_tangent,                // The candidate point
         float & integration_factor, // An factor that will be multiplied into the final result. For inverse pdfs. 
-        optix::float3 & proposed_wi)
-{
+        optix::float3 & proposed_wi) {
     // Gathering scattering parameters.
     // For now only red channel.
     float albedo = optix::get_channel(colorband, material.scattering_properties.albedo);
     float extinction = optix::get_channel(colorband, material.scattering_properties.extinction);
     float eta = material.relative_ior;
-    float g = optix::get_channel(colorband,  material.scattering_properties.meancosine);
+    float g = optix::get_channel(colorband, material.scattering_properties.meancosine);
 
     float cos_theta_i = dot(wo, no);
-    float theta_i = acosf(cos_theta_i);        
+    float theta_i = acosf(cos_theta_i);
 
     // Sampling random inputs for NN.
     float x1 = sampler->next1D();
@@ -388,23 +387,21 @@ __device__ __forceinline__ void sample_neural_network(
     float cdfnetwork_output[4];
     get_cdfnetwork_output(&icdfnetwork_output[0], &hypernetwork_output[0], &cdfnetwork_output[0]);
 
-    #if 0
+#if 0
     for (int i = 0; i < hypernetwork_layer3_out_size; ++i)
     {
         optix_print("%f ", hypernetwork_output[i]);
     }
     optix_print("\n");
-    #endif
+#endif
     optix_print("icdfnetwork_input: %f %f %f %f\n", x1, x2, x3, x4);
     optix_print("icdfnetwork_output: ");
-    for (int i = 0; i < 4; ++i)
-    {
+    for (int i = 0; i < 4; ++i) {
         optix_print("%f ", icdfnetwork_output[i]);
     }
     optix_print("\n");
     optix_print("cdfnetwork_output: ");
-    for (int i = 0; i < 4; ++i)
-    {
+    for (int i = 0; i < 4; ++i) {
         optix_print("%f ", cdfnetwork_output[i]);
     }
     optix_print("\n");
@@ -417,42 +414,23 @@ __device__ __forceinline__ void sample_neural_network(
     // Multiplying over extinction as in the empbssrdf paper
     integration_factor *= extinction;
 
-    float r = map_interval(icdfnetwork_output[0], optix::make_float2(0,1), optix::make_float2(0.01f, 10.0f));           
-    float theta_s = map_interval(icdfnetwork_output[1], optix::make_float2(0,1), optix::make_float2(0.0f, M_PIf));           
-    float theta_o = map_interval(icdfnetwork_output[2], optix::make_float2(0,1), optix::make_float2(0.0f, M_PIf/2));           
-    float phi_o = map_interval(icdfnetwork_output[3], optix::make_float2(0,1), optix::make_float2(0.0f, 2*M_PIf));           
+    float r = map_interval(icdfnetwork_output[0], optix::make_float2(0, 1), optix::make_float2(0.01f, 10.0f));
+    float theta_s = map_interval(icdfnetwork_output[1], optix::make_float2(0, 1), optix::make_float2(0.0f, M_PIf));
+    float theta_o = map_interval(icdfnetwork_output[2], optix::make_float2(0, 1), optix::make_float2(0.0f, M_PIf / 2));
+    float phi_o = map_interval(icdfnetwork_output[3], optix::make_float2(0, 1), optix::make_float2(0.0f, 2 * M_PIf));
 
     // The radius is expressed in mean free paths, so we renormalize it.
     r /= extinction;
 
     // Pick a random side for theta_s
     float zeta = sampler->next1D();
-    theta_s *= (zeta > 0.5f)? -1 : 1;
+    theta_s *= (zeta > 0.5f) ? -1 : 1;
     integration_factor *= 2;
 
     // Note that the tangent vector has to be aligned to wo in order to get a consistent framae for theta_s.
-    optix::float3 to = normalize(wo - cos_theta_i * no);
-    optix::float3 bo = cross(to, no);
-    x_tangent = xo + r * cosf(theta_s) * to + r * sinf(theta_s) * bo;
+    BSSRDFGeometry geometry_exit;
+    empirical_bssrdf_build_geometry(xo, wo, no, theta_i, r, theta_s, theta_o, phi_o, geometry_exit);
 
-    proposed_wi = spherical_to_cartesian(theta_o, phi_o);
-
-#define TEST_GEOMETRY
-#ifdef TEST_GEOMETRY
-    // FIXME still wrong values.
-    BSSRDFGeometry geom;
-    geom.xi = x_tangent;
-    geom.xo = xo;
-    geom.ni = no;
-    geom.no = no;
-    geom.wi = proposed_wi;
-    geom.wo = wo;
-    float theta_i_test, r_test, theta_s_test, theta_o_test, phi_o_test;
-    empirical_bssrdf_get_geometry(geom, theta_i_test,  r_test, theta_s_test, theta_o_test, phi_o_test);
-    optix_print("original %f, evaluated %f\n", theta_o, theta_i_test);
-    optix_print("original %f, evaluated %f\n", theta_s, theta_s_test);
-    optix_print("original %f, evaluated %f\n", r, r_test);
-    optix_print("original %f, evaluated %f\n", theta_o, theta_o_test);
-    optix_print("original %f, evaluated %f\n", phi_o, phi_o_test);
-#endif
+    x_tangent = geometry_exit.xo;
+    proposed_wi = geometry_exit.wo;
 }
