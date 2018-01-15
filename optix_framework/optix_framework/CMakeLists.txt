@@ -214,7 +214,6 @@ CUDA_files/dispersion_shader.cu
 CUDA_files/debug_camera.cu
 CUDA_files/environment_map_background.cu
 CUDA_files/env_cameras.cu
-CUDA_files/forward_dipole.cu
 CUDA_files/glass_shader.cu
 CUDA_files/glossy_shader.cu
 CUDA_files/lambertian_shader.cu
@@ -233,7 +232,6 @@ CUDA_files/tonemap_camera.cu
 CUDA_files/triangle_mesh.cu
 CUDA_files/volume_shader.cu
 CUDA_files/volume_shader_heterogenous.cu
-CUDA_files/empirical_bssrdf.cu
 )
     
 source_group("Headers" FILES ${HEADERS})

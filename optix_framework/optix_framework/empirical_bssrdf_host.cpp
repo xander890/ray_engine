@@ -75,10 +75,6 @@ void EmpiricalBSSRDF::prepare_buffers()
 
 EmpiricalBSSRDF::EmpiricalBSSRDF(optix::Context & context): BSSRDF(context, ScatteringDipole::EMPIRICAL_BSSRDF)
 {
-	std::string ptx_path_output = get_path_ptx("empirical_bssrdf.cu");
-    //static optix::Program p = context->createProgramFromPTXFile(ptx_path_output, "eval_empirical_bssrdf");
-    //mContext["empirical_bssrdf"]->setProgramId(p);
-
     mDataBuffers.buffers[0] = 0;
     mDataBuffers.buffers[1] = 0;
     mDataBuffers.buffers[2] = 0;

@@ -120,8 +120,7 @@ RT_PROGRAM void shade()
 		float3 env = make_float3(0.0f);
 		for (int j = 0; j < N; j++)
 		{
-			float3 wi, L; //int sh;
-			//evaluate_environment_light(wi, L, sh, data, t);
+			float3 wi, L;
 			sample_environment(wi, L, data, prd_radiance.sampler);
 			float cos_theta = dot(wi, normal);
 			if (cos_theta <= 0.0) continue;

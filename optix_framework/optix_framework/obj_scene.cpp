@@ -268,7 +268,7 @@ bool ObjScene::draw_gui()
 		}
 	}
 	
-	if (ImmediateGUIDraw::CollapsingHeader("Misc"))
+	if (ImmediateGUIDraw::CollapsingHeader("Sampling (generic)"))
 	{
 		if (ImmediateGUIDraw::Checkbox("Importance sample area lights", &mImportanceSampleAreaLights))
 		{

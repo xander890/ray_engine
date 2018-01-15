@@ -92,7 +92,7 @@ __forceinline__ __device__ void empirical_bssrdf_get_geometry(const BSSRDFGeomet
 	optix::float3 z_bar = normalize(cross(geometry.ni, x_bar));
 	theta_s = -atan2(dot(z_bar, x_norm),dot(x_bar, x_norm));
 
-    float theta_s_original = theta_s;
+    //float theta_s_original = theta_s;
 	// theta_s mirroring.
 	if(theta_s < 0) {
 		theta_s = abs(theta_s);
