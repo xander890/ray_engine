@@ -55,17 +55,27 @@ __forceinline__ __device__ bool compare_geometries(const BSSRDFGeometry & g1, co
 	bool e3 = fabsf(optix::length(g1.no - g2.no)) < 1e-4;
 	bool e4 = fabsf(optix::length(g1.wi - g2.wi)) < 1e-4;
 	bool e5 = fabsf(optix::length(g1.wo - g2.wo)) < 1e-4;
-    //optix_print("xi %d, xo %d, ni %d, no %d, wi %d, wo %d\n", e0, e1, e2, e3, e4, e5);
+    	//optix_print("xi %d, xo %d, ni %d, no %d, wi %d, wo %d\n", e0, e1, e2, e3, e4, e5);
 	return e0 & e1 & e2 & e3 & e4 & e5;
 }
 
 __forceinline__ __device__ void empirical_bssrdf_build_geometry(const optix::float3& xi, const optix::float3& wi, const optix::float3& n, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
 {
-    const optix::float3 x = -optix::normalize(wi - dot(wi,n) * n);
+    optix::float3 x = wi - dot(wi,n) * n;
+    optix::float3 z;
+    if(optix::length(x) < 1e-6)
+    {
+        create_onb(n,x,z); // Everything should be symmetric, so we do not care of the choice of orthonormal basis.
+    }
+    else
+    {
+        x = optix::normalize(x);
+        z = cross(x,n);
+    }
+
 	geometry.no = geometry.ni = n;
     optix_assert(fabsf(acosf(dot(wi,n)) - theta_i) < 1e-6);
-	geometry.wi = sinf(theta_i) * (-x) + cosf(theta_i) * n;
-	const optix::float3 z = cross(n,x);
+	geometry.wi = sinf(theta_i) * x + cosf(theta_i) * n;
 	const optix::float3 xoxi =  cosf(theta_s) * x +  sinf(theta_s) * (-z);
 	geometry.xo = xi + r * xoxi;
 	geometry.xi = xi;
@@ -82,26 +92,29 @@ __forceinline__ __device__ void empirical_bssrdf_get_geometry(const BSSRDFGeomet
 	optix::float3 x = geometry.xo - geometry.xi;
 	optix::float3 x_norm = normalize(x);
 	float cos_theta_o = dot(geometry.no, geometry.wo);
-	optix::float3 x_bar = -normalize(geometry.wi - cos_theta_i * geometry.ni);
+	optix::float3 x_bar = normalize(geometry.wi - cos_theta_i * geometry.ni);
 
 	if(fabs(theta_i) <= 1e-6f)
 	{
 		x_bar = x_norm;
 	}
 
-	optix::float3 z_bar = normalize(cross(geometry.ni, x_bar));
+	optix::float3 z_bar = normalize(cross(x_bar, geometry.ni));
 	theta_s = -atan2(dot(z_bar, x_norm),dot(x_bar, x_norm));
 
-    //float theta_s_original = theta_s;
+    float theta_s_original = theta_s;
 	// theta_s mirroring.
+    const optix::float3 x_h = cross(geometry.no, z_bar);
+    optix::float3 z_h = cross(x_h, geometry.no);
+
 	if(theta_s < 0) {
 		theta_s = abs(theta_s);
-		z_bar = -z_bar;
+        z_h = -z_h;
 	}
 
 	optix::float3 xo_bar = normalize(geometry.wo - cos_theta_o * geometry.no);
 	theta_o = acosf(cos_theta_o);
-	phi_o = atan2f(dot(z_bar,xo_bar), dot(x_bar,xo_bar));
+	phi_o = atan2f(dot(z_h,xo_bar), dot(x_h,xo_bar));
 
 	phi_o = normalize_angle(phi_o);
 	r = optix::length(x);
