@@ -35,7 +35,7 @@ __forceinline__ __device__ optix::float3 S_infinite_vec(const optix::float3& _r_
 
 
 __forceinline__ __device__ optix::float3 directional_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
-	const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
+	const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {
 	optix_print("BSSRDF: directional\n");
 	bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;

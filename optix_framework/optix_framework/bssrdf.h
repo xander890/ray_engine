@@ -22,31 +22,43 @@ using optix::float3;
 rtDeclareVariable(ScatteringDipole::Type, selected_bssrdf, , );
 
 __forceinline__ __device__ float3 bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
-	const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
+	const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {   
-	switch (selected_bssrdf)
-	{
 #ifdef FORWARD_DIPOLE_ONLY
-		case ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF:
-		return forward_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
+    return forward_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
 #else
-	case ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
-		return approximate_directional_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
-	case ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF:
-		return directional_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
-	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
-		return approximate_standard_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
-	case ScatteringDipole::QUANTIZED_DIFFUSION_BSSRDF:
-		return quantized_diffusion_bssrdf(geometry, recip_ior, material, flags, sampler);
-	case ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF:
-		return photon_beam_diffusion_bssrdf(geometry, recip_ior, material, flags, sampler);
-    case ScatteringDipole::EMPIRICAL_BSSRDF:
-        return eval_empbssrdf(geometry, recip_ior, material, flags, sampler);
-	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
-	default:
-		return standard_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
+    float3 S = make_float3(0.0f);
+    if(selected_bssrdf == ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF)
+    {
+        S = approximate_directional_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
+    }
+    else if(selected_bssrdf ==  ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF)
+    {
+        S = directional_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
+    }
+    else if(selected_bssrdf == ScatteringDipole::EMPIRICAL_BSSRDF)
+    {
+        S = eval_empbssrdf(geometry, recip_ior, material, flags, sampler);
+    }
+    else if(selected_bssrdf == ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF)
+    {
+        S = approximate_standard_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
+    }
+    else if(selected_bssrdf == ScatteringDipole::QUANTIZED_DIFFUSION_BSSRDF)
+    {
+        S = quantized_diffusion_bssrdf(geometry, recip_ior, material, flags, sampler);
+    }
+    else if(selected_bssrdf == ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF)
+    {
+        S = photon_beam_diffusion_bssrdf(geometry, recip_ior, material, flags, sampler);
+    }
+    //if(selected_bssrdf == ScatteringDipole::STANDARD_DIPOLE_BSSRDF)
+    else
+    {
+        S = standard_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
+    }
+    return S;
 #endif
-	}
 }
 
 __forceinline__ __device__ float3 get_beam_transmittance(const float depth, const ScatteringMaterialProperties& properties)

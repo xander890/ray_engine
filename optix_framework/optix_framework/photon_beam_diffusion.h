@@ -89,7 +89,7 @@ __device__ __forceinline__ float pbd_bssrdf(optix::float3 xi, optix::float3 ni, 
 	return max(S_d, 0.0) / N;
 }
 
-__device__ __forceinline__ float3 photon_beam_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
+__device__ __forceinline__ float3 photon_beam_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
 	optix::float4 C = make_float4(properties.C_phi_norm, properties.C_phi, properties.C_E, properties.A);

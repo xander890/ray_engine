@@ -45,7 +45,7 @@ RT_PROGRAM void render()
     mat.scattering_properties = planar_bssrdf_material_params[0];
 
     TEASampler sampler(launch_dim.x*launch_index.y + launch_index.x, frame);
-	float3 S = fresnel_integral * bssrdf(geometry, 1.0f / reference_bssrdf_rel_ior, mat, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, &sampler);
+	float3 S = fresnel_integral * bssrdf(geometry, 1.0f / reference_bssrdf_rel_ior, mat, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, sampler);
 	float S_shown = optix::get_channel(channel_to_show, S) * scale_multiplier;
 
 	float t = optix::clamp((logf(S_shown + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);

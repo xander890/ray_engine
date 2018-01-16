@@ -9,7 +9,7 @@ using optix::float3;
 rtDeclareVariable(ApproximateBSSRDFProperties, approx_std_bssrdf_props, , );
 
 __device__ float3 approximate_standard_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
-	const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
+	const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {
 	bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
 

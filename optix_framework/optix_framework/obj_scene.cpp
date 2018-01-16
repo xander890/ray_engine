@@ -378,7 +378,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(2000);
 	setDebugEnabled(debug_mode_enabled);
-	context->setPrintLaunchIndex(381,271);
+	context->setPrintLaunchIndex(200,200);
 
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
@@ -423,7 +423,6 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	context->setRayTypeCount(RayType::count());
 	context->setStackSize(ConfigParameters::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
-	context["max_depth"]->setInt(ConfigParameters::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
 
 	// Constant colors
 	context["bad_color"]->setFloat(0.0f, 1.0f, 0.0f);
@@ -474,7 +473,6 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 
 	    m_scene_bounding_box.include(loader->getSceneBBox());
 		loader->getAreaLights(lights);
-		Logger::info << to_string(lights.size()) << std::endl;
 		// Set material shaders
 
 		// Add geometry group to the group of scene objects
@@ -597,7 +595,13 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	Logger::info << "Compiling context and creating bvhs..." << endl;
 
 	RayGenCameraData dummy;
+	dummy.eye = make_float3(0,0,0);
+	dummy.U = make_float3(1,0,0);
+	dummy.V = make_float3(0,1,0);
+	dummy.W = make_float3(0,0,1);
+	context["max_depth"]->setInt(0);
 	trace(dummy);
+	context["max_depth"]->setInt(ConfigParameters::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
 	reset_renderer();
     Logger::info<<"Scene initialized."<<endl;
 	 //std::stringstream ss;
@@ -637,6 +641,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		reset_renderer();
 		m_camera_changed = false;
 	}
+
 	context["frame"]->setUint(m_frame++);
 
 	if (deforming)

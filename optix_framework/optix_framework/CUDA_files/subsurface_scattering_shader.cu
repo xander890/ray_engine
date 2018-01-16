@@ -122,7 +122,7 @@ RT_PROGRAM void shade()
                  geometry.xo = xo;
                  geometry.no = no;
                  geometry.wo = wo;
-                 accumulate += sample.L*bssrdf(geometry, recip_ior, material, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, prd_radiance.sampler) / exp_term;
+                 accumulate += sample.L*bssrdf(geometry, recip_ior, material, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, *prd_radiance.sampler) / exp_term;
             }
         }
 #endif

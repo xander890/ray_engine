@@ -54,7 +54,8 @@ __device__ __forceinline__ void evaluate_area_light(const float3& hit_point, con
     float zeta1 = sampler->next1D();
     float zeta2 = sampler->next1D();
     float zeta3 = sampler->next1D();
-    TriangleLight triangle = area_lights[(int)(area_lights.size()* zeta1)];
+    int idx = clamp((int)(area_lights.size() * zeta1), 0, area_lights.size() - 1);
+    TriangleLight triangle = area_lights[idx];
     optix::float3 point = sample_point_triangle(zeta2, zeta3, triangle.v1, triangle.v2, triangle.v3);
     optix::float3 to_light_un = point - hit_point;
     float dist_sq = dot(to_light_un, to_light_un);

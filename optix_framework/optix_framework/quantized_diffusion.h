@@ -22,7 +22,7 @@ __device__ __forceinline__ float single_approx(optix::float3 xi, optix::float3 n
   return sigma_s_p*d1*phase_HG(dot(w12, w21), g)*exp(-sigma_t_p*d1 - sigma_t*d2)/(d2*d2);
 }
 
-__device__ __forceinline__ float3 quantized_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
+__device__ __forceinline__ float3 quantized_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
 	optix::float4 C = optix::make_float4(properties.C_phi_norm, properties.C_phi, properties.C_E, properties.A);

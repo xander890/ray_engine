@@ -110,7 +110,7 @@ __device__ __forceinline__ float interpolate_bssrdf(float values[N], const rtBuf
 
 
 __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geometry, const float recip_ior,
-                                                        const MaterialDataCommon material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
+                                                        const MaterialDataCommon material, unsigned int flags, TEASampler & sampler)
 {
     optix_print("EMPIRICAL\n");
     float theta_i, r, theta_s, theta_o, phi_o;

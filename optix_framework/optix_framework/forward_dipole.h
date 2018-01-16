@@ -236,7 +236,7 @@ namespace optix
     __device__ __forceinline__ optix::float3 make_float3(const optix::float3 & c) { return c; }
 
 }
-__device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
+__device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
     float3 w12, w21;
@@ -277,7 +277,7 @@ __device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & g
 		for (unsigned int i = 0; i < samples; i++)
 		{
 			Float s = 0.0f;
-			float wi = sampleLengthDipole(material, props, d_out, n_out, R, &d_in, n_in, s, sampler);
+			float wi = sampleLengthDipole(material, props, d_out, n_out, R, &d_in, n_in, s, &sampler);
 			S += evalDipole(material, props, n_in, d_in, n_out, d_out, R, s) * wi;
 		}
 		optix::get_channel(k, res) = S / samples;

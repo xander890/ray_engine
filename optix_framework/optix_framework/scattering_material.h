@@ -56,7 +56,7 @@ class ScatteringMaterial
 public:
 
     ScatteringMaterial(optix::float3 absorption, optix::float3 scattering, optix::float3 meancosine, float scale = 1.0f, const char * name = "");
-	ScatteringMaterial(DefaultScatteringMaterial material, float prop_scale = 100.0f);
+	ScatteringMaterial(DefaultScatteringMaterial material, float prop_scale = 1.0f);
 
     ScatteringMaterial& operator=(const ScatteringMaterial& cp);
     ScatteringMaterial(const ScatteringMaterial& cp);
@@ -83,7 +83,7 @@ public:
 
 private:
     ScatteringMaterialProperties properties;
-    float scale = 100.0f;
+    float scale = 1.0f;
     optix::float3 scattering = optix::make_float3(0);
     optix::float3 asymmetry = optix::make_float3(0);
     optix::float3 absorption = optix::make_float3(1);

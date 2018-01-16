@@ -45,10 +45,9 @@ __device__ __forceinline__ void _shade()
 
 	TEASampler * sampler = prd_radiance.sampler;
 
-	float3 n = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
+	float3 no = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	float3 xo = ray.origin + t_hit*ray.direction;
 	float3 wo = -ray.direction;
-	float3 no = faceforward(n, wo, n);
 	const MaterialDataCommon material = get_material(xo);
 	const ScatteringMaterialProperties& props = material.scattering_properties;
 	float recip_ior = 1.0f / material.relative_ior;
@@ -56,7 +55,7 @@ __device__ __forceinline__ void _shade()
 	prd_radiance.result = make_float3(0.0f);
 
 	float3 beam_T = make_float3(1.0f);
-	float cos_theta_o = dot(wo, n);
+	float cos_theta_o = dot(wo, no);
 	bool inside = cos_theta_o < 0.0f;
 	if (inside)
 	{
@@ -66,27 +65,29 @@ __device__ __forceinline__ void _shade()
 		beam_T /= prob;
 		recip_ior = material.relative_ior;
 		cos_theta_o = -cos_theta_o;
+        no = -no;
 	}
 
 	float3 wt;
 	float R;
-	refract(wo, n, recip_ior, wt, R);
+	refract(wo, no, recip_ior, wt, R);
 
 	R = bssrdf_sampling_properties->show_mode == BSSRDF_SHADERS_SHOW_REFLECTION ? 1.0f : R;
 	R = bssrdf_sampling_properties->show_mode == BSSRDF_SHADERS_SHOW_REFRACTION ? 0.0f : R;
 
     // Trace reflected ray
-
+#if 0
 	if (reflect_xi < R)
 	{
 		float3 wr = -reflect(wo, no);
 		PerRayData_radiance prd_reflected = prepare_new_pt_payload(prd_radiance);
 		Ray reflected(xo, wr,  RayType::RADIANCE, scene_epsilon);
-		rtTrace(top_object, reflected, prd_reflected);
+rtTrace(top_object, reflected, prd_reflected);
 
 		prd_radiance.result += prd_reflected.result;
 	}
-	if (reflect_xi >= R)
+#endif
+    if (reflect_xi >= R)
 	{
 		PerRayData_radiance prd_refracted = prepare_new_pt_payload(prd_radiance);
 
@@ -153,7 +154,7 @@ __device__ __forceinline__ void _shade()
 					geometry.xo = xo;
 					geometry.no = no;
 					geometry.wo = wo;
-					float3 S = bssrdf(geometry, recip_ior, material, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, sampler);
+					float3 S = bssrdf(geometry, recip_ior, material, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, *sampler);
 #endif
 					L_d += L_i * S * integration_factor;
 					optix_print("Sd %e %e %e Ld %f %f %f Li %f %f %f T12 %f int %f\n",  S.x, S.y, S.z, L_d.x, L_d.y, L_d.z, L_i.x, L_i.y, L_i.z, T12, integration_factor);

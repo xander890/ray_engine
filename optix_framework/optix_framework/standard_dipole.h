@@ -7,7 +7,7 @@
 using optix::float3;
 
 __device__ float3 standard_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
-	const MaterialDataCommon& material, unsigned int flags = BSSRDFFlags::NO_FLAGS, TEASampler * sampler = nullptr)
+	const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
     float dist = optix::length(geometry.xo - geometry.xi);
