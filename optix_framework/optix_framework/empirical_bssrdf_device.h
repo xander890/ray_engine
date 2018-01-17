@@ -121,10 +121,10 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
     {
         float extinction = optix::get_channel(i, material.scattering_properties.extinction);
         float r_s = r * extinction;
-        r_s = clamp(r, 0.01f, 10.0f);
+        r_s = clamp(r_s, 0.01f, 10.0f);
         float values[5] = {theta_s, r_s, theta_i, theta_o, phi_o};
         //optix_print("theta_s %f\n", theta_s);
-        optix_print("r %f (ext %f - %f)\n", r_s, extinction, empirical_bssrdf_correction);
+        optix_print("r %f (ext %f - %f)\n", r_s, extinction, r);
         //optix_print("theta_i %f\n", theta_i);
         //optix_print("theta_o %f\n", theta_o);
         //optix_print("phi_o %f\n", phi_o);

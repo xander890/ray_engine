@@ -81,8 +81,9 @@ __device__ __forceinline__ void sample_point_on_normal_tangent_plane(
         float chosen_sampling_mfp = get_sampling_mfp(props);
         float r, phi, pdf_disk;
 
+        optix_print("Chosen mfp: %f\n", chosen_sampling_mfp);
         optix::float2 sample = optix::make_float2(sampler->next1D(), sampler->next1D());
-        optix::float2 disc_sample = sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
+        sample_disk_exponential(sample, chosen_sampling_mfp, pdf_disk, r, phi);
         integration_factor *= make_float3(r / pdf_disk);
         x_tangent = xo + r * cosf(phi) * to + r * sinf(phi) * bo;
         has_candidate_wi = false;
