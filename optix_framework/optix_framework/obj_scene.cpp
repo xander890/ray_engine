@@ -608,7 +608,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	 //cereal::JSONOutputArchive archive(ss);
 	 //archive(*mMeshes[0]);
 	 //Logger::info << ss.str() << std::endl;
-	Logger::set_logger_output(console_log);
+	//Logger::set_logger_output(console_log);
 
 }
 

@@ -123,6 +123,7 @@ RT_PROGRAM void shade()
                  geometry.no = no;
                  geometry.wo = wo;
                  accumulate += sample.L*bssrdf(geometry, recip_ior, material, BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL, *prd_radiance.sampler) / exp_term;
+                 optix_print("L %f %f %f, exp = %f\n", sample.L.x, sample.L.y, sample.L.z, 1/exp_term);
             }
         }
 #endif

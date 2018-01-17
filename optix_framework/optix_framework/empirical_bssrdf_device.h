@@ -129,7 +129,8 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
         //optix_print("theta_o %f\n", theta_o);
         //optix_print("phi_o %f\n", phi_o);
 
-        optix::get_channel(i, S) = interpolate_bssrdf_nearest<5>(values,i) * extinction * empirical_bssrdf_correction;
+        float SS = interpolate_bssrdf_nearest<5>(values,i) * empirical_bssrdf_correction;
+        optix::get_channel(i, S) = SS * extinction *extinction;
     }
 
     optix::float3 w21;
