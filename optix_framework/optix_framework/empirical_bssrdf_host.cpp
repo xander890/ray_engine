@@ -61,7 +61,7 @@ void EmpiricalBSSRDF::prepare_buffers()
     float * tbuf = reinterpret_cast<float*>(thetaoBuffer->map());
     for(int i = 0; i < theta_o_size; i++)
     {
-        tbuf[i] = get_normalized_hemisphere_buffer_angles(((float)i) / theta_o_size, 0).y;
+        tbuf[i] = get_normalized_hemisphere_buffer_angles(((float)(i+1)) / theta_o_size, 0).y;
     }
     thetaoBuffer->unmap();
     mParameterBuffers.buffers[4] = (phioBuffer)->getId();

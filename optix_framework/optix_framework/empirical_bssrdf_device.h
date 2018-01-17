@@ -17,6 +17,8 @@ rtDeclareVariable(int, empirical_buffer_size, , );
 rtDeclareVariable(EmpiricalParameterBuffer, empirical_bssrdf_parameters, , );
 rtDeclareVariable(BufPtr<int>, empirical_bssrdf_parameters_size, , );
 rtDeclareVariable(float, empirical_bssrdf_correction,,);
+rtDeclareVariable(unsigned int, empirical_bssrdf_interpolation,,);
+
 
 template<int N>
 __host__ __device__ __forceinline__ int ravel(int idx[N], BufPtr<int>& size)
@@ -40,7 +42,7 @@ __host__ __device__ __forceinline__ void unravel(const size_t& idx, BufPtr<int>&
 	}
 }
 
-__device__ __forceinline__ int get_index(int parameter_index, const float value)
+__device__ __forceinline__ int get_index_closest(int parameter_index, const float value)
 {
     auto values = empirical_bssrdf_parameters.buffers[parameter_index];
     float candidate_value = -1e9f;
@@ -56,6 +58,40 @@ __device__ __forceinline__ int get_index(int parameter_index, const float value)
     return candidate_index;
 }
 
+
+__device__ __forceinline__ int get_index_lower(int parameter_index, const float value)
+{
+    auto values = empirical_bssrdf_parameters.buffers[parameter_index];
+    float candidate_value = values[0];
+    int candidate_index = 0;
+    for(int i = 0; i < values.size(); i++)
+    {
+        if(values[i] < value && fabsf(values[i] - value) < fabsf(candidate_value - value))
+        {
+            candidate_value = values[i];
+            candidate_index = i;
+        }
+    }
+    return candidate_index;
+}
+
+__device__ __forceinline__ int get_index_upper(int parameter_index, const float value)
+{
+    auto values = empirical_bssrdf_parameters.buffers[parameter_index];
+    float candidate_value = values[0];
+    int candidate_index = 0;
+    for(int i = 0; i < values.size(); i++)
+    {
+        if(values[i] >= value && fabsf(values[i] - value) < fabsf(candidate_value - value))
+        {
+            candidate_value = values[i];
+            candidate_index = i;
+        }
+    }
+    return candidate_index;
+}
+
+
 template<int N>
 __device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int slice)
 {
@@ -65,7 +101,7 @@ __device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int
     {
         float value = values[j];
         int closest_index = 0;
-        closest_index = get_index(j, value);
+        closest_index = get_index_lower(j, value);
         float closest_param_value = empirical_bssrdf_parameters.buffers[j][closest_index];
         index_function[j] = closest_index;
         //optix_print("SIZE %d/%d closet %f - asked %f\n", closest_index, empirical_bssrdf_parameters_size[j], closest_param_value, value);
@@ -79,33 +115,47 @@ __device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int
     return empirical_buffer.buffers[slice][index];
 }
 
-/*
+
 template<int N>
-__device__ __forceinline__ float interpolate_bssrdf(float values[N], const rtBufferId<float> & slice)
+__device__ __forceinline__ float interpolate_bssrdf_linear(float values[N], int slice)
 {
     float interpolated = 0.0f;
     for(int i = 0; i < (1 << N); i++)
     {
-        std::bitset<N> bits(i);
         int index_function[N];
         float factor = 1;
+        const char * v[5] = {"theta_s", "r", "theta_i", "phi_o", "theta_o"};
         for(int j = 0; j < N; j++)
         {
-            unsigned int bit = bits[j];
+            unsigned int bit = (i >> j) & 0x01;
             float value = values[j];
-            int closest_index;
-            float closest_param_value;
-            get_index(empirical_bssrdf_parameters[j], value, closest_index, closest_param_value);
-            float closes_param_value_upper = empirical_bssrdf_parameters[j][closest_index + 1];
-            float value_normalized = (value - closest_param_value) / (closest_param_value_upper - closest_param_value);
-            index_function[j] = (bit == 0)? closest_index : closest_index + 1;
-            factor *= (bit == 0)? 1 - value_normalized : value_normalized;
+            int closest_index_lower = get_index_lower(j, value);
+            int closest_index_upper = get_index_upper(j, value);
+            if(closest_index_lower == closest_index_upper)
+            {
+                // Outside of the domain or hitting exactly the correct point.
+                index_function[j] = closest_index_lower;
+                // factor *= 1 is implicit.
+            }
+            else
+            {
+                float closest_param_value = empirical_bssrdf_parameters.buffers[j][closest_index_lower];
+                float closest_param_value_upper = empirical_bssrdf_parameters.buffers[j][closest_index_upper];
+                float value_normalized =
+                        (value - closest_param_value) / (closest_param_value_upper - closest_param_value);
+                if (launch_index.x == 0 && launch_index.y == 0)
+                    printf("%s (%f) %f %d %d\n", v[j], value, value_normalized, closest_index_lower,
+                           closest_index_upper);
+                value_normalized = clamp(value_normalized, 0.0f, 1.0f);
+                index_function[j] = (bit == 0) ? closest_index_lower : closest_index_upper;
+                factor *= (bit == 0) ? 1 - value_normalized : value_normalized;
+            }
         }
         int index = ravel<N>(index_function, empirical_bssrdf_parameters_size);
-        interpolated += slice[index] * factor;
+        interpolated += empirical_buffer.buffers[slice][index] * factor;
     }
     return interpolated;
-}*/
+}
 
 
 
@@ -129,7 +179,11 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
         //optix_print("theta_o %f\n", theta_o);
         //optix_print("phi_o %f\n", phi_o);
 
-        float SS = interpolate_bssrdf_nearest<5>(values,i) * empirical_bssrdf_correction;
+        float SS = 0;
+        if(empirical_bssrdf_interpolation == 0)
+            SS = interpolate_bssrdf_nearest<5>(values,i) * empirical_bssrdf_correction;
+        else
+            SS = interpolate_bssrdf_linear<5>(values,i) * empirical_bssrdf_correction;
         optix::get_channel(i, S) = SS * extinction *extinction;
     }
 

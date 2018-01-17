@@ -163,6 +163,7 @@ bool BSSRDFRendererModel::on_draw(bool show_material_params)
 {
 	if (BSSRDFRenderer::on_draw(show_material_params))
 		reset();
+	mBSSRDF->on_draw();
 	return false;
 }
 

@@ -55,6 +55,8 @@ private:
 	int entry_point_output = -1;
 	optix::Buffer mBSSRDFBufferTexture = nullptr;
 	optix::TextureSampler mBSSRDFHemisphereTex = nullptr;
+	optix::TextureSampler mBSSRDFHemisphereTexLinear = nullptr;
+	optix::TextureSampler mBSSRDFHemisphereTexNearest = nullptr;
 	float mScaleMultiplier = 1.f;
 	int mShowFalseColors = 1;
 	int mFresnelMode = BSSRDF_RENDER_MODE_FULL_BSSRDF;

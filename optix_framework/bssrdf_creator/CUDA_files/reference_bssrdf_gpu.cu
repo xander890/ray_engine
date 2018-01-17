@@ -61,8 +61,8 @@ RT_PROGRAM void reference_bssrdf_gpu()
             init_seed(p.t, ((unsigned long long) ref_frame_number) * launch_dim.x + idx);
         }
 		RND_FUNC(p.t);
-        if(idx == 0)
-            printf("%llu %f\n", p.t.l, RND_FUNC(p.t));
+        //if(idx == 0)
+        //    printf("%llu %f\n", p.t.l, RND_FUNC(p.t));
 		// Refraction
 		const float n1_over_n2 = 1.0f / n2_over_n1;
 		optix::float3 w12;

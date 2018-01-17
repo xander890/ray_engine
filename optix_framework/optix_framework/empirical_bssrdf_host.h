@@ -18,6 +18,10 @@ public:
         {
             mContext["empirical_bssrdf_correction"]->setFloat(mCorrection);
         }
+		if(ImmediateGUIDraw::Combo("Interpolation", (int*)&mInterpolation, "Nearest\0Linear", 2))
+		{
+			mContext["empirical_bssrdf_interpolation"]->setUint(mInterpolation);
+		}
 
 	}
 
@@ -31,4 +35,5 @@ private:
     std::unique_ptr<BSSRDFLoader> mBSSRDFLoader = nullptr;
     std::unique_ptr<BSSRDFParameterManager> mManager = nullptr;
 	float mCorrection = DEFAULT_EMPIRICAL_CORRECTION;
+	unsigned int mInterpolation = 0;
 };
