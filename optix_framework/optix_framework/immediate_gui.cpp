@@ -8,10 +8,19 @@
 
 ImmediateGUI::ImmediateGUI(GLFWwindow * window)
 {
-	ImGui_ImplGlfwGL3_Init(window, false);
-	glfwSetCharCallback(window, ImGui_ImplGlfwGL3_CharCallback);
-	glfwSetScrollCallback(window, ImGui_ImplGlfwGL3_ScrollCallback);
-	win = window;
+    if (window != nullptr)
+        win = window;
+    else
+        win = glfwCreateWindow(500, 500, "gui", nullptr, nullptr);
+
+    context_win = glfwGetCurrentContext();
+    glfwMakeContextCurrent(win);
+	ImGui_ImplGlfwGL3_Init(win, false);
+	glfwSetCharCallback(win, ImGui_ImplGlfwGL3_CharCallback);
+	glfwSetScrollCallback(win, ImGui_ImplGlfwGL3_ScrollCallback);
+    glfwMakeContextCurrent(context_win);
+
+    context_win = nullptr;
 }
 
 ImmediateGUI::~ImmediateGUI()
@@ -42,27 +51,27 @@ bool ImmediateGUI::mouseMoving(int x, int y)
 	return true;
 }
 
-void ImmediateGUI::start_draw() const
-{
-	static bool show_test_window = false;
-	static bool show_another_window = false;
-	ImGui_ImplGlfwGL3_NewFrame();
-}
 
-void ImmediateGUI::start_window(const char * name, int x, int y, int w, int h) const
+void ImmediateGUI::start_window(const char * name, int x, int y, int w, int h)
 {
-	ImGui::SetNextWindowPos(ImVec2((float)x, (float)y), ImGuiCond_FirstUseEver);
+	context_win = glfwGetCurrentContext();
+	glfwMakeContextCurrent(win);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) ;
+    ImGui_ImplGlfwGL3_NewFrame();
+	ImGui::SetNextWindowPos(ImVec2((float)0, (float)0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2((float)w, (float)h), ImGuiCond_FirstUseEver);
 	ImGui::Begin(name, (bool*)&visible, ImGuiWindowFlags_ShowBorders);
 }
 
-void ImmediateGUI::end_draw() const
+void ImmediateGUI::end_window()
 {
-	ImGui::Render();
-}
-
-void ImmediateGUI::end_window() const
-{
-	ImGui::End();
+    glfwSetWindowSize(win, (int)ImGui::GetWindowWidth() + 10, (int)ImGui::GetWindowHeight() + 10);
+    ImGui::End();
+    ImGui::Render();
+    glfwSwapBuffers(win);
+    glfwPollEvents();
+    if(glfwWindowShouldClose(win)) { exit(0); }
+	glfwMakeContextCurrent(context_win);
+	context_win = nullptr;
 }
 

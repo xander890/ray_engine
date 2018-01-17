@@ -9,7 +9,7 @@ class ImmediateGUI
 {
 public:
 
-	ImmediateGUI(GLFWwindow * window);
+	ImmediateGUI(GLFWwindow * window = nullptr);
 
 	virtual ~ImmediateGUI();
 
@@ -20,10 +20,8 @@ public:
 	bool mousePressed(int x, int y, int button, int action, int mods);
 	bool mouseMoving(int x, int y);
 
-	void start_draw() const;
-	void start_window(const char * name, int x, int y, int w, int h) const;
-	void end_draw() const;
-	void end_window() const;
+	void start_window(const char * name, int x, int y, int w, int h);
+	void end_window();
 
 	void toggleVisibility() { visible = !visible; }
 	bool isVisible() const
@@ -34,4 +32,5 @@ public:
 private:
 	bool visible = true;
 	GLFWwindow * win;
+	GLFWwindow * context_win = nullptr;
 };

@@ -569,7 +569,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	context["scene_epsilon"]->setFloat(scene_epsilon);
 	// Prepare to run 
 
-	gui = std::make_unique<ImmediateGUI>(window);
+	gui = std::make_unique<ImmediateGUI>();
 
 	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
 
@@ -931,7 +931,6 @@ void ObjScene::post_draw_callback()
 {
 	if (!gui->isVisible())
 		return;
-	gui->start_draw();
 	gui->start_window("Ray tracing demo", 20, 20, 500, 600);
 	if (draw_gui())
 	{
@@ -939,10 +938,9 @@ void ObjScene::post_draw_callback()
 	}
 	gui->end_window();
 	static const int console_height = 300;
-	gui->start_window("Console", 20, camera->get_height() - console_height - 20 , camera->get_width() - 40 , console_height);
-	ImGui::Text("%s", console_log.str().c_str());
-	gui->end_window();
-	gui->end_draw();
+	//gui->start_window("Console", 20, camera->get_height() - console_height - 20 , camera->get_width() - 40 , console_height);
+	//ImGui::Text("%s", console_log.str().c_str());
+	//gui->end_window();
 }
 
 void ObjScene::set_debug_pixel(int i, int y)
