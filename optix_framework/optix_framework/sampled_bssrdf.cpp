@@ -3,6 +3,7 @@
 #include "immediate_gui.h"
 #include "scattering_material.h"
 #include "parameter_parser.h"
+#include "string_utils.h"
 
 inline float computeSamplingMfp(SamplingMfpType::Type e, const optix::float3& t)
 {
@@ -19,6 +20,32 @@ inline float computeSamplingMfp(SamplingMfpType::Type e, const optix::float3& t)
 			return 0;
 	}
 }
+
+#define ENUM_SELECTOR(enum_type) \
+bool enum_selector_gui_##enum_type(enum_type::Type & type, std::string name, std::string id = "") \
+{ \
+	std::string elements = ""; \
+	enum_type::Type t = enum_type::first(); \
+	do \
+	{ \
+		elements += prettify(enum_type::to_string(t)) + '\0'; \
+		t = enum_type::next(t); \
+	} while (t != enum_type::NotValidEnumItem); \
+ \
+	id = (id == "")? name : id; \
+ \
+	if (ImmediateGUIDraw::Combo((std::string(name) + std::string("##") + id).c_str(), (int*)&type, elements.c_str(), enum_type::count())) \
+	{ \
+		return true; \
+	} \
+	return false; \
+}
+
+
+ENUM_SELECTOR(BssrdfSamplingType)
+ENUM_SELECTOR(BssrdfSamplePointOnTangentTechnique)
+ENUM_SELECTOR(SamplingMfpType)
+
 
 SampledBSSRDF::SampledBSSRDF(const ShaderInfo& shader_info) : Shader(shader_info)
 {
@@ -111,42 +138,44 @@ bool SampledBSSRDF::on_draw()
 	ImmediateGUIDraw::Text("BSSRDF properties:");
 	mBSSRDF->on_draw();
 
-
-	std::vector<const char*> elems{ "Camera based (Mertens et. al)", "Tangent plane" , "MIS axis (King et al.)" };
-
-	if (ImmediateGUIDraw::Combo("Sampling technique", (int*)&properties->sampling_method, elems.data(), (int)elems.size(), (int)elems.size()))
-	{
-		mHasChanged = true;
-	}
+    if(enum_selector_gui_BssrdfSamplingType(properties->sampling_method, "Sampling Technique"))
+    {
+        mHasChanged = true;
+    }
 
 	std::vector<const char*> elems2{ "Use exponential distribution", "Use neural network" };
 
 
+    if(enum_selector_gui_BssrdfSamplePointOnTangentTechnique(properties->sampling_tangent_plane_technique, "Tangent plane estimation"))
+    {
+        Logger::info << "Changing sampling tangent point to " << BssrdfSamplePointOnTangentTechnique::to_string(properties->sampling_tangent_plane_technique) << std::endl;
+        mHasChanged = true;
+        std::string new_shader = get_current_shader_source();
+        mReloadShader = new_shader != mCurrentShaderSource;
+        mCurrentShaderSource = new_shader;
+    }
+
+    if(properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::EXPONENTIAL_DISK)
+    {
+        mHasChanged |= enum_selector_gui_SamplingMfpType(mSamplingType, "Transport coefficient element");
+    }
+
+	if(properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::UNIFORM_DISK)
+	{
+		mHasChanged |= ImGui::InputFloat("Disc radius", &properties->R_max);
+	}
+
 	if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE)
 	{
-		if(ImmediateGUIDraw::Combo("Estimate point on tangent",  (int*)&properties->sampling_tangent_plane_technique, elems2.data(), (int)elems2.size(), (int)elems2.size()))
-        {
-            Logger::info << "Changing sampling tangent point to " << BssrdfSamplePointOnTangentTechnique::to_string(properties->sampling_tangent_plane_technique) << std::endl;
-            mHasChanged = true;
-            std::string new_shader = get_current_shader_source();
-            mReloadShader = new_shader != mCurrentShaderSource;
-            mCurrentShaderSource = new_shader;
-        }
-
         if(properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING)
         {
             mHasChanged |= mNNSampler->on_draw();
         }
-	}
+        mHasChanged |= ImmediateGUIDraw::InputFloat("Distance from surface", &properties->d_max);
+        mHasChanged |= ImGui::InputFloat("Min no ni", &properties->dot_no_ni_min);
+    }
 
 	mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->use_jacobian);
-	if (properties->sampling_method == BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE)
-	{
-		mHasChanged |= ImmediateGUIDraw::InputFloat("Distance from surface", &properties->d_max);
-		mHasChanged |= ImGui::InputFloat("Min no ni", &properties->dot_no_ni_min);
-		mHasChanged |= ImGui::InputFloat("Disc radius", &properties->R_max);
-	}
-
 	mHasChanged |= ImGui::RadioButton("Show all", &properties->show_mode, BSSRDF_SHADERS_SHOW_ALL); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Refraction", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFRACTION); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Reflection", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFLECTION);

@@ -35,7 +35,6 @@ RT_PROGRAM void miss()
 // Miss program returning background color
 RT_PROGRAM void miss_shadow()
 {
-	float cos_theta;
 	float3 color = make_float3(0.0f);
 	get_environment_map_color(ray.direction, color);
 	prd_shadow.emission = color;

@@ -108,7 +108,7 @@ RT_PROGRAM void shade_path_tracing(void)
 		PerRayData_radiance prd_new_ray = prepare_new_pt_payload(prd_radiance);
 
 		float3 spectral_color = make_float3(0.0f);
-		float w = 0.0f;
+		//float w = 0.0f;
 
 #ifdef USE_SPECTRAL_RENDERING
 		int band = 0;
@@ -141,13 +141,13 @@ RT_PROGRAM void shade_path_tracing(void)
 		{
 			// Selecting a random color channel.
 			band = int(prd_radiance.sampler->next1D() * 3.0f);
-			w = 3.0f;
+			//w = 3.0f;
 		}
 		else
 		{
 			// Continue using the same colorband.
 			band = prd_radiance.colorband;
-			w = 1.0f;
+			//w = 1.0f;
 		}
 
         float3 ior = get_material().ior_complex_real_sq;

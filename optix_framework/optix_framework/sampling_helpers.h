@@ -147,6 +147,17 @@ static __inline__ __device__ optix::float2 sample_disk(const optix::float2 & sam
 	return p;
 }
 
+static __inline__ __device__ optix::float2 sample_disk_uniform(const optix::float2 & sample, float & pdf, float & r, float & phi, float minR = 0.0f, float maxR = 1.0f)
+{
+	optix::float2 p;
+	r = minR + (sample.x) * (maxR - minR);
+	phi = 2.0f * M_PIf * sample.y;
+	p.x = r * cos(phi);
+	p.y = r * sin(phi);
+	pdf = 1.0f / (maxR - minR) * 1.0f / (2.0f* M_PIf);
+	return p;
+}
+
 static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::float2 & sample, float sigma, float & pdf, float & r, float & phi)
 {
 	optix::float2 p;
