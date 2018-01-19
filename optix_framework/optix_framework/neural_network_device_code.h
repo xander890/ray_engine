@@ -407,8 +407,7 @@ __device__ __forceinline__ void sample_neural_network(
     optix_print("\n");
 
     // Also here sample normalization constant
-    float bssrdf_integral = 1e-4f; // FIXME implement proper integrals from generated dataset.
-    bssrdf_integral = get_interpolated_integral(albedo, g, theta_i);
+    float bssrdf_integral = get_interpolated_integral(albedo, g, theta_i);
     bssrdf_integral *= DEFAULT_EMPIRICAL_CORRECTION;
     integration_factor *= bssrdf_integral;
     // Multiplying over extinction as in the empbssrdf paper
@@ -429,8 +428,23 @@ __device__ __forceinline__ void sample_neural_network(
 
     // Note that the tangent vector has to be aligned to wo in order to get a consistent framae for theta_s.
     BSSRDFGeometry geometry_exit;
+
+#define TREAT_AS_INPUT_GEOMETRY
+#ifdef TREAT_AS_INPUT_GEOMETRY
     empirical_bssrdf_build_geometry(xo, wo, no, theta_i, r, theta_s, theta_o, phi_o, geometry_exit);
 
     x_tangent = geometry_exit.xo;
     proposed_wi = geometry_exit.wo;
+#else
+    optix_print("theta_i %f r %f, theta_s %f, theta_o %f, phi_o %f\n",  theta_i, r, theta_s, theta_o, phi_o);
+    empirical_bssrdf_build_geometry_from_exit(xo, wo, no, theta_i, r, theta_s, theta_o, phi_o, geometry_exit);
+
+    optix_print("wi,ni angle %f wo,no angle %f\n", acosf(dot(geometry_exit.wi, geometry_exit.ni)), acosf(dot(geometry_exit.wo, geometry_exit.no)));
+    x_tangent = geometry_exit.xi;
+    proposed_wi = geometry_exit.wi;
+    optix_print("xi %f %f %f, xo %f %f %f\n", x_tangent.x, x_tangent.y, x_tangent.z, xo.x, xo.y, xo.z);
+
+
+
+#endif
 }
