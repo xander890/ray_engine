@@ -4,7 +4,8 @@
 
 #define IMPROVED_ENUM_NAME BssrdfSamplePointOnTangentTechnique
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(EXPONENTIAL_DISK,0) \
-						   ENUMITEM_VALUE(NEURAL_NETWORK_IMPORTANCE_SAMPLING,1) 
+                           ENUMITEM_VALUE(UNIFORM_DISK,1) \
+						   ENUMITEM_VALUE(NEURAL_NETWORK_IMPORTANCE_SAMPLING,2)
 #include "improved_enum.def"
 
 #define IMPROVED_ENUM_NAME BssrdfSamplingType
@@ -47,7 +48,7 @@ struct ApproximateBSSRDFProperties
 	optix::float3 approx_property_A		DEFAULT(optix::make_float3(1));
 	int pad0;
 	optix::float3 approx_property_s		DEFAULT(optix::make_float3(1));
-	float sampling_mfp_s;
+	int pad1;
 };
 
 struct QuantizedDiffusionProperties
@@ -70,14 +71,13 @@ struct BSSRDFGeometry
 
 struct BSSRDFSamplingProperties
 {
-	BssrdfSamplingType::Type        sampling_method				DEFAULT(BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE);
+	BssrdfSamplingType::Type        			sampling_method						DEFAULT(BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE);
     BssrdfSamplePointOnTangentTechnique::Type   sampling_tangent_plane_technique    DEFAULT(BssrdfSamplePointOnTangentTechnique::EXPONENTIAL_DISK);
-	int use_jacobian				DEFAULT(0);
-	float d_max						DEFAULT(1.0f);
-	float dot_no_ni_min				DEFAULT(0.001f);
-	optix::float3 mis_weights		DEFAULT(optix::make_float3(1.f, 0.f, 0.f));
-//	optix::float3 mis_weights		DEFAULT(optix::make_float3(0.5f, 0.25f, 0.25f));
-	int show_mode					DEFAULT(BSSRDF_SHADERS_SHOW_ALL);
-	optix::float4 mis_weights_cdf	DEFAULT(optix::make_float4(0.0f, 1.f, 1.f, 1.0f));
-	//	optix::float4 mis_weights_cdf	DEFAULT(optix::make_float4(0.0f, 0.5f, 0.75f, 1.0f));
+	int 										use_jacobian						DEFAULT(0);
+	float 										d_max								DEFAULT(1.0f);
+	float 										dot_no_ni_min						DEFAULT(0.001f);
+	int 										show_mode							DEFAULT(BSSRDF_SHADERS_SHOW_ALL);
+    float                                       R_max                               DEFAULT(1.0f);
+	float 										sampling_inverse_mean_free_path		DEFAULT(0.0f);
+	int 										pad;
 };

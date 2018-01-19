@@ -79,20 +79,3 @@ __forceinline__ __device__ float3 get_beam_transmittance(const float depth, cons
 	}
 }
 
-__forceinline__ __device__ float get_sampling_mfp(const ScatteringMaterialProperties& properties)
-{
-	switch (selected_bssrdf)
-	{
-	case ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF:
-	case ScatteringDipole::APPROX_STANDARD_DIPOLE_BSSRDF:
-		return approx_std_bssrdf_props.sampling_mfp_s;
-    case ScatteringDipole::EMPIRICAL_BSSRDF:
-	case ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF:
-	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
-	case ScatteringDipole::QUANTIZED_DIFFUSION_BSSRDF:
-	case ScatteringDipole::PHOTON_BEAM_DIFFUSION_BSSRDF:
-	case ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF:
-	default:
-		return properties.sampling_mfp_tr;
-	}
-}

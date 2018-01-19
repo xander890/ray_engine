@@ -4,6 +4,22 @@
 #include "scattering_material.h"
 #include "parameter_parser.h"
 
+inline float computeSamplingMfp(SamplingMfpType::Type e, const optix::float3& t)
+{
+	switch (e)
+	{
+		case SamplingMfpType::X: return t.x;
+		case SamplingMfpType::Y: return t.y;
+		case SamplingMfpType::Z: return t.z;
+		case SamplingMfpType::MIN: return optix::fminf(t);
+		case SamplingMfpType::MAX: return optix::fmaxf(t);
+		case SamplingMfpType::MEAN: return optix::dot(t, optix::make_float3(0.333f));
+		case SamplingMfpType::NotValidEnumItem:
+		default:
+			return 0;
+	}
+}
+
 SampledBSSRDF::SampledBSSRDF(const ShaderInfo& shader_info) : Shader(shader_info)
 {
 	properties = std::make_unique<BSSRDFSamplingProperties>();
@@ -30,6 +46,7 @@ void SampledBSSRDF::initialize_shader(optix::Context ctx)
 	auto s = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF), "Default dipole. Available : " + ScatteringDipole::get_full_string()));
 	Logger::info << "Using dipole " << ScatteringDipole::to_string(s) << std::endl;
 	mBSSRDF = BSSRDF::create(context, s);
+	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + SamplingMfpType::get_full_string()).c_str()));
 
 }
 
@@ -41,23 +58,33 @@ void SampledBSSRDF::initialize_mesh(Mesh& object)
 	BufPtr<BSSRDFSamplingProperties> bufptr(mPropertyBuffer->getId());
  	object.mMaterial["bssrdf_sampling_properties"]->setUserData(sizeof(BufPtr<BSSRDFSamplingProperties>), &bufptr);
     mBSSRDF->load(object.get_main_material()->get_data().relative_ior, object.get_main_material()->get_data().scattering_properties);
-	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
+
+	ScatteringDipole::Type t = mBSSRDF->get_type();
+	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 }
 
 void SampledBSSRDF::load_data(Mesh & object)
 {
 	if (mHasChanged)
 	{
+		const ScatteringMaterialProperties& scattering_properties = object.get_main_material()->get_data().scattering_properties;
+		const float relior = object.get_main_material()->get_data().relative_ior;
 		Logger::info << "Reloading shader" << std::endl;
+
+		const optix::float3 imfp = mBSSRDF->get_sampling_inverse_mean_free_path(scattering_properties);
+		properties->sampling_inverse_mean_free_path = computeSamplingMfp(mSamplingType, imfp);
+
 		initialize_buffer<BSSRDFSamplingProperties>(mPropertyBuffer, *properties);
+
 		context["samples_per_pixel"]->setUint(mSamples);
-        mBSSRDF->load(object.get_main_material()->get_data().relative_ior, object.get_main_material()->get_data().scattering_properties);
-		object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
+        mBSSRDF->load(relior, scattering_properties);
+		ScatteringDipole::Type t = mBSSRDF->get_type();
+		object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 
 		bool isNN = properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING;
         if(isNN)
         {
-            mNNSampler->load(object.get_main_material()->get_data().relative_ior,object.get_main_material()->get_data().scattering_properties);
+            mNNSampler->load(relior, scattering_properties);
         }
 
         if(mReloadShader)
@@ -71,7 +98,7 @@ void SampledBSSRDF::load_data(Mesh & object)
 
 bool SampledBSSRDF::on_draw()
 {
-	static ScatteringDipole::Type dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF;
+	static ScatteringDipole::Type dipole = mBSSRDF->get_type();
 	if (BSSRDF::dipole_selector_gui(dipole))
 	{
 		mHasChanged = true;
@@ -85,7 +112,7 @@ bool SampledBSSRDF::on_draw()
 	mBSSRDF->on_draw();
 
 
-	std::vector<const char*> elems{ "Camera based (Mertens et. al)", "Tangent plane (with distance)" , "Tangent plane (with probes)", "MIS axis (King et al.)" };
+	std::vector<const char*> elems{ "Camera based (Mertens et. al)", "Tangent plane" , "MIS axis (King et al.)" };
 
 	if (ImmediateGUIDraw::Combo("Sampling technique", (int*)&properties->sampling_method, elems.data(), (int)elems.size(), (int)elems.size()))
 	{
@@ -99,7 +126,6 @@ bool SampledBSSRDF::on_draw()
 	{
 		if(ImmediateGUIDraw::Combo("Estimate point on tangent",  (int*)&properties->sampling_tangent_plane_technique, elems2.data(), (int)elems2.size(), (int)elems2.size()))
         {
-            bool isNN = properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING;
             Logger::info << "Changing sampling tangent point to " << BssrdfSamplePointOnTangentTechnique::to_string(properties->sampling_tangent_plane_technique) << std::endl;
             mHasChanged = true;
             std::string new_shader = get_current_shader_source();
@@ -118,6 +144,7 @@ bool SampledBSSRDF::on_draw()
 	{
 		mHasChanged |= ImmediateGUIDraw::InputFloat("Distance from surface", &properties->d_max);
 		mHasChanged |= ImGui::InputFloat("Min no ni", &properties->dot_no_ni_min);
+		mHasChanged |= ImGui::InputFloat("Disc radius", &properties->R_max);
 	}
 
 	mHasChanged |= ImGui::RadioButton("Show all", &properties->show_mode, BSSRDF_SHADERS_SHOW_ALL); ImGui::SameLine();

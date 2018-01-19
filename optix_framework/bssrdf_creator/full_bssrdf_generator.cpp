@@ -157,7 +157,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	gui = nullptr;
 	if (window != nullptr)
 	{
-		gui = std::make_unique<ImmediateGUI>(window);
+		gui = std::make_unique<ImmediateGUI>();
 	}
 
 	if (mCurrentHemisphereData == nullptr)
@@ -283,7 +283,6 @@ void FullBSSRDFGenerator::post_draw_callback()
 {
 	if (gui == nullptr)
 		return;
-	gui->start_draw();
 	gui->start_window("Ray tracing demo", 20, 20, 500, 600);
 	
 	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
@@ -338,7 +337,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 		if (!mSimulate)
 		{
-			static ScatteringDipole::Type dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF;
+			static ScatteringDipole::Type dipole =  std::dynamic_pointer_cast<BSSRDFRendererModel>(mCurrentBssrdfRenderer)->get_dipole();
 			if (BSSRDF::dipole_selector_gui(dipole))
 			{
 				std::dynamic_pointer_cast<BSSRDFRendererModel>(mCurrentBssrdfRenderer)->set_dipole(dipole);
@@ -496,7 +495,6 @@ void FullBSSRDFGenerator::post_draw_callback()
 	}
 
 	gui->end_window();
-	gui->end_draw();
 }
 
 void FullBSSRDFGenerator::start_rendering()

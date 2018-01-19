@@ -12,7 +12,7 @@ BSSRDF::BSSRDF(optix::Context & ctx, ScatteringDipole::Type type)
 	mContext = ctx;
 }
 
-void BSSRDF::on_draw()
+bool BSSRDF::on_draw()
 {
 }
 

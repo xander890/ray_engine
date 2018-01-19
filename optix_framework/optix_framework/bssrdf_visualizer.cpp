@@ -60,7 +60,8 @@ void BSSRDFPlaneRenderer::initialize_shader(optix::Context ctx)
 
 void BSSRDFPlaneRenderer::initialize_mesh(Mesh& object)
 {
-	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
+	ScatteringDipole::Type t = mBSSRDF->get_type();
+	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 }
 
 void BSSRDFPlaneRenderer::pre_trace_mesh(Mesh& object)
@@ -93,6 +94,7 @@ void BSSRDFPlaneRenderer::load_data(Mesh & object)
 	context["reference_bssrdf_theta_i"]->setFloat(deg2rad(static_cast<float>(mAngle)));
 	context["reference_bssrdf_rel_ior"]->setFloat(object.get_main_material()->get_data().relative_ior);
     mBSSRDF->load(object.get_main_material()->get_data().relative_ior, object.get_main_material()->get_data().scattering_properties);
-	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
+	ScatteringDipole::Type t = mBSSRDF->get_type();
+	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 	context["channel_to_show"]->setUint(mChannel);
 }

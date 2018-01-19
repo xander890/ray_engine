@@ -1,7 +1,6 @@
 // 02576 OptiX Rendering Framework
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
-#pragma once
 #include <device_common_data.h>
 #include <color_helpers.h>
 #include <environment_map.h>

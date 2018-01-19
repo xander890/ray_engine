@@ -32,7 +32,7 @@ void QuantizedDiffusion::load(const float relative_ior, const ScatteringMaterial
 	}
 }
 
-void QuantizedDiffusion::on_draw()
+bool QuantizedDiffusion::on_draw()
 {
 	mHasChanged |= ImmediateGUIDraw::Checkbox("Use quantized", (bool*)&mProperties.use_precomputed_qd);
 }

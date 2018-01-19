@@ -13,7 +13,7 @@
 // Do not use directives like:
 // #ifndef _IMPROVED_ENUM_H_ ; #define _IMPROVED_ENUM_H_ (same reason).
 ////////////////////////////////////////////////////////////////////////
-// AUTHOR:      Hugo González Castro
+// AUTHOR:      Hugo Gonzalez Castro
 // TITLE:       Improving C++ Enum: Adding Serialization,
 //                                  Inheritance and Iteration.
 // DESCRIPTION: A different approach to C++ enums: enum to string,

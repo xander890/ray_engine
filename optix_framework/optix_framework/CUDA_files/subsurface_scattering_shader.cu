@@ -93,7 +93,7 @@ RT_PROGRAM void shade()
     float R = fresnel_R(cos_theta_o, recip_ior);
 #endif
 
-    float chosen_transport_rr = get_sampling_mfp(props);
+    float chosen_transport_rr = dot(props.transport, make_float3(0.33333f));
     float3 accumulate = make_float3(0.0f);
     uint N = sampling_output_buffer.size();
 

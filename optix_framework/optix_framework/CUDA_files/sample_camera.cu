@@ -82,7 +82,6 @@ RT_PROGRAM void sample_camera()
 
     float3 light_vector;
     float3 light_radiance;
-    int cast_shadows;
 
     float3 Le = make_float3(0.0f);
     uint lights = light_size();

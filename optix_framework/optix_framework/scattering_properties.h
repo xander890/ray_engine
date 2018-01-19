@@ -26,7 +26,7 @@ struct ScatteringMaterialProperties
     optix::float3 rev_D;
     float global_coeff;
     optix::float3 two_a_de;
-    float sampling_mfp_tr;
+	int pad;
     optix::float3 one_over_three_ext;
 	float C_phi_norm; // 1 / (4 * C_phi(1 / eta)) = 1 / (1 - 2 * C1(1/eta)) 
 	optix::float3 deltaEddExtinction;

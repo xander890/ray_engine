@@ -13,7 +13,7 @@ public:
 	EmpiricalBSSRDF(optix::Context & ctx);
     ~EmpiricalBSSRDF() {}
 	void load(const float relative_ior, const ScatteringMaterialProperties &props) override;
-	void on_draw() override {
+	bool on_draw() override {
 		if(ImmediateGUIDraw::InputFloat("Correction" ,&mCorrection))
         {
             mContext["empirical_bssrdf_correction"]->setFloat(mCorrection);

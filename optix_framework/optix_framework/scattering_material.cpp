@@ -18,7 +18,6 @@ ScatteringMaterial::ScatteringMaterial(optix::float3 absorption, optix::float3 s
 	this->scattering = scattering;
 	this->asymmetry = meancosine;
 	mStandardMaterial = DefaultScatteringMaterial::Count; // Custom
-	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + SamplingMfpType::get_full_string()).c_str()));
 	dirty = true;
 }
 
@@ -27,7 +26,6 @@ ScatteringMaterial::ScatteringMaterial(DefaultScatteringMaterial material, float
 	scale = prop_scale;
 	mStandardMaterial = static_cast<int>(material);
 	getDefaultMaterial(material);
-	mSamplingType = SamplingMfpType::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_sampling_mfp", SamplingMfpType::to_string(mSamplingType), (std::string("Part of transport/s coeff. used for sampling. Values: ") + SamplingMfpType::get_full_string()).c_str()));
 	dirty = true;
 }
 
@@ -266,8 +264,6 @@ void ScatteringMaterial::computeCoefficients(float ior)
 {
 	fill_scattering_parameters(properties, scale, ior, absorption, scattering, asymmetry);
 
-	Logger::info << "Will sample using MFP: " << SamplingMfpType::to_string(mSamplingType) << std::endl;
-	properties.sampling_mfp_tr = computeSamplingMfp(mSamplingType, properties.transport);
 	dirty = false;
 }
 

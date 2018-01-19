@@ -31,6 +31,7 @@ public:
     std::string mCurrentShaderSource;
 	std::unique_ptr<BSSRDF> mBSSRDF;
     std::unique_ptr<NeuralNetworkSampler> mNNSampler;
+	SamplingMfpType::Type mSamplingType = SamplingMfpType::MEAN;
 
 private:
     std::string get_current_shader_source();

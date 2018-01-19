@@ -38,8 +38,6 @@ RT_PROGRAM void render()
 	geometry.wi = normalize(optix::make_float3(sinf(theta_i_rad), 0, cosf(theta_i_rad)));
 
 	float fresnel_integral = planar_bssrdf_material_params->C_phi * 4 * M_PIf;
-	 
-	optix_assert(channel_to_show >= 0 && channel_to_show < 3);
 
     MaterialDataCommon mat;
     mat.scattering_properties = planar_bssrdf_material_params[0];

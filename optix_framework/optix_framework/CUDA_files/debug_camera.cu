@@ -25,9 +25,6 @@ __device__ __inline__ bool box_border(const uint2& px, const uint4& bx)
 
 RT_PROGRAM void debug_camera()
 {
-	size_t2 image_size = tonemap_output_buffer.size();
-	size_t w = image_size.x;
-	size_t h = image_size.y;
 	uint2 current_pixel = launch_index;
 
 	if (box(current_pixel, zoom_window))

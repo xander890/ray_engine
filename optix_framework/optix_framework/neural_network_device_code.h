@@ -411,7 +411,7 @@ __device__ __forceinline__ void sample_neural_network(
     bssrdf_integral *= DEFAULT_EMPIRICAL_CORRECTION;
     integration_factor *= bssrdf_integral;
     // Multiplying over extinction as in the empbssrdf paper
-    integration_factor *= extinction;
+    integration_factor *= extinction / extinction;
 
     float r = map_interval(icdfnetwork_output[0], optix::make_float2(0, 1), optix::make_float2(0.01f, 10.0f));
     float theta_s = map_interval(icdfnetwork_output[1], optix::make_float2(0, 1), optix::make_float2(0.0f, M_PIf));
@@ -436,15 +436,8 @@ __device__ __forceinline__ void sample_neural_network(
     x_tangent = geometry_exit.xo;
     proposed_wi = geometry_exit.wo;
 #else
-    optix_print("theta_i %f r %f, theta_s %f, theta_o %f, phi_o %f\n",  theta_i, r, theta_s, theta_o, phi_o);
     empirical_bssrdf_build_geometry_from_exit(xo, wo, no, theta_i, r, theta_s, theta_o, phi_o, geometry_exit);
-
-    optix_print("wi,ni angle %f wo,no angle %f\n", acosf(dot(geometry_exit.wi, geometry_exit.ni)), acosf(dot(geometry_exit.wo, geometry_exit.no)));
     x_tangent = geometry_exit.xi;
     proposed_wi = geometry_exit.wi;
-    optix_print("xi %f %f %f, xo %f %f %f\n", x_tangent.x, x_tangent.y, x_tangent.z, xo.x, xo.y, xo.z);
-
-
-
 #endif
 }

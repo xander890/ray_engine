@@ -110,5 +110,6 @@ public:
 	bool on_draw(bool show_material_params) override;
 	void load_data() override;
 	void set_dipole(ScatteringDipole::Type dip);
+	ScatteringDipole::Type get_dipole() {return mBSSRDF->get_type();}
 	std::unique_ptr<BSSRDF> mBSSRDF = nullptr;
 };

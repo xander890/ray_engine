@@ -84,8 +84,8 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
     memcpy(mCdfBuffer->map(), cdf, triangles * sizeof(float));
 		mCdfBuffer->unmap();
     delete[] cdf;
-
-	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
+	ScatteringDipole::Type t = mBSSRDF->get_type();
+	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 
 	Shader::initialize_mesh(object);
 }
@@ -109,7 +109,8 @@ void PresampledSurfaceBssrdf::load_data(Mesh & obj)
 	object["total_area"]->setFloat(mArea);
 	object["area_cdf"]->setBuffer(mCdfBuffer);
     mBSSRDF->load(obj.get_main_material()->get_data().relative_ior, obj.get_main_material()->get_data().scattering_properties);
-	obj.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &mBSSRDF->get_type());
+	ScatteringDipole::Type t = mBSSRDF->get_type();
+	obj.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 	context["sampling_vertex_buffer"]->setBuffer(g["vertex_buffer"]->getBuffer());
 	context["sampling_normal_buffer"]->setBuffer(g["normal_buffer"]->getBuffer());
 	context["sampling_vindex_buffer"]->setBuffer(g["vindex_buffer"]->getBuffer());
@@ -120,7 +121,7 @@ bool PresampledSurfaceBssrdf::on_draw()
 {
 	bool changed = false;
 
-	static ScatteringDipole::Type dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF;
+	static ScatteringDipole::Type dipole = mBSSRDF->get_type();
 	if (BSSRDF::dipole_selector_gui(dipole))
 	{
 		changed = true;
