@@ -11,7 +11,6 @@
 #include "phase_function.h"
 #include "empirical_bssrdf_utils.h"
 
-
 // FIXME, we need to remove this or find a better way to express it without overhauling all the parameters.
 rtDeclareVariable(optix::float2, plane_size, , );
 
@@ -21,7 +20,7 @@ __forceinline__ __device__ void get_reference_scene_geometry(const float theta_i
 	// Geometry
 	xi = optix::make_float3(0, 0, 0);
 	ni = optix::make_float3(0, 0, 1);
-	xo = xi + r * optix::make_float3(cos(theta_s), -sin(theta_s), 0);
+	xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
 	no = ni;
 }
 
@@ -29,7 +28,7 @@ __forceinline__ __device__ void get_reference_scene_geometry(const float theta_i
 __forceinline__ __device__ bool intersect_plane(const optix::float3 & plane_origin, const optix::float3 & plane_normal, const optix::Ray & ray, float & intersection_distance)
 {
 	float denom = optix::dot(plane_normal, ray.direction);
-	if (abs(denom) < 1e-6)
+	if (abs(denom) < 1e-12)
 		return false; // Parallel: none or all points of the line lie in the plane.
 	intersection_distance = optix::dot((plane_origin - ray.origin), plane_normal) / denom;
 	return intersection_distance > ray.tmin && intersection_distance < ray.tmax;
@@ -50,8 +49,372 @@ __forceinline__ __device__ void store_values_in_buffer(const float theta_o, cons
 		atomicAdd(&resulting_flux[idxs], flux_E);
 }
 
+
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions)
+__forceinline__ __device__ bool scatter_photon_hemisphere_mcml(const BSSRDFRendererData & geometry_data, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions)
+{
+	// Defining geometry
+	const optix::float3 xi = optix::make_float3(0, 0, 0);
+	const optix::float3 ni = optix::make_float3(0, 0, 1);
+	const optix::float3 no = ni;
+
+	// We count executions to allow stop/resuming of this function.
+	int i;
+	for (i = starting_it; i < starting_it + executions; i++)
+	{
+#ifdef TERMINATE_ON_SMALL_FLUX
+		// If the flux is really small, we can stop here, the contribution is too small.
+		if (flux_t < 1e-12)
+			return true;
+#endif
+		const float rand = RND_FUNC(t);
+
+		// Sampling new distance for photon, testing if it intersects the interface
+		const float d = -log(rand) / extinction;
+		optix::Ray ray = optix::make_Ray(xp, wp, 0, 1e-12f, d);
+
+        if(!isfinite(xp.z))
+        {
+            return true;
+        }
+
+        optix_assert(xp.z <= 1e-6);
+		optix_assert(xp.z > -INFINITY);
+
+        optix_print("%d (launch %d) -%f - xp %f %f %f wp %f %f %f \n", i, launch_index.x,optix::dot(wp, no), xp.x, xp.y, xp.z, wp.x, wp.y, wp.z);
+
+		float intersection_distance;
+		if (!intersect_plane(xi, ni, ray, intersection_distance))
+		{
+			// We are still within the medium.
+			// Russian roulette to check for absorption.
+			float absorption_prob = RND_FUNC(t);
+			if (absorption_prob > albedo)
+			{
+				optix_print("(%d) Absorption.\n", i);
+				return true;
+			}
+
+			// We scatter now.
+			xp = xp + wp * d;
+			// We choose a new direction sampling the phase function
+			optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+			wp = optix::normalize(sample_HG(wp, g, smpl));
+            xp.z = fminf(xp.z, 0);
+		}
+		else
+		{
+			// We have intersected the plane.
+			const optix::float3 surface_point = xp + wp * intersection_distance;
+			optix_assert(optix::dot(wp, no) > 0);
+
+			// Calculate refracted vector.
+            float F_r, cos_theta_i, cos_theta_t;
+            optix::float3 wo;
+            refract(-wp, -no, n2_over_n1, wo, F_r, cos_theta_i, cos_theta_t);
+
+			const float reflection_probability = RND_FUNC(t);
+
+			if(reflection_probability < F_r)
+			{
+                optix_print("(%d) Internal reflection. %f %f %f\n", i, no.x, no.y, no.z);
+
+                // Reflect and turn to face inside.
+				xp = surface_point;
+                xp.z = 0; // To avoid numerical imprecisions.
+				wp = reflect(wp, -no);
+			}
+			else
+			{
+
+                // Photons escapes the medium, we store it.
+				// Check if we are in the correct spatial bin!
+                optix::float3 diff = surface_point - xi;
+                float r = optix::length(diff);
+                float theta_s = atan2(diff.y, diff.x);
+                optix_assert(r >= 0);
+
+                bool is_r_in_bin = r >= geometry_data.mRadius.x && r < geometry_data.mRadius.y;
+                bool is_theta_s_in_bin = theta_s >= geometry_data.mThetas.x && theta_s < geometry_data.mThetas.y;
+                bool is_p_in_bin = is_r_in_bin && is_theta_s_in_bin;
+
+				float phi_o = atan2(wo.y, wo.x);
+				float theta_o = acosf(wo.z);
+
+                float flux_to_store = flux_t * 1.0f / (geometry_data.mArea * geometry_data.mSolidAngle * dot(wo, no));
+
+                if(is_p_in_bin && i > 1) // No single scattering.
+                {
+                    optix_print("(%d) Refraction. theta_o %f phi_o %f - %f\n", i, theta_o, phi_o, flux_to_store);
+
+                    store_values_in_buffer(theta_o, phi_o, flux_to_store, resulting_flux);
+                }
+                // We are done with this random walk.
+                return true;
+			}
+		}
+	}
+	return false;
+}
+
+// Returns true if the photon has been absorbed, false otherwise
+__forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(const BSSRDFRendererData & geometry_data, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions)
+{
+    // Defining geometry
+    const optix::float3 xi = optix::make_float3(0, 0, 0);
+    const optix::float3 ni = optix::make_float3(0, 0, 1);
+    const optix::float3 no = ni;
+
+    // We count executions to allow stop/resuming of this function.
+    int i;
+    for (i = starting_it; i < starting_it + executions; i++)
+    {
+#ifdef TERMINATE_ON_SMALL_FLUX
+        // If the flux is really small, we can stop here, the contribution is too small.
+        if (flux_t < 1e-12)
+            return true;
+#endif
+        const float rand = RND_FUNC(t); // RND_FUNC(t) in [0, 1). Avoids infinity when sampling exponential distribution.
+
+        // Sampling new distance for photon, testing if it intersects the interface
+        const float d = -log(rand) / extinction;
+        optix::Ray ray = optix::make_Ray(xp, wp, 0, 1e-12, d);
+
+        if(!isfinite(xp.z))
+        {
+            return true;
+        }
+
+        optix_assert(xp.z <= 1e-6);
+        optix_assert(xp.z > -INFINITY);
+
+        float intersection_distance;
+        if (!intersect_plane(xi, ni, ray, intersection_distance))
+        {
+            // We scatter now.
+            xp = xp + wp * d;
+            xp.z = fminf(xp.z, 0);  // This is needed to eliminate edge cases that give xp.z > 0 due to numerical precision.
+
+            float r = geometry_data.mRadius.x + geometry_data.mDeltaR * 0.5f;//RND_FUNC(t);
+            float theta_s = geometry_data.mThetas.x + geometry_data.mDeltaThetas * 0.5f;//RND_FUNC(t);
+
+			const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
+            optix::float3 w21 = xo - xp;
+            const float xoxp = optix::length(w21);
+            w21 = w21 / xoxp; // Normalizing
+
+            optix_assert(optix::dot(w21, no) >= 0.0f);
+
+            // Note: we are checking the *exiting* ray, so we flip the relative ior
+            float3 wo;
+            float cos_theta_o, cos_theta_21, R21;
+            // If there is no total internal reflection, we accumulate
+            if (refract(-w21, -no, n2_over_n1, wo, R21, cos_theta_21, cos_theta_o))
+            {
+                const float T21 = 1 - R21;
+                optix_assert(R21 <= 1.0f);
+                optix_assert(cos_theta_o >= 0);
+
+                const float phi_21 = atan2f(w21.y, w21.x);
+                // The outgoing azimuthal angle is the same as the refracted vector, since the refracted vector
+                // w_12 points *towards* the surface, and the outgoing w_o points *away *from the surface.
+                const float phi_o = phi_21;
+
+				float geometry_term = fabsf(optix::dot(w21, no)) / (xoxp*xoxp);
+                float bssrdf_E = albedo * flux_t * phase_HG(optix::dot(wp, w21), g) * (T21 / dot(wo, no)) * geometry_term * exp(-extinction * xoxp);
+				bssrdf_E *= r * (2.0f / (geometry_data.mRadius.x + geometry_data.mRadius.y)) * (1.0f / geometry_data.mSolidAngle);
+
+                optix_print("flux_t %f, albedo %f, p %f, exp %f, F %f\n",  flux_t, albedo , phase_HG(optix::dot(w21, wp), g) , expf(-extinction*xoxp) , T21);
+
+                // Not including single scattering, so i == 0 is not considered.
+                if (i > 0)
+                {
+                    store_values_in_buffer(acosf(cos_theta_o), phi_o, bssrdf_E, resulting_flux);
+                }
+
+                optix_print("(%d) Scattering.  %f\n", i, bssrdf_E);
+            }
+            // We choose a new direction sampling the phase function
+            optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+            wp = optix::normalize(sample_HG(wp, g, smpl));
+
+            // We are still within the medium.
+            // Russian roulette to check for absorption.
+            float absorption_prob = RND_FUNC(t);
+            if (absorption_prob > albedo)
+            {
+                optix_print("(%d) Absorption.\n", i);
+                return true;
+            }
+        }
+        else
+        {
+            // We have intersected the plane.
+            const optix::float3 surface_point = xp + wp * intersection_distance;
+                    optix_assert(optix::dot(wp, no) > 0);
+
+            float3 wo; float F_r;
+            refract(-wp, -no, n2_over_n1, wo, F_r);
+
+            // Reflect and turn to face inside.
+            flux_t *= F_r;
+            xp = surface_point;
+            wp = reflect(wp, -no);
+            xp.z = 0; // This is needed to eliminate edge cases that give xp.z > 0 due to numerical precision.
+            optix_print("(%d) Reached surface %f.\n", i, F_r);
+        }
+    }
+    return false;
+}
+
+
+// Returns true if the photon has been absorbed, false otherwise
+__forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct_bias_compensation(const BSSRDFRendererData & geometry_data, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions, float bias)
+{
+    // Defining geometry
+    const optix::float3 xi = optix::make_float3(0, 0, 0);
+    const optix::float3 ni = optix::make_float3(0, 0, 1);
+    const optix::float3 no = ni;
+
+
+    // We count executions to allow stop/resuming of this function.
+    int i;
+    for (i = starting_it; i < starting_it + executions; i++)
+    {
+#ifdef TERMINATE_ON_SMALL_FLUX
+        // If the flux is really small, we can stop here, the contribution is too small.
+        if (flux_t < 1e-12)
+            return true;
+#endif
+        const float rand = RND_FUNC(t); // RND_FUNC(t) in [0, 1). Avoids infinity when sampling exponential distribution.
+
+        // Sampling new distance for photon, testing if it intersects the interface
+        bool bias_loop = true;
+        bool first = true;
+
+        float G = 1.0f;
+
+        while(bias_loop) {
+            const float d = -log(rand) / extinction;
+            bool is_in_bias_length = d < (1.0f / bias);
+
+            bool include_original_contribution = false;
+            if(!is_in_bias_length && first)
+            {
+                optix_print("Starting bias.\n");
+                G = 1.0f;
+            }
+            else if (!is_in_bias_length && !first)
+            {
+                optix_print("Out of bias zone.\n");
+                // We are outside the dangerous area now.
+                break;
+            }
+            else if(is_in_bias_length)
+            {
+                optix_print("Continuing bias. %f\n", G);
+                // Continue to accumulate the bias compensation.
+                G *= 1.0f - d*d*bias*bias;
+                if(first) {
+                    include_original_contribution = true;
+                }
+            }
+
+            first = false;
+
+            optix::Ray ray = optix::make_Ray(xp, wp, 0, 1e-12, d);
+
+            if (!isfinite(xp.z)) {
+                return true;
+            }
+
+            optix_assert(xp.z <= 1e-6);
+            optix_assert(xp.z > -INFINITY);
+
+            float intersection_distance;
+            if (!intersect_plane(xi, ni, ray, intersection_distance)) {
+                // We scatter now.
+                xp = xp + wp * d;
+                xp.z = fminf(xp.z, 0);  // This is needed to eliminate edge cases that give xp.z > 0 due to numerical precision.
+
+                float r = geometry_data.mRadius.x + geometry_data.mDeltaR * 0.5f;//RND_FUNC(t);
+                float theta_s = geometry_data.mThetas.x + geometry_data.mDeltaThetas * 0.5f;//RND_FUNC(t);
+
+                const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
+                optix::float3 w21 = xo - xp;
+                const float xoxp = optix::length(w21);
+                w21 = w21 / xoxp; // Normalizing
+
+                optix_assert(optix::dot(w21, no) >= 0.0f);
+
+                // Note: we are checking the *exiting* ray, so we flip the relative ior
+                float3 wo;
+                float cos_theta_o, cos_theta_21, R21;
+                // If there is no total internal reflection, we accumulate
+                if (refract(-w21, -no, n2_over_n1, wo, R21, cos_theta_21, cos_theta_o)) {
+                    const float T21 = 1 - R21;
+                            optix_assert(R21 <= 1.0f);
+                            optix_assert(cos_theta_o >= 0);
+
+                    const float phi_21 = atan2f(w21.y, w21.x);
+                    // The outgoing azimuthal angle is the same as the refracted vector, since the refracted vector
+                    // w_12 points *towards* the surface, and the outgoing w_o points *away *from the surface.
+                    const float phi_o = phi_21;
+
+                    float GG = include_original_contribution? (G + 1) : G;
+                    float geometry_term = min(bias, 1.0f / (xoxp * xoxp)) * GG;
+                    geometry_term *= fabsf(optix::dot(w21, no));
+                    float bssrdf_E =
+                            albedo * flux_t * phase_HG(optix::dot(wp, w21), g) * (T21 / dot(wo, no)) * geometry_term *
+                            exp(-extinction * xoxp);
+                    bssrdf_E *= r * (2.0f / (geometry_data.mRadius.x + geometry_data.mRadius.y)) *
+                                (1.0f / geometry_data.mSolidAngle);
+
+                    optix_print("flux_t %f, albedo %f, p %f, exp %f, F %f\n", flux_t, albedo,
+                                phase_HG(optix::dot(w21, wp), g), expf(-extinction * xoxp), T21);
+
+                    // Not including single scattering, so i == 0 is not considered.
+                    if (i > 0) {
+                        store_values_in_buffer(acosf(cos_theta_o), phi_o, bssrdf_E, resulting_flux);
+                    }
+
+                    optix_print("(%d) Scattering.  %f\n", i, bssrdf_E);
+                }
+                // We choose a new direction sampling the phase function
+                optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+                wp = optix::normalize(sample_HG(wp, g, smpl));
+
+                // We are still within the medium.
+                // Russian roulette to check for absorption.
+                float absorption_prob = RND_FUNC(t);
+                if (absorption_prob > albedo) {
+                    optix_print("(%d) Absorption.\n", i);
+                    return true;
+                }
+
+            } else {
+                // We have intersected the plane.
+                const optix::float3 surface_point = xp + wp * intersection_distance;
+                        optix_assert(optix::dot(wp, no) > 0);
+
+                float3 wo;
+                float F_r;
+                refract(-wp, -no, n2_over_n1, wo, F_r);
+
+                // Reflect and turn to face inside.
+                flux_t *= F_r;
+                xp = surface_point;
+                wp = reflect(wp, -no);
+                xp.z = 0; // This is needed to eliminate edge cases that give xp.z > 0 due to numerical precision.
+                optix_print("(%d) Reached surface %f.\n", i, F_r);
+            }
+        }
+    }
+    return false;
+}
+
+// Returns true if the photon has been absorbed, false otherwise
+__forceinline__ __device__ bool scatter_photon_hemisphere_connections(const BSSRDFRendererData & geometry_data, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions)
 {
 	const float scattering = albedo * extinction;
 	// Defining geometry
@@ -72,9 +435,15 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 
 		// Sampling new distance for photon, testing if it intersects the interface
 		const float d = -log(rand) / extinction;
-		optix::Ray ray = optix::make_Ray(xp, wp, 0, scene_epsilon, d);
-		optix_assert(xp.z < 1e-6);
-		optix_assert(xp.z > -INFINITY);
+		optix::Ray ray = optix::make_Ray(xp, wp, 0, 1e-12, d);
+
+        if(!isfinite(xp.z))
+        {
+            return true;
+        }
+
+        optix_assert(xp.z <= 1e-6);
+        optix_assert(xp.z > -INFINITY);
 
 		float intersection_distance;
 		if (!intersect_plane(xi, ni, ray, intersection_distance))
@@ -87,16 +456,15 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 				optix_print("(%d) Absorption.\n", i);
 				return true;
 			}
-			
+
 			// We scatter now.
 			xp = xp + wp * d;
 			optix::float3 d_vec = xo - xp;
 			const float d_vec_len = optix::length(d_vec);
 			d_vec = d_vec / d_vec_len; // Normalizing
+            xp.z = fminf(xp.z, 0);
 
-//optix_print("## %f\n", optix::dot(d_vec, no));
 			optix_assert(optix::dot(d_vec, no) > 0.0f);
-
 
 			// Note: we are checking the *exiting* ray, so we flip the relative ior 
 			float3 wo;
@@ -106,7 +474,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 			{
 				const float F_t = 1 - F_r;
 								
-				optix_assert(F_t < 1.0f);
+				optix_assert(F_t <= 1.0f);
 				optix_assert(cos_theta_o >= 0);
 
 				const float phi_21 = atan2f(d_vec.y, d_vec.x);		
@@ -116,8 +484,9 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 
 				float flux_E = flux_t * scattering * phase_HG(optix::dot(d_vec, wp), g) * expf(-extinction*d_vec_len) * F_t;
 #ifdef INCLUDE_GEOMETRIC_TERM
-				optix_print("Geometric.\n"); 
-				flux_E *= fabsf(optix::dot(d_vec, no)) / (d_vec_len*d_vec_len);
+				optix_print("Geometric.\n");
+				optix_assert(fabsf(optix::dot(d_vec, no) - cos_theta_21) < 1e-4f);
+				flux_E *= fabsf(cos_theta_21) / (d_vec_len*d_vec_len);
 #endif 
 				optix_print("flux_t %f, albedo %f, p %f, exp %f, F %f\n",  flux_t, albedo , phase_HG(optix::dot(d_vec, wp), g) , expf(-extinction*d_vec_len) , F_t);
 
@@ -143,14 +512,14 @@ __forceinline__ __device__ bool scatter_photon_hemisphere(optix::float3& xp, opt
 			const optix::float3 surface_point = xp + wp * intersection_distance;
 			optix_assert(optix::dot(wp, no) > 0);
 
-			// Calculate Fresnel coefficient
-			const float cos_theta_p = optix::max(optix::dot(wp, no), 0.0f);
-			const float F_r = fresnel_R(cos_theta_p, n2_over_n1); // assert F_t < 1
+            float3 wo; float F_r;
+            refract(-wp, -no, n2_over_n1, wo, F_r);
 
 			// Reflect and turn to face inside.
 			flux_t *= F_r;
 			xp = surface_point;
 			wp = reflect(wp, -no);
+            xp.z = 0;
 			optix_print("(%d) Reached surface %f.\n", i, F_r);
 		}
 	}
@@ -200,8 +569,8 @@ __forceinline__ __device__ bool scatter_photon_planar(optix::float3& xp, optix::
 	for (i = starting_it; i < starting_it + executions; i++)
 	{
 		// If the flux is really small, we can stop here, the contribution is too small.
-		if (flux_t < 1e-12)
-			return true;
+		//if (flux_t < 1e-12)
+		//	return true;
 
 		const float rand = 1.0f - RND_FUNC(t); // RND_FUNC(t) in [0, 1). Avoids infinity when sampling exponential distribution.
 
@@ -241,7 +610,7 @@ __forceinline__ __device__ bool scatter_photon_planar(optix::float3& xp, optix::
 			const float F_r = fresnel_R(cos_theta_p, n2_over_n1); // assert F_t < 1
 
 			float outgoing_flux = (1.0f - F_r) * flux_t;
-			store_values_in_buffer_planar(make_float2(surface_point.x, surface_point.y), outgoing_flux, resulting_flux);
+			store_values_in_buffer_planar(optix::make_float2(surface_point.x, surface_point.y), outgoing_flux, resulting_flux);
 
 			// Reflect and turn to face inside.
 			flux_t *= F_r;
@@ -253,8 +622,26 @@ __forceinline__ __device__ bool scatter_photon_planar(optix::float3& xp, optix::
 	return false;
 }
 
-__forceinline__ __device__ bool scatter_photon(int mode, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions)
+// Returns true if the photon has been absorbed, false otherwise
+__forceinline__ __device__ bool scatter_photon_hemisphere(IntegrationMethod::Type integration, const BSSRDFRendererData & geometry_data, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions, float bias)
 {
-	return (mode == BSSRDF_OUTPUT_HEMISPHERE) ? scatter_photon_hemisphere(xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t, starting_it, executions) :
-		scatter_photon_planar(xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t, starting_it, executions);
+	if(integration == IntegrationMethod::MCML)
+		return scatter_photon_hemisphere_mcml(geometry_data, xp, wp, flux_t, resulting_flux, n2_over_n1, albedo, extinction, g, t, starting_it, executions);
+	else if (integration == IntegrationMethod::CONNECTIONS)
+		return scatter_photon_hemisphere_connections(geometry_data, xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t, starting_it, executions);
+    else if (integration == IntegrationMethod::CONNECTIONS_WITH_FIX)
+        return scatter_photon_hemisphere_connections_correct(geometry_data, xp, wp, flux_t, resulting_flux, n2_over_n1, albedo, extinction, g, t, starting_it, executions);
+    else if (integration == IntegrationMethod::CONNECTIONS_WITH_BIAS_REDUCTION)
+        return scatter_photon_hemisphere_connections_correct_bias_compensation(geometry_data, xp, wp, flux_t, resulting_flux, n2_over_n1, albedo, extinction, g, t, starting_it, executions, bias);
+    else
+		return false;
+}
+
+
+__forceinline__ __device__ bool scatter_photon(OutputShape::Type shape, IntegrationMethod::Type integration, const BSSRDFRendererData & geometry_data, optix::float3& xp, optix::float3& wp, float & flux_t, BufPtr2D<float>& resulting_flux, const float3& xo, const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE & t, int starting_it, int executions, float bias = 0)
+{
+	if(shape == OutputShape::HEMISPHERE)
+        return scatter_photon_hemisphere(integration, geometry_data, xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t, starting_it, executions, bias);
+    else
+		return scatter_photon_planar(xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t, starting_it, executions);
 }

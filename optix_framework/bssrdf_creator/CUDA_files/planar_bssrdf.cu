@@ -21,31 +21,29 @@ rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
 // Window variables
 
 rtDeclareVariable(float, reference_bssrdf_theta_o, , ) = 0.0f;
-rtDeclareVariable(float, reference_bssrdf_theta_i, , );
-rtDeclareVariable(float, reference_bssrdf_theta_s, , );
-rtDeclareVariable(float, reference_bssrdf_radius, , );
+rtDeclareVariable(BSSRDFRendererData, reference_bssrdf_data, , );
+
 rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, planar_bssrdf_material_params, , );
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
-rtDeclareVariable(int, reference_bssrdf_output_shape, , );
-//#define USE_HARDCODED_MATERIALS
- 
+rtDeclareVariable(OutputShape::Type, reference_bssrdf_output_shape, , );
+
 RT_PROGRAM void reference_bssrdf_camera()
 {
 	float2 uv = make_float2(launch_index) / make_float2(launch_dim);
 
-	float theta_i = reference_bssrdf_theta_i;
+	float theta_i = reference_bssrdf_data.mThetai;
 	float n2_over_n1 = reference_bssrdf_rel_ior;
 	float albedo = planar_bssrdf_material_params->albedo.x;
 	float extinction = planar_bssrdf_material_params->extinction.x;
 	float g = planar_bssrdf_material_params->meancosine.x;
-	float theta_s = reference_bssrdf_theta_s;
-	float r = reference_bssrdf_radius;
+	float theta_s = reference_bssrdf_data.mThetas.x;
+	float r = reference_bssrdf_data.mRadius.x;
 
     BSSRDFGeometry geometry;
 	get_reference_scene_geometry(theta_i, r, theta_s, geometry.xi, geometry.wi, geometry.ni, geometry.xo, geometry.no);
 	  
 	  
-	if (reference_bssrdf_output_shape == BSSRDF_OUTPUT_HEMISPHERE) 
+	if (reference_bssrdf_output_shape == OutputShape::HEMISPHERE)
 	{   
 		float2 angles = get_normalized_hemisphere_buffer_angles(uv.y, uv.x);
 		geometry.wo = optix::make_float3(sinf(angles.y) * cosf(angles.x), sinf(angles.y) * sinf(angles.x), cosf(angles.y));

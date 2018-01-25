@@ -51,7 +51,6 @@ void ReferenceBSSRDFGPU::render()
 	if (mRenderedFrames >= mMaxFrames)
 		return;
 
-	context->setPrintLaunchIndex(0,0,0);
 	BSSRDFRendererSimulated::render();
 
 	int * bufs = (int*)mAtomicPhotonCounterBuffer->map();
@@ -83,7 +82,8 @@ bool ReferenceBSSRDFGPU::on_draw(bool show_material_params)
 	}
 	ImmediateGUIDraw::InputInt("Maximum frames: ", (int*)&mMaxFrames);
 	std::string photons = std::string("Photons cast: ") + std::to_string(mPhotons) + " (Efficiency: " + std::to_string(((double)mPhotons)/(((double)mSamples)*(mRenderedFrames+1)));
-	ImmediateGUIDraw::Text(photons.c_str());
+	ImmediateGUIDraw::Text("%s",photons.c_str());
+
 	return false;
 }
 

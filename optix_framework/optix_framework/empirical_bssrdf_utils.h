@@ -1,7 +1,8 @@
 #pragma once
 #include "host_device_common.h"
 #include "bssrdf_properties.h"
-#define USE_OLD_STORAGE
+//#define USE_OLD_STORAGE
+//#define USE_UNIFORM_STORAGE
 
 struct EmpiricalParameterBuffer
 {
@@ -18,14 +19,18 @@ __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buff
 {
 	const float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
 	// Uniform sampling of hemisphere
+#ifdef USE_UNIFORM_STORAGE
+	const float theta_o_normalized = theta_o / M_PIf * 2;
+#else
 #ifdef USE_OLD_STORAGE
 	const float theta_o_normalized = cosf(theta_o);
 #else
 	const float theta_o_normalized = 1 - cosf(theta_o);
 #endif
+#endif
 	optix_assert(theta_o_normalized >= 0.0f);
-	optix_assert(theta_o_normalized < 1.0f);
-	optix_assert(phi_o_normalized < 1.0f); 
+	optix_assert(theta_o_normalized <= 1.0f);
+	optix_assert(phi_o_normalized <= 1.0f);
 	optix_assert(phi_o_normalized >= 0.0f);
 	return optix::make_float2(phi_o_normalized, theta_o_normalized);
 }
@@ -34,10 +39,14 @@ __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buff
 {
 	const float phi_o = phi_o_normalized * (2.0f * M_PIf);
 	// Uniform sampling of hemisphere
+#ifdef USE_UNIFORM_STORAGE
+	const float theta_o = theta_o_normalized * M_PIf / 2;
+#else
 #ifdef USE_OLD_STORAGE
 	const float theta_o = acosf(theta_o_normalized);
 #else
 	const float theta_o = acosf(1 - theta_o_normalized);
+#endif
 #endif
 	return optix::make_float2(phi_o, theta_o);
 }
@@ -56,11 +65,6 @@ __forceinline__ __device__ bool compare_geometries(const BSSRDFGeometry & g1, co
     bool e5 = fabsf(optix::length(g1.wo - g2.wo)) < 1e-4;
     optix_print("xi %d, xo %d, ni %d, no %d, wi %d, wo %d\n", e0, e1, e2, e3, e4, e5);
     return e0 & e1 & e2 & e3 & e4 & e5;
-}
-
-__forceinline__ __device__ optix::float3 rodrigues(const optix::float3 & v,const optix::float3 & axis, const float angle)
-{
-    return v * cos(angle) + cross(axis, v) * sin(angle) + axis * dot(axis, v) * (1 - cos(angle));
 }
 
 __forceinline__ __device__ void empirical_bssrdf_build_geometry_from_exit(const optix::float3& xo, const optix::float3& wo, const optix::float3& no, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
@@ -146,6 +150,7 @@ __forceinline__ __device__ void empirical_bssrdf_get_geometry(const BSSRDFGeomet
 	if(theta_s > 0) {
         z_h = -z_h;
 	}
+
 	theta_s = abs(theta_s);
 
 	optix::float3 xo_bar = normalize(geometry.wo - cos_theta_o * geometry.no);

@@ -117,6 +117,10 @@ void EmpiricalBSSRDF::load(const float relative_ior, const ScatteringMaterialPro
             for(int i = 0; i < w; i++)
             {
                 mx = std::max(mx, data[i]);
+                if(std::isnan(data[i]))
+                {
+                    Logger::error << "Nan Found!" << std::endl;
+                }
             }
             Logger::info << "Loaded bssrdf max " << mx << std::endl;
 

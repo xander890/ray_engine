@@ -14,7 +14,7 @@ rtBuffer<float4, 2> output_buffer;
 rtDeclareVariable(unsigned int, show_false_colors, , ); 
 rtDeclareVariable(float, reference_scale_multiplier, , );
 rtDeclareVariable(TexPtr, resulting_flux_tex, , );
-rtDeclareVariable(int, reference_bssrdf_output_shape, , ) = BSSRDF_OUTPUT_HEMISPHERE;
+rtDeclareVariable(OutputShape::Type, reference_bssrdf_output_shape, , ) = OutputShape::HEMISPHERE;
 rtDeclareVariable(int, reference_bssrdf_fresnel_mode, , ) = BSSRDF_RENDER_MODE_FULL_BSSRDF;
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
 
@@ -24,7 +24,7 @@ RT_PROGRAM void render_ref()
 	float2 uv = make_float2(launch_index) / make_float2(launch_dim);
 	float2 ip = uv * 2 - make_float2(1); // [-1, 1], this is xd, yd
 
-	if (reference_bssrdf_output_shape == BSSRDF_OUTPUT_HEMISPHERE)
+	if (reference_bssrdf_output_shape == OutputShape::HEMISPHERE)
 	{
 		// Inverting the projection in the paper:
 		float phi_o = atan2f(ip.y, ip.x);

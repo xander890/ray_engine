@@ -34,6 +34,7 @@ public:
 	void update_rendering(float deltaTime);
 	void end_rendering();
 
+
 	bool key_pressed(int key, int x, int y) override;
 	bool mouse_pressed(int x, int y, int button, int action, int mods) override;
 	bool mouse_moving(int x, int y) override;
@@ -73,6 +74,7 @@ private:
 	float * mCurrentHemisphereData = nullptr;
 	bool mPaused = false;
 	bool mFastMode = false;
+    bool mNormalize = true;
 	RenderMode mCurrentRenderMode = RENDER_BSSRDF;
 	std::unique_ptr<BSSRDFExporter> mExporter = nullptr;
 	std::unique_ptr<BSSRDFLoader> mLoader = nullptr;
@@ -86,5 +88,7 @@ private:
 	bool start_offline_rendering = false;
 	float mPlaneRenderingThetao = 0.0f;
 	optix::float2 mPlaneSize = optix::make_float2(2, 2);
+
+	float mCurrentAverage = 0, mCurrentMax = 0;
 };
 

@@ -95,10 +95,10 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 
 void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
 {
-	m_context->setPrintEnabled(false);
+	m_context->setPrintEnabled(true);
 	test_forward_dipole();
-	m_context->setPrintBufferSize(200);
-	m_context->setPrintLaunchIndex(0, 0, 0);
+	m_context->setPrintBufferSize(2000);
+	m_context->setPrintLaunchIndex(1000);
 	Folders::init();
 	m_context["scene_epsilon"]->setFloat(1e-3f);
 	auto top_node = m_context->createGroup();
@@ -111,7 +111,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
-	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPU>(m_context, BSSRDFRenderer::HEMISPHERE, optix::make_int2(160, 40), (int)10e5);
+	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPU>(m_context, OutputShape::HEMISPHERE, optix::make_int2(160, 40), (int)10e5);
 	mBssrdfReferenceSimulator->init();
 
 	mBssrdfModelSimulator = std::make_shared<BSSRDFRendererModel>(m_context);
@@ -173,6 +173,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	
 }
 
+
 float normalize(float * data, size_t size)
 {
 	float max_elem = 0.0f;
@@ -183,6 +184,16 @@ float normalize(float * data, size_t size)
 	for (int i = 0; i < size; i++)
 	{
 		data[i] /= max_elem;
+	}
+	return max_elem;
+}
+
+float get_max(float * data, size_t size)
+{
+	float max_elem = 0.0f;
+	for (int i = 0; i < size; i++)
+	{
+		max_elem = std::max(max_elem, data[i]);
 	}
 	return max_elem;
 }
@@ -217,9 +228,7 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 
 			m_context["plane_size"]->setFloat(mPlaneSize);
 			m_context["show_false_colors"]->setUint(mShowFalseColors);
-			m_context["reference_scale_multiplier"]->setFloat(mScaleMultiplier);
 			m_context["reference_bssrdf_fresnel_mode"]->setInt(mFresnelMode);
-
 
 			void* source = mCurrentBssrdfRenderer->get_output_buffer()->map();
 
@@ -229,15 +238,20 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 				void* dest = mBSSRDFBufferTexture->map();
 				memcpy(dest, mCurrentHemisphereData, mCurrentBssrdfRenderer->get_size().x*mCurrentBssrdfRenderer->get_size().y * sizeof(float));
 
-				if (mCurrentBssrdfRenderer->get_shape() == BSSRDFRenderer::HEMISPHERE) {
-					float avg = average((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
-					float mx = normalize((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
-					printf("Current max %e, average %e\n", mx, avg);
+				if (mCurrentBssrdfRenderer->get_shape() == OutputShape::HEMISPHERE) {
+					mCurrentAverage = average((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
+					mCurrentMax = get_max((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
 				}
 				mBSSRDFBufferTexture->unmap();
 			}
 			mCurrentBssrdfRenderer->get_output_buffer()->unmap();
 		}
+
+        float m = mScaleMultiplier;
+        if(mNormalize)
+            m /= mCurrentMax;
+
+		m_context["reference_scale_multiplier"]->setFloat(m);
 
 		auto time1 = currentTime();
 
@@ -287,10 +301,17 @@ void FullBSSRDFGenerator::post_draw_callback()
 	
 	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
 
+	if (mCurrentRenderMode == RENDER_BSSRDF)
+	{
+		ImmediateGUIDraw::Text("Current max %e, Current average %e", mCurrentMax, mCurrentAverage);
+	}
+
 	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors); 
 	ImmediateGUIDraw::SameLine();
 	ImmediateGUIDraw::Checkbox("Pause", (bool*)&mPaused);
 	ImmediateGUIDraw::Checkbox("Fast Mode", (bool*)&mFastMode);
+    ImmediateGUIDraw::SameLine();
+    ImmediateGUIDraw::Checkbox("Normalize", (bool*)&mNormalize);
 
 
 	ImmediateGUIDraw::Text("Render mode:        ");
@@ -313,12 +334,12 @@ void FullBSSRDFGenerator::post_draw_callback()
 			set_render_mode(mCurrentRenderMode, sim == 0 ? false : true);
 
 
-		static BSSRDFRenderer::OutputShape shape = mCurrentBssrdfRenderer->get_shape();
+		static OutputShape::Type shape = mCurrentBssrdfRenderer->get_shape();
 		ImmediateGUIDraw::Text("Simulation shape:   ");
 		ImmediateGUIDraw::SameLine();
-		bool changed_shape = ImmediateGUIDraw::RadioButton("Hemisphere", (int*)&shape, BSSRDFRenderer::HEMISPHERE);
+		bool changed_shape = ImmediateGUIDraw::RadioButton("Hemisphere", (int*)&shape, OutputShape::HEMISPHERE);
 		ImmediateGUIDraw::SameLine();
-		changed_shape |= ImmediateGUIDraw::RadioButton("Plane", (int*)&shape, BSSRDFRenderer::PLANE);
+		changed_shape |= ImmediateGUIDraw::RadioButton("Plane", (int*)&shape, OutputShape::PLANE);
 		if (changed_shape)
 		{
 			mCurrentBssrdfRenderer->set_shape(shape);
@@ -346,13 +367,13 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 		static float theta_o = 0.0f;
 
-		if (shape == BSSRDFRenderer::PLANE)
+		if (shape == OutputShape::PLANE)
 		{
 			ImmediateGUIDraw::SliderFloat("Outgoing light angle (deg.)", &mPlaneRenderingThetao, 0, 90);
 		}
 		mCurrentBssrdfRenderer->on_draw(true);
 
-		if (shape == BSSRDFRenderer::PLANE)
+		if (shape == OutputShape::PLANE)
 		{
 			ImmediateGUIDraw::InputFloat2("Plane Size", &mPlaneSize.x);
 		}
@@ -362,7 +383,10 @@ void FullBSSRDFGenerator::post_draw_callback()
 		{
 			float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
 			get_default_material(opts[def], theta_i, r, theta_s, albedo, extinction, g, n2_over_n1);
-			mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
+			optix::float2 ts = optix::make_float2(theta_s, theta_s + 7.5f);
+			optix::float2 rs = optix::make_float2(r, r + 1.0f);
+
+			mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, rs, ts);
 			mCurrentBssrdfRenderer->set_material_parameters(albedo, 1, g, n2_over_n1);
 		}		
 	}
@@ -382,12 +406,12 @@ void FullBSSRDFGenerator::post_draw_callback()
 				{
 					float * data = (float*)mExternalBSSRDFBuffer->map();
 					mLoader->load_hemisphere(data, index.mData);
-					normalize(data, mLoader->get_hemisphere_size());
 					mExternalBSSRDFBuffer->unmap();
 					
 
-					float theta_i; float r; float theta_s; float albedo;  float g; float eta;
+					float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
 					mParametersSimulation.get_parameters(index, theta_i, r, theta_s, albedo, g, eta);
+					// Second one is ignored anyways in this configuration...
 					mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 					mCurrentBssrdfRenderer->set_material_parameters(albedo, 1, g, eta);
 				}
@@ -521,8 +545,9 @@ void FullBSSRDFGenerator::start_rendering()
 	}	mCurrentBssrdfRenderer->set_read_only(true);
 
 	float extinction = 1.0f;
-	float theta_i; float r; float theta_s; float albedo;  float g; float eta;
+	float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
 	mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
+
 	mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 	mCurrentBssrdfRenderer->set_material_parameters(albedo, extinction, g, eta);
 	mFastMode = true;
@@ -539,14 +564,15 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 			{
 				Logger::info << std::dynamic_pointer_cast<BSSRDFRendererSimulated>(mCurrentBssrdfRenderer)->get_samples() << " samples. ";
 			}
-			float theta_i; float r; float theta_s; float albedo;  float g; float eta;
+			float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
 			mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
 			Logger::info <<  std::endl;
 			
 			std::vector<size_t> original_state;
-			if (!mParametersOriginal.get_index(theta_i, r, theta_s, albedo, g, eta, original_state))
+			if (!mParametersOriginal.get_index(theta_i, r.x, theta_s.x, albedo, g, eta, original_state))
 				Logger::error << "Index mismatch" << std::endl;
 
+            Logger::info << "Parameters: r " << r.x << " " << r.y << "; " << "theta_s " << theta_s.x << " " << theta_s.y << std::endl;
 			Logger::info << "Index: " << mState.tostring() << "(simulation) "<< ParameterState(original_state).tostring() << "(original) Parameters: eta " << eta << " g " << g << " albedo " << albedo << std::endl;
 			std::cout << "Average: " << std::scientific << average(mCurrentHemisphereData, mExporter->get_hemisphere_size()) << std::defaultfloat << std::endl;
 			mExporter->set_hemisphere(mCurrentHemisphereData, mState.mData);

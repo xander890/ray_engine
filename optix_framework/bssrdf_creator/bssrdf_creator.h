@@ -5,13 +5,13 @@
 #include <full_bssrdf_host_device_common.h>
 #include <bssrdf_properties.h>
 #include <bssrdf_host.h>
+#include "photon_trace_structs.h"
 
 class BSSRDFRenderer
 {
 public:
-	enum OutputShape { PLANE = BSSRDF_OUTPUT_PLANE, HEMISPHERE = BSSRDF_OUTPUT_HEMISPHERE};
 
-	BSSRDFRenderer(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1)) : context(ctx) {
+	BSSRDFRenderer(optix::Context & ctx, const OutputShape::Type shape = OutputShape::HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1)) : context(ctx) {
 		mOutputShape = shape;
         if(shape_size.x > -1 && shape_size.y > -1)
         {
@@ -24,7 +24,7 @@ public:
 	}
 
 	virtual void load_data();
-	void set_geometry_parameters(float theta_i, float r, float theta_s);
+	void set_geometry_parameters(float theta_i, optix::float2 r, optix::float2 theta_s);
 	void set_material_parameters(float albedo, float extinction, float g, float eta);
 
 	virtual void reset();
@@ -39,12 +39,12 @@ public:
 	virtual bool on_draw(bool show_material_params);
 
 	void set_read_only(bool is_read_only) { mIsReadOnly = is_read_only;  }
-	void set_shape(OutputShape shape);
-	OutputShape get_shape() { return mOutputShape; }
-	float mIor = 1.4f;
+	void set_shape(OutputShape::Type shape);
+	OutputShape::Type get_shape() { return mOutputShape; }
+	float mIor = 1.f;
 
 protected:
-	OutputShape mOutputShape; 
+	OutputShape::Type mOutputShape;
 	int entry_point = -1;
 	int entry_point_post = -1;
 
@@ -57,29 +57,33 @@ protected:
 	optix::Buffer mBSSRDFBuffer = nullptr;
 
 	// Geometric properties
+
+    BSSRDFRendererData mGeometryData;
+
 	float mThetai = 0.0f;
-	float mThetas = 0.0f;
-	float mRadius = 1.0f;
+	optix::float2 mThetas = optix::make_float2(0.0f, 7.5f);
+    optix::float2 mRadius = optix::make_float2(0.0f, 1.0f);
 	// Scattering properties
 	optix::Buffer mProperties;
 
 	float mAlbedo = 0.8f;
 	float mExtinction = 1.0f;
-	float mAsymmetry = 0.9f;
+	float mAsymmetry = 0.0f;
 	bool mIsReadOnly = false;
 	bool mInitialized = false;
 
-protected:
-	static optix::uint2 default_size(OutputShape shape)
+    void fill_geometry_data();
+
+	static optix::uint2 default_size(OutputShape::Type shape)
 	{
-		return shape == HEMISPHERE ? optix::make_uint2(160,40) : optix::make_uint2(400, 400);
+		return shape == OutputShape::HEMISPHERE ? optix::make_uint2(160,40) : optix::make_uint2(400, 400);
 	}
 };
 
 class BSSRDFRendererSimulated : public BSSRDFRenderer
 {
 public:
-	BSSRDFRendererSimulated(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const unsigned int samples = (int)1e8) : BSSRDFRenderer(ctx, shape, shape_size), mSamples(samples)
+	BSSRDFRendererSimulated(optix::Context & ctx, const OutputShape::Type shape = OutputShape::HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const unsigned int samples = (int)1e9) : BSSRDFRenderer(ctx, shape, shape_size), mSamples(samples)
 	{
 	}
 
@@ -93,14 +97,15 @@ public:
 
 protected:
 	unsigned int mSamples;
-	unsigned int mMaxIterations = (int)1e4;
-
+	unsigned int mMaxIterations = (int)1e9;
+	IntegrationMethod::Type mIntegrationMethod = IntegrationMethod::MCML;
+    float mBiasCompensationBound = -1.0f;
 };
 
 class BSSRDFRendererModel : public BSSRDFRenderer
 {
 public:
-	BSSRDFRendererModel(optix::Context & ctx, const OutputShape shape = HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFRenderer(ctx, shape, shape_size)
+	BSSRDFRendererModel(optix::Context & ctx, const OutputShape::Type shape = OutputShape::HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFRenderer(ctx, shape, shape_size)
 	{
 		mBSSRDF = std::move(BSSRDF::create(ctx, dipole));
 	}

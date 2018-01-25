@@ -175,7 +175,6 @@ RT_PROGRAM void shade()
     float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
     float3 w_i = -ray.direction;
     const MaterialDataCommon & material = get_material();
-    const ScatteringMaterialProperties& props = material.scattering_properties;
     float n1_over_n2 = 1.0f / material.relative_ior;
     float cos_theta_in = dot(normal, w_i);
     float3 beam_T = make_float3(1.0f);
@@ -188,14 +187,14 @@ RT_PROGRAM void shade()
         normal = -normal;
         cos_theta_in = -cos_theta_in;
     }
-    else if (material.relative_ior < 1.0f)
+/*    else if (material.relative_ior < 1.0f)
     {
         beam_T = expf(-t_hit*props.absorption);
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
         if (prd_radiance.sampler->next1D() >= prob) return;
         beam_T /= prob;
     }
-
+*/
     // Compute Fresnel reflectance (R) and trace refracted ray if necessary
     float R;
 	float3 reflected_dir = -reflect(w_i, normal); 

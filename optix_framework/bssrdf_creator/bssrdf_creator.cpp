@@ -1,11 +1,9 @@
 #include "bssrdf_creator.h"
 #include "immediate_gui.h"
 #include "optix_utils.h"
-#include "GL/glew.h"
-#include "folders.h"
 #include <sstream>
-
-void BSSRDFRenderer::set_geometry_parameters(float theta_i, float r, float theta_s)
+#include <algorithm>
+void BSSRDFRenderer::set_geometry_parameters(float theta_i, optix::float2 r,optix::float2 theta_s)
 {
 	mThetai = theta_i;
 	mThetas = theta_s;
@@ -18,11 +16,10 @@ void BSSRDFRenderer::load_data()
 	if (!mInitialized)
 		init();
 	context["ref_frame_number"]->setUint(mRenderedFrames);
-	context["reference_bssrdf_theta_i"]->setFloat(deg2rad(mThetai));
-	context["reference_bssrdf_theta_s"]->setFloat(deg2rad(mThetas));
-	context["reference_bssrdf_radius"]->setFloat(mRadius);
+    fill_geometry_data();
+	context["reference_bssrdf_data"]->setUserData(sizeof(BSSRDFRendererData), &mGeometryData);
 	context["reference_bssrdf_rel_ior"]->setFloat(mIor);
-	context["reference_bssrdf_output_shape"]->setInt(static_cast<int>(mOutputShape));
+	context["reference_bssrdf_output_shape"]->setUserData(sizeof(OutputShape::Type), &mOutputShape);
 }
 
 void BSSRDFRenderer::set_material_parameters(float albedo, float extinction, float g, float eta)
@@ -46,6 +43,7 @@ void BSSRDFRenderer::reset()
 	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());
 	*cc = c;
 	mProperties->unmap();
+    fill_geometry_data();
 }
 
 void BSSRDFRenderer::init()
@@ -81,16 +79,21 @@ bool BSSRDFRenderer::on_draw(bool show_material_params)
 	bool changed = false;
 
 	float backup_theta_i = mThetai;
-	float backup_theta_s = mThetas;
+	optix::float2 backup_theta_s = mThetas;
+	optix::float2 backup_r = mRadius;
 
 	changed |= ImmediateGUIDraw::SliderFloat("Incoming light angle (deg.)", &mThetai, 0, 90);
-	if (mOutputShape == HEMISPHERE)
+	if (mOutputShape == OutputShape::HEMISPHERE)
 	{
-		changed |= ImmediateGUIDraw::InputFloat("Radius", &mRadius, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
-		changed |= ImmediateGUIDraw::SliderFloat("Angle on plane", &mThetas, 0, 360);
+		changed |= ImmediateGUIDraw::InputFloat("Radius (lower)", &mRadius.x, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::InputFloat("Radius (upper)", &mRadius.y, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::SliderFloat("Angle on plane (lower)", &mThetas.x, 0, 360);
+		changed |= ImmediateGUIDraw::SliderFloat("Angle on plane (upper)", &mThetas.y, 0, 360);
 	}
+
 	mThetai = mIsReadOnly ? backup_theta_i : mThetai;
 	mThetas = mIsReadOnly ? backup_theta_s : mThetas;
+	mRadius = mIsReadOnly ? backup_r : mRadius;
 
 	if (show_material_params)
 	{
@@ -109,7 +112,7 @@ bool BSSRDFRenderer::on_draw(bool show_material_params)
 	return changed;
 }
 
-void BSSRDFRenderer::set_shape(OutputShape shape)
+void BSSRDFRenderer::set_shape(OutputShape::Type shape)
 {
 	mOutputShape = shape;
 	mShapeSize = default_size(shape);
@@ -118,6 +121,17 @@ void BSSRDFRenderer::set_shape(OutputShape shape)
 
 	mBSSRDFBufferIntermediate->setSize(mShapeSize.x, mShapeSize.y);
 	mBSSRDFBuffer->setSize(mShapeSize.x, mShapeSize.y);
+}
+
+void BSSRDFRenderer::fill_geometry_data() {
+	optix::float2 theta_s = deg2rad(mThetas);
+    mGeometryData.mThetai = deg2rad(mThetai);
+    mGeometryData.mThetas = theta_s;
+    mGeometryData.mRadius = mRadius;
+	mGeometryData.mArea = (mRadius.y*mRadius.y - mRadius.x*mRadius.x) * 0.5f * (theta_s.y - theta_s.x);
+	mGeometryData.mSolidAngle = 2.0f * M_PIf / (mShapeSize.x * mShapeSize.y);
+	mGeometryData.mDeltaR = mRadius.y - mRadius.x;
+	mGeometryData.mDeltaThetas = theta_s.y - theta_s.x;
 }
 
 void BSSRDFRendererModel::init()
@@ -211,14 +225,21 @@ void BSSRDFRendererSimulated::load_data()
 	BSSRDFRenderer::load_data();
 	context["maximum_iterations"]->setUint(mMaxIterations);
 	context["reference_bssrdf_samples_per_frame"]->setUint(mSamples);
+    context["reference_bssrdf_integration"]->setUserData(sizeof(IntegrationMethod::Type), &mIntegrationMethod);
+	context["reference_bssrdf_bias_bound"]->setFloat(mBiasCompensationBound);
 
+	if(mBiasCompensationBound == -1.0f) {
+		ScatteringMaterialProperties *cc = reinterpret_cast<ScatteringMaterialProperties *>(mProperties->map());
+		mBiasCompensationBound = 3.0 * cc->scattering.x;
+		mProperties->unmap();
+	}
 }
 
 bool BSSRDFRendererSimulated::on_draw(bool show_material_params)
 {
 	std::stringstream ss;
 	ss << "Rendered: " << mRenderedFrames << " frames, " << mRenderedFrames*mSamples << " samples" << std::endl;
-	ImmediateGUIDraw::Text(ss.str().c_str());
+	ImmediateGUIDraw::Text("%s",ss.str().c_str());
 	bool changed = BSSRDFRenderer::on_draw(show_material_params);
 
 	static int smpl = mSamples;
@@ -232,6 +253,22 @@ bool BSSRDFRendererSimulated::on_draw(bool show_material_params)
 	{
 		set_max_iterations(iter);
 	}
+
+    std::string s = IntegrationMethod::get_full_string();
+	std::replace(s.begin(), s.end(), ' ', '\0');
+    if(ImmediateGUIDraw::Combo("Integration method", (int*)&mIntegrationMethod, s.c_str(), IntegrationMethod::count()))
+    {
+        reset();
+    }
+
+	if(mIntegrationMethod == IntegrationMethod::CONNECTIONS_WITH_BIAS_REDUCTION)
+	{
+		if(ImmediateGUIDraw::InputFloat("Bias reduction bound", &mBiasCompensationBound))
+		{
+			reset();
+		}
+	}
+
 
 	if (changed)
 		reset();

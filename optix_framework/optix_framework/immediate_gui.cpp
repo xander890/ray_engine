@@ -18,6 +18,9 @@ ImmediateGUI::ImmediateGUI(GLFWwindow * window)
 	ImGui_ImplGlfwGL3_Init(win, false);
 	glfwSetCharCallback(win, ImGui_ImplGlfwGL3_CharCallback);
 	glfwSetScrollCallback(win, ImGui_ImplGlfwGL3_ScrollCallback);
+	glfwSetKeyCallback(win, ImGui_ImplGlfwGL3_KeyCallback);
+	glfwSetCharCallback(win, ImGui_ImplGlfwGL3_CharCallback);
+
     glfwMakeContextCurrent(context_win);
 
     context_win = nullptr;

@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "logger.h"
+#include "host_device_common.h"
 
 #define INVALID_INDEX ((size_t)(-1))
 
@@ -77,13 +78,15 @@ public:
 		return res;
 	}
 
-	void get_parameters(const ParameterState & state, float & theta_i, float & r, float & theta_s, float & albedo, float & g, float & eta)
+	void get_parameters(const ParameterState & state, float & theta_i, optix::float2 & r, optix::float2 & theta_s, float & albedo, float & g, float & eta)
 	{
 		if (!is_valid(state))
 			return;
 		theta_i = parameters[theta_i_index][state[theta_i_index]];
-		r = parameters[r_index][state[r_index]];
-		theta_s = parameters[theta_s_index][state[theta_s_index]];
+		r.x = parameters[r_index][state[r_index]];
+		theta_s.x = parameters[theta_s_index][state[theta_s_index]];
+        r.y = parameters[r_index][state[r_index] + 1];
+        theta_s.y = parameters[theta_s_index][state[theta_s_index] + 1];
 		albedo = parameters[albedo_index][state[albedo_index]];
 		g = parameters[g_index][state[g_index]];
 		eta = parameters[eta_index][state[eta_index]];
@@ -163,6 +166,8 @@ public:
 		std::vector<size_t> dims(parameters.size());
 		for (int i = 0; i < dims.size(); i++)
 			dims[i] = parameters.at(i).size();
+		dims[r_index] -= 1; 		// This span deltas!
+		dims[theta_s_index] -= 1; 	// This span deltas!
 		return dims;
 	}
 

@@ -34,7 +34,7 @@ __forceinline__ __device__ optix::float3 S_infinite_vec(const optix::float3& _r_
 }
 
 
-__forceinline__ __device__ optix::float3 directional_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
+__forceinline__ __device__ optix::float3 directional_dipole_bssrdf(const BSSRDFGeometry & geometry, const float n1_over_n2,
 	const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {
 	optix_print("BSSRDF: directional\n");
@@ -43,10 +43,9 @@ __forceinline__ __device__ optix::float3 directional_dipole_bssrdf(const BSSRDFG
 	const ScatteringMaterialProperties& properties = material.scattering_properties;
 	optix::float3 _w12, w21;
 	float R12, R21;
-	refract(geometry.wi, geometry.ni, recip_ior, _w12, R12);
-	refract(geometry.wo, geometry.no, recip_ior, w21, R21);
+	refract(geometry.wi, geometry.ni, n1_over_n2, _w12, R12);
+	refract(-geometry.wo, -geometry.no, 1.0/n1_over_n2, w21, R21);
 	float F = include_fresnel_out? (1 - R21) : 1.0f;
-	w21 = -w21;
 
 	optix::float3 _x =  geometry.xo - geometry.xi;
 	optix::float3 _r_sqr = make_float3(dot(_x, _x));

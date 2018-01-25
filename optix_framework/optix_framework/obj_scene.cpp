@@ -166,7 +166,7 @@ bool ObjScene::draw_gui()
 	ss << "Time (render):      " << to_string(to_milliseconds(render_time_main)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_main)) << " FPS)" << std::endl;
 	ss << "Time (post trace):  " << to_string(to_milliseconds(render_time_post)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_post)) << " FPS)" << std::endl;
 	ss << "Time (tonemap/dbg): " << to_string(to_milliseconds(render_time_tonemap)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_tonemap)) << " FPS)";
-	ImmediateGUIDraw::Text(ss.str().c_str());
+	ImmediateGUIDraw::Text("%s",ss.str().c_str());
 	static bool debug = debug_mode_enabled;
 	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -378,7 +378,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(2000);
 	setDebugEnabled(debug_mode_enabled);
-	context->setPrintLaunchIndex(200,200);
+	context->setPrintLaunchIndex(407,56);
 
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());

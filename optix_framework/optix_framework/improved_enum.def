@@ -221,17 +221,6 @@ namespace IMPROVED_ENUM_NAME
 	STATIC_METHOD inline const EnumType last()
 	{ return previous(NotValidEnumItem); }
 
-	STATIC_METHOD inline const std::string get_full_string()
-	{
-		EnumType firs = first();
-		std::string res = std::string("");
-		do
-		{
-			res += std::string(" ") + to_string(firs);
-			firs = next(firs);
-		} while(firs != NotValidEnumItem);
-		return res;
-	}
 
 	//! Number of enum items:
 	//////////////////////////////////////////
@@ -256,6 +245,21 @@ namespace IMPROVED_ENUM_NAME
 			//////////////////////////////////////////
 			;
 	}
+
+	STATIC_METHOD inline const std::string get_full_string(const char * separator = " ")
+	{
+		EnumType firs = first();
+		std::string res = std::string("");
+		for(int i = 0; i < count(); i++)
+		{
+			if(i != 0)
+				res.append(separator);
+			res += to_string(firs);
+			firs = next(firs);
+		} while(firs != NotValidEnumItem);
+		return res;
+	}
+
 #endif
 	// Free temporary macros:
 	///////////////////////////

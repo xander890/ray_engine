@@ -29,14 +29,14 @@ void printUsageAndExit( const std::string& argv0 )
        << "         --shader         | -sh <shader>  specify the closest hit program to be used for shading" << std::endl
 	   << "options: --rectangle <ox oy w h>     renctangle to render." << std::endl
 	   << std::endl;
-  
+
   GLFWDisplay::printUsage();
 
   exit(0);
 }
 
 
-int main( int argc, char** argv ) 
+int main( int argc, char** argv )
 {
 	std::vector<std::string> filenames;
 	std::string filename = "";
@@ -80,7 +80,7 @@ int main( int argc, char** argv )
 	ConfigParameters::init(config_file);
 	GLFWDisplay::setRequiresDisplay(!nodisplay);
 	GLFWDisplay::init( argc, argv );
-	
+
 	std::unique_ptr<RenderTask> task = nullptr;
 	if (auto_mode)
 	{

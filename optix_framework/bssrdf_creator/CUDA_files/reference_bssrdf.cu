@@ -16,12 +16,13 @@ rtDeclareVariable(unsigned int, ref_frame_number, , ) = 1e5;
 rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
 // Window variables
 
-rtDeclareVariable(float, reference_bssrdf_theta_i, , );
-rtDeclareVariable(float, reference_bssrdf_theta_s, , );
-rtDeclareVariable(float, reference_bssrdf_radius, , );
+rtDeclareVariable(BSSRDFRendererData, reference_bssrdf_data, , );
 rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, reference_bssrdf_material_params, , );
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
-rtDeclareVariable(int, reference_bssrdf_output_shape, , );
+rtDeclareVariable(OutputShape::Type, reference_bssrdf_output_shape, , );
+rtDeclareVariable(IntegrationMethod::Type, reference_bssrdf_integration, , );
+rtDeclareVariable(float, reference_bssrdf_bias_bound, , );
+
 
 //#define USE_HARDCODED_MATERIALS
 
@@ -35,9 +36,9 @@ RT_PROGRAM void reference_bssrdf_camera()
 	const float incident_power = 1.0f;
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
 	  
-	theta_i = reference_bssrdf_theta_i;
-	theta_s = reference_bssrdf_theta_s;
-	r = reference_bssrdf_radius; 
+	theta_i = reference_bssrdf_data.mThetai;
+	theta_s = reference_bssrdf_data.mThetas.x;
+	r = reference_bssrdf_data.mRadius.x;
 	n2_over_n1 = reference_bssrdf_rel_ior;
 	albedo = reference_bssrdf_material_params->albedo.x;
 	extinction = reference_bssrdf_material_params->extinction.x;
@@ -57,7 +58,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	optix::float3 xp = xi; 
 	optix::float3 wp = w12;
 
-	if (!scatter_photon(reference_bssrdf_output_shape, xp, wp, flux_t, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, t, 0, maximum_iterations))
+	if (!scatter_photon(reference_bssrdf_output_shape, reference_bssrdf_integration, reference_bssrdf_data, xp, wp, flux_t, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, t, 0, maximum_iterations))
 	{ 
 		optix_print("Max iterations reached. Distance %f (%f mfps)\n", length(xp - xo), length(xp - xo) / r);  
 	}  

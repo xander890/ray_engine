@@ -22,6 +22,14 @@ __device__ __forceinline__ void init_seed(SEED_TYPE & seed, unsigned long long q
 __device__ __forceinline__ void init_seed(SEED_TYPE & seed, unsigned long long q) { seed = (unsigned int)q; }
 #endif
 
+#define IMPROVED_ENUM_NAME IntegrationMethod
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(MCML,0) ENUMITEM_VALUE(CONNECTIONS,1) ENUMITEM_VALUE(CONNECTIONS_WITH_FIX,2) ENUMITEM_VALUE(CONNECTIONS_WITH_BIAS_REDUCTION,3)
+#include "improved_enum.def"
+
+#define IMPROVED_ENUM_NAME OutputShape
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(PLANE,0) ENUMITEM_VALUE(HEMISPHERE,1)
+#include "improved_enum.def"
+
 struct PhotonSample
 {
 	optix::float3 xp; // Position of the photon
@@ -45,3 +53,14 @@ __host__ __device__ __forceinline__ PhotonSample get_empty_photon()
     p.G = 1;
 	return p;
 }
+
+struct BSSRDFRendererData
+{
+    float mThetai       DEFAULT(0.0f);
+    optix::float2 mThetas       DEFAULT(optix::make_float2(0.0f, 7.5));
+    optix::float2 mRadius       DEFAULT(optix::make_float2(0.0f, 1.f));
+    float mArea;
+    float mSolidAngle;
+	float mDeltaR;
+	float mDeltaThetas;
+};

@@ -20,18 +20,20 @@ rtDeclareVariable(unsigned int, batch_iterations, , ) = 1e3;
 rtDeclareVariable(unsigned int, ref_frame_number, , ) = 1e5;
 // Window variables
 
-rtDeclareVariable(float, reference_bssrdf_theta_i, , );
-rtDeclareVariable(float, reference_bssrdf_theta_s, , );
-rtDeclareVariable(float, reference_bssrdf_radius, , );
+rtDeclareVariable(BSSRDFRendererData, reference_bssrdf_data, , );
+
 rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, reference_bssrdf_material_params, , );
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
-rtDeclareVariable(int, reference_bssrdf_output_shape, , );
+rtDeclareVariable(OutputShape::Type, reference_bssrdf_output_shape, , );
+rtDeclareVariable(IntegrationMethod::Type, reference_bssrdf_integration, , );
+rtDeclareVariable(float, reference_bssrdf_bias_bound, , );
+
 
 //#define USE_HARDCODED_MATERIALS
 
 RT_PROGRAM void reference_bssrdf_gpu()
 {
-	optix_print("Welcome.\n"); 
+	optix_print("Welcome. %d\n", ref_frame_number);
 	uint idx = launch_index.x;
 	optix::uint t = ref_frame_number * launch_dim.x + idx;
 	tea_hash(t);
@@ -39,14 +41,13 @@ RT_PROGRAM void reference_bssrdf_gpu()
 	const float incident_power = 1.0f; 
 	float theta_i; float r; float theta_s; float albedo; float extinction; float g; float n2_over_n1;
 
-	theta_i = reference_bssrdf_theta_i; 
-	theta_s = reference_bssrdf_theta_s;
-	r = reference_bssrdf_radius;
+	theta_i = reference_bssrdf_data.mThetai;
+	theta_s = reference_bssrdf_data.mThetas.x;
+	r = reference_bssrdf_data.mRadius.x;
 	n2_over_n1 = reference_bssrdf_rel_ior;
 	albedo = reference_bssrdf_material_params->albedo.x;
 	extinction = reference_bssrdf_material_params->extinction.x;
 	g = reference_bssrdf_material_params->meancosine.x;
-	optix_print("a %f, e %f, g %f\n", albedo, extinction, g);
 
 	optix::float3 xi, wi, ni, xo, no;
 	get_reference_scene_geometry(theta_i, r, theta_s, xi, wi, ni, xo, no);
@@ -76,9 +77,10 @@ RT_PROGRAM void reference_bssrdf_gpu()
 		atomicAdd(&photon_counter[ref_frame_number], 1);
 	}
 	 
-	if (scatter_photon(reference_bssrdf_output_shape, p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
+	if (scatter_photon(reference_bssrdf_output_shape, reference_bssrdf_integration, reference_bssrdf_data, p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations, reference_bssrdf_bias_bound))
 	{
 		photon_buffer[idx].status = PHOTON_STATUS_NEW;
+        optix_print("RW done.\n");
 	}
 	else 
 	{
@@ -95,7 +97,7 @@ RT_PROGRAM void reference_bssrdf_gpu()
 		}
 	}
     photon_buffer[idx].t = p.t;
-
+    optix_print("Frame %d done.\n", ref_frame_number);
 }
 
 RT_PROGRAM void reference_bssrdf_gpu_post()
@@ -106,7 +108,6 @@ RT_PROGRAM void reference_bssrdf_gpu_post()
         //optix_print("Photons %d --> %d %d\n", i, photon_counter[i], photons);
 		photons += photon_counter[i];
 	}
-    optix_print("Photons %llu (%f)\n", photons, reference_resulting_flux_intermediate[launch_index]);
 	reference_resulting_flux[launch_index] = reference_resulting_flux_intermediate[launch_index] / photons;
 }
 

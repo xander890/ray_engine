@@ -98,7 +98,7 @@ using BufPtr3D = BufPtr<T, 3>;
 #define optix_assert(x) 
 #else
 #define optix_print rtPrintf
-#define optix_assert(x) if(!(x)) optix_print("Assertion " #x " failed. File: %s, Line %d\n", __FILE__, __LINE__); 
+#define optix_assert(x) if(!(x)) printf("Assertion " #x " failed. File: %s, Line %d\n", __FILE__, __LINE__);
 #endif
 #else
 #define optix_print printf

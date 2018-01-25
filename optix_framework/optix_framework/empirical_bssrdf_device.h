@@ -101,7 +101,7 @@ __device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int
     {
         float value = values[j];
         int closest_index = 0;
-        closest_index = get_index_lower(j, value);
+        closest_index = get_index_closest(j, value);
         float closest_param_value = empirical_bssrdf_parameters.buffers[j][closest_index];
         index_function[j] = closest_index;
         //optix_print("SIZE %d/%d closet %f - asked %f\n", closest_index, empirical_bssrdf_parameters_size[j], closest_param_value, value);
@@ -159,7 +159,7 @@ __device__ __forceinline__ float interpolate_bssrdf_linear(float values[N], int 
 
 
 
-__forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geometry, const float recip_ior,
+__forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geometry, const float n1_over_n2,
                                                         const MaterialDataCommon material, unsigned int flags, TEASampler & sampler)
 {
     optix_print("EMPIRICAL\n");
@@ -184,15 +184,16 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
             SS = interpolate_bssrdf_nearest<5>(values,i) * empirical_bssrdf_correction;
         else
             SS = interpolate_bssrdf_linear<5>(values,i) * empirical_bssrdf_correction;
-        optix::get_channel(i, S) = SS * extinction *extinction;
+        optix::get_channel(i, S) = SS * extinction * extinction;
     }
 
     optix::float3 w21;
     float R21;
     bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
 
-    refract(geometry.wo, geometry.no, recip_ior, w21, R21);
-    float F = include_fresnel_out?  1.0f : 1.0f/(1.0f - R21);
+    refract(-geometry.wo, -geometry.no, 1.0/n1_over_n2, w21, R21);
+
+    float F = 1;//1.0f/(1.0f - R21);
     return S * F;
 }
 
