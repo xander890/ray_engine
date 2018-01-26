@@ -195,8 +195,8 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(co
             xp = xp + wp * d;
             xp.z = fminf(xp.z, 0);  // This is needed to eliminate edge cases that give xp.z > 0 due to numerical precision.
 
-            float r = geometry_data.mRadius.x + geometry_data.mDeltaR * 0.5f;//RND_FUNC(t);
-            float theta_s = geometry_data.mThetas.x + geometry_data.mDeltaThetas * 0.5f;//RND_FUNC(t);
+            float r = geometry_data.mRadius.x + geometry_data.mDeltaR * RND_FUNC(t);
+            float theta_s = geometry_data.mThetas.x + geometry_data.mDeltaThetas * RND_FUNC(t);
 
 			const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
             optix::float3 w21 = xo - xp;
@@ -289,126 +289,194 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct_bi
         const float rand = RND_FUNC(t); // RND_FUNC(t) in [0, 1). Avoids infinity when sampling exponential distribution.
 
         // Sampling new distance for photon, testing if it intersects the interface
-        bool bias_loop = true;
-        bool first = true;
 
-        float G = 1.0f;
+        const float d = -log(rand) / extinction;
 
-        while(bias_loop) {
-            const float d = -log(rand) / extinction;
-            bool is_in_bias_length = d < (1.0f / bias);
+        optix::Ray ray = optix::make_Ray(xp, wp, 0, 1e-12, d);
 
-            bool include_original_contribution = false;
-            if(!is_in_bias_length && first)
-            {
-                optix_print("Starting bias.\n");
-                G = 1.0f;
-            }
-            else if (!is_in_bias_length && !first)
-            {
-                optix_print("Out of bias zone.\n");
-                // We are outside the dangerous area now.
-                break;
-            }
-            else if(is_in_bias_length)
-            {
-                optix_print("Continuing bias. %f\n", G);
-                // Continue to accumulate the bias compensation.
-                G *= 1.0f - d*d*bias*bias;
-                if(first) {
-                    include_original_contribution = true;
+        if (!isfinite(xp.z)) {
+            return true;
+        }
+
+        optix_assert(xp.z <= 1e-6);
+        optix_assert(xp.z > -INFINITY);
+
+        float intersection_distance;
+        if (!intersect_plane(xi, ni, ray, intersection_distance)) {
+            // We scatter now.
+            xp = xp + wp * d;
+            xp.z = fminf(xp.z, 0);  // This is needed to eliminate edge cases that give xp.z > 0 due to numerical precision.
+
+            float r = geometry_data.mRadius.x + geometry_data.mDeltaR * RND_FUNC(t);
+            float theta_s = geometry_data.mThetas.x + geometry_data.mDeltaThetas * RND_FUNC(t);
+
+            const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
+            optix::float3 w21 = xo - xp;
+            const float xoxp = optix::length(w21);
+            w21 = w21 / xoxp; // Normalizing
+
+            optix_assert(optix::dot(w21, no) >= 0.0f);
+
+            // Note: we are checking the *exiting* ray, so we flip the relative ior
+            float3 wo;
+            float cos_theta_o, cos_theta_21, R21;
+            // If there is no total internal reflection, we accumulate
+            if (refract(-w21, -no, n2_over_n1, wo, R21, cos_theta_21, cos_theta_o)) {
+                const float T21 = 1 - R21;
+                        optix_assert(R21 <= 1.0f);
+                        optix_assert(cos_theta_o >= 0);
+
+                const float phi_21 = atan2f(w21.y, w21.x);
+                // The outgoing azimuthal angle is the same as the refracted vector, since the refracted vector
+                // w_12 points *towards* the surface, and the outgoing w_o points *away *from the surface.
+                const float phi_o = phi_21;
+
+
+                const float mfp_bias = 1 / bias;
+                const float b = bias*bias;
+
+                float G = 1.0f / (xoxp * xoxp);
+                float geometry_term = min(b, G);
+
+                float bssrdf_E = albedo * flux_t * phase_HG(optix::dot(wp, w21), g) * fabsf(optix::dot(w21, no)) * (T21 / dot(wo, no));
+                bssrdf_E *= r * (2.0f / (geometry_data.mRadius.x + geometry_data.mRadius.y)) * (1.0f / geometry_data.mSolidAngle);
+
+                optix_print("flux_t %f, albedo %f, p %f, exp %f, F %f\n", flux_t, albedo,
+                            phase_HG(optix::dot(w21, wp), g), expf(-extinction * xoxp), T21);
+
+
+                optix_print("(%d) Scattering.  %f\n", i, bssrdf_E);
+
+                float bssrdf_to_store = bssrdf_E * geometry_term * expf(-extinction * xoxp);
+
+#if 1
+                // Not including single scattering, so i == 0 is not considered.
+                if(i > 0 && xoxp < mfp_bias)
+                {
+                    float G_prime = 1 - b * xoxp * xoxp;
+                    optix_assert(G_prime > 0);
+                    optix_assert(fabsf(geometry_term - b) < 1e-20f);
+
+                    bssrdf_to_store += bssrdf_E * expf(-extinction * xoxp) * G_prime;
+                    float sign_dir = RND_FUNC(t) > 0.5f? -1.0f : 1.0f;
+                    optix::float3 old_dir = wp;
+                    optix::float3 new_dir = sign_dir * w21;
+                    optix::float3 new_pos = xp;
+                    while(true)
+                    {
+                        float rand_bias = RND_FUNC(t);
+                        float d_bias = -log(rand_bias) / extinction;
+
+                        new_pos = new_pos + new_dir * d_bias;
+                        float distance_from_xo = optix::length(new_pos - xo);
+
+                        // If we go outside or too far.
+                        if(d_bias > mfp_bias)
+                            break;
+
+                        if(new_pos.z >= 0.0f || distance_from_xo > mfp_bias)
+                            break;
+
+                        G_prime *= (1 - b * d_bias * d_bias);
+                        bssrdf_to_store += G_prime * bssrdf_E * exp(-extinction * distance_from_xo) * phase_HG(dot(old_dir, new_dir), g) * 2.0f;
+
+                        old_dir = new_dir;
+                        float sign_dir = RND_FUNC(t) > 0.5f? -1.0f : 1.0f;
+                        new_dir = sign_dir * w21;
+                    }
                 }
+#else
+                if(i > 0 && xoxp < mfp_bias)
+                {
+                    float G = (1.0f - b*xoxp*xoxp);
+                    bssrdf_to_store += bssrdf_E * G;
+                    optix::float3 new_xp = xp;
+                    optix::float3 new_wp = -w21;
+
+                    while(false)
+                    {
+                        float rand_bias = RND_FUNC(t); // RND_FUNC(t) in [0, 1). Avoids infinity when sampling exponential distribution.
+                        float d_bias = -log(rand_bias) / extinction;
+
+                        if(d_bias >= mfp_bias) {
+                            optix_print("Bias computation terminated. \n");
+                            break;
+                        }
+
+                        optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+                        new_wp = sample_HG(new_wp, g, smpl);
+                        optix::Ray ray_bias = optix::make_Ray(new_xp, new_wp, 0, 1e-12, d_bias);
+                        float intersection_distance_bias;
+                        if(!intersect_plane(xi, ni, ray_bias, intersection_distance_bias))
+                        {
+                            new_xp = new_xp + new_wp * d_bias;
+                            new_xp.z = fminf(new_xp.z, 0);
+                            optix::float3 new_w21 = xo - new_xp;
+                            const float new_xoxp = optix::length(new_w21);
+                            new_w21 = new_w21 / new_xoxp; // Normalizing
+                            float3 new_wo;
+                            float new_R21;
+                            // If there is no total internal reflection, we accumulate
+                            if (refract(-new_w21, -no, n2_over_n1, new_wo, new_R21)) {
+                                const float new_T21 = 1 - new_R21;
+                                optix_assert(new_R21 <= 1.0f);
+
+                                // The outgoing azimuthal angle is the same as the refracted vector, since the refracted vector
+                                // w_12 points *towards* the surface, and the outgoing w_o points *away *from the surface.
+                                float new_geometry_term = min(bound, 1.0f / (new_xoxp * new_xoxp));
+                                new_geometry_term *= fabsf(optix::dot(new_w21, no));
+                                float new_bssrdf_E = albedo * flux_t * phase_HG(optix::dot(new_wp, new_w21), g) * (new_T21 / dot(new_wo, no)) * new_geometry_term *
+                                        expf(-extinction * new_xoxp);
+                                new_bssrdf_E *= r * (2.0f / (geometry_data.mRadius.x + geometry_data.mRadius.y)) *
+                                            (1.0f / geometry_data.mSolidAngle);
+
+                                optix_print("Add... %d %f %f\n", launch_index.x,  G, new_bssrdf_E);
+                                G *= (1 - bound * d_bias * d_bias);
+                                // Not including single scattering, so i == 0 is not considered.
+                                bssrdf_to_store += new_bssrdf_E * G;
+
+                            }
+                            else break;
+                        }
+                        else break;
+                    }
+                }
+#endif
+
+                if (i > 0) {
+                    store_values_in_buffer(acosf(cos_theta_o), phi_o, bssrdf_to_store, resulting_flux);
+                }
+
             }
+            // We choose a new direction sampling the phase function
+            optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
+            wp = optix::normalize(sample_HG(wp, g, smpl));
 
-            first = false;
-
-            optix::Ray ray = optix::make_Ray(xp, wp, 0, 1e-12, d);
-
-            if (!isfinite(xp.z)) {
+            // We are still within the medium.
+            // Russian roulette to check for absorption.
+            float absorption_prob = RND_FUNC(t);
+            if (absorption_prob > albedo) {
+                optix_print("(%d) Absorption.\n", i);
                 return true;
             }
 
-            optix_assert(xp.z <= 1e-6);
-            optix_assert(xp.z > -INFINITY);
+        } else {
+            // We have intersected the plane.
+            const optix::float3 surface_point = xp + wp * intersection_distance;
+                    optix_assert(optix::dot(wp, no) > 0);
 
-            float intersection_distance;
-            if (!intersect_plane(xi, ni, ray, intersection_distance)) {
-                // We scatter now.
-                xp = xp + wp * d;
-                xp.z = fminf(xp.z, 0);  // This is needed to eliminate edge cases that give xp.z > 0 due to numerical precision.
+            float3 wo;
+            float F_r;
+            refract(-wp, -no, n2_over_n1, wo, F_r);
 
-                float r = geometry_data.mRadius.x + geometry_data.mDeltaR * 0.5f;//RND_FUNC(t);
-                float theta_s = geometry_data.mThetas.x + geometry_data.mDeltaThetas * 0.5f;//RND_FUNC(t);
-
-                const optix::float3 xo = xi + r * optix::make_float3(cos(theta_s), sin(theta_s), 0);
-                optix::float3 w21 = xo - xp;
-                const float xoxp = optix::length(w21);
-                w21 = w21 / xoxp; // Normalizing
-
-                optix_assert(optix::dot(w21, no) >= 0.0f);
-
-                // Note: we are checking the *exiting* ray, so we flip the relative ior
-                float3 wo;
-                float cos_theta_o, cos_theta_21, R21;
-                // If there is no total internal reflection, we accumulate
-                if (refract(-w21, -no, n2_over_n1, wo, R21, cos_theta_21, cos_theta_o)) {
-                    const float T21 = 1 - R21;
-                            optix_assert(R21 <= 1.0f);
-                            optix_assert(cos_theta_o >= 0);
-
-                    const float phi_21 = atan2f(w21.y, w21.x);
-                    // The outgoing azimuthal angle is the same as the refracted vector, since the refracted vector
-                    // w_12 points *towards* the surface, and the outgoing w_o points *away *from the surface.
-                    const float phi_o = phi_21;
-
-                    float GG = include_original_contribution? (G + 1) : G;
-                    float geometry_term = min(bias, 1.0f / (xoxp * xoxp)) * GG;
-                    geometry_term *= fabsf(optix::dot(w21, no));
-                    float bssrdf_E =
-                            albedo * flux_t * phase_HG(optix::dot(wp, w21), g) * (T21 / dot(wo, no)) * geometry_term *
-                            exp(-extinction * xoxp);
-                    bssrdf_E *= r * (2.0f / (geometry_data.mRadius.x + geometry_data.mRadius.y)) *
-                                (1.0f / geometry_data.mSolidAngle);
-
-                    optix_print("flux_t %f, albedo %f, p %f, exp %f, F %f\n", flux_t, albedo,
-                                phase_HG(optix::dot(w21, wp), g), expf(-extinction * xoxp), T21);
-
-                    // Not including single scattering, so i == 0 is not considered.
-                    if (i > 0) {
-                        store_values_in_buffer(acosf(cos_theta_o), phi_o, bssrdf_E, resulting_flux);
-                    }
-
-                    optix_print("(%d) Scattering.  %f\n", i, bssrdf_E);
-                }
-                // We choose a new direction sampling the phase function
-                optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
-                wp = optix::normalize(sample_HG(wp, g, smpl));
-
-                // We are still within the medium.
-                // Russian roulette to check for absorption.
-                float absorption_prob = RND_FUNC(t);
-                if (absorption_prob > albedo) {
-                    optix_print("(%d) Absorption.\n", i);
-                    return true;
-                }
-
-            } else {
-                // We have intersected the plane.
-                const optix::float3 surface_point = xp + wp * intersection_distance;
-                        optix_assert(optix::dot(wp, no) > 0);
-
-                float3 wo;
-                float F_r;
-                refract(-wp, -no, n2_over_n1, wo, F_r);
-
-                // Reflect and turn to face inside.
-                flux_t *= F_r;
-                xp = surface_point;
-                wp = reflect(wp, -no);
-                xp.z = 0; // This is needed to eliminate edge cases that give xp.z > 0 due to numerical precision.
-                optix_print("(%d) Reached surface %f.\n", i, F_r);
-            }
+            // Reflect and turn to face inside.
+            flux_t *= F_r;
+            xp = surface_point;
+            wp = reflect(wp, -no);
+            xp.z = 0; // This is needed to eliminate edge cases that give xp.z > 0 due to numerical precision.
+            optix_print("(%d) Reached surface %f.\n", i, F_r);
         }
+
     }
     return false;
 }
