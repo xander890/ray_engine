@@ -27,3 +27,17 @@ inline void split_extension(const std::string& filename, std::string & file, std
 	file = filename.substr(0, lastdot);
 	ext = filename.substr(lastdot);
 }
+
+inline void split(const std::string& s, std::vector<std::string>& result, const std::string& delim)
+{
+	size_t begin = 0;
+	size_t end = s.find(delim);
+	while(end != s.npos)
+	{
+		result.push_back(s.substr(begin, end - begin));
+		begin = end + delim.size();
+		end = s.find(delim, begin);
+	}
+	if(s.size() > begin)
+		result.push_back(s.substr(begin, s.size() - begin));
+}

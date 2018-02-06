@@ -5,7 +5,7 @@
 #include "bssrdf_loader.h"
 #include "empirical_bssrdf_utils.h"
 
-class BSSRDFLoader;
+class BSSRDFImporter;
 
 class EmpiricalBSSRDF : public BSSRDF
 {
@@ -32,7 +32,7 @@ private:
     optix::Buffer mParameterSizeBuffer;
     EmpiricalDataBuffer mDataBuffers;
     std::string mBSSRDFFile;
-    std::unique_ptr<BSSRDFLoader> mBSSRDFLoader = nullptr;
+    std::unique_ptr<BSSRDFImporter> mBSSRDFLoader = nullptr;
     std::unique_ptr<BSSRDFParameterManager> mManager = nullptr;
 	float mCorrection = DEFAULT_EMPIRICAL_CORRECTION;
 	unsigned int mInterpolation = 0;

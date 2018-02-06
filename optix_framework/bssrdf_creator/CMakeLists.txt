@@ -5,12 +5,13 @@ full_bssrdf_generator.cpp
 main.cpp
 reference_bssrdf.cpp
 reference_bssrdf_gpu.cpp
-)
+        reference_bssrdf_gpu_mixed.cpp )
 
 set(CUDA_SOURCES    
 CUDA_files/planar_bssrdf.cu
 CUDA_files/reference_bssrdf.cu
 CUDA_files/reference_bssrdf_gpu.cu
+CUDA_files/reference_bssrdf_gpu_mixed.cu
 CUDA_files/render_bssrdf.cu
 )
 
@@ -22,7 +23,7 @@ photon_trace_reference_bssrdf.h
 photon_trace_structs.h
 reference_bssrdf.h
 reference_bssrdf_gpu.h
-)
+reference_bssrdf_gpu_mixed.h)
 set( APP_EXE bssrdf_creator )
 
 source_group("Headers" FILES ${HEADERS})

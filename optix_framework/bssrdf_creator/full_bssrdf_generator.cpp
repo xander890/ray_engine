@@ -7,6 +7,8 @@
 #include "GLFW/glfw3.h"
 #include "GLFWDisplay.h"
 #include "forward_dipole_test.h"
+#include "reference_bssrdf_gpu_mixed.h"
+
 #pragma warning(disable : 4996)
 
 #define WINDOW_SIZE 800
@@ -95,10 +97,10 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 
 void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
 {
-	m_context->setPrintEnabled(true);
+	m_context->setPrintEnabled(mDebug);
 	test_forward_dipole();
 	m_context->setPrintBufferSize(2000);
-	m_context->setPrintLaunchIndex(1000);
+	m_context->setPrintLaunchIndex(10000);
 	Folders::init();
 	m_context["scene_epsilon"]->setFloat(1e-3f);
 	auto top_node = m_context->createGroup();
@@ -111,7 +113,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
-	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPU>(m_context, OutputShape::HEMISPHERE, optix::make_int2(160, 40), (int)10e5);
+	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPUMixed>(m_context, OutputShape::HEMISPHERE, optix::make_int2(160, 40), (int)10e5);
 	mBssrdfReferenceSimulator->init();
 
 	mBssrdfModelSimulator = std::make_shared<BSSRDFRendererModel>(m_context);
@@ -164,13 +166,13 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	{
 		mCurrentHemisphereData = new float[mCurrentBssrdfRenderer->get_storage_size()];
 	}
-	
+
 	mParametersSimulation.parameters[eta_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "eta", mParametersOriginal.parameters[eta_index], "Eta indices to scan.");
 	mParametersSimulation.parameters[g_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "g", mParametersOriginal.parameters[g_index], "Eta indices to scan.");
 	mParametersSimulation.parameters[albedo_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "albedo", mParametersOriginal.parameters[albedo_index], "Eta indices to scan.");
-	
+
 	mExternalBSSRDFBuffer = m_context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, 1);
-	
+
 }
 
 
@@ -216,7 +218,6 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 
 	if (!mPaused)
 	{
-		auto time = currentTime();
 
 		m_context["frame"]->setInt(frame);
 
@@ -225,7 +226,6 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 		if (mCurrentRenderMode == RenderMode::RENDER_BSSRDF)
 		{
 			mCurrentBssrdfRenderer->render();
-
 			m_context["plane_size"]->setFloat(mPlaneSize);
 			m_context["show_false_colors"]->setUint(mShowFalseColors);
 			m_context["reference_bssrdf_fresnel_mode"]->setInt(mFresnelMode);
@@ -249,23 +249,27 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 
         float m = mScaleMultiplier;
         if(mNormalize)
-            m /= mCurrentMax;
+            m = 1.0 / mCurrentMax;
 
 		m_context["reference_scale_multiplier"]->setFloat(m);
 
-		auto time1 = currentTime();
 
 		if (!mFastMode)
 		{
 			RTsize w, h;
 			result_buffer->getSize(w, h);
-			m_context["ior"]->setFloat(mCurrentBssrdfRenderer->mIor);
+
+            float albedo, ext, g, n2_over_n1;
+            mCurrentBssrdfRenderer->get_material_parameters(albedo, ext, g, n2_over_n1);
+
+			m_context["ior"]->setFloat(n2_over_n1);
 			m_context["reference_bssrdf_theta_o"]->setFloat(deg2rad(mPlaneRenderingThetao));
 			m_context->launch(entry_point_output, w, h);
 		}
 
-		frame++;
-		auto dur = time1 - time;
+        auto time1 = currentTime();
+        frame++;
+		auto dur = time1 - mCurrentStartTime;
 		update_rendering(std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count() / 1e9);
 	}
 }
@@ -276,7 +280,7 @@ optix::Buffer FullBSSRDFGenerator::get_output_buffer()
 }
 
 bool vector_gui(const std::string & name, std::vector<float> & vec, std::string & storage)
-{	
+{
 	static char buf[256];
 	storage.copy(buf, storage.size());
 	buf[storage.size()] = '\0';
@@ -298,7 +302,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 	if (gui == nullptr)
 		return;
 	gui->start_window("Ray tracing demo", 20, 20, 500, 600);
-	
+
 	ImmediateGUIDraw::InputFloat("Reference scale multiplier", &mScaleMultiplier);
 
 	if (mCurrentRenderMode == RENDER_BSSRDF)
@@ -306,13 +310,18 @@ void FullBSSRDFGenerator::post_draw_callback()
 		ImmediateGUIDraw::Text("Current max %e, Current average %e", mCurrentMax, mCurrentAverage);
 	}
 
-	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors); 
+	ImmediateGUIDraw::Checkbox("Show false colors", (bool*)&mShowFalseColors);
 	ImmediateGUIDraw::SameLine();
-	ImmediateGUIDraw::Checkbox("Pause", (bool*)&mPaused);
-	ImmediateGUIDraw::Checkbox("Fast Mode", (bool*)&mFastMode);
+	ImmediateGUIDraw::Checkbox("Pause",&mPaused);
     ImmediateGUIDraw::SameLine();
-    ImmediateGUIDraw::Checkbox("Normalize", (bool*)&mNormalize);
+    if(ImmediateGUIDraw::Checkbox("Debug",&mDebug))
+    {
+        m_context->setPrintEnabled(mDebug);
+    }
 
+	ImmediateGUIDraw::Checkbox("Fast Mode", &mFastMode);
+    ImmediateGUIDraw::SameLine();
+    ImmediateGUIDraw::Checkbox("Normalize", &mNormalize);
 
 	ImmediateGUIDraw::Text("Render mode:        ");
 	ImmediateGUIDraw::SameLine();
@@ -365,13 +374,11 @@ void FullBSSRDFGenerator::post_draw_callback()
 			}
 		}
 
-		static float theta_o = 0.0f;
-
 		if (shape == OutputShape::PLANE)
 		{
 			ImmediateGUIDraw::SliderFloat("Outgoing light angle (deg.)", &mPlaneRenderingThetao, 0, 90);
 		}
-		mCurrentBssrdfRenderer->on_draw(true);
+		mCurrentBssrdfRenderer->on_draw(BSSRDFRenderer::SHOW_ALL);
 
 		if (shape == OutputShape::PLANE)
 		{
@@ -388,7 +395,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 			mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, rs, ts);
 			mCurrentBssrdfRenderer->set_material_parameters(albedo, 1, g, n2_over_n1);
-		}		
+		}
 	}
 	else if(mCurrentRenderMode == SHOW_EXISTING_BSSRDF)
 	{
@@ -407,7 +414,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 					float * data = (float*)mExternalBSSRDFBuffer->map();
 					mLoader->load_hemisphere(data, index.mData);
 					mExternalBSSRDFBuffer->unmap();
-					
+
 
 					float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
 					mParametersSimulation.get_parameters(index, theta_i, r, theta_s, albedo, g, eta);
@@ -535,25 +542,28 @@ void FullBSSRDFGenerator::start_rendering()
 	current_render_task->start();
 
 	mExporter = std::make_unique<BSSRDFExporter>(current_render_task->get_destination_file(), mParametersSimulation, mCurrentBssrdfRenderer->get_size().y, mCurrentBssrdfRenderer->get_size().x);
-	
+
 	mState = ParameterState({ 0,0,0,0,0,0 });
 
 	if (mSimulate)
 	{
 		std::dynamic_pointer_cast<BSSRDFRendererSimulated>(mCurrentBssrdfRenderer)->set_samples(mSimulationSamplesPerFrame);
 		std::dynamic_pointer_cast<BSSRDFRendererSimulated>(mCurrentBssrdfRenderer)->set_max_iterations(mSimulationMaxIterations);
-	}	mCurrentBssrdfRenderer->set_read_only(true);
+	}
 
+    mCurrentBssrdfRenderer->set_read_only(true);
 	float extinction = 1.0f;
 	float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
 	mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
 
 	mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 	mCurrentBssrdfRenderer->set_material_parameters(albedo, extinction, g, eta);
-	mFastMode = true;
+	mFastMode = false;
+	mPaused = false;
+    mCurrentStartTime = currentTime();
 }
 
-void FullBSSRDFGenerator::update_rendering(float deltaTime)
+void FullBSSRDFGenerator::update_rendering(float time_past)
 {
 	if (current_render_task->is_active())
 	{
@@ -567,7 +577,7 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 			float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
 			mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
 			Logger::info <<  std::endl;
-			
+
 			std::vector<size_t> original_state;
 			if (!mParametersOriginal.get_index(theta_i, r.x, theta_s.x, albedo, g, eta, original_state))
 				Logger::error << "Index mismatch" << std::endl;
@@ -582,6 +592,7 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 			if (!mParametersSimulation.is_valid(mState))
 			{
 				end_rendering();
+                mCurrentStartTime = currentTime();
 			}
 			else
 			{
@@ -589,12 +600,13 @@ void FullBSSRDFGenerator::update_rendering(float deltaTime)
 				mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 				mCurrentBssrdfRenderer->set_material_parameters(albedo, extinction, g, eta);
 				current_render_task->start();
+                mCurrentStartTime = currentTime();
 			}
 
 		}
 		else
 		{
-			current_render_task->update(deltaTime);
+			current_render_task->update_absolute(time_past);
 		}
 	}
 }
@@ -603,6 +615,7 @@ void FullBSSRDFGenerator::end_rendering()
 {
 	current_render_task->end();
 	mCurrentBssrdfRenderer->set_read_only(false);
+    mPaused = true;
 }
 
 bool FullBSSRDFGenerator::key_pressed(int key, int x, int y)
@@ -640,13 +653,12 @@ void FullBSSRDFGenerator::scene_initialized()
 
 void FullBSSRDFGenerator::set_external_bssrdf(const std::string & file)
 {
-	mLoader = std::make_unique<BSSRDFLoader>(file);
+	mLoader = std::make_unique<BSSRDFImporter>(file);
 	auto phio = mLoader->get_hemisphere_phi_o();
 	auto thetao = mLoader->get_hemisphere_theta_o();
 	mExternalBSSRDFBuffer->setSize(phio,thetao);
 	float * data = (float*)mExternalBSSRDFBuffer->map();
 	mLoader->load_hemisphere(data, {0,0,0,0,0,0});
-	normalize(data, mLoader->get_hemisphere_size());
 	mExternalBSSRDFBuffer->unmap();
 }
 

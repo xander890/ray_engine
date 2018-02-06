@@ -5,7 +5,8 @@
 class ReferenceBSSRDFGPU : public BSSRDFRendererSimulated
 {
 public:
-	ReferenceBSSRDFGPU(optix::Context & ctx, const OutputShape::Type shape = OutputShape::HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const unsigned int samples = (int)1e8) : BSSRDFRendererSimulated(ctx, shape, shape_size, samples)
+
+    ReferenceBSSRDFGPU(optix::Context & ctx, const OutputShape::Type shape = OutputShape::HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const unsigned int samples = (int)1e8) : BSSRDFRendererSimulated(ctx, shape, shape_size, samples)
 	{
 	}
 
@@ -13,7 +14,7 @@ public:
 	void render() override;
 	void load_data() override;
 	void set_samples(int samples) override;
-	bool on_draw(bool show_material_params) override;
+	bool on_draw(unsigned int flags) override;
 
 	size_t get_samples() override;
 	
@@ -23,5 +24,6 @@ public:
 	unsigned int mBatchIterations = (int)1e4;
 	unsigned int mMaxFrames = 100000;
 	unsigned long long mPhotons = 0;
+	std::string ptx_file = "reference_bssrdf_gpu.cu";
 };
 

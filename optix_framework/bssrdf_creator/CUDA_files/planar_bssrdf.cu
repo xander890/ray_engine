@@ -45,7 +45,7 @@ RT_PROGRAM void reference_bssrdf_camera()
 	  
 	if (reference_bssrdf_output_shape == OutputShape::HEMISPHERE)
 	{   
-		float2 angles = get_normalized_hemisphere_buffer_angles(uv.y, uv.x);
+		float2 angles = get_normalized_hemisphere_buffer_angles(uv.x, uv.y);
 		geometry.wo = optix::make_float3(sinf(angles.y) * cosf(angles.x), sinf(angles.y) * sinf(angles.x), cosf(angles.y));
 	}
 	else  

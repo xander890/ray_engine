@@ -4,6 +4,7 @@
 #include <bssrdf_creator.h>
 #include <bssrdf_loader.h>
 #include <reference_bssrdf_gpu.h>
+#include <chrono>
 #include "string_utils.h"
 #include "logger.h"
 #include "render_task.h"
@@ -31,7 +32,7 @@ public:
 	void post_draw_callback() override;
 
 	void start_rendering();
-	void update_rendering(float deltaTime);
+	void update_rendering(float time_past);
 	void end_rendering();
 
 
@@ -49,7 +50,7 @@ private:
 
 	optix::Buffer result_buffer;
 	std::shared_ptr<BSSRDFRenderer>	 mCurrentBssrdfRenderer;
-	std::shared_ptr<ReferenceBSSRDFGPU>	 mBssrdfReferenceSimulator;
+	std::shared_ptr<BSSRDFRendererSimulated>	 mBssrdfReferenceSimulator;
 	std::shared_ptr<BSSRDFRendererModel>		 mBssrdfModelSimulator;
 	std::string config_file;
 
@@ -75,9 +76,10 @@ private:
 	bool mPaused = false;
 	bool mFastMode = false;
     bool mNormalize = true;
+	bool mDebug = false;
 	RenderMode mCurrentRenderMode = RENDER_BSSRDF;
 	std::unique_ptr<BSSRDFExporter> mExporter = nullptr;
-	std::unique_ptr<BSSRDFLoader> mLoader = nullptr;
+	std::unique_ptr<BSSRDFImporter> mLoader = nullptr;
 
 	optix::Buffer mExternalBSSRDFBuffer;
 	std::string mExternalFilePath = "test.bssrdf";
@@ -90,5 +92,6 @@ private:
 	optix::float2 mPlaneSize = optix::make_float2(2, 2);
 
 	float mCurrentAverage = 0, mCurrentMax = 0;
+    std::chrono::time_point<std::chrono::high_resolution_clock>  mCurrentStartTime;
 };
 

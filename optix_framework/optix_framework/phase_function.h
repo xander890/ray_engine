@@ -3,7 +3,7 @@
 #include "math_helpers.h"
 #include "random.h"
 
-__inline__ __device__ optix::float3 sample_HG(optix::float3& forward, float g, const optix::float2& smpl)
+__forceinline__ __device__ optix::float3 sample_HG(optix::float3& forward, float g, const optix::float2& smpl)
 {
 	float xi = smpl.x;
 	float cos_theta;
@@ -27,15 +27,15 @@ __inline__ __device__ optix::float3 sample_HG(optix::float3& forward, float g, c
 	return v;
 }
 
-__inline__ __device__ optix::float3 sample_HG(optix::float3& forward, float g, optix::uint& t)
+__forceinline__ __device__ optix::float3 sample_HG(optix::float3& forward, float g, optix::uint& t)
 {
 	optix::float2 smpl = optix::make_float2(rnd(t), rnd(t));
 	return sample_HG(forward, g, smpl);
 }
 
-__inline__ __device__ float phase_HG(float cos_alpha, float g)
+__forceinline__ __device__ float phase_HG(float cos_alpha, float g)
 {
 	float g_sqr = g*g;
-	float den = rsqrtf(1 + g_sqr - 2 * g * cos_alpha);
-	return 0.25f * M_1_PIf * (1.0f - g_sqr) * den * den * den;
+	float den = pow(1 + g_sqr - 2 * g * cos_alpha, 1.5f);
+	return 0.25f * M_1_PIf * (1.0f - g_sqr) / den;
 }

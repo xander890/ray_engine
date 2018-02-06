@@ -8,6 +8,8 @@
 
 #define INVALID_INDEX ((size_t)(-1))
 
+#define theta_o_index 7
+#define phi_o_index 6
 #define theta_i_index 5
 #define r_index 4
 #define theta_s_index 3

@@ -17,7 +17,7 @@ std::vector<float> convert_to_rad(const std::vector<float> & vec)
 
 void EmpiricalBSSRDF::prepare_buffers()
 {
-    mBSSRDFLoader = std::make_unique<BSSRDFLoader>(mBSSRDFFile);
+    mBSSRDFLoader = std::make_unique<BSSRDFImporter>(mBSSRDFFile);
 
     // First, allocating data buffers, one per wavelength.
     size_t s = mBSSRDFLoader->get_material_slice_size();
@@ -54,14 +54,14 @@ void EmpiricalBSSRDF::prepare_buffers()
     float * pbuf = reinterpret_cast<float*>(phioBuffer->map());
     for(int i = 0; i < phi_o_size; i++)
     {
-        pbuf[i] = get_normalized_hemisphere_buffer_angles(0, ((float)i) / phi_o_size).x;
+        pbuf[i] = get_normalized_hemisphere_buffer_angles(((float)i) / phi_o_size, 0.0f).x;
     }
     phioBuffer->unmap();
     optix::Buffer thetaoBuffer = create_buffer<float>(mContext, RT_BUFFER_INPUT, theta_o_size);
     float * tbuf = reinterpret_cast<float*>(thetaoBuffer->map());
     for(int i = 0; i < theta_o_size; i++)
     {
-        tbuf[i] = get_normalized_hemisphere_buffer_angles(((float)(i+1)) / theta_o_size, 0).y;
+        tbuf[i] = get_normalized_hemisphere_buffer_angles(0.0f, ((float)(i+1)) / theta_o_size).y;
     }
     thetaoBuffer->unmap();
     mParameterBuffers.buffers[4] = (phioBuffer)->getId();

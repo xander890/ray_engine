@@ -98,6 +98,11 @@ std::string RenderTaskFrames::to_string()
 	return std::string("Frame based. Stopping at ") + std::to_string(destination_samples) + " frames";
 }
 
+void RenderTaskFrames::update_absolute(float time)
+{
+	update(time);
+}
+
 RenderTaskTime::RenderTaskTime(float destination_time, const std::string& destination_file, bool close_program_on_exit = false):
 	RenderTask(destination_file, close_program_on_exit), destination_time(destination_time), current_time(FLT_MIN)
 {
@@ -113,6 +118,14 @@ void RenderTaskTime::update(float deltaTime)
 {
 	if (is_active())
 		current_time += deltaTime;
+}
+
+void RenderTaskTime::update_absolute(float time)
+{
+	if (is_active())
+	{
+		current_time = time;
+	}
 }
 
 bool RenderTaskTime::is_active()
@@ -151,6 +164,8 @@ std::string RenderTaskTime::to_string()
 	return std::string("Time based. Stopping at ") + std::to_string(destination_time) + " seconds.";
 }
 
+
+
 RenderTaskTimeorFrames::RenderTaskTimeorFrames(int max_frames, float dest_time, const std::string & destination_file, bool close_program_on_exit) : RenderTask(destination_file, close_program_on_exit)
 {
 	destination_samples = max_frames;
@@ -173,6 +188,17 @@ void RenderTaskTimeorFrames::update(float deltaTime)
 		current_frame += 1;
 	}
 }
+
+void RenderTaskTimeorFrames::update_absolute(float time)
+{
+	if (is_active())
+	{
+		current_time = time;
+		current_frame += 1;
+	}
+}
+
+
 
 bool RenderTaskTimeorFrames::is_active()
 {
@@ -211,4 +237,3 @@ std::string RenderTaskTimeorFrames::to_string()
 {
 	return std::string("Time/Frame based. Stopping at ") + std::to_string(destination_samples) + " frames or " + std::to_string(destination_time) + " seconds, whichever first.";
 }
-

@@ -1,6 +1,7 @@
 #pragma once
 #include "host_device_common.h"
 #include "bssrdf_properties.h"
+#include "math_helpers.h"
 //#define USE_OLD_STORAGE
 //#define USE_UNIFORM_STORAGE
 
@@ -15,19 +16,50 @@ struct EmpiricalDataBuffer
     int test;
 };
 
-__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(float theta_o, float phi_o)
+__forceinline__ __host__ __device__ float get_normalized_phi_o(float phi_o)
 {
-	const float phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
-	// Uniform sampling of hemisphere
+    return normalize_angle(phi_o) / (2.0f * M_PIf);
+}
+
+__forceinline__ __host__ __device__ float get_normalized_theta_o(float theta_o)
+{
 #ifdef USE_UNIFORM_STORAGE
-	const float theta_o_normalized = theta_o / M_PIf * 2;
+    const float theta_o_normalized = theta_o / M_PIf * 2;
 #else
 #ifdef USE_OLD_STORAGE
-	const float theta_o_normalized = cosf(theta_o);
+    const float theta_o_normalized = cosf(theta_o);
 #else
-	const float theta_o_normalized = 1 - cosf(theta_o);
+    const float theta_o_normalized = 1.0f - cosf(theta_o);
 #endif
 #endif
+    return theta_o_normalized;
+}
+
+__forceinline__ __host__ __device__ float get_phi_o(float phi_o_normalized)
+{
+    return phi_o_normalized * (2.0f * M_PIf);
+}
+
+
+__forceinline__ __host__ __device__ float get_theta_o(float theta_o_normalized)
+{
+#ifdef USE_UNIFORM_STORAGE
+    const float theta_o = theta_o_normalized * M_PIf / 2;
+#else
+#ifdef USE_OLD_STORAGE
+    const float theta_o = acosf(theta_o_normalized);
+#else
+    const float theta_o = acosf(1 - theta_o_normalized);
+#endif
+#endif
+    return theta_o;
+}
+
+
+__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(float phi_o, float theta_o)
+{
+	const float phi_o_normalized = get_normalized_phi_o(phi_o);
+    const float theta_o_normalized = get_normalized_theta_o(theta_o);
 	optix_assert(theta_o_normalized >= 0.0f);
 	optix_assert(theta_o_normalized <= 1.0f);
 	optix_assert(phi_o_normalized <= 1.0f);
@@ -35,19 +67,10 @@ __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buff
 	return optix::make_float2(phi_o_normalized, theta_o_normalized);
 }
 
-__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(float theta_o_normalized, float phi_o_normalized)
+__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(float phi_o_normalized, float theta_o_normalized)
 {
-	const float phi_o = phi_o_normalized * (2.0f * M_PIf);
-	// Uniform sampling of hemisphere
-#ifdef USE_UNIFORM_STORAGE
-	const float theta_o = theta_o_normalized * M_PIf / 2;
-#else
-#ifdef USE_OLD_STORAGE
-	const float theta_o = acosf(theta_o_normalized);
-#else
-	const float theta_o = acosf(1 - theta_o_normalized);
-#endif
-#endif
+	const float phi_o = get_phi_o(phi_o_normalized);
+	const float theta_o = get_theta_o(theta_o_normalized);
 	return optix::make_float2(phi_o, theta_o);
 }
 

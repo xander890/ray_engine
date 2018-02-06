@@ -18,18 +18,13 @@ rtDeclareVariable(BufPtr1D<int>, photon_counter, , );
 rtDeclareVariable(unsigned int, maximum_iterations, , ) = 1e5;
 rtDeclareVariable(unsigned int, batch_iterations, , ) = 1e3;
 rtDeclareVariable(unsigned int, ref_frame_number, , ) = 1e5;
-// Window variables
 
 rtDeclareVariable(BSSRDFRendererData, reference_bssrdf_data, , );
+rtDeclareVariable(BSSRDFSimulatedOptions, reference_bssrdf_simulated_options, , );
 
 rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, reference_bssrdf_material_params, , );
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
 rtDeclareVariable(OutputShape::Type, reference_bssrdf_output_shape, , );
-rtDeclareVariable(IntegrationMethod::Type, reference_bssrdf_integration, , );
-rtDeclareVariable(float, reference_bssrdf_bias_bound, , );
-
-
-//#define USE_HARDCODED_MATERIALS
 
 RT_PROGRAM void reference_bssrdf_gpu()
 {
@@ -77,7 +72,7 @@ RT_PROGRAM void reference_bssrdf_gpu()
 		atomicAdd(&photon_counter[ref_frame_number], 1);
 	}
 	 
-	if (scatter_photon(reference_bssrdf_output_shape, reference_bssrdf_integration, reference_bssrdf_data, p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations, reference_bssrdf_bias_bound))
+	if (scatter_photon(reference_bssrdf_output_shape, reference_bssrdf_simulated_options, reference_bssrdf_data, p.xp, p.wp, p.flux, reference_resulting_flux_intermediate, xo, n2_over_n1, albedo, extinction, g, p.t, p.i, batch_iterations))
 	{
 		photon_buffer[idx].status = PHOTON_STATUS_NEW;
         optix_print("RW done.\n");

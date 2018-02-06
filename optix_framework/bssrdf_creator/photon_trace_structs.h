@@ -23,8 +23,13 @@ __device__ __forceinline__ void init_seed(SEED_TYPE & seed, unsigned long long q
 #endif
 
 #define IMPROVED_ENUM_NAME IntegrationMethod
-#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(MCML,0) ENUMITEM_VALUE(CONNECTIONS,1) ENUMITEM_VALUE(CONNECTIONS_WITH_FIX,2) ENUMITEM_VALUE(CONNECTIONS_WITH_BIAS_REDUCTION,3)
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(MCML,0) ENUMITEM_VALUE(CONNECTIONS,1) ENUMITEM_VALUE(CONNECTIONS_WITH_FIX,2)
 #include "improved_enum.def"
+
+#define IMPROVED_ENUM_NAME BiasMode
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(BIAS_ONLY,0) ENUMITEM_VALUE(BIASED_RESULT,1) ENUMITEM_VALUE(RENDER_ALL,2)
+#include "improved_enum.def"
+
 
 #define IMPROVED_ENUM_NAME OutputShape
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(PLANE,0) ENUMITEM_VALUE(HEMISPHERE,1)
@@ -63,4 +68,12 @@ struct BSSRDFRendererData
     float mSolidAngle;
 	float mDeltaR;
 	float mDeltaThetas;
+};
+
+struct BSSRDFSimulatedOptions
+{
+    float mBias                                     DEFAULT(-1.0f);
+    BiasMode::Type  mbBiasMode                      DEFAULT(BiasMode::RENDER_ALL);
+    IntegrationMethod::Type mIntegrationMethod      DEFAULT(IntegrationMethod::MCML);
+	bool mbCosineWeighted							DEFAULT(false);
 };

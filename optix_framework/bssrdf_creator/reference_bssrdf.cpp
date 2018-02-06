@@ -97,7 +97,7 @@ bool HemisphereBSSRDFShader::on_draw()
 
 	ImmediateGUIDraw::Checkbox("Use parameters from material 0", &mUseMeshParameters);
 
-	ref_impl->on_draw(!mUseMeshParameters);
+	ref_impl->on_draw(!mUseMeshParameters? BSSRDFRenderer::SHOW_ALL : BSSRDFRenderer::HIDE_ALL);
 
 	return false;
 }

@@ -9,6 +9,7 @@ public:
 	virtual ~RenderTask() = default;
 	virtual void start() = 0;
 	virtual void update(float deltaTime) = 0;
+	virtual void update_absolute(float deltaTime) = 0;
 	virtual bool is_active() = 0;
 	virtual bool is_finished() = 0;
 	virtual std::string get_progress_string() = 0;
@@ -29,6 +30,7 @@ public:
 	RenderTaskFrames(int destination_samples, const std::string& destination_file, bool close_program_on_exit);
 	void start() override;
 	void update(float deltaTime) override;
+	void update_absolute(float time) override;
 	bool is_active() override;
 	bool is_finished() override;
 	std::string get_progress_string() override;
@@ -47,6 +49,8 @@ public:
 	RenderTaskTime(float destination_time, const std::string& destination_file, bool close_program_on_exit);
 	void start() override;
 	void update(float deltaTime) override;
+	void update_absolute(float time) override;
+
 	bool is_active() override;
 	bool is_finished() override;
 	std::string get_progress_string() override;
@@ -65,6 +69,7 @@ public:
 	RenderTaskTimeorFrames(int max_frames, float destination_time, const std::string& destination_file, bool close_program_on_exit);
 	void start() override;
 	void update(float deltaTime) override;
+	void update_absolute(float time) override;
 	bool is_active() override;
 	bool is_finished() override;
 	std::string get_progress_string() override;

@@ -58,7 +58,7 @@ int main( int argc, char** argv )
 	}
 	else if (arg == "-o" || arg == "--output")
 	{
-		if (i == argc - 1)
+	      	if (i == argc - 1)
 			printUsageAndExit(argv[0]);
 		auto_mode = true;
 		output_file = argv[++i];
@@ -75,7 +75,7 @@ int main( int argc, char** argv )
 		frames = std::stoi(argv[++i]);
 	}
 	}
-	//if ( filenames.size() == 0 ) 
+	//if ( filenames.size() == 0 )
 	//  filenames.push_back(string("./meshes/") + "closed_bunny_vn.obj");
 	ConfigParameters::init(config_file);
 	GLFWDisplay::setRequiresDisplay(!nodisplay);

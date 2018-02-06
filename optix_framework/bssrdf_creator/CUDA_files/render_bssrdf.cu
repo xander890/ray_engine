@@ -37,7 +37,7 @@ RT_PROGRAM void render_ref()
 		else 
 		{
 			float theta_o = M_PIf * 0.5f * l;
-			float2 coords = get_normalized_hemisphere_buffer_coordinates(theta_o, phi_o);  
+			float2 coords = get_normalized_hemisphere_buffer_coordinates(phi_o,theta_o);
 			float cos_theta_o = cosf(theta_o);
 			float S = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, coords.x, coords.y).x;
 			float T21 = 1.0f - fresnel_R(cos_theta_o, reference_bssrdf_rel_ior);

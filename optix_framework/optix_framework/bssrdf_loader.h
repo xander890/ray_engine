@@ -11,19 +11,19 @@
 #define parameter_delimiter std::string("PARAMETER")
 
 
-class BSSRDFLoader
+class BSSRDFImporter
 {
 public:
-	BSSRDFLoader(const std::string & filename);
-	~BSSRDFLoader() {}
+	BSSRDFImporter(const std::string & filename);
+	~BSSRDFImporter() {}
 	void get_dimensions(std::vector<size_t> & dimensions);
 	size_t get_material_slice_size();
 	size_t get_hemisphere_size();
 	const std::map<size_t, std::vector<float>>& get_parameters();
 	bool load_material_slice(float * bssrdf_data, const std::vector<size_t> & idx);
 	bool load_hemisphere(float * bssrdf, const std::vector<size_t> & idx);
-	size_t get_hemisphere_theta_o() { return mThetaoSize; }
-	size_t get_hemisphere_phi_o() { return mPhioSize; }
+	size_t get_hemisphere_theta_o() { return mDimensions[theta_o_index]; }
+	size_t get_hemisphere_phi_o() { return mDimensions[phi_o_index]; }
 
 private:
 	bool parse_header();
@@ -31,7 +31,6 @@ private:
 	size_t mBSSRDFStart = 0;
 	std::string mFileName;
 	std::map<size_t, std::vector<float>> mParameters;
-	size_t mThetaoSize, mPhioSize;
 };
 
 class BSSRDFExporter
@@ -49,6 +48,6 @@ private:
 	std::string mHeader;
 	std::string mFileName;
 	size_t mThetaoSize, mPhioSize;
-	
+
 	const BSSRDFParameterManager & mManager;
 };

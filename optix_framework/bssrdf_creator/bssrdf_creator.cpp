@@ -3,6 +3,10 @@
 #include "optix_utils.h"
 #include <sstream>
 #include <algorithm>
+#include <parserstringhelpers.h>
+
+int BSSRDFRenderer::mGlobalId = 0;
+
 void BSSRDFRenderer::set_geometry_parameters(float theta_i, optix::float2 r,optix::float2 theta_s)
 {
 	mThetai = theta_i;
@@ -74,39 +78,48 @@ void BSSRDFRenderer::init()
 	reset();
 }
 
-bool BSSRDFRenderer::on_draw(bool show_material_params)
+bool BSSRDFRenderer::on_draw(unsigned int flags)
 {
+	if(flags == HIDE_ALL)
+		return false;
+
 	bool changed = false;
 
 	float backup_theta_i = mThetai;
 	optix::float2 backup_theta_s = mThetas;
 	optix::float2 backup_r = mRadius;
 
-	changed |= ImmediateGUIDraw::SliderFloat("Incoming light angle (deg.)", &mThetai, 0, 90);
-	if (mOutputShape == OutputShape::HEMISPHERE)
+	changed |= ImmediateGUIDraw::SliderFloat(GUI_LABEL("Incoming light angle (deg.)", mId), &backup_theta_i, 0, 90);
+	if ((flags & SHOW_GEOMETRY != 0) && mOutputShape == OutputShape::HEMISPHERE)
 	{
-		changed |= ImmediateGUIDraw::InputFloat("Radius (lower)", &mRadius.x, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
-		changed |= ImmediateGUIDraw::InputFloat("Radius (upper)", &mRadius.y, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
-		changed |= ImmediateGUIDraw::SliderFloat("Angle on plane (lower)", &mThetas.x, 0, 360);
-		changed |= ImmediateGUIDraw::SliderFloat("Angle on plane (upper)", &mThetas.y, 0, 360);
+		changed |= ImmediateGUIDraw::InputFloat(GUI_LABEL("Radius (lower)", mId), &backup_r.x, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::InputFloat(GUI_LABEL("Radius (upper)", mId), &backup_r.y, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::SliderFloat(GUI_LABEL("Angle on plane (lower)", mId), &backup_theta_s.x, 0, 360);
+		changed |= ImmediateGUIDraw::SliderFloat(GUI_LABEL("Angle on plane (upper)", mId), &backup_theta_s.y, 0, 360);
 	}
 
-	mThetai = mIsReadOnly ? backup_theta_i : mThetai;
-	mThetas = mIsReadOnly ? backup_theta_s : mThetas;
-	mRadius = mIsReadOnly ? backup_r : mRadius;
-
-	if (show_material_params)
+	if(changed && !mIsReadOnly)
 	{
-		changed |= ImmediateGUIDraw::InputFloat("Albedo##RefAlbedo", &mAlbedo, 0, 0, -1, mIsReadOnly? ImGuiInputTextFlags_ReadOnly : 0);
-		changed |= ImmediateGUIDraw::InputFloat("Extinction##RefExtinction", &mExtinction, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
-		changed |= ImmediateGUIDraw::InputFloat("G##RefAsymmetry", &mAsymmetry, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
-		changed |= ImmediateGUIDraw::InputFloat("Relative IOR##RefRelIOR", &mIor, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		set_geometry_parameters(backup_theta_i, backup_r, backup_theta_s);
+	}
+
+	float albedo = mAlbedo, ext = mExtinction, g = mAsymmetry, eta = mIor;
+	if (flags & SHOW_MATERIAL != 0)
+	{
+		changed |= ImmediateGUIDraw::InputFloat(GUI_LABEL("Albedo", mId), &albedo, 0, 0, -1, mIsReadOnly? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::InputFloat(GUI_LABEL("Extinction", mId), &ext, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::InputFloat(GUI_LABEL("G", mId), &g, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+		changed |= ImmediateGUIDraw::InputFloat(GUI_LABEL("Relative IOR", mId), &eta, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
+	}
+
+	if(changed && !mIsReadOnly)
+	{
+		set_material_parameters(albedo, ext, g, eta);
 	}
 
 	if (changed)
 	{
 		reset();
-
 	}
 
 	return changed;
@@ -132,6 +145,41 @@ void BSSRDFRenderer::fill_geometry_data() {
 	mGeometryData.mSolidAngle = 2.0f * M_PIf / (mShapeSize.x * mShapeSize.y);
 	mGeometryData.mDeltaR = mRadius.y - mRadius.x;
 	mGeometryData.mDeltaThetas = theta_s.y - theta_s.x;
+}
+
+void BSSRDFRenderer::get_geometry_parameters(float &theta_i, optix::float2 &r, optix::float2 &theta_s) {
+    theta_i = mThetai;
+    r = mRadius;
+    theta_s = mThetas;
+}
+
+void BSSRDFRenderer::get_material_parameters(float &albedo, float &extinction, float &g, float &eta) {
+    albedo = mAlbedo;
+    extinction = mExtinction;
+    g = mAsymmetry;
+    eta = mIor;
+}
+
+BSSRDFRenderer::BSSRDFRenderer(optix::Context &ctx, const OutputShape::Type shape, const optix::int2 &shape_size) : context(ctx) {
+	mOutputShape = shape;
+	mId = mGlobalId++;
+	if(shape_size.x > -1 && shape_size.y > -1)
+	{
+		mShapeSize = optix::make_uint2(shape_size.x, shape_size.y);
+	}
+	else
+	{
+		mShapeSize = default_size(shape);
+	}
+}
+
+BSSRDFRenderer::~BSSRDFRenderer() {
+	mBSSRDFBuffer->destroy();
+	mBSSRDFBufferIntermediate->destroy();
+}
+
+optix::uint2 BSSRDFRenderer::default_size(OutputShape::Type shape) {
+	return shape == OutputShape::HEMISPHERE ? optix::make_uint2(160,40) : optix::make_uint2(400, 400);
 }
 
 void BSSRDFRendererModel::init()
@@ -173,9 +221,9 @@ void BSSRDFRendererModel::render()
 	mRenderedFrames++;
 }
 
-bool BSSRDFRendererModel::on_draw(bool show_material_params)
+bool BSSRDFRendererModel::on_draw(unsigned int flags)
 {
-	if (BSSRDFRenderer::on_draw(show_material_params))
+	if (BSSRDFRenderer::on_draw(flags))
 		reset();
 	mBSSRDF->on_draw();
 	return false;
@@ -188,6 +236,8 @@ void BSSRDFRendererModel::load_data()
 	mBSSRDF->load(1.1f, *cc);
 	auto type = mBSSRDF->get_type();
 	context["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &type);
+
+
 	mProperties->unmap();
 }
 
@@ -209,6 +259,9 @@ void BSSRDFRendererSimulated::init()
 	context["reference_resulting_flux_intermediate"]->setUserData(sizeof(BufPtr2D<float>), &ptr);
 	BufPtr2D<float> ptr2 = BufPtr2D<float>(mBSSRDFBuffer->getId());
 	context["reference_resulting_flux"]->setUserData(sizeof(BufPtr2D<float>), &ptr2);
+
+    float scattering = mAlbedo * mExtinction;
+    set_bias(1.0f/(3.0f * scattering));
 }
 
 void BSSRDFRendererSimulated::render()
@@ -225,54 +278,66 @@ void BSSRDFRendererSimulated::load_data()
 	BSSRDFRenderer::load_data();
 	context["maximum_iterations"]->setUint(mMaxIterations);
 	context["reference_bssrdf_samples_per_frame"]->setUint(mSamples);
-    context["reference_bssrdf_integration"]->setUserData(sizeof(IntegrationMethod::Type), &mIntegrationMethod);
-	context["reference_bssrdf_bias_bound"]->setFloat(mBiasCompensationBound);
 
-	if(mBiasCompensationBound == -1.0f) {
-		ScatteringMaterialProperties *cc = reinterpret_cast<ScatteringMaterialProperties *>(mProperties->map());
-		mBiasCompensationBound = 3.0 * cc->scattering.x;
-		mProperties->unmap();
-	}
+    if(mbUseAutomaticBias)
+    {
+        float bias_mfp = (mRadius.x + mRadius.y) / 2.0f;
+        bias_mfp = fminf(bias_mfp, 1.0f);
+        mBssrdfOptions.mBias = 1.0f / (bias_mfp * bias_mfp);
+        mBiasInMfps = bias_mfp;
+    }
+
+    context["reference_bssrdf_simulated_options"]->setUserData(sizeof(BSSRDFSimulatedOptions), &mBssrdfOptions);
 }
 
-bool BSSRDFRendererSimulated::on_draw(bool show_material_params)
+bool BSSRDFRendererSimulated::on_draw(unsigned int flags)
 {
 	std::stringstream ss;
 	ss << "Rendered: " << mRenderedFrames << " frames, " << mRenderedFrames*mSamples << " samples" << std::endl;
 	ImmediateGUIDraw::Text("%s",ss.str().c_str());
-	bool changed = BSSRDFRenderer::on_draw(show_material_params);
+	bool changed = BSSRDFRenderer::on_draw(flags);
 
 	static int smpl = mSamples;
-	if (ImmediateGUIDraw::InputInt("Samples", (int*)&smpl, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0))
+	if (ImmediateGUIDraw::InputInt(GUI_LABEL("Samples", mId), &smpl, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0))
 	{
 		set_samples(smpl);
 	}
 
 	static int iter = mMaxIterations;
-	if (ImmediateGUIDraw::InputInt("Maximum iterations", (int*)&iter, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0))
+	if (ImmediateGUIDraw::InputInt(GUI_LABEL("Maximum iterations", mId), &iter, 1, 100, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0))
 	{
 		set_max_iterations(iter);
 	}
 
     std::string s = IntegrationMethod::get_full_string();
 	std::replace(s.begin(), s.end(), ' ', '\0');
-    if(ImmediateGUIDraw::Combo("Integration method", (int*)&mIntegrationMethod, s.c_str(), IntegrationMethod::count()))
+
+	changed |= ImmediateGUIDraw::Combo(GUI_LABEL("Integration method", mId), (int*)&mBssrdfOptions.mIntegrationMethod, s.c_str(), IntegrationMethod::count());
+	changed |= ImmediateGUIDraw::Checkbox(GUI_LABEL("Automatic bias", mId), &mbUseAutomaticBias);
+
+    if (ImmediateGUIDraw::InputFloat(GUI_LABEL("Bias reduction bound", mId), &mBiasInMfps, mIsReadOnly || mbUseAutomaticBias? ImGuiInputTextFlags_ReadOnly : 0))
     {
-        reset();
+        changed = true;
+        set_bias(mBiasInMfps);
     }
 
-	if(mIntegrationMethod == IntegrationMethod::CONNECTIONS_WITH_BIAS_REDUCTION)
+	std::string s2 = BiasMode::get_full_string();
+	std::vector<std::string> tokens;
+	split(tokens, s2, ' ');
+	std::vector<const char*> c;
+	for(std::string & s : tokens)
 	{
-		if(ImmediateGUIDraw::InputFloat("Bias reduction bound", &mBiasCompensationBound))
-		{
-			reset();
-		}
+		c.push_back(s.c_str());
 	}
+	if((flags & SHOW_EXTRA_OPTIONS) != 0)
+		changed |= ImmediateGUIDraw::Combo(GUI_LABEL("Bias rendering type", mId), (int*)&mBssrdfOptions.mbBiasMode, &c[0], BiasMode::count(), BiasMode::count());
 
+	if((flags & SHOW_EXTRA_OPTIONS) != 0)
+		changed |= ImmediateGUIDraw::Checkbox(GUI_LABEL("Cosine weighted", mId), &mBssrdfOptions.mbCosineWeighted);
 
 	if (changed)
 		reset();
-	return false;
+	return changed;
 }
 
 void BSSRDFRendererSimulated::set_samples(int samples)
@@ -285,4 +350,29 @@ void BSSRDFRendererSimulated::set_max_iterations(int max_iter)
 {
 	mMaxIterations = max_iter;
 	reset();
+}
+
+
+void BSSRDFRendererSimulated::set_integration_method(IntegrationMethod::Type method) {
+    mBssrdfOptions.mIntegrationMethod = method;
+    reset();
+}
+
+void BSSRDFRendererSimulated::set_bias_visualization_method(BiasMode::Type biasmethod) {
+    mBssrdfOptions.mbBiasMode = biasmethod;
+    reset();
+}
+
+void BSSRDFRendererSimulated::set_bias(float bias) {
+    mBssrdfOptions.mBias = 1.0f / (bias * bias);
+	mBiasInMfps = bias;
+    reset();
+}
+
+void BSSRDFRendererSimulated::set_material_parameters(float albedo, float extinction, float g, float eta) {
+    BSSRDFRenderer::set_material_parameters(albedo, extinction, g, eta);
+}
+
+void BSSRDFRendererSimulated::set_cosine_weighted(bool cosine_weighted) {
+	mBssrdfOptions.mbCosineWeighted = cosine_weighted;
 }
