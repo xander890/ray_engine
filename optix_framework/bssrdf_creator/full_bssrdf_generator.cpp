@@ -415,7 +415,6 @@ void FullBSSRDFGenerator::post_draw_callback()
 					mLoader->load_hemisphere(data, index.mData);
 					mExternalBSSRDFBuffer->unmap();
 
-
 					float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
 					mParametersSimulation.get_parameters(index, theta_i, r, theta_s, albedo, g, eta);
 					// Second one is ignored anyways in this configuration...

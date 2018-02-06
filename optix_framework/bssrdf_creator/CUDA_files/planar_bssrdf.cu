@@ -37,15 +37,16 @@ RT_PROGRAM void reference_bssrdf_camera()
 	float extinction = planar_bssrdf_material_params->extinction.x;
 	float g = planar_bssrdf_material_params->meancosine.x;
 	float theta_s = reference_bssrdf_data.mThetas.x;
-	float r = reference_bssrdf_data.mRadius.x;
+	float r =  reference_bssrdf_data.mRadius.x;
 
     BSSRDFGeometry geometry;
 	get_reference_scene_geometry(theta_i, r, theta_s, geometry.xi, geometry.wi, geometry.ni, geometry.xo, geometry.no);
-	  
-	  
+
+    float2 angles;
 	if (reference_bssrdf_output_shape == OutputShape::HEMISPHERE)
 	{   
-		float2 angles = get_normalized_hemisphere_buffer_angles(uv.x, uv.y);
+		angles = get_normalized_hemisphere_buffer_angles(uv.x, uv.y);//get_bin_center(uv.x, uv.y, reference_bssrdf_data.mPhioBins, reference_bssrdf_data.mThetaoBins);
+        angles.y = fmaxf(0.001f, angles.y);
 		geometry.wo = optix::make_float3(sinf(angles.y) * cosf(angles.x), sinf(angles.y) * sinf(angles.x), cosf(angles.y));
 	}
 	else  
@@ -61,8 +62,6 @@ RT_PROGRAM void reference_bssrdf_camera()
     mat.scattering_properties = planar_bssrdf_material_params[0];
     TEASampler sampler(launch_dim.x*launch_index.y + launch_index.x, 0);
     optix::float3 S = bssrdf(geometry, n1_over_n2, mat, BSSRDFFlags::NO_FLAGS, sampler);
-	//optix::float3 SE = eval_empbssrdf(geometry, n1_over_n2, mat, BSSRDFFlags::NO_FLAGS, &sampler);
-	optix_print("S: %f, S.x");
 	planar_resulting_flux_intermediate[launch_index] = S.x;
 } 
       

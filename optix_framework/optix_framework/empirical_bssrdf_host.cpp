@@ -5,15 +5,6 @@
 #include "scattering_properties.h"
 #include "empirical_bssrdf_utils.h"
 
-std::vector<float> convert_to_rad(const std::vector<float> & vec)
-{
-    std::vector<float> n;
-    for(auto & v : vec)
-    {
-        n.push_back(deg2rad(v));
-    }
-    return n;
-}
 
 void EmpiricalBSSRDF::prepare_buffers()
 {
@@ -32,45 +23,22 @@ void EmpiricalBSSRDF::prepare_buffers()
     std::vector<size_t> full_dimensions;
     mBSSRDFLoader->get_dimensions(full_dimensions);
     mParameterSizeBuffer = create_buffer<int>(mContext, RT_BUFFER_INPUT, 5);
-    size_t phi_o_size = mBSSRDFLoader->get_hemisphere_phi_o();
-    size_t theta_o_size = mBSSRDFLoader->get_hemisphere_theta_o();
     int* buf = reinterpret_cast<int*>(mParameterSizeBuffer->map());
     buf[0] = full_dimensions[theta_s_index];
     buf[1] = full_dimensions[r_index];
     buf[2] = full_dimensions[theta_i_index];
-    buf[3] = theta_o_size;
-    buf[4] = phi_o_size;
+    buf[4] = full_dimensions[phi_o_index];
+    buf[3] = full_dimensions[theta_o_index];
     mParameterSizeBuffer->unmap();
 
     auto parameters = mBSSRDFLoader->get_parameters();
-    auto converted_theta_i = convert_to_rad(parameters[theta_i_index]);
-    auto converted_theta_s = convert_to_rad(parameters[theta_s_index]);
-
-    mParameterBuffers.buffers[0] = create_and_initialize_buffer(mContext,converted_theta_s )->getId();
+    mParameterBuffers.buffers[0] = create_and_initialize_buffer(mContext, parameters[theta_s_index] )->getId();
     mParameterBuffers.buffers[1] = create_and_initialize_buffer(mContext,parameters[r_index] )->getId();
-    mParameterBuffers.buffers[2] = create_and_initialize_buffer(mContext,converted_theta_i )->getId();
-
-    optix::Buffer phioBuffer = create_buffer<float>(mContext, RT_BUFFER_INPUT, phi_o_size);
-    float * pbuf = reinterpret_cast<float*>(phioBuffer->map());
-    for(int i = 0; i < phi_o_size; i++)
-    {
-        pbuf[i] = get_normalized_hemisphere_buffer_angles(((float)i) / phi_o_size, 0.0f).x;
-    }
-    phioBuffer->unmap();
-    optix::Buffer thetaoBuffer = create_buffer<float>(mContext, RT_BUFFER_INPUT, theta_o_size);
-    float * tbuf = reinterpret_cast<float*>(thetaoBuffer->map());
-    for(int i = 0; i < theta_o_size; i++)
-    {
-        tbuf[i] = get_normalized_hemisphere_buffer_angles(0.0f, ((float)(i+1)) / theta_o_size).y;
-    }
-    thetaoBuffer->unmap();
-    mParameterBuffers.buffers[4] = (phioBuffer)->getId();
-    mParameterBuffers.buffers[3] = (thetaoBuffer)->getId();
-
+    mParameterBuffers.buffers[2] = create_and_initialize_buffer(mContext, parameters[theta_i_index] )->getId();
+    mParameterBuffers.buffers[4] = create_and_initialize_buffer(mContext, parameters[phi_o_index] )->getId();
+    mParameterBuffers.buffers[3] = create_and_initialize_buffer(mContext, parameters[theta_o_index] )->getId();
     mManager = std::make_unique<BSSRDFParameterManager>(parameters);
     mInitialized = true;
-
-
 }
 
 EmpiricalBSSRDF::EmpiricalBSSRDF(optix::Context & context): BSSRDF(context, ScatteringDipole::EMPIRICAL_BSSRDF)

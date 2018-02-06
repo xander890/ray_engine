@@ -8,6 +8,16 @@
 #include <string_utils.h>
 #include "empirical_bssrdf_utils.h"
 
+std::vector<float> convert_to_rad(const std::vector<float> & vec)
+{
+    std::vector<float> n;
+    for(auto & v : vec)
+    {
+        n.push_back(deg2rad(v));
+    }
+    return n;
+}
+
 std::string get_filename(const std::string & filename, const std::vector<size_t> & idx, const std::map<size_t, std::vector<float>> & params)
 {
 	std::stringstream file;
@@ -32,31 +42,14 @@ void parameters_to_string(const std::map<size_t, std::vector<float>> & parameter
 	std::stringstream ss;
 	for (auto & p : parameters)
 	{
-		ss << parameter_delimiter << " " << names.at(p.first) << " " << tostring(p.second) << std::endl;
+        std::string n = tostring(p.second);
+        if(p.first == theta_i_index || p.first == theta_s_index)
+        {
+            n = tostring(convert_to_rad(p.second));
+        }
+		ss << parameter_delimiter << " " << names.at(p.first) << " " << n << std::endl;
 	}
 	result = ss.str();
-}
-
-void string_to_parameters(const std::string & parse, const std::map<size_t, std::string> & names, std::map<size_t, std::vector<float>> & parameters)
-{
-	std::stringstream ss(parse);
-	std::string str;
-	while (std::getline(ss, str)) {
-		if (str.size() >= parameter_delimiter.size() && str.substr(0, parameter_delimiter.size()) == parameter_delimiter)
-		{
-			std::stringstream ss(str.substr(parameter_delimiter.size()));
-			std::string name;
-			ss >> name;
-			std::string s = ss.str();
-			s.erase(0, name.length() + 1);
-			auto res = std::find_if(std::begin(names), std::end(names), [&](const auto &pair)
-			{
-				return pair.second == name;
-			});
-			if (res != names.end())
-				parameters[res->first] = tovalue<std::vector<float>>(s);
-		}
-	}
 }
 
 BSSRDFImporter::BSSRDFImporter(const std::string & filename)
@@ -160,31 +153,12 @@ bool BSSRDFImporter::load_hemisphere(float * bssrdf_data, const std::vector<size
 	
 bool BSSRDFImporter::parse_header()
 {
-
-	std::ifstream file(mFileName, std::ofstream::in | std::ofstream::binary);
-
-#define MAX_HEADER_SIZE 8192
-	char header[MAX_HEADER_SIZE];
-	file.read(header, MAX_HEADER_SIZE * sizeof(char));
-	std::string str(header);
-
-	size_t bssrdf_del = str.find(std::string("\n") + bssrdf_delimiter);
+	std::ifstream file(mFileName);
+    std::string str;
 
 	bool parsed_dimensions = false;
-	bool has_bssrdf_flag = false;
 
-	mBSSRDFStart = str.find("\n", bssrdf_del + 1) + 1;
-
-	string_to_parameters(str.substr(0, mBSSRDFStart), BSSRDFParameterManager::parameter_names, mParameters);
-
-	std::stringstream ss(str);
-
-	while (std::getline(ss, str)) {
-		if (str.size() >= bssrdf_delimiter.size() && str.substr(0, bssrdf_delimiter.size()).compare(bssrdf_delimiter) == 0)
-		{
-			has_bssrdf_flag = true;
-			break;
-		}
+	while (std::getline(file, str)) {
 		if (str.size() >= size_delimiter.size() && str.substr(0, size_delimiter.size()).compare(size_delimiter) == 0)
 		{
 			std::stringstream ss (str.substr(size_delimiter.size()));
@@ -198,10 +172,24 @@ bool BSSRDFImporter::parse_header()
 			}
 			parsed_dimensions = true;
 		}
+        if (str.size() >= parameter_delimiter.size() && str.substr(0, parameter_delimiter.size()) == parameter_delimiter)
+        {
+            std::stringstream ss(str.substr(parameter_delimiter.size()));
+            std::string name;
+            ss >> name;
+            std::string s = ss.str();
+            s.erase(0, name.length() + 1);
+            auto res = std::find_if(std::begin(BSSRDFParameterManager::parameter_names), std::end(BSSRDFParameterManager::parameter_names), [&](const auto &pair)
+            {
+                return pair.second == name;
+            });
+            if (res != BSSRDFParameterManager::parameter_names.end())
+                mParameters[res->first] = tovalue<std::vector<float>>(s);
+        }
 		if (!str.empty() && str[0] == '#')
 			continue;
 	}
-	return has_bssrdf_flag && parsed_dimensions;
+	return parsed_dimensions;
 }
 
 
@@ -314,7 +302,7 @@ std::string BSSRDFExporter::create_header()
 	}
 	ss << mPhioSize << " " << mThetaoSize;
 	ss << std::endl;
-	ss << "#eta\tg\talbedo\ttheta_s\tr\ttheta_i\tphi_o\ttheta_o" << std::endl;
+	ss << "#eta g albedo theta_s r theta_i phi_o theta_o" << std::endl;
 
 	std::string params;
 	parameters_to_string(mManager.parameters, BSSRDFParameterManager::parameter_names, params);
@@ -324,7 +312,7 @@ std::string BSSRDFExporter::create_header()
     for(int i = 0; i <= mPhioSize; i++)
 	{
         float normalized = static_cast<float>(i) / mPhioSize;
-        ss << std::to_string(get_phi_o(normalized));
+        ss << " " << std::to_string(get_phi_o(normalized));
 	}
     ss << std::endl;
 
@@ -332,10 +320,9 @@ std::string BSSRDFExporter::create_header()
     for(int i = 0; i <= mThetaoSize; i++)
     {
         float normalized = static_cast<float>(i) / mThetaoSize;
-        ss << std::to_string(get_phi_o(normalized));
+        ss << " " << std::to_string(get_theta_o(normalized));
     }
     ss << std::endl;
     ss << bssrdf_delimiter << std::endl;
-	size_t t = ss.tellp();
 	return ss.str();
 }

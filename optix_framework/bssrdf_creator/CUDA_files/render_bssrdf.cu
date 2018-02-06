@@ -18,6 +18,12 @@ rtDeclareVariable(OutputShape::Type, reference_bssrdf_output_shape, , ) = Output
 rtDeclareVariable(int, reference_bssrdf_fresnel_mode, , ) = BSSRDF_RENDER_MODE_FULL_BSSRDF;
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
 
+__device__ __forceinline__ float convert_to_tex_coordinate(float normalized_buffer_coordinate, unsigned int size)
+{
+	float sz = static_cast<float>(size);
+	float factor = (sz - 1.0f) / sz;
+	return 0.5f / sz + normalized_buffer_coordinate * factor;
+}
 
 RT_PROGRAM void render_ref()
 {
@@ -38,8 +44,14 @@ RT_PROGRAM void render_ref()
 		{
 			float theta_o = M_PIf * 0.5f * l;
 			float2 coords = get_normalized_hemisphere_buffer_coordinates(phi_o,theta_o);
+			optix::uint3 size = optix::rtTexSize(resulting_flux_tex);
+			float2 texcoords;
+			texcoords.x = convert_to_tex_coordinate(coords.x, size.x);
+			texcoords.y = convert_to_tex_coordinate(coords.y, size.y);
+
 			float cos_theta_o = cosf(theta_o);
-			float S = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, coords.x, coords.y).x;
+			float S = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, texcoords.x, texcoords.y).x;
+            //float S = reference_scale_multiplier * optix::rtTex2DFetch<float4>(resulting_flux_tex, int(coords.x * size.x), int(coords.y * size.y)).x;
 			float T21 = 1.0f - fresnel_R(cos_theta_o, reference_bssrdf_rel_ior);
 
 			float val;
@@ -70,8 +82,8 @@ RT_PROGRAM void render_ref()
 		float S = optix::rtTex2D<float4>(resulting_flux_tex, uv.x, uv.y).x;
 		float S_shown = reference_scale_multiplier * fresnel_integral / T21 * S;
 
-		float t = clamp((log(S_shown + 1.0e-10) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);
-		float h = clamp((1.0 - t)*2.0f, 0.0f, 0.65f);
+		float t = clamp((logf(S_shown + 1.0e-10f) / 2.30258509299f + 6.0f) / 6.0f, 0.0f, 1.0f);
+		float h = clamp((1.0f - t)*2.0f, 0.0f, 0.65f);
 
 		optix::float4 res = make_float4(S_shown);
 		if (show_false_colors)

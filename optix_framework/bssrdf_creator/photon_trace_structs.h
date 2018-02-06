@@ -68,6 +68,8 @@ struct BSSRDFRendererData
     float mSolidAngle;
 	float mDeltaR;
 	float mDeltaThetas;
+	unsigned int mPhioBins;
+	unsigned int mThetaoBins;
 };
 
 struct BSSRDFSimulatedOptions

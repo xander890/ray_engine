@@ -145,6 +145,8 @@ void BSSRDFRenderer::fill_geometry_data() {
 	mGeometryData.mSolidAngle = 2.0f * M_PIf / (mShapeSize.x * mShapeSize.y);
 	mGeometryData.mDeltaR = mRadius.y - mRadius.x;
 	mGeometryData.mDeltaThetas = theta_s.y - theta_s.x;
+	mGeometryData.mPhioBins = mShapeSize.x;
+	mGeometryData.mThetaoBins = mShapeSize.y;
 }
 
 void BSSRDFRenderer::get_geometry_parameters(float &theta_i, optix::float2 &r, optix::float2 &theta_s) {

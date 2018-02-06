@@ -40,7 +40,6 @@ __forceinline__ __host__ __device__ float get_phi_o(float phi_o_normalized)
     return phi_o_normalized * (2.0f * M_PIf);
 }
 
-
 __forceinline__ __host__ __device__ float get_theta_o(float theta_o_normalized)
 {
 #ifdef USE_UNIFORM_STORAGE
@@ -74,6 +73,15 @@ __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buff
 	return optix::make_float2(phi_o, theta_o);
 }
 
+__forceinline__ __host__ __device__ optix::float2 get_bin_center(float phi_o_normalized, float theta_o_normalized, unsigned int phi_o_size, unsigned int theta_o_size)
+{
+    const float phi_o_low = get_phi_o(floorf(phi_o_normalized * phi_o_size) / phi_o_size);
+    const float phi_o_high = get_phi_o((floorf(phi_o_normalized * phi_o_size) + 1) / phi_o_size);
+    const float theta_o_low = get_theta_o(floorf(theta_o_normalized * theta_o_size) / theta_o_size);
+    const float theta_o_high = get_theta_o((floorf(theta_o_normalized * theta_o_size) + 1) / theta_o_size);
+    return optix::make_float2(phi_o_low + phi_o_high, theta_o_low + theta_o_high) * 0.5f;
+}
+
 __forceinline__ __device__ void print_v3(const optix::float3 & v)
 {
     optix_print("%f %f %f\n", v.x, v.y,v.z);
@@ -90,6 +98,7 @@ __forceinline__ __device__ bool compare_geometries(const BSSRDFGeometry & g1, co
     return e0 & e1 & e2 & e3 & e4 & e5;
 }
 
+/*
 __forceinline__ __device__ void empirical_bssrdf_build_geometry_from_exit(const optix::float3& xo, const optix::float3& wo, const optix::float3& no, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
 {
     geometry.xo = xo;
@@ -116,7 +125,7 @@ __forceinline__ __device__ void empirical_bssrdf_build_geometry_from_exit(const 
     geometry.xi = geometry.xo - r * x_vec;
     geometry.wi = sinf(theta_i) * (-tangent) + cosf(theta_i) * no;
 }
-
+*/
 
 __forceinline__ __device__ void empirical_bssrdf_build_geometry(const optix::float3& xi, const optix::float3& wi, const optix::float3& n, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
 {
@@ -137,11 +146,11 @@ __forceinline__ __device__ void empirical_bssrdf_build_geometry(const optix::flo
     geometry.wi = wi;
     optix_assert(fabsf(acosf(dot(wi,n)) - theta_i) < 1e-6);
 
-	const optix::float3 xoxi =  cosf(theta_s) * tangent +  sinf(theta_s) * bitangent;
+	const optix::float3 xoxi =  cosf(theta_s) * tangent + sinf(theta_s) * bitangent;
 	geometry.xo = xi + r * xoxi;
 
 	const optix::float3 wo_s = optix::make_float3(sinf(theta_o) * cosf(phi_o), sinf(theta_o) * sinf(phi_o), cosf(theta_o));
-    float sign = theta_s > 0? -1 : 1;
+    float sign = signf(theta_s);
 	geometry.wo = tangent * wo_s.x + sign * bitangent * wo_s.y + geometry.no * wo_s.z;
 }
 
@@ -165,23 +174,27 @@ __forceinline__ __device__ void empirical_bssrdf_get_geometry(const BSSRDFGeomet
 
     float theta_s_original = theta_s;
 	// theta_s mirroring.
-    const optix::float3 x_h = cross(z_bar,geometry.no);
-    optix::float3 z_h = cross(geometry.no,x_h);
+    //const optix::float3 x_h = cross(z_bar,geometry.no);
+    //optix::float3 z_h = cross(geometry.no,x_h);
 
-	// The standard bssrdf is defined with theta_s < 0 in mind. In this case, we mirror.
-	// See fig. 4-d of the original paper for reference.
-	if(theta_s > 0) {
-        z_h = -z_h;
+	if(theta_s < 0) {
+        z_bar = -z_bar;
+        theta_s = fabsf(theta_s);
 	}
-
-	theta_s = abs(theta_s);
 
 	optix::float3 xo_bar = normalize(geometry.wo - cos_theta_o * geometry.no);
 	theta_o = acosf(cos_theta_o);
-	phi_o = atan2f(dot(z_h,xo_bar), dot(x_h,xo_bar));
+
+    if(fabs(theta_o) <= 1e-6f)
+    {
+        xo_bar = x_norm;
+    }
+
+    phi_o = atan2f(dot(z_bar,xo_bar), dot(x_bar,xo_bar));
 
 	phi_o = normalize_angle(phi_o);
 	r = optix::length(x);
+
 
     optix_assert(theta_i >= 0 && theta_i <= M_PIf/2);
 	optix_assert(theta_s >= 0 && theta_s <= M_PIf);
@@ -194,9 +207,9 @@ __forceinline__ __device__ void empirical_bssrdf_get_geometry(const BSSRDFGeomet
 	empirical_bssrdf_build_geometry(geometry.xi, geometry.wi, geometry.ni, theta_i, r, theta_s_original, theta_o, phi_o, gg);
 	bool res = compare_geometries(gg, geometry);
 	optix_print("Geometries in: %s\n", res? "yes" : "no");
-    BSSRDFGeometry gg2;
-    empirical_bssrdf_build_geometry_from_exit(geometry.xo, geometry.wo, geometry.no, theta_i, r, theta_s_original, theta_o, phi_o, gg2);
-    bool res2 = compare_geometries(gg2, geometry);
-    optix_print("Geometries out: %s\n", res2? "yes" : "no");
+//    BSSRDFGeometry gg2;
+//    empirical_bssrdf_build_geometry_from_exit(geometry.xo, geometry.wo, geometry.no, theta_i, r, theta_s_original, theta_o, phi_o, gg2);
+//    bool res2 = compare_geometries(gg2, geometry);
+//    optix_print("Geometries out: %s\n", res2? "yes" : "no");
 #endif
 }

@@ -106,4 +106,4 @@ using BufPtr3D = BufPtr<T, 3>;
 #endif
 
 // FIXME temporary, remove me.
-#define DEFAULT_EMPIRICAL_CORRECTION 1000.0f
+#define DEFAULT_EMPIRICAL_CORRECTION 1.0f

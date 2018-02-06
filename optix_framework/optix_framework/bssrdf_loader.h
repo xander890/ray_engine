@@ -10,7 +10,6 @@
 #define size_delimiter std::string("SIZE")
 #define parameter_delimiter std::string("PARAMETER")
 
-
 class BSSRDFImporter
 {
 public:
@@ -28,7 +27,6 @@ public:
 private:
 	bool parse_header();
 	std::vector<size_t> mDimensions;
-	size_t mBSSRDFStart = 0;
 	std::string mFileName;
 	std::map<size_t, std::vector<float>> mParameters;
 };
