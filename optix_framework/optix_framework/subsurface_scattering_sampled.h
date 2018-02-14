@@ -76,14 +76,13 @@ __device__ __forceinline__ void _shade()
 	R = bssrdf_sampling_properties->show_mode == BSSRDF_SHADERS_SHOW_REFRACTION ? 0.0f : R;
 
     // Trace reflected ray
-#if 0
+#if 1
 	if (reflect_xi < R)
 	{
 		float3 wr = -reflect(wo, no);
 		PerRayData_radiance prd_reflected = prepare_new_pt_payload(prd_radiance);
 		Ray reflected(xo, wr,  RayType::RADIANCE, scene_epsilon);
-rtTrace(top_object, reflected, prd_reflected);
-
+		rtTrace(top_object, reflected, prd_reflected);
 		prd_radiance.result += prd_reflected.result;
 	}
 #endif

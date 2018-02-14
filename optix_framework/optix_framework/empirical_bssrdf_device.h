@@ -174,7 +174,6 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
         if(r_s > 10.0f)
             continue;
 
-        r_s = clamp(r_s, 1e-6f, 10.0f);
         float values[5] = {theta_s, r_s, theta_i, theta_o, phi_o};
         //optix_print("theta_s %f\n", theta_s);
         optix_print("r %f (ext %f - %f)\n", r_s, extinction, r);
@@ -199,7 +198,6 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
     bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
 
     refract(geometry.wo, geometry.no, n1_over_n2, w21, R21);
-
 
     float F = include_fresnel_out? 1.0f : 1.0f/(1.0f - R21);
     optix_print("Extracted %f %f %f F %f\n", S.x, S.y, S.z, F);

@@ -59,6 +59,8 @@ void EmpiricalBSSRDF::load(const float relative_ior, const ScatteringMaterialPro
         Logger::info << "Scatt : " << props.scattering.x << " " << props.scattering.y << " "<< props.scattering.z << std::endl;
         Logger::info << "Albedo: " << props.albedo.x << " " << props.albedo.y << " "<< props.albedo.z << std::endl;
         Logger::info << "Ext   : " << props.extinction.x << " " << props.extinction.y << " "<< props.extinction.z << std::endl;
+        Logger::info << "G   : " << props.meancosine.x << " " << props.meancosine.y << " "<< props.meancosine.z << std::endl;
+        Logger::info << "Eta   : " << relative_ior << std::endl;
         Logger::info << "Loading new material for empirical bssrdf..." << std::endl;
         prepare_buffers();
 

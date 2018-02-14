@@ -98,6 +98,10 @@ bool BSSRDFImporter::load_material_slice(float * bssrdf_data, const std::vector<
 		Logger::error << "File not found. " << filename << std::endl;
 		return false;
 	}
+	else
+	{
+		Logger::info << "Loading file: " << filename << std::endl;
+	}
 	std::ifstream ifs;
 	ifs.open(filename, std::ofstream::in | std::ofstream::binary);
 	ifs.seekg(pos);

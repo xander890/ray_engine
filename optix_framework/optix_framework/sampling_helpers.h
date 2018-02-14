@@ -165,7 +165,7 @@ static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::
 	phi = 2.0f * M_PIf * sample.y;
 	p.x = r * cos(phi);
 	p.y = r * sin(phi);
-	pdf = sigma * sample.x / (2.0f* M_PIf);
+	pdf = sigma * expf(-sigma * r) / (2.0f* M_PIf);
 	return p;
 }
 

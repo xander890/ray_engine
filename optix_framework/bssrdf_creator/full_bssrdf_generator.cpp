@@ -655,6 +655,14 @@ void FullBSSRDFGenerator::set_external_bssrdf(const std::string & file)
 	mLoader = std::make_unique<BSSRDFImporter>(file);
 	auto phio = mLoader->get_hemisphere_phi_o();
 	auto thetao = mLoader->get_hemisphere_theta_o();
+
+	auto sl = mLoader->get_material_slice_size();
+	float * d2 = new float[sl];
+	mLoader->load_material_slice(d2, {0,0,0});
+	float mx = get_max(d2, sl);
+	Logger::info << "Calculated max: " << mx << std::endl;
+
+
 	mExternalBSSRDFBuffer->setSize(phio,thetao);
 	float * data = (float*)mExternalBSSRDFBuffer->map();
 	mLoader->load_hemisphere(data, {0,0,0,0,0,0});

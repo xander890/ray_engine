@@ -9,6 +9,7 @@
 #include <material_device.h>
 #include "phase_function.h"
 #include "volume_path_tracing_common.h"
+#include "bssrdf.h"
 
 using namespace optix;
 
@@ -53,7 +54,7 @@ __device__ __inline__ float get_asymmetry(const optix::float3 & pos, int colorba
     return *(&props.meancosine.x + colorband);
 }
 
-__device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASampler * sampler)
+__device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASampler * sampler, int & scattering_events)
 {
     float albedo = get_albedo(ray.origin, colorband);
     float g = get_asymmetry(ray.origin, colorband);
@@ -75,53 +76,10 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASam
     PerRayData_shadow prd_ray;
     prd_ray.attenuation = 1.0f;
 
-#ifdef USE_SIMILARITY
-
-    bool stop = false;
-    int counter = 0;
-    bool absorbed = false;
-    while (!stop)
+    for (scattering_events = 0; scattering_events < maximum_volume_steps; scattering_events++)
     {
-        albedo = get_albedo(ray.origin, colorband);
-        g = get_asymmetry(ray.origin, colorband);
-        extinction = get_extinction(ray.origin, colorband);
-        float red_extinction = get_reduced_extinction(ray.origin, colorband);
-
         // Sample new distance
-        float dist_exponent = (counter < SIMILARITY_STEPS) ? extinction : red_extinction;
-        ray.tmax = -log(rnd(t)) / dist_exponent;
-        prd_ray.attenuation = 1.0f;
-
-        rtTrace(top_shadower, ray, prd_ray);
-
-        if (prd_ray.attenuation > 0.0f)
-        {
-            // The shadow ray did not hit anything, i.e., still inside the volume
-            // New ray origin
-            ray.origin += ray.direction * ray.tmax;
-            // New ray direction 
-            ray.direction = (counter < SIMILARITY_STEPS) ? sample_HG(ray.direction, g, t) : sample_HG(ray.direction, t);
-        }
-        else break;
-
-        absorbed = rnd(t) > albedo;
-        stop = absorbed || prd_ray.attenuation <= 0.0f;
-
-    }
-    return !absorbed;
-#else
-    int steps = maximum_volume_steps;
-
-    if(volume_pt_mode == VOLUME_PT_SINGLE_SCATTERING_ONLY)
-    {
-        steps = 2;
-    }
-
-    for (int i = 0; i < steps; i++)
-    {
-        //extinction = get_extinction(ray.origin, colorband);
-        // Sample new distance
-        ray.tmax = -log(sampler->next1D()) / extinction;
+        ray.tmax = -logf(sampler->next1D()) / extinction;
 
         rtTrace(top_shadower, ray, prd_ray);
         if (prd_ray.attenuation > 0.0f)
@@ -131,26 +89,20 @@ __device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASam
             // New ray origin
             ray.origin += ray.direction * ray.tmax;
 
-          //  g = get_asymmetry(ray.origin, colorband);
-            // New ray direction 
+            // New ray direction
             ray.direction = sample_HG(ray.direction, g, sampler->next2D());
         }
         else // Intersection hit
         {
-            if(volume_pt_mode == VOLUME_PT_MULTIPLE_SCATTERING_ONLY && steps < 2)
-            {
-                return false;
-            }
             return true;
         }
 
-//        albedo = get_albedo(ray.origin, colorband);
         // Break if absorbed
         if (sampler->next1D() > albedo)
             return false;
     }
     return false;
-#endif
+
 }
 
 
@@ -177,7 +129,6 @@ RT_PROGRAM void shade()
     const MaterialDataCommon & material = get_material();
     float n1_over_n2 = 1.0f / material.relative_ior;
     float cos_theta_in = dot(normal, w_i);
-    float3 beam_T = make_float3(1.0f);
 
     // Russian roulette with absorption if arrived from dense medium
     bool inside = cos_theta_in < 0.0f;
@@ -185,16 +136,8 @@ RT_PROGRAM void shade()
     {
         n1_over_n2 = material.relative_ior;
         normal = -normal;
-        cos_theta_in = -cos_theta_in;
     }
-/*    else if (material.relative_ior < 1.0f)
-    {
-        beam_T = expf(-t_hit*props.absorption);
-        float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
-        if (prd_radiance.sampler->next1D() >= prob) return;
-        beam_T /= prob;
-    }
-*/
+
     // Compute Fresnel reflectance (R) and trace refracted ray if necessary
     float R;
 	float3 reflected_dir = -reflect(w_i, normal); 
@@ -222,19 +165,25 @@ RT_PROGRAM void shade()
             weight = 1.0f;
         }
 
-
         // Trace inside, i.e., reflect from inside or refract from outside
         float3 dir_inside = inside ? reflected_dir : refracted_dir;
         Ray ray_inside(hit_pos, dir_inside,  RayType::SHADOW, scene_epsilon, RT_DEFAULT_MAX);
 
-        if (scatter_inside(ray_inside, colorband, prd_radiance.sampler))
+        int scattering_events = 0;
+
+        if (scatter_inside(ray_inside, colorband, prd_radiance.sampler, scattering_events))
         {
+            if(volume_pt_mode == VOLUME_PT_SINGLE_SCATTERING_ONLY && scattering_events >= 2)
+                return;
+            if(volume_pt_mode == VOLUME_PT_MULTIPLE_SCATTERING_ONLY && scattering_events < 2)
+                return;
+
             // Switch to radiance ray and intersect with boundary
             ray_inside.ray_type =  RayType::RADIANCE;
             ray_inside.tmax = RT_DEFAULT_MAX;
             rtTrace(top_object, ray_inside, prd_radiance);
 
-            *(&prd_radiance.result.x + colorband) *= weight*(*(&beam_T.x + colorband));
+            *(&prd_radiance.result.x + colorband) *= weight;
             *(&prd_radiance.result.x + (colorband + 1) % 3) = 0.0f;
             *(&prd_radiance.result.x + (colorband + 2) % 3) = 0.0f;
         }
@@ -245,7 +194,7 @@ RT_PROGRAM void shade()
         float3 dir_outside = inside ? refracted_dir : reflected_dir;
         Ray ray_outside(hit_pos, dir_outside,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
         rtTrace(top_object, ray_outside, prd_radiance);
-        prd_radiance.result = beam_T * (prd_radiance.result);
+        prd_radiance.result = prd_radiance.result;
 
     }
 }
