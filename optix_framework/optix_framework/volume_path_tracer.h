@@ -26,16 +26,18 @@ public:
 		bool changed = ImmediateGUIDraw::InputInt("Maximum rays in volume", (int*)&max_vol_samples);
 		ImmediateGUIDraw::Text("Mode: ");
 		ImmediateGUIDraw::SameLine();
-		changed |= ImmediateGUIDraw::RadioButton("All", (int*)&mVolumePTMode, VOLUME_PT_INCLUDE_ALL);
+		changed |= ImmediateGUIDraw::CheckboxFlags("Direct transmission", &mVolumePTMode, VOLUME_PT_INCLUDE_DIRECT_TRANSMISSION);
 		ImmediateGUIDraw::SameLine();
-		changed |= ImmediateGUIDraw::RadioButton("Single scattering", (int*)&mVolumePTMode, VOLUME_PT_SINGLE_SCATTERING_ONLY);
+		changed |= ImmediateGUIDraw::CheckboxFlags("Single scattering", &mVolumePTMode, VOLUME_PT_INCLUDE_SINGLE_SCATTERING);
 		ImmediateGUIDraw::SameLine();
-		changed |= ImmediateGUIDraw::RadioButton("Multiple scattering", (int*)&mVolumePTMode, VOLUME_PT_MULTIPLE_SCATTERING_ONLY);
+		changed |= ImmediateGUIDraw::CheckboxFlags("Multiple scattering", &mVolumePTMode, VOLUME_PT_INCLUDE_MULTIPLE_SCATTERING);
+		changed |= ImmediateGUIDraw::CheckboxFlags("Exclude backlit", &mVolumePTMode, VOLUME_PT_EXCLUDE_BACKLIT);
+
 		return changed;
 	}
 
 	virtual Shader* clone() override { return new VolumePathTracer(*this); }
 
 	unsigned int max_vol_samples = 1000000;
-	unsigned int mVolumePTMode = VOLUME_PT_INCLUDE_ALL;
+	unsigned int mVolumePTMode = VOLUME_PT_INCLUDE_DIRECT_TRANSMISSION | VOLUME_PT_INCLUDE_SINGLE_SCATTERING | VOLUME_PT_INCLUDE_MULTIPLE_SCATTERING;
 };

@@ -138,6 +138,7 @@ bool SampledBSSRDF::on_draw()
 	ImmediateGUIDraw::Text("BSSRDF properties:");
 	mBSSRDF->on_draw();
 
+
     if(enum_selector_gui_BssrdfSamplingType(properties->sampling_method, "Sampling Technique"))
     {
         mHasChanged = true;
@@ -176,6 +177,7 @@ bool SampledBSSRDF::on_draw()
     }
 
 	mHasChanged |= ImmediateGUIDraw::Checkbox("Jacobian", (bool*)&properties->use_jacobian);
+	mHasChanged |= ImmediateGUIDraw::Checkbox("Exclude backfaces", (bool*)&properties->exclude_backfaces);
 	mHasChanged |= ImGui::RadioButton("Show all", &properties->show_mode, BSSRDF_SHADERS_SHOW_ALL); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Refraction", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFRACTION); ImGui::SameLine();
 	mHasChanged |= ImGui::RadioButton("Reflection", &properties->show_mode, BSSRDF_SHADERS_SHOW_REFLECTION);

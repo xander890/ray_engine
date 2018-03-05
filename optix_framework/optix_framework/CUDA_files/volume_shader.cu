@@ -148,6 +148,7 @@ RT_PROGRAM void shade()
     ++prd_radiance.depth;
     prd_radiance.flags |= RayFlags::USE_EMISSION;
     float xi = prd_radiance.sampler->next1D();
+
     if ((xi < R && inside) || (xi > R && !inside))
     {
         // Sample a color and set properties
@@ -173,10 +174,26 @@ RT_PROGRAM void shade()
 
         if (scatter_inside(ray_inside, colorband, prd_radiance.sampler, scattering_events))
         {
-            if(volume_pt_mode == VOLUME_PT_SINGLE_SCATTERING_ONLY && scattering_events >= 2)
+            bool include = (scattering_events == 0 && ((volume_pt_mode & VOLUME_PT_INCLUDE_DIRECT_TRANSMISSION) > 0));
+            include |= (scattering_events == 1 && ((volume_pt_mode & VOLUME_PT_INCLUDE_SINGLE_SCATTERING) > 0));
+            include |= (scattering_events > 1 && ((volume_pt_mode & VOLUME_PT_INCLUDE_MULTIPLE_SCATTERING) > 0));
+
+            if(!include)
                 return;
-            if(volume_pt_mode == VOLUME_PT_MULTIPLE_SCATTERING_ONLY && scattering_events < 2)
-                return;
+
+            if((volume_pt_mode & VOLUME_PT_EXCLUDE_BACKLIT) > 0)
+            {
+                PerRayData_normal_depth payload;
+                payload.depth = 0;
+                payload.normal = optix::make_float3(0.0f);
+                Ray ray_normal = optix::make_Ray(ray_inside.origin - ray_inside.direction * 1e-5f, ray_inside.direction,
+                    RayType::ATTRIBUTE, 0.0f, RT_DEFAULT_MAX);
+                rtTrace(top_object, ray_normal, payload);
+                optix::float3 no = payload.normal;
+                // Check backlit.
+                if(dot(no, normal) < 0.0f)
+                    return;
+            }
 
             // Switch to radiance ray and intersect with boundary
             ray_inside.ray_type =  RayType::RADIANCE;

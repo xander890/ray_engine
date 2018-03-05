@@ -90,6 +90,13 @@ __device__ __forceinline__ int get_index_upper(int parameter_index, const float 
     return candidate_index;
 }
 
+__device__ __forceinline__ optix::float3 get_modified_normal_frisvad(const optix::float3 & ni, const optix::float3 & xixo)
+{
+    if(length(xixo) < 1e-7f)
+        return ni;
+    const optix::float3 q = cross(ni, xixo);
+    return cross(normalize(xixo), normalize(q));
+}
 
 template<int N>
 __device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int slice)

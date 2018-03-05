@@ -25,6 +25,7 @@ rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload,);
 rtDeclareVariable(BufPtr<PositionSample>, sampling_output_buffer, ,);
 rtDeclareVariable(float3, shading_normal, attribute shading_normal,);
 rtDeclareVariable(float3, texcoord, attribute texcoord,);
+rtDeclareVariable(int, exclude_backfaces, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow()
@@ -43,34 +44,34 @@ RT_PROGRAM void shade()
         return;
     }
 
-    float3 n = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
-    float3 xo = ray.origin + t_hit * ray.direction;
-    float3 wo = -ray.direction;
-    float3 no = faceforward(n, wo, n);
-    const MaterialDataCommon &material = get_material(xo);
-    const ScatteringMaterialProperties &props = material.scattering_properties;
-    float recip_ior = 1.0f / material.relative_ior;
+    TEASampler * sampler = prd_radiance.sampler;
 
-    float reflect_xi = prd_radiance.sampler->next1D();
+    float3 no = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
+    float3 xo = ray.origin + t_hit*ray.direction;
+    float3 wo = -ray.direction;
+    const MaterialDataCommon material = get_material(xo);
+    const ScatteringMaterialProperties& props = material.scattering_properties;
+    float recip_ior = 1.0f / material.relative_ior;
+    float reflect_xi = sampler->next1D();
     prd_radiance.result = make_float3(0.0f);
 
     float3 beam_T = make_float3(1.0f);
-    float cos_theta_o = dot(wo, n);
+    float cos_theta_o = dot(wo, no);
     bool inside = cos_theta_o < 0.0f;
-
     if (inside)
     {
         beam_T = get_beam_transmittance(t_hit, props);
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
-        if (prd_radiance.sampler->next1D() >= prob)
-        { return; }
+        if (sampler->next1D() >= prob) return;
         beam_T /= prob;
         recip_ior = material.relative_ior;
+        cos_theta_o = -cos_theta_o;
+        no = -no;
     }
 
     float3 wt;
     float R;
-    refract(wo, n, recip_ior, wt, R);
+    refract(wo, no, recip_ior, wt, R);
 
     if (reflect_xi >= R)
     {
@@ -84,9 +85,9 @@ RT_PROGRAM void shade()
         {
             float chosen_transport_rr = dot(props.transport, make_float3(0.33333f));
             float3 accumulate = make_float3(0.0f);
-            uint N = sampling_output_buffer.size();
+            int N = sampling_output_buffer.size();
 
-            for (uint i = 0; i < N; ++i)
+            for (int i = 0; i < N; ++i)
             {
                 PositionSample &sample = sampling_output_buffer[i];
 
@@ -98,9 +99,12 @@ RT_PROGRAM void shade()
                 {
                     // Russian roulette
                     float dist = length(xo - sample.pos);
-                    float exp_term = exp(-dist * chosen_transport_rr);
+                    float exp_term = expf(-dist * chosen_transport_rr);
                     if (prd_radiance.sampler->next1D() < exp_term)
                     {
+                        if(exclude_backfaces == 1 && dot(no, sample.normal) < 0.0f)
+                            continue;
+
                         BSSRDFGeometry geometry;
                         geometry.xi = sample.pos;
                         geometry.ni = sample.normal;

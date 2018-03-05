@@ -79,5 +79,5 @@ struct BSSRDFSamplingProperties
 	int 										show_mode							DEFAULT(BSSRDF_SHADERS_SHOW_ALL);
     float                                       R_max                               DEFAULT(1.0f);
 	float 										sampling_inverse_mean_free_path		DEFAULT(0.0f);
-	int 										pad;
+	int 										exclude_backfaces					DEFAULT(0);
 };

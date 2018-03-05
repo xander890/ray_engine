@@ -25,6 +25,7 @@ private:
 	float mArea;
 	optix::Buffer mCdfBuffer;
 	std::unique_ptr<BSSRDF> mBSSRDF;
+	bool mExcludeBackFaces = false;
 };
 
 

@@ -36,6 +36,7 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
     context["sampling_normal_buffer"]->setBuffer(empty_buffer);
     context["sampling_vindex_buffer"]->setBuffer(empty_bufferi3);
     context["sampling_nindex_buffer"]->setBuffer(empty_bufferi3);
+	context["exclude_backfaces"]->setInt(mExcludeBackFaces? 0 : 1);
 
     mSampleBuffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
     mSampleBuffer->setFormat(RT_FORMAT_USER);
@@ -128,6 +129,11 @@ bool PresampledSurfaceBssrdf::on_draw()
 		mBSSRDF.reset();
 		mBSSRDF = BSSRDF::create(context, dipole);
 	}
+	if(ImmediateGUIDraw::Checkbox("Exclude backfaces", &mExcludeBackFaces))
+	{
+		context["exclude_backfaces"]->setInt(mExcludeBackFaces? 0 : 1);
+	}
+
 	ImmediateGUIDraw::Text("BSSRDF properties:");
 	mBSSRDF->on_draw();
 	if (ImmediateGUIDraw::InputInt("Area samples", (int*)&mSamples))

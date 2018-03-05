@@ -97,7 +97,6 @@ __device__ __forceinline__ void _shade()
 
 		if (!inside)
 		{
-
 			float3 L_d = make_float3(0.0f);
 			uint N = samples_per_pixel;
 
@@ -113,6 +112,11 @@ __device__ __forceinline__ void _shade()
 					optix_print("Sample non valid.\n");
 					continue;
 				}
+
+                if(bssrdf_sampling_properties->exclude_backfaces && dot(no, ni) < 0.0f)
+                {
+                    continue;
+                }
 
 				optix::float3 wi = make_float3(0);
 				optix::float3 L_i;
