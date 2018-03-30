@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <string_utils.h>
-#include "empirical_bssrdf_utils.h"
+#include "empirical_bssrdf_common.h"
 
 std::vector<float> convert_to_rad(const std::vector<float> & vec)
 {
@@ -316,7 +316,7 @@ std::string BSSRDFExporter::create_header()
     for(int i = 0; i <= mPhioSize; i++)
 	{
         float normalized = static_cast<float>(i) / mPhioSize;
-        ss << " " << std::to_string(get_phi_o(normalized));
+//        ss << " " << std::to_string(get_phi_o(normalized));
 	}
     ss << std::endl;
 
@@ -324,7 +324,7 @@ std::string BSSRDFExporter::create_header()
     for(int i = 0; i <= mThetaoSize; i++)
     {
         float normalized = static_cast<float>(i) / mThetaoSize;
-        ss << " " << std::to_string(get_theta_o(normalized));
+//        ss << " " << std::to_string(get_theta_o(normalized));
     }
     ss << std::endl;
     ss << bssrdf_delimiter << std::endl;

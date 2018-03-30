@@ -75,6 +75,14 @@ void BSSRDFRenderer::init()
 		mProperties->setSize(1);
 	}
 
+	if (mSolidAngleBuffer.get() == nullptr)
+	{
+		mSolidAngleBuffer = context->createBuffer(RT_BUFFER_INPUT);
+		mSolidAngleBuffer->setFormat(RT_FORMAT_FLOAT);
+		mSolidAngleBuffer->setSize(mShapeSize.x, mShapeSize.y);
+		fill_solid_angle_buffer();
+	}
+
 	reset();
 }
 
@@ -90,7 +98,7 @@ bool BSSRDFRenderer::on_draw(unsigned int flags)
 	optix::float2 backup_r = mRadius;
 
 	changed |= ImmediateGUIDraw::SliderFloat(GUI_LABEL("Incoming light angle (deg.)", mId), &backup_theta_i, 0, 90);
-	if ((flags & SHOW_GEOMETRY != 0) && mOutputShape == OutputShape::HEMISPHERE)
+	if ((flags & SHOW_GEOMETRY != 0))
 	{
 		changed |= ImmediateGUIDraw::InputFloat(GUI_LABEL("Radius (lower)", mId), &backup_r.x, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
 		changed |= ImmediateGUIDraw::InputFloat(GUI_LABEL("Radius (upper)", mId), &backup_r.y, 0, 0, -1, mIsReadOnly ? ImGuiInputTextFlags_ReadOnly : 0);
@@ -129,9 +137,6 @@ void BSSRDFRenderer::set_shape(OutputShape::Type shape)
 {
 	mOutputShape = shape;
 	mShapeSize = default_size(shape);
-	//resize_glbo_buffer<float>(mBSSRDFBufferIntermediate, mShapeSize.x*mShapeSize.y);
-	//resize_glbo_buffer<float>(mBSSRDFBuffer, mShapeSize.x*mShapeSize.y);
-
 	mBSSRDFBufferIntermediate->setSize(mShapeSize.x, mShapeSize.y);
 	mBSSRDFBuffer->setSize(mShapeSize.x, mShapeSize.y);
 }
@@ -142,11 +147,9 @@ void BSSRDFRenderer::fill_geometry_data() {
     mGeometryData.mThetas = theta_s;
     mGeometryData.mRadius = mRadius;
 	mGeometryData.mArea = (mRadius.y*mRadius.y - mRadius.x*mRadius.x) * 0.5f * (theta_s.y - theta_s.x);
-	mGeometryData.mSolidAngle = 2.0f * M_PIf / (mShapeSize.x * mShapeSize.y);
+	mGeometryData.mSolidAngleBuffer = mSolidAngleBuffer->getId();
 	mGeometryData.mDeltaR = mRadius.y - mRadius.x;
 	mGeometryData.mDeltaThetas = theta_s.y - theta_s.x;
-	mGeometryData.mPhioBins = mShapeSize.x;
-	mGeometryData.mThetaoBins = mShapeSize.y;
 }
 
 void BSSRDFRenderer::get_geometry_parameters(float &theta_i, optix::float2 &r, optix::float2 &theta_s) {
@@ -181,7 +184,17 @@ BSSRDFRenderer::~BSSRDFRenderer() {
 }
 
 optix::uint2 BSSRDFRenderer::default_size(OutputShape::Type shape) {
-	return shape == OutputShape::HEMISPHERE ? optix::make_uint2(160,40) : optix::make_uint2(400, 400);
+	return shape == OutputShape::HEMISPHERE ? optix::make_uint2(160,40) : optix::make_uint2(80,80);
+}
+
+void BSSRDFRenderer::fill_solid_angle_buffer()
+{
+	float * buf = reinterpret_cast<float*>(mSolidAngleBuffer->map());
+	for(int i = 0; i < mShapeSize.x*mShapeSize.y; i++)
+	{
+		buf[i] = 2.0f * M_PIf / (mShapeSize.x * mShapeSize.y);
+	}
+	mSolidAngleBuffer->unmap();
 }
 
 void BSSRDFRendererModel::init()

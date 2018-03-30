@@ -1,13 +1,13 @@
 #pragma once
 #include "host_device_common.h"
 #include "random.h"
+#include "empirical_bssrdf_common.h"
 #define PHOTON_STATUS_NEW 0
 #define PHOTON_STATUS_SCATTERING 1
 
 //#define INCLUDE_SINGLE_SCATTERING/
 //#define INCLUDE_GEOMETRIC_TERM
 #define ACCURATE_RANDOM
-#define RAAB_ET_AL_FIX
 #define TERMINATE_ON_SMALL_FLUX
 
 #ifdef ACCURATE_RANDOM
@@ -28,11 +28,6 @@ __device__ __forceinline__ void init_seed(SEED_TYPE & seed, unsigned long long q
 
 #define IMPROVED_ENUM_NAME BiasMode
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(BIAS_ONLY,0) ENUMITEM_VALUE(BIASED_RESULT,1) ENUMITEM_VALUE(RENDER_ALL,2)
-#include "improved_enum.def"
-
-
-#define IMPROVED_ENUM_NAME OutputShape
-#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(PLANE,0) ENUMITEM_VALUE(HEMISPHERE,1)
 #include "improved_enum.def"
 
 struct PhotonSample
@@ -65,11 +60,9 @@ struct BSSRDFRendererData
     optix::float2 mThetas       DEFAULT(optix::make_float2(0.0f, 7.5));
     optix::float2 mRadius       DEFAULT(optix::make_float2(0.0f, 1.f));
     float mArea;
-    float mSolidAngle;
+    rtBufferId<float, 2> mSolidAngleBuffer;
 	float mDeltaR;
 	float mDeltaThetas;
-	unsigned int mPhioBins;
-	unsigned int mThetaoBins;
 };
 
 struct BSSRDFSimulatedOptions

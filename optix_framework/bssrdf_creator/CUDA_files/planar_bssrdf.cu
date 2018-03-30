@@ -7,7 +7,7 @@
 #include <device_common_data.h>
 #include <md5.h>
 #include <material.h>
-#include "empirical_bssrdf_utils.h"
+#include "empirical_bssrdf_common.h"
 #include <bssrdf.h>
 #include "../photon_trace_reference_bssrdf.h"
 using namespace optix;
@@ -43,18 +43,9 @@ RT_PROGRAM void reference_bssrdf_camera()
 	get_reference_scene_geometry(theta_i, r, theta_s, geometry.xi, geometry.wi, geometry.ni, geometry.xo, geometry.no);
 
     float2 angles;
-	if (reference_bssrdf_output_shape == OutputShape::HEMISPHERE)
-	{   
-		angles = get_normalized_hemisphere_buffer_angles(uv.x, uv.y);//get_bin_center(uv.x, uv.y, reference_bssrdf_data.mPhioBins, reference_bssrdf_data.mThetaoBins);
-        angles.y = fmaxf(0.001f, angles.y);
-		geometry.wo = optix::make_float3(sinf(angles.y) * cosf(angles.x), sinf(angles.y) * sinf(angles.x), cosf(angles.y));
-	}
-	else  
-	{      
-		geometry.wo = normalize(optix::make_float3(sinf(reference_bssrdf_theta_o), 0, cosf(reference_bssrdf_theta_o)));
-		optix::float2 plan = get_planar_buffer_coordinates(uv);
-		geometry.xo = make_float3(plan.x, plan.y, 0);
-	} 
+	angles = get_normalized_hemisphere_buffer_angles(reference_bssrdf_output_shape, uv.x, uv.y);//get_bin_center(uv.x, uv.y, reference_bssrdf_data.mPhioBins, reference_bssrdf_data.mThetaoBins);
+	angles.y = fmaxf(0.001f, angles.y);
+	geometry.wo = optix::make_float3(sinf(angles.y) * cosf(angles.x), sinf(angles.y) * sinf(angles.x), cosf(angles.y));
 
 	const float n1_over_n2 = 1.0f / n2_over_n1;
 

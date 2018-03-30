@@ -3,7 +3,7 @@
 #include <immediate_gui.h>
 #include "bssrdf_host.h"
 #include "bssrdf_loader.h"
-#include "empirical_bssrdf_utils.h"
+#include "empirical_bssrdf_common.h"
 
 class BSSRDFImporter;
 
@@ -13,17 +13,7 @@ public:
 	EmpiricalBSSRDF(optix::Context & ctx);
     ~EmpiricalBSSRDF() {}
 	void load(const float relative_ior, const ScatteringMaterialProperties &props) override;
-	bool on_draw() override {
-		if(ImmediateGUIDraw::InputFloat("Correction" ,&mCorrection))
-        {
-            mContext["empirical_bssrdf_correction"]->setFloat(mCorrection);
-        }
-		if(ImmediateGUIDraw::Combo("Interpolation", (int*)&mInterpolation, "Nearest\0Linear", 2))
-		{
-			mContext["empirical_bssrdf_interpolation"]->setUint(mInterpolation);
-		}
-
-	}
+	bool on_draw() override;
 
 private:
     void prepare_buffers();
@@ -36,4 +26,5 @@ private:
     std::unique_ptr<BSSRDFParameterManager> mManager = nullptr;
 	float mCorrection = DEFAULT_EMPIRICAL_CORRECTION;
 	unsigned int mInterpolation = 0;
+    EmpiricalBSSRDFNonPlanarity::Type mNonPlanarSurfacesHandles = EmpiricalBSSRDFNonPlanarity::UNCHANGED;
 };

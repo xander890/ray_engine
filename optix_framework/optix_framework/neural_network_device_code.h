@@ -8,7 +8,7 @@
 #include <sampling_helpers.h>
 #include "material.h"
 #include "bssrdf_properties.h"
-#include "empirical_bssrdf_utils.h"
+#include "empirical_bssrdf_common.h"
 
 // HyperNetwork parameters
 rtDeclareVariable(int, hypernetwork_num_layers, , );

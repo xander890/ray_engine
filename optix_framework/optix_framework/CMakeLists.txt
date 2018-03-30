@@ -127,12 +127,12 @@ set(HEADERS
     bssrdf_parameter_manager.h
     empirical_bssrdf_device.h
     empirical_bssrdf_host.h
-    empirical_bssrdf_utils.h
+        empirical_bssrdf_common.h
     improved_enum.def
     volume_path_tracing_common.h 
     subsurface_scattering_sampled_common.h
     subsurface_scattering_sampled.h
-)
+        hemisphere_partitions.h)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp

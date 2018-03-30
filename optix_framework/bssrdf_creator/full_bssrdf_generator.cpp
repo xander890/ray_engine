@@ -226,7 +226,6 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 		if (mCurrentRenderMode == RenderMode::RENDER_BSSRDF)
 		{
 			mCurrentBssrdfRenderer->render();
-			m_context["plane_size"]->setFloat(mPlaneSize);
 			m_context["show_false_colors"]->setUint(mShowFalseColors);
 			m_context["reference_bssrdf_fresnel_mode"]->setInt(mFresnelMode);
 
@@ -344,7 +343,8 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 
 		static OutputShape::Type shape = mCurrentBssrdfRenderer->get_shape();
-		ImmediateGUIDraw::Text("Simulation shape:   ");
+
+		ImmediateGUIDraw::Text("Storage shape:   ");
 		ImmediateGUIDraw::SameLine();
 		bool changed_shape = ImmediateGUIDraw::RadioButton("Hemisphere", (int*)&shape, OutputShape::HEMISPHERE);
 		ImmediateGUIDraw::SameLine();

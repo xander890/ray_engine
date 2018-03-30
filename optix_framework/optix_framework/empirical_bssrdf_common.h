@@ -3,7 +3,21 @@
 #include "bssrdf_properties.h"
 #include "math_helpers.h"
 //#define USE_OLD_STORAGE
-//#define USE_UNIFORM_STORAGE
+
+#define UNIFORM_POLAR_STORAGE 0
+#define HEMI_UNIFORM_POLAR_STORAGE 1
+#define HEMI_UNIFORM_POLAR_STORAGE_OLD 2
+#define USE_STORAGE HEMI_UNIFORM_POLAR_STORAGE
+
+// Ways to handle NPG (non-planar geometry)
+#define IMPROVED_ENUM_NAME EmpiricalBSSRDFNonPlanarity
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(UNCHANGED,0) ENUMITEM_VALUE(NO_ONLY,1) ENUMITEM_VALUE(NI_ONLY,2) ENUMITEM_VALUE(MODIFIED_TANGENT_PLANE,3) ENUMITEM_VALUE(MODIFIED_TANGENT_PLANE_ALL,4) ENUMITEM_VALUE(MUTUAL_ROTATION,5)
+#include "improved_enum.def"
+
+#define IMPROVED_ENUM_NAME OutputShape
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(PLANE,0) ENUMITEM_VALUE(HEMISPHERE,1)
+#include "improved_enum.def"
+
 
 struct EmpiricalParameterBuffer
 {
@@ -16,49 +30,37 @@ struct EmpiricalDataBuffer
     int test;
 };
 
-__forceinline__ __host__ __device__ float get_normalized_phi_o(float phi_o)
+__forceinline__ __host__ __device__ void get_normalized_polar(float phi_o, float theta_o, float & phi_o_normalized, float & theta_o_normalized)
 {
-    return normalize_angle(phi_o) / (2.0f * M_PIf);
+#if USE_STORAGE == UNIFORM_POLAR_STORAGE
+    theta_o_normalized = theta_o / M_PIf * 2;
+#elif USE_STORAGE == HEMI_UNIFORM_POLAR_STORAGE
+    theta_o_normalized = 1.0f - cosf(theta_o);
+#elif USE_STORAGE == HEMI_UNIFORM_POLAR_STORAGE_OLD
+    theta_o_normalized = cosf(theta_o);
+#endif
+    phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
 }
 
-__forceinline__ __host__ __device__ float get_normalized_theta_o(float theta_o)
+__forceinline__ __host__ __device__ void get_angles_polar(float phi_o_normalized, float theta_o_normalized, float & phi_o, float & theta_o)
 {
-#ifdef USE_UNIFORM_STORAGE
-    const float theta_o_normalized = theta_o / M_PIf * 2;
-#else
-#ifdef USE_OLD_STORAGE
-    const float theta_o_normalized = cosf(theta_o);
-#else
-    const float theta_o_normalized = 1.0f - cosf(theta_o);
+#if USE_STORAGE == UNIFORM_POLAR_STORAGE
+    theta_o  = theta_o_normalized * M_PIf / 2;
+#elif USE_STORAGE == HEMI_UNIFORM_POLAR_STORAGE
+    theta_o = acosf(1 - theta_o_normalized);
+#elif USE_STORAGE == HEMI_UNIFORM_POLAR_STORAGE_OLD
+    theta_o_ = acosf(theta_o_normalized);
 #endif
-#endif
-    return theta_o_normalized;
-}
-
-__forceinline__ __host__ __device__ float get_phi_o(float phi_o_normalized)
-{
-    return phi_o_normalized * (2.0f * M_PIf);
-}
-
-__forceinline__ __host__ __device__ float get_theta_o(float theta_o_normalized)
-{
-#ifdef USE_UNIFORM_STORAGE
-    const float theta_o = theta_o_normalized * M_PIf / 2;
-#else
-#ifdef USE_OLD_STORAGE
-    const float theta_o = acosf(theta_o_normalized);
-#else
-    const float theta_o = acosf(1 - theta_o_normalized);
-#endif
-#endif
-    return theta_o;
+    phi_o = phi_o_normalized * (2.0f * M_PIf);
 }
 
 
-__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(float phi_o, float theta_o)
+
+
+__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(OutputShape::Type shape, float phi_o, float theta_o)
 {
-	const float phi_o_normalized = get_normalized_phi_o(phi_o);
-    const float theta_o_normalized = get_normalized_theta_o(theta_o);
+	float phi_o_normalized, theta_o_normalized;
+    get_normalized_polar(phi_o, theta_o, phi_o_normalized, theta_o_normalized);
 	optix_assert(theta_o_normalized >= 0.0f);
 	optix_assert(theta_o_normalized <= 1.0f);
 	optix_assert(phi_o_normalized <= 1.0f);
@@ -66,20 +68,11 @@ __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buff
 	return optix::make_float2(phi_o_normalized, theta_o_normalized);
 }
 
-__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(float phi_o_normalized, float theta_o_normalized)
+__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(OutputShape::Type shape, float phi_o_normalized, float theta_o_normalized)
 {
-	const float phi_o = get_phi_o(phi_o_normalized);
-	const float theta_o = get_theta_o(theta_o_normalized);
+    float phi_o, theta_o;
+    get_angles_polar(phi_o_normalized, theta_o_normalized, phi_o, theta_o);
 	return optix::make_float2(phi_o, theta_o);
-}
-
-__forceinline__ __host__ __device__ optix::float2 get_bin_center(float phi_o_normalized, float theta_o_normalized, unsigned int phi_o_size, unsigned int theta_o_size)
-{
-    const float phi_o_low = get_phi_o(floorf(phi_o_normalized * phi_o_size) / phi_o_size);
-    const float phi_o_high = get_phi_o((floorf(phi_o_normalized * phi_o_size) + 1) / phi_o_size);
-    const float theta_o_low = get_theta_o(floorf(theta_o_normalized * theta_o_size) / theta_o_size);
-    const float theta_o_high = get_theta_o((floorf(theta_o_normalized * theta_o_size) + 1) / theta_o_size);
-    return optix::make_float2(phi_o_low + phi_o_high, theta_o_low + theta_o_high) * 0.5f;
 }
 
 __forceinline__ __device__ void print_v3(const optix::float3 & v)
@@ -127,6 +120,7 @@ __forceinline__ __device__ void empirical_bssrdf_build_geometry_from_exit(const 
 }
 */
 
+
 __forceinline__ __device__ void empirical_bssrdf_build_geometry(const optix::float3& xi, const optix::float3& wi, const optix::float3& n, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
 {
     optix::float3 tangent = -(wi - dot(wi,n) * n);
@@ -154,15 +148,19 @@ __forceinline__ __device__ void empirical_bssrdf_build_geometry(const optix::flo
 	geometry.wo = tangent * wo_s.x + sign * bitangent * wo_s.y + geometry.no * wo_s.z;
 }
 
+__device__ __forceinline__ optix::float3 get_modified_normal_frisvad(const optix::float3 & ni, const optix::float3 & xixo)
+{
+    if(length(xixo) < 1e-7f)
+        return ni;
+    const optix::float3 q = cross(ni, xixo);
+    return cross(normalize(xixo), normalize(q));
+}
+
+
 __forceinline__ __device__ void empirical_bssrdf_get_geometry(const BSSRDFGeometry & geometry, float& theta_i, float &r, float& theta_s, float& theta_o, float& phi_o)
 {
     optix::float3 x = geometry.xo - geometry.xi;
-
-#ifdef USE_MODIFIED_TP
-    optix::float3 n = get_modified_normal_frisvad(geometry.ni, x);
-#else
     optix::float3 n = geometry.ni;
-#endif
 
 	float cos_theta_i = dot(geometry.wi, n);
 	theta_i = acosf(cos_theta_i);

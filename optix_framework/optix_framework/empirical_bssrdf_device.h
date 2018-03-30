@@ -4,8 +4,7 @@
 #include  "material_device.h"
 #include <device_common_data.h>
 #include <scattering_properties.h>
-//#include <bitset>
-#include "empirical_bssrdf_utils.h"
+#include "empirical_bssrdf_common.h"
 #include "optix_helpers.h"
 
 #ifdef INCLUDE_PROGRAMS_ONLY
@@ -18,6 +17,7 @@ rtDeclareVariable(EmpiricalParameterBuffer, empirical_bssrdf_parameters, , );
 rtDeclareVariable(BufPtr<int>, empirical_bssrdf_parameters_size, , );
 rtDeclareVariable(float, empirical_bssrdf_correction,,);
 rtDeclareVariable(unsigned int, empirical_bssrdf_interpolation,,);
+rtDeclareVariable(EmpiricalBSSRDFNonPlanarity::Type, non_planar_geometry_handle,,);
 
 
 template<int N>
@@ -90,13 +90,6 @@ __device__ __forceinline__ int get_index_upper(int parameter_index, const float 
     return candidate_index;
 }
 
-__device__ __forceinline__ optix::float3 get_modified_normal_frisvad(const optix::float3 & ni, const optix::float3 & xixo)
-{
-    if(length(xixo) < 1e-7f)
-        return ni;
-    const optix::float3 q = cross(ni, xixo);
-    return cross(normalize(xixo), normalize(q));
-}
 
 template<int N>
 __device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int slice)
@@ -115,7 +108,16 @@ __device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int
     }
     int index = ravel<N>(index_function, empirical_bssrdf_parameters_size);
     if( index > empirical_buffer_size) {
-        printf("Index is out of bounds! %d / %d\n", index, empirical_buffer_size);
+        printf("Index is out of bounds! %d / %d (", index, empirical_buffer_size);
+
+        const char * v[5] = {"theta_s", "r", "theta_i", "theta_o", "phi_o"};
+
+        for(int j = 0; j < 5; j++)
+        {
+            printf("%s %f ", v[j], empirical_bssrdf_parameters.buffers[j][index_function[j]]);
+        }
+
+        printf(")\n");
         return 0;
     }
     //optix_print("INDEX %d -- %e\n", index, empirical_buffer.buffers[slice][index]);
@@ -166,12 +168,46 @@ __device__ __forceinline__ float interpolate_bssrdf_linear(float values[N], int 
 
 
 
-__forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geometry, const float n1_over_n2,
+__forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geom, const float n1_over_n2,
                                                         const MaterialDataCommon material, unsigned int flags, TEASampler & sampler)
 {
     optix_print("EMPIRICAL\n");
     float theta_i, r, theta_s, theta_o, phi_o;
+
+    BSSRDFGeometry geometry = geom;
+    if(non_planar_geometry_handle == EmpiricalBSSRDFNonPlanarity::UNCHANGED)
+    {
+    }
+    else if(non_planar_geometry_handle == EmpiricalBSSRDFNonPlanarity::NO_ONLY)
+    {
+        geometry.ni = geometry.no;
+    }
+    else if(non_planar_geometry_handle == EmpiricalBSSRDFNonPlanarity::NI_ONLY)
+    {
+        geometry.no = geometry.ni;
+    }
+    else if(non_planar_geometry_handle == EmpiricalBSSRDFNonPlanarity::MODIFIED_TANGENT_PLANE)
+    {
+        optix::float3 x = geom.xo - geom.xi;
+        optix::float3 n = get_modified_normal_frisvad(geometry.ni, x);
+        geometry.ni = n;
+    }
+    else if(non_planar_geometry_handle == EmpiricalBSSRDFNonPlanarity::MODIFIED_TANGENT_PLANE_ALL)
+    {
+        optix::float3 x = geom.xo - geom.xi;
+        optix::float3 n = get_modified_normal_frisvad(geometry.ni, x);
+        geometry.ni = n;
+        geometry.no = n;
+    }
+    else if(non_planar_geometry_handle == EmpiricalBSSRDFNonPlanarity::MUTUAL_ROTATION)
+    {
+        // FIXME implement me
+    }
+
     empirical_bssrdf_get_geometry(geometry, theta_i, r, theta_s, theta_o, phi_o);
+
+    if(theta_i < 0.0f || theta_o < 0.0f || theta_i > M_PIf / 2 || theta_o > M_PIf / 2)
+        return optix::make_float3(0.0f);
 
     optix::float3 S = optix::make_float3(0.0f);
     for(int i = 0; i < 3; i++)
@@ -182,11 +218,7 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
             continue;
 
         float values[5] = {theta_s, r_s, theta_i, theta_o, phi_o};
-        //optix_print("theta_s %f\n", theta_s);
         optix_print("r %f (ext %f - %f)\n", r_s, extinction, r);
-        //optix_print("theta_i %f\n", theta_i);
-        //optix_print("theta_o %f\n", theta_o);
-        //optix_print("phi_o %f\n", phi_o);
 
         float SS = 0;
         if(empirical_bssrdf_interpolation == 0)
@@ -202,7 +234,7 @@ __forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geo
 
     optix::float3 w21;
     float R21;
-    bool include_fresnel_out = (flags &= BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
+    bool include_fresnel_out = (flags & BSSRDFFlags::EXCLUDE_OUTGOING_FRESNEL) == 0;
 
     refract(geometry.wo, geometry.no, n1_over_n2, w21, R21);
 

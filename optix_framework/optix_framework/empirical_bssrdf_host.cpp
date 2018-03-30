@@ -3,7 +3,7 @@
 #include "bssrdf_loader.h"
 #include "optix_utils.h"
 #include "scattering_properties.h"
-#include "empirical_bssrdf_utils.h"
+#include "empirical_bssrdf_common.h"
 
 
 void EmpiricalBSSRDF::prepare_buffers()
@@ -105,5 +105,37 @@ void EmpiricalBSSRDF::load(const float relative_ior, const ScatteringMaterialPro
             mInitialized = false;
         }
         mContext["empirical_bssrdf_correction"]->setFloat(mCorrection);
+        mContext["non_planar_geometry_handle"]->setUserData(sizeof(EmpiricalBSSRDFNonPlanarity::Type), &mNonPlanarSurfacesHandles);
+
     }
+}
+
+bool EmpiricalBSSRDF::on_draw()
+{
+    bool changed = false;
+    if(ImmediateGUIDraw::InputFloat("Correction" ,&mCorrection))
+    {
+        mContext["empirical_bssrdf_correction"]->setFloat(mCorrection);
+        changed = true;
+    }
+    if(ImmediateGUIDraw::Combo("Interpolation", (int*)&mInterpolation, "Nearest\0Linear", 2))
+    {
+        mContext["empirical_bssrdf_interpolation"]->setUint(mInterpolation);
+        changed = true;
+    }
+
+    std::string data = "";
+    auto f = EmpiricalBSSRDFNonPlanarity::first();
+    while(f != EmpiricalBSSRDFNonPlanarity::NotValidEnumItem)
+    {
+        data += EmpiricalBSSRDFNonPlanarity::to_string(f) + '\0';
+        f = EmpiricalBSSRDFNonPlanarity::next(f);
+    }
+
+    if(ImmediateGUIDraw::Combo("Normal handle", (int*)&mNonPlanarSurfacesHandles, &data[0], EmpiricalBSSRDFNonPlanarity::count()))
+    {
+        mContext["non_planar_geometry_handle"]->setUserData(sizeof(EmpiricalBSSRDFNonPlanarity::Type), &mNonPlanarSurfacesHandles);
+        changed = true;
+    }
+    return changed;
 }

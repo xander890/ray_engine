@@ -30,8 +30,8 @@ RT_PROGRAM void render_ref()
 	float2 uv = make_float2(launch_index) / make_float2(launch_dim);
 	float2 ip = uv * 2 - make_float2(1); // [-1, 1], this is xd, yd
 
-	if (reference_bssrdf_output_shape == OutputShape::HEMISPHERE)
-	{
+	//if (reference_bssrdf_output_shape == OutputShape::HEMISPHERE)
+	//{
 		// Inverting the projection in the paper:
 		float phi_o = atan2f(ip.y, ip.x);
 		float l = length(ip);
@@ -43,7 +43,7 @@ RT_PROGRAM void render_ref()
 		else 
 		{
 			float theta_o = M_PIf * 0.5f * l;
-			float2 coords = get_normalized_hemisphere_buffer_coordinates(phi_o,theta_o);
+			float2 coords = get_normalized_hemisphere_buffer_coordinates(reference_bssrdf_output_shape, phi_o,theta_o);
 			optix::uint3 size = optix::rtTexSize(resulting_flux_tex);
 			float2 texcoords;
 			texcoords.x = convert_to_tex_coordinate(coords.x, size.x);
@@ -68,7 +68,8 @@ RT_PROGRAM void render_ref()
 			else
 				output_buffer[launch_index] = make_float4(val);
 		}
-	}
+//	}
+		/*
 	else
 	{
 		float fresnel_integral = C_phi(reference_bssrdf_rel_ior) * 4 * M_PIf;
@@ -99,6 +100,6 @@ RT_PROGRAM void render_ref()
 			res = optix::make_float4(hsv2rgb(h, 1.0, 1.0), 1.0);
 		}
 		output_buffer[launch_index] = res;
-	}
+	}*/
 	
 }

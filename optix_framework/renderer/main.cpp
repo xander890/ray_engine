@@ -13,6 +13,7 @@
 #include "sky_model.h"
 #include "immediate_gui.h"
 
+#include "hemisphere_partitions.h"
 namespace
 {
 	void lower_case(char& x)
@@ -42,6 +43,9 @@ void printUsageAndExit( const std::string& argv0 )
 
 int main( int argc, char** argv ) 
 {
+	std::vector<float> r;
+	std::vector<int> i;
+	get_hemisphere_subdivisions(288, r, i);
 	std::vector<std::string> filenames;
 	std::string filename = "";
 	std::string output_file = "rendering.raw";

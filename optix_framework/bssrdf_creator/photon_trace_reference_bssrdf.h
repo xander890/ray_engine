@@ -10,7 +10,7 @@
 #include "device_environment_map.h"
 #include "optical_helper.h"
 #include "phase_function.h"
-#include "empirical_bssrdf_utils.h"
+#include "empirical_bssrdf_common.h"
 
 // FIXME, we need to remove this or find a better way to express it without overhauling all the parameters.
 rtDeclareVariable(optix::float2, plane_size, ,);
@@ -40,13 +40,13 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 &plane_origi
 }
 
 
-__forceinline__ __device__ optix::uint2 store_values_in_buffer(const float theta_o, const float phi_o, const float flux_E, BufPtr2D<float> &resulting_flux)
+__forceinline__ __device__ optix::uint2 store_values_in_buffer(OutputShape::Type shape, const float theta_o, const float phi_o, const float flux_E, BufPtr2D<float> &resulting_flux)
 {
     const optix::size_t2 bins = resulting_flux.size();
-    optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(phi_o, theta_o);
+    optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(shape, phi_o, theta_o);
     optix::uint2 idxs = make_uint2(coords * make_float2(bins));
-            optix_assert(flux_E >= 0.0f);
-            optix_assert(!isnan(flux_E));
+    optix_assert(flux_E >= 0.0f);
+    optix_assert(!isnan(flux_E));
     optix_print("Storing flux %f\n", flux_E);
 
     // Atomic add to avoid thread conflicts
@@ -59,7 +59,7 @@ __forceinline__ __device__ optix::uint2 store_values_in_buffer(const float theta
 
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_hemisphere_mcml(const BSSRDFSimulatedOptions &options, const BSSRDFRendererData &geometry_data,
+__forceinline__ __device__ bool scatter_photon_hemisphere_mcml(OutputShape::Type shape, const BSSRDFSimulatedOptions &options, const BSSRDFRendererData &geometry_data,
         optix::float3 &xp, optix::float3 &wp, float &flux_t, BufPtr2D<float> &resulting_flux,
         const float n2_over_n1, const float albedo, const float extinction, const float g,
         SEED_TYPE &t, int starting_it, int executions)
@@ -155,17 +155,18 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_mcml(const BSSRDFSimul
                 float phi_o = atan2f(wo.y, wo.x);
                 float theta_o = acosf(wo.z);
 
+                const optix::size_t2 bins = resulting_flux.size();
+                optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(shape, phi_o, theta_o);
+                optix::uint2 idxs = make_uint2(coords * make_float2(bins));
 
-                float flux_to_store = flux_t * 1.0f / (geometry_data.mArea * geometry_data.mSolidAngle);
+                float flux_to_store = flux_t * 1.0f / (geometry_data.mArea * geometry_data.mSolidAngleBuffer[idxs]);
 
                 if (!options.mbCosineWeighted)
                 {
-                    const optix::size_t2 bins = resulting_flux.size();
-                    optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(phi_o, theta_o);
                     float theta_o_coord_norm = int(coords.y * bins.y) / float(bins.y);
                     float theta_o_coord_norm_up = (1 + int(coords.y * bins.y)) / float(bins.y);
-                    float theta_bottom = get_normalized_hemisphere_buffer_angles(0, theta_o_coord_norm).y;
-                    float theta_up = get_normalized_hemisphere_buffer_angles(0, theta_o_coord_norm_up).y;
+                    float theta_bottom = get_normalized_hemisphere_buffer_angles(shape, 0.0f, theta_o_coord_norm).y;
+                    float theta_up = get_normalized_hemisphere_buffer_angles(shape, 0.0f, theta_o_coord_norm_up).y;
                     float theta_average = (theta_bottom + theta_up) / 2;
                     flux_to_store /= cosf(theta_average);
                 }
@@ -187,7 +188,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_mcml(const BSSRDFSimul
                 {
                     optix_print("(%d) Refraction. theta_o %f phi_o %f - %f\n", i, theta_o, phi_o, flux_to_store);
 
-                    store_values_in_buffer(theta_o, phi_o, flux_to_store, resulting_flux);
+                    store_values_in_buffer(shape, theta_o, phi_o, flux_to_store, resulting_flux);
                 }
                 // We are done with this random walk.
                 return true;
@@ -198,7 +199,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_mcml(const BSSRDFSimul
 }
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(const BSSRDFSimulatedOptions &options,
+__forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(OutputShape::Type shape, const BSSRDFSimulatedOptions &options,
         const BSSRDFRendererData &geometry_data,
         optix::float3 &xp, optix::float3 &wp,
         float &flux_t,
@@ -285,20 +286,25 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(co
                     G_prime = fminf(G_prime, b);
                 }
 
-                float geometry_term = fabsf(optix::dot(w21, no)) * G_prime;
+                const float theta_o = acosf(cos_theta_o);
+                const optix::size_t2 bins = resulting_flux.size();
+                optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(shape, phi_o, theta_o);
+                optix::uint2 idxs = make_uint2(coords * make_float2(bins));
+
+                float geometry_term = fabsf(optix::dot(wo, no)) * G_prime;
                 float bssrdf_E = albedo * flux_t * phase_HG(optix::dot(wp, w21), g) * T21 * geometry_term *
                                  expf(-extinction * xoxp);
                 bssrdf_E *= r * (2.0f / (geometry_data.mRadius.x + geometry_data.mRadius.y)) *
-                            (1.0f / geometry_data.mSolidAngle);
+                            (1.0f / geometry_data.mSolidAngleBuffer[idxs]);
 
                 if (!options.mbCosineWeighted)
                 {
-                    const optix::size_t2 bins = resulting_flux.size();
-                    optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(phi_o, acosf(cos_theta_o));
+                    get_theta_bin_center(coords.y);
+                    float cos_theta_average =
                     float theta_o_coord_norm = int(coords.y * bins.y) / float(bins.y);
                     float theta_o_coord_norm_up = (1 + int(coords.y * bins.y)) / float(bins.y);
-                    float theta_bottom = get_normalized_hemisphere_buffer_angles(0, theta_o_coord_norm).y;
-                    float theta_up = get_normalized_hemisphere_buffer_angles(0, theta_o_coord_norm_up).y;
+                    float theta_bottom = get_normalized_hemisphere_buffer_angles(shape, 0, theta_o_coord_norm).y;
+                    float theta_up = get_normalized_hemisphere_buffer_angles(shape, 0, theta_o_coord_norm_up).y;
                     float theta_average = (theta_bottom + theta_up) / 2;
                     bssrdf_E /= cosf(theta_average);
                 }
@@ -309,7 +315,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(co
                 // Not including single scattering, so i == 0 is not considered.
                 if (i > 0)
                 {
-                    store_values_in_buffer(acosf(cos_theta_o), phi_o, bssrdf_E, resulting_flux);
+                    store_values_in_buffer(shape, theta_o, phi_o, bssrdf_E, resulting_flux);
                 }
 
                 optix_print("(%d) Scattering.  %f\n", i, bssrdf_E);
@@ -439,7 +445,7 @@ if(i > 0 && xoxp < mfp_bias)
 
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_hemisphere_connections(const BSSRDFRendererData &geometry_data, optix::float3 &xp, optix::float3 &wp,
+__forceinline__ __device__ bool scatter_photon_hemisphere_connections(OutputShape::Type shape, const BSSRDFRendererData &geometry_data, optix::float3 &xp, optix::float3 &wp,
         float &flux_t, BufPtr2D<float> &resulting_flux, const float3 &xo,
         const float n2_over_n1, const float albedo, const float extinction, const float g,
         SEED_TYPE &t, int starting_it, int executions)
@@ -530,7 +536,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections(const BSSR
 #else
                 if (i > 0)
                 {
-                    store_values_in_buffer(acosf(cos_theta_o), phi_o, flux_E, resulting_flux);
+                    store_values_in_buffer(shape, acosf(cos_theta_o), phi_o, flux_E, resulting_flux);
                 }
 #endif
                 optix_print("(%d) Scattering.  %f\n", i, flux_E);
@@ -570,141 +576,30 @@ __forceinline__ __device__ optix::float2 get_planar_buffer_coordinates(const opt
     return (normalized_coord * plane_size) - plane_size / 2;
 }
 
-
-__forceinline__ __device__ void
-store_values_in_buffer_planar(const optix::float2 &xo_plane, const float flux_E, BufPtr2D<float> &resulting_flux)
-{
-    const optix::size_t2 bins = resulting_flux.size();
-    optix::float2 coords = get_normalized_planar_buffer_coordinates(xo_plane);
-
-    // Store only if on the plane
-    if (coords.x >= 0.0f && coords.x < 1.0f && coords.y >= 0.0f && coords.y < 1.0f)
-    {
-        optix::uint2 idxs = make_uint2(coords * make_float2(bins));
-                optix_assert(flux_E >= 0.0f);
-                optix_assert(!isnan(flux_E));
-
-        // Atomic add to avoid thread conflicts
-        if (!isnan(flux_E))
-        {
-            atomicAdd(&resulting_flux[idxs], flux_E);
-        }
-    }
-}
-
-
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_planar(optix::float3 &xp, optix::float3 &wp, float &flux_t, BufPtr2D<float> &resulting_flux,
-        const float3 &xo, const float n2_over_n1, const float albedo, const float extinction,
-        const float g, SEED_TYPE &t, int starting_it, int executions)
-{
-    // Defining geometry
-    const optix::float3 xi = optix::make_float3(0, 0, 0);
-    const optix::float3 ni = optix::make_float3(0, 0, 1);
-    const optix::float3 no = ni;
-
-    // We count executions to allow stop/resuming of this function.
-    int i;
-    for (i = starting_it; i < starting_it + executions; i++)
-    {
-        // If the flux is really small, we can stop here, the contribution is too small.
-        //if (flux_t < 1e-12)
-        //	return true;
-
-        const float rand =
-                1.0f - RND_FUNC(t); // RND_FUNC(t) in [0, 1). Avoids infinity when sampling exponential distribution.
-
-        // Sampling new distance for photon, testing if it intersects the interface
-        const float d = -logf(rand) / extinction;
-        optix::Ray ray = optix::make_Ray(xp, wp, 0, 0, d);
-                optix_assert(xp.z < 1e-6);
-                optix_assert(xp.z > -INFINITY);
-
-        float intersection_distance;
-        if (!intersect_plane(xi, ni, ray, intersection_distance))
-        {
-            // We are still within the medium.
-            // Russian roulette to check for absorption.
-            float absorption_prob = RND_FUNC(t);
-            if (absorption_prob > albedo)
-            {
-                optix_print("(%d) Absorption.\n", i);
-                return true;
-            }
-
-            // We scatter now.
-            xp = xp + wp * d;
-
-            // We choose a new direction sampling the phase function
-            optix::float2 smpl = optix::make_float2(RND_FUNC(t), RND_FUNC(t));
-            wp = optix::normalize(sample_HG(wp, g, smpl));
-        }
-        else
-        {
-            // We have intersected the plane.
-            const optix::float3 surface_point = xp + wp * intersection_distance;
-                    optix_assert(optix::dot(wp, no) > 0);
-
-            // Calculate Fresnel coefficient
-            const float cos_theta_p = optix::fmaxf(optix::dot(wp, no), 0.0f);
-            const float F_r = fresnel_R(cos_theta_p, n2_over_n1); // assert F_t < 1
-
-            float outgoing_flux = (1.0f - F_r) * flux_t;
-            store_values_in_buffer_planar(optix::make_float2(surface_point.x, surface_point.y), outgoing_flux,
-                    resulting_flux);
-
-            // Reflect and turn to face inside.
-            flux_t *= F_r;
-            xp = surface_point;
-            wp = reflect(wp, -no);
-            optix_print("(%d) Reached surface %f.\n", i, outgoing_flux);
-        }
-    }
-    return false;
-}
-
-// Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_hemisphere(const BSSRDFSimulatedOptions &options, const BSSRDFRendererData &geometry_data,
+__forceinline__ __device__ bool scatter_photon(OutputShape::Type shape, const BSSRDFSimulatedOptions &options, const BSSRDFRendererData &geometry_data,
         optix::float3 &xp, optix::float3 &wp, float &flux_t, BufPtr2D<float> &resulting_flux,
         const float3 &xo, const float n2_over_n1, const float albedo, const float extinction,
         const float g, SEED_TYPE &t, int starting_it, int executions)
 {
     if (options.mIntegrationMethod == IntegrationMethod::MCML)
     {
-        return scatter_photon_hemisphere_mcml(options, geometry_data, xp, wp, flux_t, resulting_flux, n2_over_n1,
+        return scatter_photon_hemisphere_mcml(shape, options, geometry_data, xp, wp, flux_t, resulting_flux, n2_over_n1,
                 albedo, extinction, g, t, starting_it, executions);
     }
     else if (options.mIntegrationMethod == IntegrationMethod::CONNECTIONS)
     {
-        return scatter_photon_hemisphere_connections(geometry_data, xp, wp, flux_t, resulting_flux, xo, n2_over_n1,
+        return scatter_photon_hemisphere_connections(shape, geometry_data, xp, wp, flux_t, resulting_flux, xo, n2_over_n1,
                 albedo, extinction, g, t, starting_it, executions);
     }
     else if (options.mIntegrationMethod == IntegrationMethod::CONNECTIONS_WITH_FIX)
     {
-        return scatter_photon_hemisphere_connections_correct(options, geometry_data, xp, wp, flux_t, resulting_flux,
+        return scatter_photon_hemisphere_connections_correct(shape, options, geometry_data, xp, wp, flux_t, resulting_flux,
                 n2_over_n1, albedo, extinction, g, t, starting_it,
                 executions);
     }
     else
     {
         return false;
-    }
-}
-
-
-__forceinline__ __device__ bool scatter_photon(OutputShape::Type shape, const BSSRDFSimulatedOptions &options, const BSSRDFRendererData &geometry_data,
-        optix::float3 &xp, optix::float3 &wp, float &flux_t, BufPtr2D<float> &resulting_flux, const float3 &xo,
-        const float n2_over_n1, const float albedo, const float extinction, const float g, SEED_TYPE &t,
-        int starting_it, int executions)
-{
-    if (shape == OutputShape::HEMISPHERE)
-    {
-        return scatter_photon_hemisphere(options, geometry_data, xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo,
-                extinction, g, t, starting_it, executions);
-    }
-    else
-    {
-        return scatter_photon_planar(xp, wp, flux_t, resulting_flux, xo, n2_over_n1, albedo, extinction, g, t,
-                starting_it, executions);
     }
 }

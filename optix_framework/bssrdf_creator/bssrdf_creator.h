@@ -7,6 +7,7 @@
 #include <bssrdf_host.h>
 #include "photon_trace_structs.h"
 
+
 #define hash "#"
 #define GUI_LABEL_IMPL(label, id) (std::string(label hash hash label) + std::to_string(id)).c_str()
 #define GUI_LABEL(label, id) GUI_LABEL_IMPL(label, id)
@@ -49,6 +50,7 @@ public:
 	};
 
 protected:
+	void fill_solid_angle_buffer();
     void fill_geometry_data();
     static optix::uint2 default_size(OutputShape::Type shape);
 
@@ -63,6 +65,7 @@ protected:
 	optix::Buffer mBSSRDFBufferIntermediate = nullptr;
 	optix::Buffer mBSSRDFBuffer = nullptr;
     optix::Buffer mProperties = nullptr;
+	optix::Buffer mSolidAngleBuffer = nullptr;
 
 	// Geometric properties
     BSSRDFRendererData mGeometryData;
