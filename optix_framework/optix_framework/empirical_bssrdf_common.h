@@ -54,7 +54,20 @@ __forceinline__ __host__ __device__ void get_angles_polar(float phi_o_normalized
     phi_o = phi_o_normalized * (2.0f * M_PIf);
 }
 
+__forceinline__ __host__ __device__ void get_normalized_cartesian(float phi_o, float theta_o, float & phi_o_normalized, float & theta_o_normalized)
+{
+    float x = theta_o / (M_PIf * 0.5f) * cosf(phi_o);
+    float y = theta_o / (M_PIf * 0.5f) * sinf(phi_o);
+    theta_o_normalized = x * 0.5f + 0.5f;
+    phi_o_normalized =
+    phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
+}
 
+__forceinline__ __host__ __device__ void get_angles_cartesian(float phi_o_normalized, float theta_o_normalized, float & phi_o, float & theta_o)
+{
+    theta_o = acosf(1 - theta_o_normalized);
+    phi_o = phi_o_normalized * (2.0f * M_PIf);
+}
 
 
 __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(OutputShape::Type shape, float phi_o, float theta_o)

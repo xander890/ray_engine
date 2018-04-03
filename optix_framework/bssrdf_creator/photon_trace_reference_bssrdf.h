@@ -40,15 +40,11 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 &plane_origi
 }
 
 
-__forceinline__ __device__ optix::uint2 store_values_in_buffer(OutputShape::Type shape, const float theta_o, const float phi_o, const float flux_E, BufPtr2D<float> &resulting_flux)
+__forceinline__ __device__ optix::uint2 store_values_in_buffer(const optix::uint2& idxs, const float flux_E, BufPtr2D<float> &resulting_flux)
 {
-    const optix::size_t2 bins = resulting_flux.size();
-    optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(shape, phi_o, theta_o);
-    optix::uint2 idxs = make_uint2(coords * make_float2(bins));
     optix_assert(flux_E >= 0.0f);
     optix_assert(!isnan(flux_E));
     optix_print("Storing flux %f\n", flux_E);
-
     // Atomic add to avoid thread conflicts
     if (!isnan(flux_E))
     {
@@ -188,7 +184,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_mcml(OutputShape::Type
                 {
                     optix_print("(%d) Refraction. theta_o %f phi_o %f - %f\n", i, theta_o, phi_o, flux_to_store);
 
-                    store_values_in_buffer(shape, theta_o, phi_o, flux_to_store, resulting_flux);
+                    store_values_in_buffer(idxs, flux_to_store, resulting_flux);
                 }
                 // We are done with this random walk.
                 return true;
@@ -299,8 +295,8 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(Ou
 
                 if (!options.mbCosineWeighted)
                 {
-                    get_theta_bin_center(coords.y);
-                    float cos_theta_average =
+//                    float cos_theta_average = get_theta_bin_center();
+
                     float theta_o_coord_norm = int(coords.y * bins.y) / float(bins.y);
                     float theta_o_coord_norm_up = (1 + int(coords.y * bins.y)) / float(bins.y);
                     float theta_bottom = get_normalized_hemisphere_buffer_angles(shape, 0, theta_o_coord_norm).y;
@@ -315,7 +311,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(Ou
                 // Not including single scattering, so i == 0 is not considered.
                 if (i > 0)
                 {
-                    store_values_in_buffer(shape, theta_o, phi_o, bssrdf_E, resulting_flux);
+                    store_values_in_buffer(idxs, bssrdf_E, resulting_flux);
                 }
 
                 optix_print("(%d) Scattering.  %f\n", i, bssrdf_E);
@@ -536,7 +532,11 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections(OutputShap
 #else
                 if (i > 0)
                 {
-                    store_values_in_buffer(shape, acosf(cos_theta_o), phi_o, flux_E, resulting_flux);
+                    const float theta_o = acosf(cos_theta_o);
+                    const optix::size_t2 bins = resulting_flux.size();
+                    optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(shape, phi_o, theta_o);
+                    optix::uint2 idxs = make_uint2(coords * make_float2(bins));
+                    store_values_in_buffer(idxs, flux_E, resulting_flux);
                 }
 #endif
                 optix_print("(%d) Scattering.  %f\n", i, flux_E);
