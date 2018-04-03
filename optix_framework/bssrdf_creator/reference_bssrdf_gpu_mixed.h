@@ -11,7 +11,7 @@
 class ReferenceBSSRDFGPUMixed : public BSSRDFRendererSimulated
 {
 public:
-    ReferenceBSSRDFGPUMixed(optix::Context & ctx, const OutputShape::Type shape = OutputShape::HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const unsigned int samples = (int)1e8) : BSSRDFRendererSimulated(ctx, shape, shape_size, samples)
+    ReferenceBSSRDFGPUMixed(optix::Context & ctx, const OutputShape::Type shape = DEFAULT_SHAPE, const optix::int2 & shape_size = optix::make_int2(-1), const unsigned int samples = (int)1e8) : BSSRDFRendererSimulated(ctx, shape, shape_size, samples)
     {
         mRenderer1 = std::make_unique<ReferenceBSSRDFGPU>(ctx, shape, shape_size, samples);
         mRenderer2 = std::make_unique<ReferenceBSSRDFGPU>(ctx, shape, shape_size, samples);

@@ -20,7 +20,6 @@ rtDeclareVariable(unsigned int, ref_frame_number, , );
 rtDeclareVariable(unsigned int, reference_bssrdf_samples_per_frame, , );
 // Window variables
 
-rtDeclareVariable(float, reference_bssrdf_theta_o, , ) = 0.0f;
 rtDeclareVariable(BSSRDFRendererData, reference_bssrdf_data, , );
 
 rtDeclareVariable(BufPtr<ScatteringMaterialProperties>, planar_bssrdf_material_params, , );

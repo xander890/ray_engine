@@ -76,7 +76,7 @@ private:
 	bool mPaused = false;
 	bool mFastMode = false;
     bool mNormalize = true;
-	bool mDebug = false;
+	bool mDebug = true;
 	RenderMode mCurrentRenderMode = RENDER_BSSRDF;
 	std::unique_ptr<BSSRDFExporter> mExporter = nullptr;
 	std::unique_ptr<BSSRDFImporter> mLoader = nullptr;
@@ -88,8 +88,6 @@ private:
 	bool mSimulate = 1;
 	void set_render_mode(RenderMode m, bool isSimulated);
 	bool start_offline_rendering = false;
-	float mPlaneRenderingThetao = 0.0f;
-	optix::float2 mPlaneSize = optix::make_float2(2, 2);
 
 	float mCurrentAverage = 0, mCurrentMax = 0;
     std::chrono::time_point<std::chrono::high_resolution_clock>  mCurrentStartTime;

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <parserstringhelpers.h>
+#include <logger.h>
 
 int BSSRDFRenderer::mGlobalId = 0;
 
@@ -190,10 +191,92 @@ optix::uint2 BSSRDFRenderer::default_size(OutputShape::Type shape) {
 void BSSRDFRenderer::fill_solid_angle_buffer()
 {
 	float * buf = reinterpret_cast<float*>(mSolidAngleBuffer->map());
-	for(int i = 0; i < mShapeSize.x*mShapeSize.y; i++)
-	{
-		buf[i] = 2.0f * M_PIf / (mShapeSize.x * mShapeSize.y);
-	}
+    int total_size = mShapeSize.x * mShapeSize.y;
+    if(mOutputShape == OutputShape::HEMISPHERE)
+    {
+        // Angle is uniform
+        for (int i = 0; i < total_size; i++)
+        {
+            buf[i] = 2.0f * M_PIf / (total_size);
+        }
+    }
+    else
+    {
+        // In this case, we need to monte carlo simulate the angles.
+        float* counter = new float[total_size];
+
+        for (int i = 0; i < total_size; i++)
+        {
+            counter[i] = 0.0f;
+            buf[i] = 0.0f;
+        }
+
+        Seed64 seed;
+        seed.l = 12324323433;
+        const int MONTE_CARLO_SAMPLES = 1e7;
+
+        for(int k = 0; k < MONTE_CARLO_SAMPLES; k++)
+        {
+            float x_norm = rnd_accurate(seed);
+            float y_norm = rnd_accurate(seed);
+            float x = x_norm * 2.0f - 1.0f;
+            float y = y_norm * 2.0f - 1.0f;
+            float d = sqrtf(x*x + y*y);
+            int x_idx = int(x_norm * mShapeSize.x);
+            int y_idx = int(y_norm * mShapeSize.y);
+            int idx = y_idx * mShapeSize.x + x_idx;
+
+            if(d > 1.0f)
+            {
+                continue;
+            }
+            float theta_o, phi_o;
+            get_angles_cartesian(x_norm, y_norm, phi_o, theta_o);
+            float sin_theta = sinf(theta_o);
+            float jacobian = get_jacobian_cartesian(x_norm, y_norm);
+            if(idx > total_size)
+            {
+                Logger::error << "Index out of bounds " << idx << "/" << total_size << std::endl;
+            }
+            counter[idx] += 1.0f;
+            buf[idx] += sin_theta * jacobian;
+        }
+
+        float probability = 1.0f / (total_size);
+
+        float min_angle = FLT_MAX;
+        float max_angle = FLT_MIN;
+
+        for(int k = 0; k < total_size; k++)
+        {
+            if(counter[k] > 0)
+            {
+                if(buf[k] == 0.0f)
+                {
+                    Logger::error << "Error! Value " << buf[k] << " encountered at index " << k << std::endl;
+                }
+
+                buf[k] = buf[k] / counter[k] * probability;
+                min_angle = std::min(min_angle, buf[k]);
+                max_angle = std::max(max_angle, buf[k]);
+            }
+            int x_idx = k % mShapeSize.x;
+            int y_idx = k /  mShapeSize.x;
+            float x_n = float(x_idx) / mShapeSize.x;
+            float y_n = float(y_idx) / mShapeSize.y;
+            float x = x_n * 2.0f - 1.0f;
+            float y = y_n * 2.0f - 1.0f;
+            float l = sqrtf(x*x + y*y);
+
+            if(l < 1 && counter[k] == 0)
+                Logger::info << buf[k] << "\t" << counter[k] << "\t" << l <<  std::endl;
+        }
+
+
+        Logger::info << "Angle stats: min " << min_angle  << " max " << max_angle << std::endl;
+        delete[] counter;
+
+    }
 	mSolidAngleBuffer->unmap();
 }
 

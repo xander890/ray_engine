@@ -14,9 +14,10 @@ rtBuffer<float4, 2> output_buffer;
 rtDeclareVariable(unsigned int, show_false_colors, , ); 
 rtDeclareVariable(float, reference_scale_multiplier, , );
 rtDeclareVariable(TexPtr, resulting_flux_tex, , );
-rtDeclareVariable(OutputShape::Type, reference_bssrdf_output_shape, , ) = OutputShape::HEMISPHERE;
+rtDeclareVariable(OutputShape::Type, reference_bssrdf_output_shape, , );
 rtDeclareVariable(int, reference_bssrdf_fresnel_mode, , ) = BSSRDF_RENDER_MODE_FULL_BSSRDF;
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
+rtDeclareVariable(BSSRDFRendererData, reference_bssrdf_data, , );
 
 __device__ __forceinline__ float convert_to_tex_coordinate(float normalized_buffer_coordinate, unsigned int size)
 {
@@ -30,44 +31,49 @@ RT_PROGRAM void render_ref()
 	float2 uv = make_float2(launch_index) / make_float2(launch_dim);
 	float2 ip = uv * 2 - make_float2(1); // [-1, 1], this is xd, yd
 
-	//if (reference_bssrdf_output_shape == OutputShape::HEMISPHERE)
-	//{
-		// Inverting the projection in the paper:
-		float phi_o = atan2f(ip.y, ip.x);
-		float l = length(ip);
+    optix::float2 coords;
+    float l = length(ip);
+    float cos_theta_o;
+    float phi_o = atan2f(ip.y, ip.x);
+    float theta_o = M_PIf * 0.5f * l;
+    coords = get_normalized_hemisphere_buffer_coordinates(reference_bssrdf_output_shape, phi_o,theta_o);
+    cos_theta_o = cosf(theta_o);
 
-		if (l >= 1) 
-		{
-			output_buffer[launch_index] = make_float4(0); 
-		}
-		else 
-		{
-			float theta_o = M_PIf * 0.5f * l;
-			float2 coords = get_normalized_hemisphere_buffer_coordinates(reference_bssrdf_output_shape, phi_o,theta_o);
-			optix::uint3 size = optix::rtTexSize(resulting_flux_tex);
-			float2 texcoords;
-			texcoords.x = convert_to_tex_coordinate(coords.x, size.x);
-			texcoords.y = convert_to_tex_coordinate(coords.y, size.y);
+    if (l >= 1)
+    {
+        output_buffer[launch_index] = make_float4(0);
+    }
+    else
+    {
+        optix::uint3 size = optix::rtTexSize(resulting_flux_tex);
+        float2 texcoords;
+        texcoords.x = convert_to_tex_coordinate(coords.x, size.x);
+        texcoords.y = convert_to_tex_coordinate(coords.y, size.y);
 
-			float cos_theta_o = cosf(theta_o);
-			float S = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, texcoords.x, texcoords.y).x;
-            //float S = reference_scale_multiplier * optix::rtTex2DFetch<float4>(resulting_flux_tex, int(coords.x * size.x), int(coords.y * size.y)).x;
-			float T21 = 1.0f - fresnel_R(cos_theta_o, reference_bssrdf_rel_ior);
 
-			float val;
-			switch (reference_bssrdf_fresnel_mode)
-			{
-			case BSSRDF_RENDER_MODE_FRESNEL_OUT_ONLY: val = T21; break;
-			case BSSRDF_RENDER_MODE_REMOVE_FRESNEL: val = S / T21; break;
-			default:
-			case BSSRDF_RENDER_MODE_FULL_BSSRDF: val = S; break;
-			}
+        //float S = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, texcoords.x, texcoords.y).x;
+        float S = reference_scale_multiplier * optix::rtTex2DFetch<float4>(resulting_flux_tex, int(coords.x * size.x), int(coords.y * size.y)).x;
 
-			if (show_false_colors == 1)
-				output_buffer[launch_index] = make_float4(jet(val), 1);
-			else
-				output_buffer[launch_index] = make_float4(val);
-		}
+        float T21 = 1.0f - fresnel_R(cos_theta_o, reference_bssrdf_rel_ior);
+
+        float val;
+        switch (reference_bssrdf_fresnel_mode)
+        {
+        case BSSRDF_RENDER_MODE_FRESNEL_OUT_ONLY: val = T21; break;
+        case BSSRDF_RENDER_MODE_REMOVE_FRESNEL: val = S / T21; break;
+        default:
+        case BSSRDF_RENDER_MODE_FULL_BSSRDF: val = S; break;
+        }
+
+        if (show_false_colors == 1)
+            output_buffer[launch_index] = make_float4(jet(val), 1);
+        else
+            output_buffer[launch_index] = make_float4(val);
+    }
+
+    optix::uint2 t = make_uint2(uv * make_float2(reference_bssrdf_data.mSolidAngleBuffer.size()));
+    float v = reference_bssrdf_data.mSolidAngleBuffer[t] * reference_scale_multiplier;
+    output_buffer[launch_index] =  make_float4(jet(v), 1);
 //	}
 		/*
 	else

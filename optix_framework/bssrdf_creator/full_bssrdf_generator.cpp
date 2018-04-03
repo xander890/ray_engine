@@ -98,7 +98,7 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
 {
 	m_context->setPrintEnabled(mDebug);
-	test_forward_dipole();
+// 	test_forward_dipole();
 	m_context->setPrintBufferSize(2000);
 	m_context->setPrintLaunchIndex(10000);
 	Folders::init();
@@ -113,7 +113,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
-	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPUMixed>(m_context, OutputShape::HEMISPHERE, optix::make_int2(160, 40), (int)10e5);
+	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPUMixed>(m_context, DEFAULT_SHAPE, optix::make_int2(100, 80), (int)10e5);
 	mBssrdfReferenceSimulator->init();
 
 	mBssrdfModelSimulator = std::make_shared<BSSRDFRendererModel>(m_context);
@@ -237,10 +237,10 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 				void* dest = mBSSRDFBufferTexture->map();
 				memcpy(dest, mCurrentHemisphereData, mCurrentBssrdfRenderer->get_size().x*mCurrentBssrdfRenderer->get_size().y * sizeof(float));
 
-				if (mCurrentBssrdfRenderer->get_shape() == OutputShape::HEMISPHERE) {
-					mCurrentAverage = average((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
-					mCurrentMax = get_max((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
-				}
+
+				mCurrentAverage = average((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
+                mCurrentMax = get_max((float *) dest, (int) mCurrentBssrdfRenderer->get_storage_size());
+
 				mBSSRDFBufferTexture->unmap();
 			}
 			mCurrentBssrdfRenderer->get_output_buffer()->unmap();
@@ -262,7 +262,6 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
             mCurrentBssrdfRenderer->get_material_parameters(albedo, ext, g, n2_over_n1);
 
 			m_context["ior"]->setFloat(n2_over_n1);
-			m_context["reference_bssrdf_theta_o"]->setFloat(deg2rad(mPlaneRenderingThetao));
 			m_context->launch(entry_point_output, w, h);
 		}
 
@@ -374,16 +373,8 @@ void FullBSSRDFGenerator::post_draw_callback()
 			}
 		}
 
-		if (shape == OutputShape::PLANE)
-		{
-			ImmediateGUIDraw::SliderFloat("Outgoing light angle (deg.)", &mPlaneRenderingThetao, 0, 90);
-		}
 		mCurrentBssrdfRenderer->on_draw(BSSRDFRenderer::SHOW_ALL);
 
-		if (shape == OutputShape::PLANE)
-		{
-			ImmediateGUIDraw::InputFloat2("Plane Size", &mPlaneSize.x);
-		}
 		const char * opts[6] = {"A","B","C","D","E", "F"};
 		static int def = 0;
 		if (ImmediateGUIDraw::Combo("Default material", &def, opts, 6,6))

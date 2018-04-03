@@ -18,6 +18,7 @@
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(PLANE,0) ENUMITEM_VALUE(HEMISPHERE,1)
 #include "improved_enum.def"
 
+#define DEFAULT_SHAPE OutputShape::PLANE
 
 struct EmpiricalParameterBuffer
 {
@@ -42,56 +43,67 @@ __forceinline__ __host__ __device__ void get_normalized_polar(float phi_o, float
     phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
 }
 
-__forceinline__ __host__ __device__ void get_angles_polar(float phi_o_normalized, float theta_o_normalized, float & phi_o, float & theta_o)
+__forceinline__ __host__ __device__ void get_angles_polar(float buffer_x_normalized, float buffer_y_normalized, float & phi_o, float & theta_o)
 {
 #if USE_STORAGE == UNIFORM_POLAR_STORAGE
-    theta_o  = theta_o_normalized * M_PIf / 2;
+    theta_o  = buffer_y_normalized * M_PIf / 2;
 #elif USE_STORAGE == HEMI_UNIFORM_POLAR_STORAGE
-    theta_o = acosf(1 - theta_o_normalized);
+    theta_o = acosf(1 - buffer_y_normalized);
 #elif USE_STORAGE == HEMI_UNIFORM_POLAR_STORAGE_OLD
-    theta_o_ = acosf(theta_o_normalized);
+    theta_o_ = acosf(buffer_y_normalized);
 #endif
-    phi_o = phi_o_normalized * (2.0f * M_PIf);
+    phi_o = buffer_x_normalized * (2.0f * M_PIf);
 }
 
-__forceinline__ __host__ __device__ void get_normalized_cartesian(float phi_o, float theta_o, float & phi_o_normalized, float & theta_o_normalized)
+__forceinline__ __host__ __device__ float get_jacobian_polar(float buffer_x_normalized, float buffer_y_normalized)
+{
+    return 2.0f * M_PIf * 1.0f / sqrtf(- (buffer_x_normalized - 2.0f) * buffer_x_normalized);
+}
+
+__forceinline__ __host__ __device__ void get_normalized_cartesian(float phi_o, float theta_o, float & buffer_x_normalized, float & buffer_y_normalized)
 {
     float x = theta_o / (M_PIf * 0.5f) * cosf(phi_o);
     float y = theta_o / (M_PIf * 0.5f) * sinf(phi_o);
-    theta_o_normalized = x * 0.5f + 0.5f;
-    phi_o_normalized = y * 0.5f + 0.5f;
+    buffer_y_normalized = x * 0.5f + 0.5f;
+    buffer_x_normalized = y * 0.5f + 0.5f;
 }
 
-__forceinline__ __host__ __device__ void get_angles_cartesian(float phi_o_normalized, float theta_o_normalized, float & phi_o, float & theta_o)
+__forceinline__ __host__ __device__ void get_angles_cartesian(float buffer_x_normalized, float buffer_y_normalized, float & phi_o, float & theta_o)
 {
-    float x = theta_o_normalized * 2.0f - 1.0f;
-    float y = phi_o_normalized * 2.0f - 1.0f;
-    theta_o = M_PIf * 2.0f * sqrtf(x*x + y*y);
+    float x = buffer_y_normalized * 2.0f - 1.0f;
+    float y = buffer_x_normalized * 2.0f - 1.0f;
+    theta_o = M_PIf * 0.5f * sqrtf(x*x + y*y);
     phi_o = atan2f(y, x);
 }
 
+__forceinline__ __host__ __device__ float get_jacobian_cartesian(float buffer_x_normalized, float buffer_y_normalized)
+{
+    float x = buffer_x_normalized * 2.0f - 1.0f;
+    float y = buffer_y_normalized * 2.0f - 1.0f;
+    return M_PIf / (2.0f * sqrtf(x*x + y*y)) * 4.0f;
+}
 
 __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(OutputShape::Type shape, float phi_o, float theta_o)
 {
-	float phi_o_normalized, theta_o_normalized;
+	float buffer_x_normalized, buffer_y_normalized;
     if(shape == OutputShape::HEMISPHERE)
-        get_normalized_polar(phi_o, theta_o, phi_o_normalized, theta_o_normalized);
+        get_normalized_polar(phi_o, theta_o, buffer_x_normalized, buffer_y_normalized);
     else
-        get_normalized_cartesian(phi_o, theta_o, phi_o_normalized, theta_o_normalized):
-	optix_assert(theta_o_normalized >= 0.0f);
-	optix_assert(theta_o_normalized <= 1.0f);
-	optix_assert(phi_o_normalized <= 1.0f);
-	optix_assert(phi_o_normalized >= 0.0f);
-	return optix::make_float2(phi_o_normalized, theta_o_normalized);
+        get_normalized_cartesian(phi_o, theta_o, buffer_x_normalized, buffer_y_normalized);
+	optix_assert(buffer_y_normalized >= 0.0f);
+	optix_assert(buffer_y_normalized <= 1.0f);
+	optix_assert(buffer_x_normalized <= 1.0f);
+	optix_assert(buffer_x_normalized >= 0.0f);
+	return optix::make_float2(buffer_x_normalized, buffer_y_normalized);
 }
 
-__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(OutputShape::Type shape, float phi_o_normalized, float theta_o_normalized)
+__forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(OutputShape::Type shape, float buffer_x_normalized, float buffer_y_normalized)
 {
     float phi_o, theta_o;
     if(shape == OutputShape::HEMISPHERE)
-        get_angles_polar(phi_o_normalized, theta_o_normalized, phi_o, theta_o);
+        get_angles_polar(buffer_x_normalized, buffer_y_normalized, phi_o, theta_o);
     else
-        get_angles_cartesian(phi_o_normalized, theta_o_normalized, phi_o, theta_o);
+        get_angles_cartesian(buffer_x_normalized, buffer_y_normalized, phi_o, theta_o);
 	return optix::make_float2(phi_o, theta_o);
 }
 
@@ -100,6 +112,26 @@ __forceinline__ __device__ void print_v3(const optix::float3 & v)
     optix_print("%f %f %f\n", v.x, v.y,v.z);
 }
 
+__forceinline__ __host__ __device__ float get_cos_theta_of_bin_center(OutputShape::Type shape, const optix::float2 normalized_coords, const optix::float2 & bins)
+{
+    if(shape == OutputShape::HEMISPHERE)
+    {
+        float theta_o_coord_norm = int(normalized_coords.y * bins.y) / float(bins.y);
+        float theta_o_coord_norm_up = (1 + int(normalized_coords.y * bins.y)) / float(bins.y);
+        float theta_bottom = get_normalized_hemisphere_buffer_angles(shape, 0, theta_o_coord_norm).y;
+        float theta_up = get_normalized_hemisphere_buffer_angles(shape, 0, theta_o_coord_norm_up).y;
+        float theta_average = (theta_bottom + theta_up) / 2;
+        return cosf(theta_average);
+    }
+    else
+    {
+        optix::float2 coords = normalized_coords * bins;
+        optix::float2 center = optix::floor(coords) + optix::make_float2(0.5f);
+        optix::float2 center_normalized = center / bins;
+        optix::float2 c = get_normalized_hemisphere_buffer_angles(shape, center_normalized.x, center_normalized.y);
+        return cosf(c.y);
+    }
+}
 __forceinline__ __device__ bool compare_geometries(const BSSRDFGeometry & g1, const BSSRDFGeometry & g2) {
     bool e0 = fabsf(optix::length(g1.xi - g2.xi)) < 1e-4;
     bool e1 = fabsf(optix::length(g1.xo - g2.xo)) < 1e-4;

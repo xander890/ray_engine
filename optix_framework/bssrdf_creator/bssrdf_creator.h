@@ -16,7 +16,7 @@ class BSSRDFRenderer
 {
 public:
 
-	BSSRDFRenderer(optix::Context & ctx, const OutputShape::Type shape = OutputShape::HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1));
+	BSSRDFRenderer(optix::Context & ctx, const OutputShape::Type shape = DEFAULT_SHAPE, const optix::int2 & shape_size = optix::make_int2(-1));
     virtual ~BSSRDFRenderer();
 
 	virtual void load_data();
@@ -89,7 +89,7 @@ protected:
 class BSSRDFRendererSimulated : public BSSRDFRenderer
 {
 public:
-	BSSRDFRendererSimulated(optix::Context & ctx, const OutputShape::Type shape = OutputShape::HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const unsigned int samples = (int)1e9) : BSSRDFRenderer(ctx, shape, shape_size), mSamples(samples)
+	BSSRDFRendererSimulated(optix::Context & ctx, const OutputShape::Type shape = DEFAULT_SHAPE, const optix::int2 & shape_size = optix::make_int2(-1), const unsigned int samples = (int)1e9) : BSSRDFRenderer(ctx, shape, shape_size), mSamples(samples)
 	{
 	}
 
@@ -121,7 +121,7 @@ protected:
 class BSSRDFRendererModel : public BSSRDFRenderer
 {
 public:
-	BSSRDFRendererModel(optix::Context & ctx, const OutputShape::Type shape = OutputShape::HEMISPHERE, const optix::int2 & shape_size = optix::make_int2(-1), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFRenderer(ctx, shape, shape_size)
+	BSSRDFRendererModel(optix::Context & ctx, const OutputShape::Type shape = DEFAULT_SHAPE, const optix::int2 & shape_size = optix::make_int2(-1), const ScatteringDipole::Type & dipole = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF) : BSSRDFRenderer(ctx, shape, shape_size)
 	{
 		mBSSRDF = std::move(BSSRDF::create(ctx, dipole));
 	}

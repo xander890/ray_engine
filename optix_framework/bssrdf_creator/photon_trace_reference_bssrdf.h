@@ -151,20 +151,20 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_mcml(OutputShape::Type
                 float phi_o = atan2f(wo.y, wo.x);
                 float theta_o = acosf(wo.z);
 
-                const optix::size_t2 bins = resulting_flux.size();
+                const optix::float2 bins = optix::make_float2(resulting_flux.size());
                 optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(shape, phi_o, theta_o);
-                optix::uint2 idxs = make_uint2(coords * make_float2(bins));
+                optix::uint2 idxs = make_uint2(coords * bins);
 
-                float flux_to_store = flux_t * 1.0f / (geometry_data.mArea * geometry_data.mSolidAngleBuffer[idxs]);
+                float flux_to_store = flux_t * 1.0f / (geometry_data.mArea);
+                float solid_angle_bin = geometry_data.mSolidAngleBuffer[idxs];
+                flux_to_store /= solid_angle_bin;
+                if(!isfinite(solid_angle_bin) || !isfinite(flux_to_store))
+                    printf("ANGLE %f flux %f\n", solid_angle_bin, flux_to_store);
 
                 if (!options.mbCosineWeighted)
                 {
-                    float theta_o_coord_norm = int(coords.y * bins.y) / float(bins.y);
-                    float theta_o_coord_norm_up = (1 + int(coords.y * bins.y)) / float(bins.y);
-                    float theta_bottom = get_normalized_hemisphere_buffer_angles(shape, 0.0f, theta_o_coord_norm).y;
-                    float theta_up = get_normalized_hemisphere_buffer_angles(shape, 0.0f, theta_o_coord_norm_up).y;
-                    float theta_average = (theta_bottom + theta_up) / 2;
-                    flux_to_store /= cosf(theta_average);
+                    float cos_theta_average = get_cos_theta_of_bin_center(shape, coords, bins);
+                    flux_to_store /= cos_theta_average;
                 }
 
                 const float b = options.mBias;
@@ -183,7 +183,6 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_mcml(OutputShape::Type
                 if (is_p_in_bin && i > 1) // No single scattering.
                 {
                     optix_print("(%d) Refraction. theta_o %f phi_o %f - %f\n", i, theta_o, phi_o, flux_to_store);
-
                     store_values_in_buffer(idxs, flux_to_store, resulting_flux);
                 }
                 // We are done with this random walk.
@@ -283,9 +282,9 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(Ou
                 }
 
                 const float theta_o = acosf(cos_theta_o);
-                const optix::size_t2 bins = resulting_flux.size();
+                optix::float2 bins = optix::make_float2(resulting_flux.size());
                 optix::float2 coords = get_normalized_hemisphere_buffer_coordinates(shape, phi_o, theta_o);
-                optix::uint2 idxs = make_uint2(coords * make_float2(bins));
+                optix::uint2 idxs = make_uint2(coords * bins);
 
                 float geometry_term = fabsf(optix::dot(wo, no)) * G_prime;
                 float bssrdf_E = albedo * flux_t * phase_HG(optix::dot(wp, w21), g) * T21 * geometry_term *
@@ -295,14 +294,8 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(Ou
 
                 if (!options.mbCosineWeighted)
                 {
-//                    float cos_theta_average = get_theta_bin_center();
-
-                    float theta_o_coord_norm = int(coords.y * bins.y) / float(bins.y);
-                    float theta_o_coord_norm_up = (1 + int(coords.y * bins.y)) / float(bins.y);
-                    float theta_bottom = get_normalized_hemisphere_buffer_angles(shape, 0, theta_o_coord_norm).y;
-                    float theta_up = get_normalized_hemisphere_buffer_angles(shape, 0, theta_o_coord_norm_up).y;
-                    float theta_average = (theta_bottom + theta_up) / 2;
-                    bssrdf_E /= cosf(theta_average);
+                    float cos_theta_average = get_cos_theta_of_bin_center(shape, coords, bins);
+                    bssrdf_E /= cos_theta_average;
                 }
 
                 optix_print("flux_t %f, albedo %f, p %f, exp %f, F %f\n", flux_t, albedo,
