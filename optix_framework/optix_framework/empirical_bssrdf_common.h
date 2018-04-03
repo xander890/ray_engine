@@ -59,21 +59,25 @@ __forceinline__ __host__ __device__ void get_normalized_cartesian(float phi_o, f
     float x = theta_o / (M_PIf * 0.5f) * cosf(phi_o);
     float y = theta_o / (M_PIf * 0.5f) * sinf(phi_o);
     theta_o_normalized = x * 0.5f + 0.5f;
-    phi_o_normalized =
-    phi_o_normalized = normalize_angle(phi_o) / (2.0f * M_PIf);
+    phi_o_normalized = y * 0.5f + 0.5f;
 }
 
 __forceinline__ __host__ __device__ void get_angles_cartesian(float phi_o_normalized, float theta_o_normalized, float & phi_o, float & theta_o)
 {
-    theta_o = acosf(1 - theta_o_normalized);
-    phi_o = phi_o_normalized * (2.0f * M_PIf);
+    float x = theta_o_normalized * 2.0f - 1.0f;
+    float y = phi_o_normalized * 2.0f - 1.0f;
+    theta_o = M_PIf * 2.0f * sqrtf(x*x + y*y);
+    phi_o = atan2f(y, x);
 }
 
 
 __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_coordinates(OutputShape::Type shape, float phi_o, float theta_o)
 {
 	float phi_o_normalized, theta_o_normalized;
-    get_normalized_polar(phi_o, theta_o, phi_o_normalized, theta_o_normalized);
+    if(shape == OutputShape::HEMISPHERE)
+        get_normalized_polar(phi_o, theta_o, phi_o_normalized, theta_o_normalized);
+    else
+        get_normalized_cartesian(phi_o, theta_o, phi_o_normalized, theta_o_normalized):
 	optix_assert(theta_o_normalized >= 0.0f);
 	optix_assert(theta_o_normalized <= 1.0f);
 	optix_assert(phi_o_normalized <= 1.0f);
@@ -84,7 +88,10 @@ __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buff
 __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buffer_angles(OutputShape::Type shape, float phi_o_normalized, float theta_o_normalized)
 {
     float phi_o, theta_o;
-    get_angles_polar(phi_o_normalized, theta_o_normalized, phi_o, theta_o);
+    if(shape == OutputShape::HEMISPHERE)
+        get_angles_polar(phi_o_normalized, theta_o_normalized, phi_o, theta_o);
+    else
+        get_angles_cartesian(phi_o_normalized, theta_o_normalized, phi_o, theta_o);
 	return optix::make_float2(phi_o, theta_o);
 }
 
