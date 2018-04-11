@@ -75,7 +75,7 @@ size_t BSSRDFImporter::get_material_slice_size()
 
 size_t BSSRDFImporter::get_hemisphere_size()
 {
-	return get_hemisphere_theta_o()*get_hemisphere_phi_o();
+	return get_hemisphere_dimension_2()* get_hemisphere_dimension_1();
 }
 
 const std::map<size_t, std::vector<float>>& BSSRDFImporter::get_parameters()
@@ -161,6 +161,7 @@ bool BSSRDFImporter::parse_header()
     std::string str;
 
 	bool parsed_dimensions = false;
+	bool shape_found = false;
 
 	while (std::getline(file, str)) {
 		if (str.size() >= size_delimiter.size() && str.substr(0, size_delimiter.size()).compare(size_delimiter) == 0)
@@ -176,18 +177,32 @@ bool BSSRDFImporter::parse_header()
 			}
 			parsed_dimensions = true;
 		}
+		if (str.size() >= shape_delimiter.size() && str.substr(0, shape_delimiter.size()).compare(shape_delimiter) == 0)
+		{
+			if(shape_found)
+				Logger::warning << "Shape inconsistency found. Be careful to specify the shape before the parameters!" << std::endl;
+			mOutputShape = OutputShape::to_enum(str.substr(shape_delimiter.size()));
+			shape_found = true;
+		}
         if (str.size() >= parameter_delimiter.size() && str.substr(0, parameter_delimiter.size()) == parameter_delimiter)
         {
+			if(!shape_found)
+			{
+				Logger::error << "Shape has not been found. Assuming hemisphere!" << std::endl;
+				mOutputShape = OutputShape::HEMISPHERE;
+				shape_found = true;
+			}
             std::stringstream ss(str.substr(parameter_delimiter.size()));
             std::string name;
             ss >> name;
             std::string s = ss.str();
             s.erase(0, name.length() + 1);
-            auto res = std::find_if(std::begin(BSSRDFParameterManager::parameter_names), std::end(BSSRDFParameterManager::parameter_names), [&](const auto &pair)
+			auto names = BSSRDFParameterManager::get_parameter_names(mOutputShape);
+            auto res = std::find_if(std::begin(names), std::end(names), [&](const auto &pair)
             {
                 return pair.second == name;
             });
-            if (res != BSSRDFParameterManager::parameter_names.end())
+            if (res != names.end())
                 mParameters[res->first] = tovalue<std::vector<float>>(s);
         }
 		if (!str.empty() && str[0] == '#')
@@ -197,10 +212,11 @@ bool BSSRDFImporter::parse_header()
 }
 
 
-BSSRDFExporter::BSSRDFExporter(const std::string & filename, const BSSRDFParameterManager & manager, size_t size_theta_o, size_t size_phi_o) : mManager(manager), mFileName(filename)
+BSSRDFExporter::BSSRDFExporter(const OutputShape::Type shape, const std::string &filename, const BSSRDFParameterManager &manager, size_t size_theta_o, size_t size_phi_o): mManager(manager), mFileName(filename)
 {
-	mThetaoSize = size_theta_o;
-	mPhioSize = size_phi_o;
+	mOutputShape = shape;
+	mDim2Size = size_theta_o;
+	mDim1Size = size_phi_o;
 	size_t total_size = sizeof(float);
 	for (size_t element : mManager.get_dimensions())
 		total_size *= element;
@@ -230,7 +246,7 @@ size_t BSSRDFExporter::get_material_slice_size()
 
 size_t BSSRDFExporter::get_hemisphere_size()
 {
-	return mThetaoSize * mPhioSize;
+	return mDim2Size * mDim1Size;
 }
 
 void BSSRDFExporter::set_material_slice(const float * bssrdf_data, const std::vector<size_t>& idx)
@@ -295,8 +311,7 @@ void BSSRDFExporter::set_hemisphere(const float * bssrdf_data, const std::vector
 std::string BSSRDFExporter::create_header()
 {
 	std::stringstream ss;
-	//ss.open(mFileName, std::ofstream::out);
-	ss << "# BSSRDF file format (version 0.1)" << std::endl;
+	ss << "# BSSRDF file format (version 0.2)" << std::endl;
 	ss << "# Index dimensions is at follows:" << std::endl;
 	ss << size_delimiter << " ";
 	auto di = mManager.get_dimensions();
@@ -304,29 +319,58 @@ std::string BSSRDFExporter::create_header()
 	{
 		ss << di[i] << " ";
 	}
-	ss << mPhioSize << " " << mThetaoSize;
+	ss << mDim1Size << " " << mDim2Size;
 	ss << std::endl;
-	ss << "#eta g albedo theta_s r theta_i phi_o theta_o" << std::endl;
+
+	auto names = BSSRDFParameterManager::get_parameter_names(mOutputShape);
+
+	std::string dim_1_token = names[dim_1_index];
+	std::string dim_2_token = names[dim_2_index];
+
+	ss << "#eta g albedo theta_s r theta_i " << dim_1_token << " " << dim_2_token << std::endl;
+	ss << shape_delimiter << " " << OutputShape::to_string(mOutputShape) << std::endl;
 
 	std::string params;
-	parameters_to_string(mManager.parameters, BSSRDFParameterManager::parameter_names, params);
+	parameters_to_string(mManager.parameters, names, params);
 	ss << params;
 
-    ss << parameter_delimiter << " phi_o_index";
-    for(int i = 0; i <= mPhioSize; i++)
+    ss << parameter_delimiter << " " << dim_1_token << "_index";
+    for(int i = 0; i <= mDim1Size; i++)
 	{
-        float normalized = static_cast<float>(i) / mPhioSize;
-//        ss << " " << std::to_string(get_phi_o(normalized));
+        float normalized = static_cast<float>(i) / mDim1Size;
+		if(mOutputShape == OutputShape::HEMISPHERE)
+		{
+			float theta_o, phi_o;
+			get_angles_polar(normalized, 0, phi_o, theta_o);
+			ss << " " << std::to_string(phi_o);
+		}
+		else
+		{
+			float x = normalized * 2 - 1;
+			ss << " " << std::to_string(x);
+		}
 	}
     ss << std::endl;
 
-    ss << parameter_delimiter << " theta_o_index";
-    for(int i = 0; i <= mThetaoSize; i++)
+    ss << parameter_delimiter << " " << dim_2_token << "_index";
+    for(int i = 0; i <= mDim2Size; i++)
     {
-        float normalized = static_cast<float>(i) / mThetaoSize;
-//        ss << " " << std::to_string(get_theta_o(normalized));
+        float normalized = static_cast<float>(i) / mDim2Size;
+
+		if(mOutputShape == OutputShape::HEMISPHERE)
+		{
+			float theta_o, phi_o;
+			get_angles_polar(0, normalized, phi_o, theta_o);
+			ss << " " << std::to_string(theta_o);
+		}
+		else
+		{
+			float y = normalized * 2 - 1;
+			ss << " " << std::to_string(y);
+		}
     }
     ss << std::endl;
     ss << bssrdf_delimiter << std::endl;
 	return ss.str();
 }
+

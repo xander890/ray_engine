@@ -156,16 +156,12 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_mcml(OutputShape::Type
                 optix::uint2 idxs = make_uint2(coords * bins);
 
                 float flux_to_store = flux_t * 1.0f / (geometry_data.mArea);
-                float solid_angle_bin = geometry_data.mSolidAngleBuffer[idxs];
-                flux_to_store /= solid_angle_bin;
+                float solid_angle_bin = geometry_data.mWeightedSolidAngleBuffer[idxs];
+
+                if(solid_angle_bin > 0.0f)
+                    flux_to_store /= solid_angle_bin;
                 if(!isfinite(solid_angle_bin) || !isfinite(flux_to_store))
                     printf("ANGLE %f flux %f\n", solid_angle_bin, flux_to_store);
-
-                if (!options.mbCosineWeighted)
-                {
-                    float cos_theta_average = get_cos_theta_of_bin_center(shape, coords, bins);
-                    flux_to_store /= cos_theta_average;
-                }
 
                 const float b = options.mBias;
                 if (options.mbBiasMode == BiasMode::BIAS_ONLY)
@@ -289,14 +285,11 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(Ou
                 float geometry_term = fabsf(optix::dot(wo, no)) * G_prime;
                 float bssrdf_E = albedo * flux_t * phase_HG(optix::dot(wp, w21), g) * T21 * geometry_term *
                                  expf(-extinction * xoxp);
-                bssrdf_E *= r * (2.0f / (geometry_data.mRadius.x + geometry_data.mRadius.y)) *
-                            (1.0f / geometry_data.mSolidAngleBuffer[idxs]);
+                bssrdf_E *= r * (2.0f / (geometry_data.mRadius.x + geometry_data.mRadius.y));
 
-                if (!options.mbCosineWeighted)
-                {
-                    float cos_theta_average = get_cos_theta_of_bin_center(shape, coords, bins);
-                    bssrdf_E /= cos_theta_average;
-                }
+                float solid_angle_bin = geometry_data.mWeightedSolidAngleBuffer[idxs];
+                if(solid_angle_bin > 0.0f)
+                    bssrdf_E /= solid_angle_bin;
 
                 optix_print("flux_t %f, albedo %f, p %f, exp %f, F %f\n", flux_t, albedo,
                         phase_HG(optix::dot(w21, wp), g), expf(-extinction * xoxp), T21);

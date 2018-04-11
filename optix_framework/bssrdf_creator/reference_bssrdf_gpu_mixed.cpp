@@ -189,3 +189,20 @@ void ReferenceBSSRDFGPUMixed::set_preset(ReferenceRendererPreset::Type preset)
         case ReferenceRendererPreset::NotValidEnumItem:break;
     }
 }
+
+void ReferenceBSSRDFGPUMixed::set_shape(OutputShape::Type shape)
+{
+    //BSSRDFRenderer::set_shape(shape);
+    mOutputShape = shape;
+    mRenderer1->set_shape(shape);
+    mRenderer2->set_shape(shape);
+}
+
+void ReferenceBSSRDFGPUMixed::set_size(optix::uint2 size)
+{
+    //BSSRDFRenderer::set_size(size);
+    mShapeSize = size;
+    mBSSRDFSumBuffer->setSize(mShapeSize.x, mShapeSize.y);
+    mRenderer1->set_size(size);
+    mRenderer2->set_size(size);
+}

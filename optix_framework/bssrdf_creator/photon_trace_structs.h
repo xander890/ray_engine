@@ -60,7 +60,7 @@ struct BSSRDFRendererData
     optix::float2 mThetas       DEFAULT(optix::make_float2(0.0f, 7.5));
     optix::float2 mRadius       DEFAULT(optix::make_float2(0.0f, 1.f));
     float mArea;
-    rtBufferId<float, 2> mSolidAngleBuffer;
+    rtBufferId<float, 2> mWeightedSolidAngleBuffer;
 	float mDeltaR;
 	float mDeltaThetas;
 };

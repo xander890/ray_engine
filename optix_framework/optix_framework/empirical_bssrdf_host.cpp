@@ -27,16 +27,16 @@ void EmpiricalBSSRDF::prepare_buffers()
     buf[0] = full_dimensions[theta_s_index];
     buf[1] = full_dimensions[r_index];
     buf[2] = full_dimensions[theta_i_index];
-    buf[4] = full_dimensions[phi_o_index];
-    buf[3] = full_dimensions[theta_o_index];
+    buf[4] = full_dimensions[dim_1_index];
+    buf[3] = full_dimensions[dim_2_index];
     mParameterSizeBuffer->unmap();
 
     auto parameters = mBSSRDFLoader->get_parameters();
     mParameterBuffers.buffers[0] = create_and_initialize_buffer(mContext, parameters[theta_s_index] )->getId();
     mParameterBuffers.buffers[1] = create_and_initialize_buffer(mContext,parameters[r_index] )->getId();
     mParameterBuffers.buffers[2] = create_and_initialize_buffer(mContext, parameters[theta_i_index] )->getId();
-    mParameterBuffers.buffers[4] = create_and_initialize_buffer(mContext, parameters[phi_o_index] )->getId();
-    mParameterBuffers.buffers[3] = create_and_initialize_buffer(mContext, parameters[theta_o_index] )->getId();
+    mParameterBuffers.buffers[4] = create_and_initialize_buffer(mContext, parameters[dim_1_index] )->getId();
+    mParameterBuffers.buffers[3] = create_and_initialize_buffer(mContext, parameters[dim_2_index] )->getId();
     mManager = std::make_unique<BSSRDFParameterManager>(parameters);
     mInitialized = true;
 }

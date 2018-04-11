@@ -37,8 +37,10 @@ public:
 	virtual bool on_draw(unsigned int flags);
 
 	void set_read_only(bool is_read_only) { mIsReadOnly = is_read_only;  }
-	void set_shape(OutputShape::Type shape);
+	virtual void set_shape(OutputShape::Type shape);
+	virtual void set_size(optix::uint2 new_size);
 	OutputShape::Type get_shape() { return mOutputShape; }
+	static optix::uint2 get_default_size(OutputShape::Type shape);
 
 	enum GUIFlags
 	{
@@ -52,11 +54,10 @@ public:
 protected:
 	void fill_solid_angle_buffer();
     void fill_geometry_data();
-    static optix::uint2 default_size(OutputShape::Type shape);
 
 	OutputShape::Type mOutputShape;
-	int entry_point = -1;
-	int entry_point_post = -1;
+	unsigned int entry_point = -1;
+	unsigned int entry_point_post = -1;
     unsigned int mRenderedFrames = 0;
 
 	optix::uint2 mShapeSize;
@@ -65,7 +66,7 @@ protected:
 	optix::Buffer mBSSRDFBufferIntermediate = nullptr;
 	optix::Buffer mBSSRDFBuffer = nullptr;
     optix::Buffer mProperties = nullptr;
-	optix::Buffer mSolidAngleBuffer = nullptr;
+	optix::Buffer mWeightedSolidAngleBuffer = nullptr;
 
 	// Geometric properties
     BSSRDFRendererData mGeometryData;
@@ -82,6 +83,7 @@ protected:
 
     bool mIsReadOnly = false;
     bool mInitialized = false;
+	bool mRecomputeSolidAngles = true;
     static int mGlobalId;
     int mId;
 };
@@ -131,6 +133,6 @@ public:
 	bool on_draw(unsigned int flags) override;
 	void load_data() override;
 	void set_dipole(ScatteringDipole::Type dip);
-	ScatteringDipole::Type get_dipole() {return mBSSRDF->get_type();}
+	ScatteringDipole::Type get_dipole() { return mBSSRDF->get_type();}
 	std::unique_ptr<BSSRDF> mBSSRDF = nullptr;
 };

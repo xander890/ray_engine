@@ -5,11 +5,12 @@
 #include <string>
 #include "logger.h"
 #include "host_device_common.h"
+#include "empirical_bssrdf_common.h"
 
 #define INVALID_INDEX ((size_t)(-1))
 
-#define theta_o_index 7
-#define phi_o_index 6
+#define dim_2_index 7
+#define dim_1_index 6
 #define theta_i_index 5
 #define r_index 4
 #define theta_s_index 3
@@ -69,7 +70,6 @@ public:
 	BSSRDFParameterManager(std::map<size_t, std::vector<float>> p) : parameters(p) {}
 	std::map<size_t, std::vector<float>> parameters;
 
-	static std::map<size_t, std::string> parameter_names;
 	static std::map<size_t, std::vector<float>> original_parameters;
 	size_t size() const
 	{
@@ -173,6 +173,12 @@ public:
 		return dims;
 	}
 
+
+    static const std::map<size_t, std::string>& get_parameter_names(OutputShape::Type type)
+    {
+        return type == OutputShape::HEMISPHERE? parameter_names_hemi : parameter_names_plane;
+    };
+
 private:
 	bool increment(size_t src, size_t size, size_t & dst)
 	{
@@ -180,5 +186,8 @@ private:
 		return ((src + 1) / size) >= 1;
 	}
 
-	static const ParameterState invalid_index; 
+	static const ParameterState invalid_index;
+	static std::map<size_t, std::string> parameter_names_hemi;
+	static std::map<size_t, std::string> parameter_names_plane;
+
 };

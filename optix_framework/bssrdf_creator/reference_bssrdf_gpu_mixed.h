@@ -30,6 +30,8 @@ public:
     void render() override;
     bool on_draw(unsigned int flags) override;
     void reset() override;
+    void set_shape(OutputShape::Type shape) override;
+    void set_size(optix::uint2 shape) override;
 
     void set_geometry_parameters(float theta_i, optix::float2 r, optix::float2 theta_s) override;
     void set_material_parameters(float albedo, float extinction, float g, float eta) override;

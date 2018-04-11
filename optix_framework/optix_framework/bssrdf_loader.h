@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "empirical_bssrdf_common.h"
 #include "bssrdf_parameter_manager.h"
 
 #define USE_SMALL_FILES
@@ -9,6 +10,7 @@
 #define bssrdf_delimiter std::string("BSSRDF")
 #define size_delimiter std::string("SIZE")
 #define parameter_delimiter std::string("PARAMETER")
+#define shape_delimiter std::string("SHAPE")
 
 class BSSRDFImporter
 {
@@ -21,20 +23,22 @@ public:
 	const std::map<size_t, std::vector<float>>& get_parameters();
 	bool load_material_slice(float * bssrdf_data, const std::vector<size_t> & idx);
 	bool load_hemisphere(float * bssrdf, const std::vector<size_t> & idx);
-	size_t get_hemisphere_theta_o() { return mDimensions[theta_o_index]; }
-	size_t get_hemisphere_phi_o() { return mDimensions[phi_o_index]; }
+	size_t get_hemisphere_dimension_2() { return mDimensions[dim_2_index]; }
+	size_t get_hemisphere_dimension_1() { return mDimensions[dim_1_index]; }
+	OutputShape::Type get_shape() { return mOutputShape; }
 
 private:
 	bool parse_header();
 	std::vector<size_t> mDimensions;
 	std::string mFileName;
 	std::map<size_t, std::vector<float>> mParameters;
+	OutputShape::Type mOutputShape;
 };
 
 class BSSRDFExporter
 {
 public:
-	BSSRDFExporter(const std::string & filename, const BSSRDFParameterManager & manager, size_t size_theta_o, size_t size_phi_o);
+	BSSRDFExporter(const OutputShape::Type shape, const std::string & filename, const BSSRDFParameterManager & manager, size_t size_theta_o, size_t size_phi_o);
 	size_t get_material_slice_size();
 	size_t get_hemisphere_size();
 
@@ -45,7 +49,8 @@ private:
 	std::string create_header();
 	std::string mHeader;
 	std::string mFileName;
-	size_t mThetaoSize, mPhioSize;
+	size_t mDim2Size, mDim1Size;
+	OutputShape::Type mOutputShape;
 
 	const BSSRDFParameterManager & mManager;
 };

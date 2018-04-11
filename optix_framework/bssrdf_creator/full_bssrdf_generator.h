@@ -49,9 +49,9 @@ private:
 	void set_external_bssrdf(const std::string & file);
 
 	optix::Buffer result_buffer;
-	std::shared_ptr<BSSRDFRenderer>	 mCurrentBssrdfRenderer;
-	std::shared_ptr<BSSRDFRendererSimulated>	 mBssrdfReferenceSimulator;
-	std::shared_ptr<BSSRDFRendererModel>		 mBssrdfModelSimulator;
+	std::shared_ptr<BSSRDFRenderer>	 mCurrentBssrdfRenderer = nullptr;
+	std::shared_ptr<BSSRDFRendererSimulated>	 mBssrdfReferenceSimulator = nullptr;
+	std::shared_ptr<BSSRDFRendererModel>		 mBssrdfModelSimulator = nullptr;
 	std::string config_file;
 
 	int entry_point_output = -1;
@@ -60,7 +60,8 @@ private:
 	optix::TextureSampler mBSSRDFHemisphereTexLinear = nullptr;
 	optix::TextureSampler mBSSRDFHemisphereTexNearest = nullptr;
 	float mScaleMultiplier = 1.f;
-	int mShowFalseColors = 1;
+	unsigned int mShowFalseColors = 1;
+	unsigned int mInterpolation = 0;
 	int mFresnelMode = BSSRDF_RENDER_MODE_FULL_BSSRDF;
 	std::unique_ptr<ImmediateGUI> gui;
 

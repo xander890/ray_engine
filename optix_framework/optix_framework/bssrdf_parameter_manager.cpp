@@ -6,9 +6,9 @@ const ParameterState BSSRDFParameterManager::invalid_index = ParameterState({INV
                                                                              INVALID_INDEX, INVALID_INDEX});;
 
 #define stringify_pair(x) x, #x
-std::map<size_t, std::string> BSSRDFParameterManager::parameter_names = {
-        {stringify_pair(theta_o_index)},
-        {stringify_pair(phi_o_index)},
+std::map<size_t, std::string> BSSRDFParameterManager::parameter_names_hemi = {
+        {dim_2_index, "theta_o"},
+        {dim_1_index, "phi_o"},
         {stringify_pair(theta_i_index)},
         {stringify_pair(r_index)},
         {stringify_pair(theta_s_index)},
@@ -16,6 +16,18 @@ std::map<size_t, std::string> BSSRDFParameterManager::parameter_names = {
         {stringify_pair(g_index)},
         {stringify_pair(eta_index)}
 };
+
+std::map<size_t, std::string> BSSRDFParameterManager::parameter_names_plane = {
+        {dim_2_index, "y"},
+        {dim_1_index, "x"},
+        {stringify_pair(theta_i_index)},
+        {stringify_pair(r_index)},
+        {stringify_pair(theta_s_index)},
+        {stringify_pair(albedo_index)},
+        {stringify_pair(g_index)},
+        {stringify_pair(eta_index)}
+};
+
 #undef stringify_pair
 
 std::map<size_t, std::vector<float>> BSSRDFParameterManager::original_parameters = {

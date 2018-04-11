@@ -18,6 +18,7 @@ rtDeclareVariable(OutputShape::Type, reference_bssrdf_output_shape, , );
 rtDeclareVariable(int, reference_bssrdf_fresnel_mode, , ) = BSSRDF_RENDER_MODE_FULL_BSSRDF;
 rtDeclareVariable(float, reference_bssrdf_rel_ior, , );
 rtDeclareVariable(BSSRDFRendererData, reference_bssrdf_data, , );
+rtDeclareVariable(unsigned int, interpolation, , );
 
 __device__ __forceinline__ float convert_to_tex_coordinate(float normalized_buffer_coordinate, unsigned int size)
 {
@@ -51,8 +52,9 @@ RT_PROGRAM void render_ref()
         texcoords.y = convert_to_tex_coordinate(coords.y, size.y);
 
 
-        //float S = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, texcoords.x, texcoords.y).x;
-        float S = reference_scale_multiplier * optix::rtTex2DFetch<float4>(resulting_flux_tex, int(coords.x * size.x), int(coords.y * size.y)).x;
+        float S0 = reference_scale_multiplier * optix::rtTex2D<float4>(resulting_flux_tex, texcoords.x, texcoords.y).x;
+        float S1 = reference_scale_multiplier * optix::rtTex2DFetch<float4>(resulting_flux_tex, int(coords.x * size.x), int(coords.y * size.y)).x;
+        float S = interpolation == 0? S1 : S0;
 
         float T21 = 1.0f - fresnel_R(cos_theta_o, reference_bssrdf_rel_ior);
 
@@ -70,10 +72,16 @@ RT_PROGRAM void render_ref()
         else
             output_buffer[launch_index] = make_float4(val);
     }
-
-    optix::uint2 t = make_uint2(uv * make_float2(reference_bssrdf_data.mSolidAngleBuffer.size()));
-    float v = reference_bssrdf_data.mSolidAngleBuffer[t] * reference_scale_multiplier;
-    output_buffer[launch_index] =  make_float4(jet(v), 1);
+/*
+    optix::uint3 size = optix::rtTexSize(resulting_flux_tex);
+    optix::float2 ss = optix::make_float2(size.x, size.y);
+    optix::float2 buf_norm = optix::floor(uv * ss) / ss;
+    bool x = interpolation == 1;
+    float v = reference_scale_multiplier / get_cos_theta_of_bin_center(OutputShape::PLANE, buf_norm, ss, x);
+    output_buffer[launch_index] = make_float4(jet(v), 1);
+    if(l > 1.0f)
+        output_buffer[launch_index] = make_float4(0,0,0,0);
+*/
 //	}
 		/*
 	else

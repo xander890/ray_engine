@@ -112,7 +112,7 @@ __forceinline__ __device__ void print_v3(const optix::float3 & v)
     optix_print("%f %f %f\n", v.x, v.y,v.z);
 }
 
-__forceinline__ __host__ __device__ float get_cos_theta_of_bin_center(OutputShape::Type shape, const optix::float2 normalized_coords, const optix::float2 & bins)
+__forceinline__ __host__ __device__ float get_cos_theta_of_bin_center(OutputShape::Type shape, const optix::float2 normalized_coords, const optix::float2 & bins, bool inters = false)
 {
     if(shape == OutputShape::HEMISPHERE)
     {
@@ -125,10 +125,29 @@ __forceinline__ __host__ __device__ float get_cos_theta_of_bin_center(OutputShap
     }
     else
     {
+
         optix::float2 coords = normalized_coords * bins;
         optix::float2 center = optix::floor(coords) + optix::make_float2(0.5f);
+        optix::float2 plane_coords = center/bins * 2 - 1;
+        float l = optix::length(plane_coords);
+        const float BIAS = 0.5f;
+        if(inters && l >= 1 - fmaxf(BIAS/bins.x, BIAS/bins.y))
+        {
+            bool intersection_found = true;
+            optix::float2 point = optix::floor(coords);
+            optix::float2 plane_coords_s = plane_coords * bins;
+            point.x = plane_coords.x < 0.0f? point.x + 1.0f : point.x;
+            point.y = plane_coords.y < 0.0f? point.y + 1.0f : point.y;
+            optix::float2 point_found = point/bins * 2 - 1;
+            if(intersection_found && length(point_found) < 1)
+            {
+                center = point;
+            }
+        }
+
         optix::float2 center_normalized = center / bins;
         optix::float2 c = get_normalized_hemisphere_buffer_angles(shape, center_normalized.x, center_normalized.y);
+
         return cosf(c.y);
     }
 }
