@@ -24,7 +24,7 @@
 #include "GLFWDisplay.h"
 #include "shader_factory.h"
 #include "optprops/Medium.h"
-#include "mesh.h"
+#include "object_host.h"
 #include "host_material.h"
 #include "environment_map_background.h"
 #include "constant_background.h"
@@ -48,7 +48,14 @@
 #include "bssrdf_visualizer.h"
 
 using namespace std;
-using namespace optix;
+using optix::uint2;
+using optix::TextureSampler;
+using optix::Program;
+using optix::make_float3;
+using optix::Acceleration;
+using optix::Aabb;
+using optix::Buffer;
+
 
 void ObjScene::add_result_image(const string& image_file)
 {
@@ -56,9 +63,9 @@ void ObjScene::add_result_image(const string& image_file)
 	context["comparison_texture"]->setInt(comparison_image->getId());
 }
 
-void ObjScene::execute_on_scene_elements(function<void(Mesh&)> operation) 
+void ObjScene::execute_on_scene_elements(function<void(Object&)> operation)
 {
-    for (std::unique_ptr<Mesh> & m : mMeshes)
+    for (std::unique_ptr<Object> & m : mMeshes)
     {
         operation(*m);
     }
@@ -110,7 +117,7 @@ bool ObjScene::key_pressed(int key, int action, int modifier)
 	case GLFW_KEY_R:
 	{
 		Logger::info << "Reloading all shaders..." << std::endl;
-		execute_on_scene_elements([=](Mesh & m)
+		execute_on_scene_elements([=](Object & m)
 		{
 			m.reload_shader();
 		});
@@ -141,7 +148,7 @@ ObjScene::ObjScene()
 {
 	calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
 	mMeshes.clear();
-	custom_rr = make_int4(-1);
+	custom_rr = optix::make_int4(-1);
 	current_render_task = make_unique<RenderTaskFrames>(1000, "res.raw", false);
 }
 
@@ -168,6 +175,12 @@ bool ObjScene::draw_gui()
 	ss << "Time (tonemap/dbg): " << to_string(to_milliseconds(render_time_tonemap)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_tonemap)) << " FPS)";
 	ImmediateGUIDraw::Text("%s",ss.str().c_str());
 	static bool debug = debug_mode_enabled;
+
+	if(ImmediateGUIDraw::Button("Serialize"))
+	{
+		serialize_scene();
+	}
+
 	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImmediateGUIDraw::Checkbox("Debug mode", &debug))
@@ -205,7 +218,7 @@ bool ObjScene::draw_gui()
 		ImmediateGUIDraw::SameLine();
 		if (ImmediateGUIDraw::Button("Reset Shaders"))
 		{
-			execute_on_scene_elements([=](Mesh & m)
+			execute_on_scene_elements([=](Object & m)
 			{
 				m.reload_shader();
 			});
@@ -290,12 +303,11 @@ bool ObjScene::draw_gui()
 
 	if (ImmediateGUIDraw::CollapsingHeader("Meshes"))
 	{
-		execute_on_scene_elements([&](Mesh & m)
+		execute_on_scene_elements([&](Object & m)
 		{
 			changed |= m.on_draw();
 		});
 	}
-
 
 	changed |= camera->on_draw();
 
@@ -340,6 +352,21 @@ bool ObjScene::draw_gui()
 	}
 
 	return changed;
+}
+
+void ObjScene::serialize_scene()
+{
+	std::stringstream ss;
+	{
+		cereal::XMLOutputArchive output_archive(ss);
+		output_archive(mMeshes[0]);
+	}
+	Logger::info << ss.str();
+
+	cereal::XMLInputArchiveOptix iarchive(context, ss);
+	std::unique_ptr<Object> m;
+    iarchive(m);
+
 }
 
 
@@ -463,7 +490,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 		// Load OBJ scene
 		Logger::info <<"Loading obj " << filenames[i]  << "..." <<endl;
 		ObjLoader* loader = new ObjLoader((Folders::data_folder + filenames[i]).c_str(), context);
-        vector<std::unique_ptr<Mesh>> v = loader->load(get_object_transform(filenames[i]));
+        vector<std::unique_ptr<Object>> v = loader->load(get_object_transform(filenames[i]));
 		for (auto& c : v)
 		{
 			c->transform_changed_event = std::bind(&ObjScene::transform_changed, this);
@@ -482,7 +509,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	
 	context["importance_sample_area_lights"]->setUint(mImportanceSampleAreaLights);
 
-    execute_on_scene_elements([=](Mesh & m)
+    execute_on_scene_elements([=](Object & m)
     {
         m.set_method(t);
     });
@@ -550,10 +577,10 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	tonemap_entry_point = add_entry_point(context, ray_gen_program_t);
 	debug_entry_point = add_entry_point(context, ray_gen_program_d);
 
-	zoomed_area = make_uint4(camera_width / 2 - 5, camera_height / 2 - 5, 10, 10);
+	zoomed_area = optix::make_uint4(camera_width / 2 - 5, camera_height / 2 - 5, 10, 10);
 	context["zoom_window"]->setUint(zoom_debug_window);
 	context["image_part_to_zoom"]->setUint(zoomed_area);
-	context["debug_index"]->setUint(make_uint2(0, 0));
+	context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	// Environment cameras
 	
 
@@ -582,7 +609,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	params.name = "ketchup";
 
     material_ketchup = std::make_shared<MaterialHost>(context,params);
-    execute_on_scene_elements([=](Mesh & m)
+    execute_on_scene_elements([=](Object & m)
     {
         //m.add_material(material_ketchup);
     });
@@ -648,7 +675,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		scene->getAcceleration()->markDirty();
 
     method->pre_trace();
-    execute_on_scene_elements([=](Mesh & m)
+    execute_on_scene_elements([=](Object & m)
     {
 		m.load();
         m.pre_trace();
@@ -670,7 +697,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 
 
 	method->post_trace();
-	execute_on_scene_elements([=](Mesh & m)
+	execute_on_scene_elements([=](Object & m)
 	{
 		m.post_trace();
 	});
@@ -833,12 +860,12 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 	context["area_lights"]->set(area_light_buffer);
 }
 
-GeometryGroup ObjScene::get_geometry_group(unsigned int idx)
+optix::GeometryGroup ObjScene::get_geometry_group(unsigned int idx)
 {
 	RTobject object;
 	rtGroupGetChild(scene->get(), idx, &object);
 	RTgeometrygroup temp = reinterpret_cast<RTgeometrygroup>(object);
-	return GeometryGroup::take(temp);
+	return optix::GeometryGroup::take(temp);
 }
 
 optix::Matrix4x4 ObjScene::get_object_transform(string filename)
@@ -956,7 +983,7 @@ bool ObjScene::mouse_pressed(int x, int y, int button, int action, int mods)
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && debug_mode_enabled)
 	{
 		set_debug_pixel(x, y);
-		zoomed_area = make_uint4(x - (int)zoomed_area.z / 2, y - (int)zoomed_area.w / 2, zoomed_area.z, zoomed_area.w);
+		zoomed_area = optix::make_uint4(x - (int)zoomed_area.z / 2, y - (int)zoomed_area.w / 2, zoomed_area.z, zoomed_area.w);
 		return true;
 	}
 	return gui->mousePressed(x, y, button, action, mods);
@@ -1029,7 +1056,7 @@ void ObjScene::updateGlassObjects()
 	Logger::info<<"Updating glass objects"<<endl;
 	float3* abs = reinterpret_cast<float3*>(&calc_absorption);
 	*abs = global_absorption_override / global_absorption_inv_multiplier;
-	execute_on_scene_elements([=](Mesh& object)
+	execute_on_scene_elements([=](Object& object)
 		{
 			object.mMaterial["ior"]->setFloat(global_ior_override);
 			object.mMaterial["absorption"]->setFloat(*abs);
@@ -1047,7 +1074,7 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 
 	bool use_auto_camera = ConfigParameters::get_parameter<bool>("camera", "use_auto_camera", false, "Use a automatic placed camera or use the current data.");
 
-	Matrix3x3 camera_matrix = Matrix3x3::identity();
+    optix::Matrix3x3 camera_matrix = optix::Matrix3x3::identity();
 
 	float vfov = ConfigParameters::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
 
@@ -1071,7 +1098,7 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 
 	if (camera_type == PinholeCameraType::INVERSE_CAMERA_MATRIX)
 	{
-		camera_matrix = ConfigParameters::get_parameter<Matrix3x3>("camera", "inv_camera_matrix", Matrix3x3::identity(), "The camera inverse calibration matrix K^-1 * R^-1");
+		camera_matrix = ConfigParameters::get_parameter<optix::Matrix3x3>("camera", "inv_camera_matrix", optix::Matrix3x3::identity(), "The camera inverse calibration matrix K^-1 * R^-1");
 	}
 
 	reset_renderer();

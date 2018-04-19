@@ -9,6 +9,8 @@
 #include "cereal/types/memory.hpp"
 #include "host_material.h"
 #include "transform.h"
+#include "optix_serialize.h"
+#include "optix_utils.h"
 
 struct MeshData
 {
@@ -18,78 +20,135 @@ struct MeshData
     optix::Buffer mVIbuffer;
     optix::Buffer mNIbuffer;
     optix::Buffer mTIbuffer;
-    optix::Buffer mMatBuffer;
     int mNumTriangles;
     optix::Aabb   mBoundingBox;
 };
 
-class Mesh
+inline void save_buffer(cereal::XMLOutputArchive & archive, optix::Buffer buffer, std::string name)
+{
+    void * data = buffer->map();
+    RTsize dim = buffer->getDimensionality();
+    std::vector<RTsize> dims = std::vector<RTsize>(dim);
+    buffer->getSize(dim, &dims[0]);
+    RTsize total_size = 1;
+    for(int i = 0; i < dim; i++)
+        total_size *= dims[i];
+
+    RTsize element = buffer->getElementSize();
+    archive.saveBinaryValue(data, total_size * element, name.c_str());
+    buffer->unmap();
+    archive(cereal::make_nvp(name + "_element_size", element));
+    archive(cereal::make_nvp(name + "_dimensionality", dim));
+    archive(cereal::make_nvp(name + "_size", dims));
+}
+
+namespace cereal
+{
+template<class Archive>  void save(Archive & ar, MeshData const & m)
+{
+    throw Exception("Non implemented");
+}
+
+template<>
+inline void save(cereal::XMLOutputArchive & ar, MeshData const & m)
+{
+    save_buffer(ar, m.mVbuffer, "vertex_buffer");
+    save_buffer(ar, m.mNbuffer, "normal_buffer");
+    save_buffer(ar, m.mTBuffer, "texcoord_buffer");
+    save_buffer(ar, m.mVIbuffer, "vertex_index_buffer");
+    save_buffer(ar, m.mNIbuffer, "normal_index_buffer");
+    save_buffer(ar, m.mTIbuffer, "texture_index_buffer");
+    ar(cereal::make_nvp("num_triangles", m.mNumTriangles));
+}
+}
+
+inline void load_buffer(cereal::XMLInputArchiveOptix & archive, optix::Buffer & buffer, std::string name)
+{
+    RTsize element, dim;
+    archive(cereal::make_nvp(name + "_element_size", element));
+    archive(cereal::make_nvp(name + "_dimensionality", dim));
+
+    std::vector<RTsize> dims = std::vector<RTsize>(dim);
+    archive(cereal::make_nvp(name + "_size", dims));
+
+    buffer = archive.get_context()->createBuffer(RT_BUFFER_INPUT);
+    buffer->setFormat(RT_FORMAT_USER);
+    buffer->setSize(dim, &dims[0]);
+    buffer->setElementSize(element);
+
+    RTsize total_size = 1;
+    for(int i = 0; i < dim; i++)
+        total_size *= dims[i];
+
+    void * data = buffer->map();
+    archive.loadBinaryValue(data, total_size * element, name.c_str());
+    buffer->unmap();
+}
+
+namespace cereal {
+
+template<class Archive>  void load(Archive & ar, MeshData & m)
+{
+    throw Exception("Non implemented");
+}
+
+template<>
+inline void load(cereal::XMLInputArchiveOptix & ar, MeshData & m)
+{
+    load_buffer(ar, m.mVbuffer, "vertex_buffer");
+    load_buffer(ar, m.mNbuffer, "normal_buffer");
+    load_buffer(ar, m.mTBuffer, "texcoord_buffer");
+    load_buffer(ar, m.mVIbuffer, "vertex_index_buffer");
+    load_buffer(ar, m.mNIbuffer, "normal_index_buffer");
+    load_buffer(ar, m.mTIbuffer, "texture_index_buffer");
+    ar(cereal::make_nvp("num_triangles", m.mNumTriangles));
+}
+}
+
+class Geometry2
 {
 public:
-    explicit Mesh(optix::Context ctx);
+    explicit Geometry2(optix::Context ctx);
 
-    void init(const char* name, MeshData meshdata, std::shared_ptr<MaterialHost> material);
+    void init(const char* name, MeshData meshdata);
 
     optix::Geometry mGeometry = nullptr;
     optix::Context  mContext;
-    optix::Material mMaterial = nullptr;
 
-	void reload_shader();
 	void load();
-
-    void set_method(RenderingMethodType::EnumType method);
-    void set_shader(int illum);
-	void set_shader(const std::string & source);
-
-    void add_material(std::shared_ptr<MaterialHost> material);
-
-    std::shared_ptr<MaterialHost> get_main_material() { return mMaterialData[0]; }
-    const std::vector<std::shared_ptr<MaterialHost>> & get_materials() { return mMaterialData; }
-
 	bool on_draw();
-	void pre_trace();
-	void post_trace();
-
-	optix::GeometryInstance get_geometry_instance() { return mGeometryInstance;  }
-	optix::GeometryGroup get_static_handle() { return mGeometryGroup; }
-	optix::Transform get_dynamic_handle() { return mOptixTransform; }
-
-	typedef std::function<void()> TransformChangedDelegate;
-	TransformChangedDelegate transform_changed_event = nullptr;
+    MeshData mMeshData;
+    optix::Geometry get_geometry() { return mGeometry; }
 
 private:
-	optix::GeometryInstance mGeometryInstance = nullptr;
-	optix::GeometryGroup mGeometryGroup = nullptr;
-	optix::Transform mOptixTransform = nullptr;
+    Geometry2() {}
 
-	MeshData mMeshData;
-	std::unique_ptr<Shader> mShader;
-	std::unique_ptr<Transform> mTransform;
-
-	void load_materials();
 	void load_geometry();
-	void load_shader();
-	void load_transform();
 
-	std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
     void create_and_bind_optix_data();
     optix::Program         mIntersectProgram;
     optix::Program         mBoundingboxProgram;
-    optix::Buffer          mMaterialBuffer;
     optix::Buffer          mBBoxBuffer;
     std::string            mMeshName;
 
-	bool mReloadShader = true;
+
 	bool mReloadGeometry = true;
-	bool mReloadMaterials = true;
 
 	friend class cereal::access;
 	// Serialization
 	template<class Archive>
-	void serialize(Archive & archive)
+	void load(Archive & archive)
 	{
 		archive(cereal::make_nvp("name", mMeshName));
-		archive(cereal::make_nvp("materials",mMaterialData));
+        archive(cereal::make_nvp("data", mMeshData));
 	}
-	int mMeshID;
+
+    template<class Archive>
+    void save(Archive & archive) const
+    {
+        archive(cereal::make_nvp("name", mMeshName));
+        archive(cereal::make_nvp("data", mMeshData));
+    }
+
+    int mMeshID;
 };

@@ -1,11 +1,17 @@
 #pragma once
 #include <optix_world.h>
 #include "logger.h"
-
-#include <sstream>
+#include <cereal/access.hpp>
+#include <cereal/types/vector.hpp>
+#include "cereal/types/memory.hpp"
+#include <xml_archive.hpp>
+#include <cereal/archives/json.hpp>
 
 namespace cereal
 {
+
+    using XMLOutputArchive = XMLOutputArchiveOptix;
+
 	template<class Archive> void serialize(Archive & archive, optix::float1 & m) { archive(make_nvp("x", m.x)); }
 	template<class Archive> void serialize(Archive & archive, optix::float2 & m) { archive(make_nvp("x", m.x), make_nvp("y", m.y)); }
 	template<class Archive> void serialize(Archive & archive, optix::float3 & m) { archive(make_nvp("x", m.x), make_nvp("y", m.y), make_nvp("z", m.z)); }
@@ -43,34 +49,3 @@ namespace cereal
 
 }
 
-//inline void test_cereal()
-//{
-//	optix::float3 example = optix::make_float3(1, 0, 0);
-//	std::stringstream ss;
-//	{
-//		cereal::JSONOutputArchive oarchive(ss); // Create an output archive
-//		{
-//			oarchive(make_nvp("vec0", example));
-//		}
-//		{
-//			oarchive(make_nvp("vec1", optix::make_uint2(1024, 21)));
-//		}
-//		{
-//			oarchive(make_nvp("vec2", optix::make_uchar4('c', 'i', 'a', 'o')));
-//		}
-//		{
-//			oarchive(make_nvp("vec3", optix::make_short4(0,0,1,5)));
-//		}
-//	}
-//	
-//
-//	Logger::info << ss.str();
-//	cereal::JSONInputArchive iarchive(ss);
-//	optix::float3 e1;
-//	optix::uint2 e2;
-//	optix::uchar4 e3;
-//	optix::short4 e4;
-//	iarchive(e1,e2,e3,e4);
-//	Logger::info << e1.x;
-//
-//}

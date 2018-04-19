@@ -79,8 +79,7 @@ set(HEADERS
     obj_loader.h
     obj_scene.h
     optical_helper.h
-    optixhelpers.h
-    optix_common.h
+        optix_common.h
     optix_helpers.h
     optix_serialize.h
     optix_utils.h
@@ -132,7 +131,8 @@ set(HEADERS
     volume_path_tracing_common.h 
     subsurface_scattering_sampled_common.h
     subsurface_scattering_sampled.h
-        hemisphere_partitions.h)
+        hemisphere_partitions.h
+        xml_archive.hpp object_host.cpp object_host.h)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp
@@ -200,7 +200,7 @@ set(SRCS
     sky_model.cpp
     sphere.cpp
     transform.cpp
-    )
+        object_host.cpp object_host.h)
 
 set(CUDA_SOURCES
 CUDA_files/absorbing_glass.cu

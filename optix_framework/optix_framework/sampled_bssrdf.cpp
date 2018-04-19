@@ -1,5 +1,5 @@
 #include "sampled_bssrdf.h"
-#include "mesh.h"
+#include "object_host.h"
 #include "immediate_gui.h"
 #include "scattering_material.h"
 #include "parameter_parser.h"
@@ -77,7 +77,7 @@ void SampledBSSRDF::initialize_shader(optix::Context ctx)
 
 }
 
-void SampledBSSRDF::initialize_mesh(Mesh& object)
+void SampledBSSRDF::initialize_mesh(Object& object)
 {
     mCurrentShaderSource = get_current_shader_source();
     mReloadShader = true;
@@ -90,7 +90,7 @@ void SampledBSSRDF::initialize_mesh(Mesh& object)
 	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 }
 
-void SampledBSSRDF::load_data(Mesh & object)
+void SampledBSSRDF::load_data(Object & object)
 {
 	if (mHasChanged)
 	{

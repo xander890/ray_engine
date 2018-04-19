@@ -1,7 +1,7 @@
 #include "bssrdf_visualizer.h"
 #include "immediate_gui.h"
 #include "optix_utils.h"
-
+#include "object_host.h"
 
 int BSSRDFPlaneRenderer::entry_point_output = -1;
 
@@ -58,18 +58,18 @@ void BSSRDFPlaneRenderer::initialize_shader(optix::Context ctx)
 
 }
 
-void BSSRDFPlaneRenderer::initialize_mesh(Mesh& object)
+void BSSRDFPlaneRenderer::initialize_mesh(Object& object)
 {
 	ScatteringDipole::Type t = mBSSRDF->get_type();
 	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 }
 
-void BSSRDFPlaneRenderer::pre_trace_mesh(Mesh& object)
+void BSSRDFPlaneRenderer::pre_trace_mesh(Object& object)
 {
 	
 }
 
-void BSSRDFPlaneRenderer::post_trace_mesh(Mesh & object)
+void BSSRDFPlaneRenderer::post_trace_mesh(Object & object)
 {
 	context->launch(entry_point_output, mCameraWidth, mCameraHeight);
 }
@@ -84,7 +84,7 @@ bool BSSRDFPlaneRenderer::on_draw()
 	return false;
 }
 
-void BSSRDFPlaneRenderer::load_data(Mesh & object)
+void BSSRDFPlaneRenderer::load_data(Object & object)
 {
 	context["scale_multiplier"]->setFloat(mMult);
 	context["show_false_colors"]->setUint(mShowFalseColors);

@@ -61,9 +61,9 @@ void ImmediateGUI::start_window(const char * name, int x, int y, int w, int h)
 	glfwMakeContextCurrent(win);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) ;
     ImGui_ImplGlfwGL3_NewFrame();
-	ImGui::SetNextWindowPos(ImVec2((float)0, (float)0), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2((float)x, (float)y), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2((float)w, (float)h), ImGuiCond_FirstUseEver);
-	ImGui::Begin(name, (bool*)&visible, ImGuiWindowFlags_ShowBorders);
+	ImGui::Begin(name, &visible, ImGuiWindowFlags_ShowBorders);
 }
 
 void ImmediateGUI::end_window()

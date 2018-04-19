@@ -14,7 +14,7 @@ inline void split(std::vector<std::string> &tokens, const std::string &text, cha
 	}
 	tokens.push_back(text.substr(start));
 }
-#define space std::string(" ")
+#define space_token std::string(" ")
 
 template<typename T>
 inline std::string stringize(std::initializer_list<T> nums)

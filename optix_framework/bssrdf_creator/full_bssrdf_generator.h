@@ -77,7 +77,7 @@ private:
 	bool mPaused = false;
 	bool mFastMode = false;
     bool mNormalize = true;
-	bool mDebug = true;
+	bool mDebug = false;
 	RenderMode mCurrentRenderMode = RENDER_BSSRDF;
 	std::unique_ptr<BSSRDFExporter> mExporter = nullptr;
 	std::unique_ptr<BSSRDFImporter> mLoader = nullptr;

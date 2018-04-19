@@ -113,7 +113,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
-	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPUMixed>(m_context, DEFAULT_SHAPE, optix::make_int2(100, 80), (int)10e5);
+	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPUMixed>(m_context, DEFAULT_SHAPE, optix::make_int2(100, 100), (int)10e5);
 	mBssrdfReferenceSimulator->init();
 
 	mBssrdfModelSimulator = std::make_shared<BSSRDFRendererModel>(m_context);
@@ -249,7 +249,7 @@ void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
 
         float m = mScaleMultiplier;
         if(mNormalize)
-            m = 1.0 / mCurrentMax;
+            m = 1.0f / mCurrentMax;
 
 		m_context["reference_scale_multiplier"]->setFloat(m);
 
@@ -277,24 +277,6 @@ optix::Buffer FullBSSRDFGenerator::get_output_buffer()
 {
 	return result_buffer;
 }
-
-bool vector_gui(const std::string & name, std::vector<float> & vec, std::string & storage)
-{
-	static char buf[256];
-	storage.copy(buf, storage.size());
-	buf[storage.size()] = '\0';
-
-	if (ImGui::InputText(name.c_str(), buf, storage.size()))
-	{
-		std::vector<float> c = tovalue<std::vector<float>>(std::string(buf));
-		storage = gui_string(vec);
-		vec.clear();
-		vec.insert(vec.begin(), c.begin(), c.end());
-		return true;
-	}
-	return false;
-}
-
 
 void FullBSSRDFGenerator::post_draw_callback()
 {

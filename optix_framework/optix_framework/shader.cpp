@@ -1,29 +1,19 @@
 #include <shader.h>
-#include "material_library.h"
-#include "glossy.h"
 #include "../optprops/Medium.h"
-#include "host_device_common.h"
-#include "mesh.h"
-#include "default_shader.h"
+#include "object_host.h"
 #include "shader_factory.h"
-#include "scattering_material.h"
-#include "host_material.h"
 
-using namespace optix;
-using namespace std;
-
-
-void Shader::initialize_mesh(Mesh & object)
+void Shader::initialize_mesh(Object &object)
 {
     set_hit_programs(object);
 }
 
-void Shader::pre_trace_mesh(Mesh & object)
+void Shader::pre_trace_mesh(Object &object)
 {
     return;
 }
 
-void Shader::post_trace_mesh(Mesh & object)
+void Shader::post_trace_mesh(Object &object)
 {
 	return;
 }
@@ -47,7 +37,7 @@ Shader::Shader(const Shader & cp)
 	method = cp.method;
 }
 
-void Shader::set_hit_programs(Mesh& object)
+void Shader::set_hit_programs(Object &object)
 {
 	Logger::info << "Loading closest hit programs..." << std::endl;
 	auto chit = ShaderFactory::createProgram(shader_path, "shade", method);

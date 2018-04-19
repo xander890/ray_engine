@@ -5,10 +5,10 @@
       <Filter>CUDA_files</Filter>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\triangle_mesh.cu">
-      <Filter>CUDA_files\Mesh</Filter>
+      <Filter>CUDA_files\Geometry</Filter>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\box.cu">
-      <Filter>CUDA_files\Mesh</Filter>
+      <Filter>CUDA_files\Geometry</Filter>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\sample_camera.cu">
       <Filter>CUDA_files\Cameras</Filter>
@@ -29,10 +29,10 @@
       <Filter>CUDA_files\Miss Programs</Filter>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\chull.cu">
-      <Filter>CUDA_files\Mesh</Filter>
+      <Filter>CUDA_files\Geometry</Filter>
     </CudaCompile>
     <CudaCompile Include="sphere.cu">
-      <Filter>CUDA_files\Mesh</Filter>
+      <Filter>CUDA_files\Geometry</Filter>
     </CudaCompile>
     <CudaCompile Include="CUDA_files\env_cameras.cu">
       <Filter>CUDA_files\Cameras</Filter>
@@ -610,7 +610,7 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{8d9a0b34-8d37-4b13-b97f-1f6c85fc135c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CUDA_files\Mesh">
+    <Filter Include="CUDA_files\Geometry">
       <UniqueIdentifier>{729678eb-d7e0-4cf8-a65a-853f085f18a5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Lights">

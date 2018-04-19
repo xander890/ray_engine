@@ -67,12 +67,12 @@ void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
 
 }
 
-void HemisphereBSSRDFShader::initialize_mesh(Mesh& object)
+void HemisphereBSSRDFShader::initialize_mesh(Geometry& object)
 {
 
 }
 
-void HemisphereBSSRDFShader::pre_trace_mesh(Mesh& object)
+void HemisphereBSSRDFShader::pre_trace_mesh(Geometry& object)
 {	
 	ref_impl->render();
 
@@ -83,7 +83,7 @@ void HemisphereBSSRDFShader::pre_trace_mesh(Mesh& object)
 	mBSSRDFBufferTexture->unmap();
 }
 
-void HemisphereBSSRDFShader::post_trace_mesh(Mesh & object)
+void HemisphereBSSRDFShader::post_trace_mesh(Geometry & object)
 {
 	context->launch(entry_point_output, mCameraWidth, mCameraHeight);
 }
@@ -102,7 +102,7 @@ bool HemisphereBSSRDFShader::on_draw()
 	return false;
 }
 
-void HemisphereBSSRDFShader::load_data(Mesh & object)
+void HemisphereBSSRDFShader::load_data(Geometry & object)
 {
 	int s = mBSSRDFHemisphereTex->getId();
 	context["resulting_flux_tex"]->setUserData(sizeof(TexPtr),&(s));

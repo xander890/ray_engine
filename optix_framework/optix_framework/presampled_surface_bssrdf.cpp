@@ -4,8 +4,11 @@
 #include "immediate_gui.h"
 #include "optix_utils.h"
 #include "parameter_parser.h"
+#include "object_host.h"
 
-using namespace optix;
+using optix::Buffer;
+using optix::float3;
+using optix::int3;
 
 PresampledSurfaceBssrdf::PresampledSurfaceBssrdf(PresampledSurfaceBssrdf & copy) : Shader(copy)
 {
@@ -48,9 +51,9 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
 	mCdfBuffer = context->createBuffer(RT_BUFFER_INPUT);
 }
 
-void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
+void PresampledSurfaceBssrdf::initialize_mesh(Object& object)
 {
-    Geometry g = object.mGeometry;    
+    optix::Geometry g = object.mGeometry->get_geometry();
     // precompute triangle area cdf
     Buffer v_buff = g["vertex_buffer"]->getBuffer();
     Buffer v_idx_buff = g["vindex_buffer"]->getBuffer();
@@ -92,7 +95,7 @@ void PresampledSurfaceBssrdf::initialize_mesh(Mesh& object)
 }
 
 
-void PresampledSurfaceBssrdf::pre_trace_mesh(Mesh& obj)
+void PresampledSurfaceBssrdf::pre_trace_mesh(Object& obj)
 {
 	auto buf = BufPtr<PositionSample>(mSampleBuffer->getId());
 	context["sampling_output_buffer"]->setUserData(sizeof(BufPtr<PositionSample>), &buf);
@@ -101,10 +104,10 @@ void PresampledSurfaceBssrdf::pre_trace_mesh(Mesh& obj)
     context["bssrdf_enabled"]->setUint(1);
 }
 
-void PresampledSurfaceBssrdf::load_data(Mesh & obj)
+void PresampledSurfaceBssrdf::load_data(Object & obj)
 {
-	Geometry g = obj.mGeometry;
-	GeometryInstance object = obj.get_geometry_instance();
+	optix::Geometry g = obj.mGeometry->get_geometry();
+	optix::GeometryInstance object = obj.get_geometry_instance();
 	auto buf = BufPtr<PositionSample>(mSampleBuffer->getId());
 	object["sampling_output_buffer"]->setUserData(sizeof(BufPtr<PositionSample>), &buf);
 	object["total_area"]->setFloat(mArea);

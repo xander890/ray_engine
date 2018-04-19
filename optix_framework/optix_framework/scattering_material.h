@@ -4,9 +4,6 @@
 #include <memory>
 #include <optix_world.h>
 #include "structs.h"
-#include <cereal/access.hpp>
-#include <cereal/types/vector.hpp>
-#include "cereal/types/memory.hpp"
 #include "scattering_properties.h"
 #include "optix_serialize.h"
 #include "enums.h"

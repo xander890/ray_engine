@@ -18,8 +18,8 @@ std::map<size_t, std::string> BSSRDFParameterManager::parameter_names_hemi = {
 };
 
 std::map<size_t, std::string> BSSRDFParameterManager::parameter_names_plane = {
-        {dim_2_index, "y"},
-        {dim_1_index, "x"},
+        {dim_2_index, "x"},
+        {dim_1_index, "y"},
         {stringify_pair(theta_i_index)},
         {stringify_pair(r_index)},
         {stringify_pair(theta_s_index)},

@@ -1,7 +1,7 @@
 #include "glossy.h"
 #include "folders.h"
 #include "parameter_parser.h"
-#include "mesh.h"
+#include "object_host.h"
 #include "brdf_utils.h"
 #include "merl_common.h"
 #include <ImageLoader.h>
@@ -22,7 +22,7 @@ void GlossyShader::initialize_shader(optix::Context context)
     use_merl_brdf = ConfigParameters::get_parameter<bool>("config", "use_merl_brdf", false, "configure the ray tracer to try to use the MERL brdf database whenever possible.");
 }
 
-void GlossyShader::set_data(Mesh& object)
+void GlossyShader::set_data(Object& object)
 {
     object.mMaterial["exponent_blinn"]->setFloat(blinn_exponent);
     object.mMaterial["exponent_aniso"]->setFloat(anisotropic_exp);
@@ -30,7 +30,7 @@ void GlossyShader::set_data(Mesh& object)
     object.mMaterial["merl_brdf_multiplier"]->setFloat(merl_correction);
 }
 
-void GlossyShader::initialize_mesh(Mesh& object)
+void GlossyShader::initialize_mesh(Object& object)
 {
     Shader::initialize_mesh(object);
     set_data(object);
@@ -78,7 +78,7 @@ void GlossyShader::initialize_mesh(Mesh& object)
 
 }
 
-void GlossyShader::pre_trace_mesh(Mesh& object)
+void GlossyShader::pre_trace_mesh(Object& object)
 {
     Shader::pre_trace_mesh(object);
     set_data(object);

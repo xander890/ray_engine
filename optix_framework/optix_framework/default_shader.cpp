@@ -1,4 +1,5 @@
 #include "default_shader.h"
+#include "object_host.h"
 
 std::vector<ShaderInfo> DefaultShader::default_shaders = 
 {
@@ -17,7 +18,7 @@ void DefaultShader::initialize_shader(optix::Context ctx)
     Shader::initialize_shader(ctx);
 }
 
-void DefaultShader::initialize_mesh(Mesh& object)
+void DefaultShader::initialize_mesh(Object & object)
 {
     Shader::initialize_mesh(object);
 }

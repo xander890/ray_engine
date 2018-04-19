@@ -31,17 +31,20 @@
 #include <ImageLoader.h>
 #include <area_light.h>
 
-#include "mesh.h"
+#include "object_host.h"
 #include "host_material.h"
 #include <scattering_material.h>
-using namespace optix;
 
 //------------------------------------------------------------------------------
 // 
 //  Helper functions
 //
 //------------------------------------------------------------------------------
-
+using optix::Buffer;
+using optix::int3;
+using optix::float3;
+using optix::float4;
+using optix::make_float3;
 
 namespace 
 {
@@ -62,7 +65,7 @@ namespace
 //------------------------------------------------------------------------------
 
 ObjLoader::ObjLoader( const char* filename,
-					  Context& context)
+					  optix::Context& context)
 : m_filename( filename ),
   m_context( context ),
   m_vbuffer( 0 ),
@@ -74,22 +77,22 @@ ObjLoader::ObjLoader( const char* filename,
   m_pathname = m_filename.substr(0,m_filename.find_last_of("/\\")+1);
 }
 
-std::vector<std::unique_ptr<Mesh>> ObjLoader::load()
+std::vector<std::unique_ptr<Object>> ObjLoader::load()
 {
    return load( optix::Matrix4x4::identity() );
 }
 
-void ObjLoader::setIntersectProgram( Program intersect_program )
+void ObjLoader::setIntersectProgram( optix::Program intersect_program )
 {
  // m_intersect_program = intersect_program;
 }
 
-void ObjLoader::setBboxProgram( Program bbox_program )
+void ObjLoader::setBboxProgram( optix::Program bbox_program )
 {
  // m_bbox_program = bbox_program;
 }
 
-std::vector<std::unique_ptr<Mesh>> ObjLoader::load(const optix::Matrix4x4& transform)
+std::vector<std::unique_ptr<Object>> ObjLoader::load(const optix::Matrix4x4& transform)
 {
   // parse the OBJ file
 	std::string s = m_filename;
@@ -97,7 +100,7 @@ std::vector<std::unique_ptr<Mesh>> ObjLoader::load(const optix::Matrix4x4& trans
   if ( !model ) {
 	std::stringstream ss;
 	ss << "ObjLoader::loadImpl - glmReadOBJ( '" << m_filename << "' ) failed" << std::endl;
-	throw Exception( ss.str() );
+	throw optix::Exception( ss.str() );
   }
   
   // Create vertex data buffers to be shared by all Geometries
@@ -131,14 +134,14 @@ void ObjLoader::loadVertexData( GLMmodel* model, const optix::Matrix4x4& transfo
 
   // Create texcoord buffer
   m_tbuffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_FLOAT2, num_texcoords );
-  float2* tbuffer_data = static_cast<float2*>( m_tbuffer->map() );
+	optix::float2* tbuffer_data = static_cast<optix::float2*>( m_tbuffer->map() );
 
   // Transform and copy vertices.  
   for ( unsigned int i = 0; i < num_vertices; ++i )
   {
 	const float3 v3 = *reinterpret_cast<float3*>(&model->vertices[(i+1)*3]);
-	float4 v4 = make_float4( v3, 1.0f );
-	vbuffer_data[i] = make_float3( transform*v4 );
+	  optix::float4 v4 = make_float4( v3, 1.0f );
+	vbuffer_data[i] = optix::make_float3( transform*v4 );
   }
 
   // Transform and copy normals.
@@ -146,8 +149,8 @@ void ObjLoader::loadVertexData( GLMmodel* model, const optix::Matrix4x4& transfo
   for( unsigned int i = 0; i < num_normals; ++i )
   {
 	const float3 v3 = *reinterpret_cast<float3*>(&model->normals[(i+1)*3]);
-	float4 v4 = make_float4( v3, 0.0f );
-	nbuffer_data[i] = make_float3( norm_transform*v4 );
+	  optix::float4 v4 = make_float4( v3, 0.0f );
+	nbuffer_data[i] = optix::make_float3( norm_transform*v4 );
   }
 
   // Copy texture coordinates.
@@ -198,9 +201,9 @@ std::vector<ObjMaterial> ObjLoader::parse_mtl_file(std::string mat, optix::Conte
 	return vec;
 }
 
-std::vector<std::unique_ptr<Mesh>> ObjLoader::createGeometryInstances(GLMmodel* model)
+std::vector<std::unique_ptr<Object>> ObjLoader::createGeometryInstances(GLMmodel* model)
 {
-  std::vector<std::unique_ptr<Mesh>> instances;
+  std::vector<std::unique_ptr<Object>> instances;
 
   // Loop over all groups -- grab the triangles and material props from each group
   unsigned int triangle_count = 0u;
@@ -275,10 +278,12 @@ std::vector<std::unique_ptr<Mesh>> ObjLoader::createGeometryInstances(GLMmodel* 
 
 
     std::shared_ptr<MaterialHost> materialData = getMaterial(obj_group->material);
-    MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, mbuffer, (int)num_triangles, bbox };
-    std::unique_ptr<Mesh> rtMesh = std::make_unique<Mesh>(m_context); 
+    MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, (int)num_triangles, bbox };
+    std::unique_ptr<Object> rtMesh = std::make_unique<Object>(m_context);
     std::string name = obj_group->name;
-    rtMesh->init(name.c_str(), meshdata, materialData);
+    std::unique_ptr<Geometry2> geom = std::make_unique<Geometry2>(m_context);
+    geom->init(name.c_str(), meshdata);
+    rtMesh->init(name.c_str(), std::move(geom), materialData);
     
 	instances.push_back( std::move(rtMesh) );
   }
@@ -304,7 +309,6 @@ std::shared_ptr<MaterialHost> ObjLoader::getMaterial(unsigned int index)
 ObjMaterial ObjLoader::convert_mat(GLMmaterial& mat, optix::Context ctx)
 {
 	ObjMaterial params;
-
 
 	params.shininess = mat.shininess;
 	params.illum = mat.shader;

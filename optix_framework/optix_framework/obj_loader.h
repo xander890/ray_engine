@@ -66,8 +66,8 @@ public:
 	
   virtual void setIntersectProgram( optix::Program program );
   virtual void setBboxProgram(optix::Program program);
-  virtual std::vector<std::unique_ptr<Mesh>> load();
-  virtual std::vector<std::unique_ptr<Mesh>> load(const optix::Matrix4x4& transform);
+  virtual std::vector<std::unique_ptr<Object>> load();
+  virtual std::vector<std::unique_ptr<Object>> load(const optix::Matrix4x4& transform);
 
   virtual optix::Aabb getSceneBBox()const { return m_aabb; }
 
@@ -84,7 +84,7 @@ public:
 
 protected:
 
-  std::vector<std::unique_ptr<Mesh>> createGeometryInstances(GLMmodel* model);
+  std::vector<std::unique_ptr<Object>> createGeometryInstances(GLMmodel* model);
   void loadVertexData( GLMmodel* model, const optix::Matrix4x4& transform );
   void createMaterialParams( GLMmodel* model );
   std::shared_ptr<MaterialHost> getMaterial(unsigned int index);

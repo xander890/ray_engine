@@ -5,7 +5,7 @@
 #include <map>
 #include <enums.h>
 
-class Mesh;
+class Object;
 
 struct ShaderInfo
 {
@@ -28,10 +28,10 @@ public:
     virtual ~Shader() = default;  
 
 	virtual Shader* clone() = 0;
-    virtual void initialize_mesh(Mesh & object);
-    virtual void pre_trace_mesh(Mesh & object);  
-	virtual void post_trace_mesh(Mesh & object);
-	virtual void load_data(Mesh & object) {}
+    virtual void initialize_mesh(Object &object);
+    virtual void pre_trace_mesh(Object &object);
+	virtual void post_trace_mesh(Object &object);
+	virtual void load_data(Object &object) {}
 
     virtual void initialize_shader(optix::Context context);
     void set_method(RenderingMethodType::EnumType m) { method = m; }
@@ -43,11 +43,9 @@ public:
 	void set_source(const std::string & source);
 
 protected:
-
-
 	Shader(const Shader & cp);
 
-    void set_hit_programs(Mesh & object);
+    void set_hit_programs(Object &object);
 
 	optix::Context context;
 	int illum;

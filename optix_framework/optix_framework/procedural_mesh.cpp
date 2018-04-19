@@ -66,7 +66,6 @@ ProceduralMesh* ProceduralMesh::unserialize(std::istream& stream)
 		serialization_map[Sphere::id] = Sphere::create;
 	}
 
-	
 	std::string name;
 	stream >> name;
 	std::string material;

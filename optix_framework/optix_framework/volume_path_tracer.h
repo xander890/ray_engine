@@ -15,7 +15,7 @@ public:
 		max_vol_samples = ConfigParameters::get_parameter<int>("config", "maximum_volume_steps", max_vol_samples, "Maximum rays in VPT.");
 	}
 
-	virtual void load_data(Mesh & object) override
+	virtual void load_data(Object &object) override
 	{
 		context["maximum_volume_steps"]->setUint(max_vol_samples);
 		context["volume_pt_mode"]->setUint(mVolumePTMode);

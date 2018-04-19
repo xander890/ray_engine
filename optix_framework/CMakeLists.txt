@@ -14,7 +14,7 @@ set(CMAKE_MODULE_PATH
 if(WIN32)
   set (CMAKE_CXX_STANDARD 11)
 else()
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 add_compile_options(-fpermissive)
 FIND_PACKAGE(PkgConfig REQUIRED)
 PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)

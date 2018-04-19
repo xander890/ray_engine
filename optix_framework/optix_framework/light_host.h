@@ -3,13 +3,13 @@
 #include <memory>
 #include <optix_world.h>
 
-struct CameraData;
+struct LightData;
 
 class Light
 {
 public:
     virtual ~Light() = default;
-    std::unique_ptr<CameraData> data;
+    std::unique_ptr<LightData> data;
 
     Light();
 

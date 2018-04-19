@@ -18,12 +18,12 @@ public:
 
     void initialize_shader(optix::Context context) override;
     
-    void initialize_mesh(Mesh & object) override;
-    void pre_trace_mesh(Mesh & object) override;
+    void initialize_mesh(Object & object) override;
+    void pre_trace_mesh(Object & object) override;
 	virtual Shader* clone() override { return new GlossyShader(*this); }
 
 private:
-    void set_data(Mesh& object);
+    void set_data(Object& object);
 	// FIXME proper struct & copy constructor
 	float blinn_exponent;
     optix::float2 anisotropic_exp;

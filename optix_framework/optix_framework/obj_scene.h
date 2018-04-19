@@ -15,12 +15,13 @@
 #include <functional>
 #include <camera_host.h>
 #include <chrono>
+#include <sstream>
 
 class MissProgram;
 class ImmediateGUI;
 class RenderTask;
 struct TriangleLight;
-class Mesh;
+class Object;
 class MaterialHost;
 class RenderingMethod;
 struct MPMLMedium;
@@ -105,14 +106,13 @@ private:
 	bool deforming;
 	std::unique_ptr<Camera> camera = nullptr;
 	optix::Buffer output_buffer;
-	
-   
+
 	std::unique_ptr<ImmediateGUI> gui = nullptr;
 	void add_result_image(const std::string& image_file);
-    std::vector<std::unique_ptr<Mesh>> mMeshes;
+    std::vector<std::unique_ptr<Object>> mMeshes;
     std::shared_ptr<MaterialHost> material_ketchup;
 
-    void execute_on_scene_elements(std::function<void(Mesh&)> operation);
+    void execute_on_scene_elements(std::function<void(Object&)> operation);
 
 	void setDebugEnabled(bool var);
 	float tonemap_multiplier = 1.0f;
@@ -160,6 +160,8 @@ private:
 
 	bool start_render_task_when_ready = false;
 	std::stringstream console_log;
+
+    void serialize_scene();
 };
 
 #endif // OBJSCENE_H
