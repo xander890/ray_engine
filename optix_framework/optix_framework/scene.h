@@ -9,6 +9,7 @@
 class RenderingMethod;
 class Object;
 class Camera;
+class MissProgram;
 
 class Scene
 {
@@ -26,6 +27,8 @@ public:
     std::string serialize();
     void set_method(std::unique_ptr<RenderingMethod> method);
     const RenderingMethod& get_method() const { return *method; }
+    void set_miss_program(std::unique_ptr<MissProgram> method);
+    const MissProgram& get_miss_program() const { return *miss_program; }
 
     int add_object(std::unique_ptr<Object> object);
     int add_camera(std::unique_ptr<Camera> camera);
@@ -41,6 +44,7 @@ private:
     optix::Group scene;
     optix::Context context;
     std::unique_ptr<RenderingMethod> method;
+    std::unique_ptr<MissProgram> miss_program;
     std::shared_ptr<Camera> mCurrentCamera;
 
     void transform_changed();

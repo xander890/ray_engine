@@ -136,7 +136,7 @@ bool SkyModel::get_miss_program(unsigned ray_type, optix::Context& ctx, optix::P
 }
 
 
-void SkyModel::get_directional_light(SingularLightData & light)
+void SkyModel::get_directional_light(SingularLightData & light) const
 {
 	light.direction = -sun_position;
 	light.emission = sun_color * 6.87e-5f;

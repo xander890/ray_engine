@@ -107,7 +107,7 @@ bool ObjScene::key_pressed(int key, int action, int modifier)
 
 ObjScene::ObjScene(const std::vector<std::string>& obj_filenames, optix::int4 rendering_r)
 	: context(m_context),
-	current_miss_program(), filenames(obj_filenames), m_frame(0u)
+	filenames(obj_filenames), m_frame(0u)
 {
 	custom_rr = rendering_r;
 	current_render_task = make_unique<RenderTaskFrames>(1000, "res.raw", false);
@@ -257,21 +257,15 @@ bool ObjScene::draw_gui()
 		}
 	}
 
-	if (ImmediateGUIDraw::CollapsingHeader("Background"))
+    const char * miss_programs[3] = { "Constant Background", "Environment map", "Sky model"  };
+    static int current_miss_program = 0; //FIXME
+	if (ImmediateGUIDraw::Combo("Background", &current_miss_program, miss_programs, 3, 3))
 	{
-		const char * miss_programs[3] = { "Constant Background", "Environment map", "Sky model"  };
-		if (ImmediateGUIDraw::Combo("Background", (int*)&current_miss_program, miss_programs, 3, 3))
-		{
-			changed = true;
-			set_miss_program();
-		}
-		changed |= miss_program->on_draw();
+		changed = true;
+        set_miss_program(static_cast<BackgroundType::Type>(current_miss_program));
 	}
 
-	if (ImmediateGUIDraw::CollapsingHeader("Scene"))
-	{
-        changed = mScene->on_draw();
-	}
+    changed = mScene->on_draw();
 
 	if (ImmediateGUIDraw::CollapsingHeader("Heterogenous materials"))
 	{
@@ -401,7 +395,7 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 		available_media.push_back(&kv.second);
 	}
 
-	current_miss_program = BackgroundType::to_enum(ConfigParameters::get_parameter<string>("config", "default_miss_type", BackgroundType::to_string(BackgroundType::CONSTANT_BACKGROUND), std::string("Miss program. ") + BackgroundType::get_full_string()));
+    BackgroundType::Type current_miss_program = BackgroundType::to_enum(ConfigParameters::get_parameter<string>("config", "default_miss_type", BackgroundType::to_string(BackgroundType::CONSTANT_BACKGROUND), std::string("Miss program. ") + BackgroundType::get_full_string()));
 
     tonemap_exponent = ConfigParameters::get_parameter<float>("tonemap", "tonemap_exponent", 1.8f, "Tonemap exponent");
     tonemap_multiplier = ConfigParameters::get_parameter<float>("tonemap", "tonemap_multiplier", 1.f, "Tonemap multiplier");
@@ -504,7 +498,7 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 
 
 	// Add light sources depending on chosen shader
-    set_miss_program();
+    set_miss_program(current_miss_program);
 
 	add_lights(lights);
 
@@ -584,8 +578,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
 
     mScene->get_current_camera()->update_camera(s_camera_data);
-
-    miss_program->set_into_gpu(context);
 
     context["tonemap_multiplier"]->setFloat(tonemap_multiplier);
 	context["tonemap_exponent"]->setFloat(tonemap_exponent);
@@ -726,7 +718,8 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 	case LightType::SKY:
 		{
 			SingularLightData light;
-			static_cast<SkyModel*>(miss_program.get())->get_directional_light(light);
+
+			static_cast<const SkyModel&>(mScene->get_miss_program()).get_directional_light(light);
             memcpy(dir_light_buffer->map(), &light, sizeof(SingularLightData));
             dir_light_buffer->unmap();
 		}
@@ -891,11 +884,11 @@ bool ObjScene::mouse_pressed(int x, int y, int button, int action, int mods)
 	return gui->mousePressed(x, y, button, action, mods);
 }
 
-void ObjScene::set_miss_program()
+void ObjScene::set_miss_program(BackgroundType::EnumType program)
 {
-	if (miss_program != nullptr)
-		miss_program.reset();
-	switch (current_miss_program)
+    std::unique_ptr<MissProgram> miss_program = nullptr;
+
+	switch (program)
 	{
 	case BackgroundType::ENVIRONMENT_MAP:
 	{
@@ -914,7 +907,7 @@ void ObjScene::set_miss_program()
         miss_program = std::make_unique<ConstantBackground>(color);
         break;
     }
-    miss_program->init(context);
+    mScene->set_miss_program(std::move(miss_program));
 }
 
 void ObjScene::set_rendering_method(RenderingMethodType::EnumType t)

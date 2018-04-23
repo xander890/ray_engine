@@ -81,15 +81,13 @@ private:
 	optix::Context context;
 	bool debug_mode_enabled = false;
 
-	BackgroundType::EnumType current_miss_program;
 	bool collect_images = false;
 	bool show_difference_image = false;
 	optix::Aabb m_scene_bounding_box;
 	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height);
 
 	void add_lights(std::vector<TriangleLight>& area_lights);
-	void set_miss_program();
-    std::unique_ptr<MissProgram> miss_program = nullptr;
+	void set_miss_program(BackgroundType::EnumType miss_program);
 
 	static bool export_raw(const std::string& name, optix::Buffer buffer, int frames);
 	void set_rendering_method(RenderingMethodType::EnumType t);

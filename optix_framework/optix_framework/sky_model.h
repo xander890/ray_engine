@@ -48,7 +48,7 @@ public:
 	SkyModel(optix::float3 up, optix::float3 north) : up(up), north(north) {  }
 	~SkyModel(void);
 	optix::float3 get_sky_color(optix::float3 v);
-	void get_directional_light(SingularLightData & light);
+	void get_directional_light(SingularLightData & light) const;
 
     virtual void init(optix::Context & ctx) override;
     virtual void set_into_gpu(optix::Context & ctx) override;

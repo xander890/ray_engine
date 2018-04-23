@@ -9,6 +9,8 @@
 #include "camera_host.h"
 #include <algorithm>
 #include "scattering_material.h"
+#include "miss_program.h"
+#include "immediate_gui.h"
 
 void Scene::execute_on_scene_elements(std::function<void(Object&)> operation)
 {
@@ -42,12 +44,24 @@ Scene::Scene(optix::Context context)
 bool Scene::on_draw()
 {
     bool changed = false;
-    execute_on_scene_elements([&](Object & m)
-    {
-        changed |= m.on_draw();
-    });
 
-    changed |= mCurrentCamera->on_draw();
+    if (ImmediateGUIDraw::CollapsingHeader("Meshes"))
+    {
+        execute_on_scene_elements([&](Object &m)
+        {
+            changed |= m.on_draw();
+        });
+    }
+
+    if (ImmediateGUIDraw::CollapsingHeader("Camera"))
+    {
+        changed |= mCurrentCamera->on_draw();
+    }
+
+    if (ImmediateGUIDraw::CollapsingHeader("Background"))
+    {
+        changed |= miss_program->on_draw();
+    }
     return changed;
 }
 
@@ -68,6 +82,7 @@ std::string Scene::serialize()
 void Scene::pre_trace()
 {
     mCurrentCamera->set_into_gpu(context);
+    miss_program->set_into_gpu(context);
     method->pre_trace();
     execute_on_scene_elements([=](Object & m)
     {
@@ -159,5 +174,11 @@ std::shared_ptr<Camera> Scene::get_camera(int camera_id)
     {
         return *val;
     }
+}
+
+void Scene::set_miss_program(std::unique_ptr<MissProgram> miss)
+{
+    miss->init(context);
+    miss_program = std::move(miss);
 }
 
