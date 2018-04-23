@@ -132,7 +132,7 @@ set(HEADERS
     subsurface_scattering_sampled_common.h
     subsurface_scattering_sampled.h
         hemisphere_partitions.h
-        xml_archive.hpp object_host.cpp object_host.h)
+        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp
@@ -200,7 +200,7 @@ set(SRCS
     sky_model.cpp
     sphere.cpp
     transform.cpp
-        object_host.cpp object_host.h)
+        object_host.cpp object_host.h scene.cpp scene.h)
 
 set(CUDA_SOURCES
 CUDA_files/absorbing_glass.cu

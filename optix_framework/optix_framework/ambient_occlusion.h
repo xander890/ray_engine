@@ -10,6 +10,7 @@ public:
 	virtual void init();
 
 	virtual void pre_trace();
+	std::string get_suffix() const { return "_ao"; }
 
 };
 

@@ -105,10 +105,10 @@ inline void load(cereal::XMLInputArchiveOptix & ar, MeshData & m)
 }
 }
 
-class Geometry2
+class Geometry
 {
 public:
-    explicit Geometry2(optix::Context ctx);
+    explicit Geometry(optix::Context ctx);
 
     void init(const char* name, MeshData meshdata);
 
@@ -121,7 +121,7 @@ public:
     optix::Geometry get_geometry() { return mGeometry; }
 
 private:
-    Geometry2() {}
+    Geometry() {}
 
 	void load_geometry();
 

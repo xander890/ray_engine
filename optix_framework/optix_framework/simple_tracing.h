@@ -8,6 +8,7 @@ class SimpleTracing : public RenderingMethod
 public:
     SimpleTracing(optix::Context & context) : RenderingMethod(context) {}
 	virtual void init();
+	std::string get_suffix() const { return ""; }
 };
 
 

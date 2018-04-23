@@ -11,7 +11,7 @@
 using namespace optix;
 using namespace std;
 
-Camera::Camera(optix::Context & context, PinholeCameraType::EnumType camera_type, int width, int height, int downsampling, optix::int4 rendering_rect)
+Camera::Camera(optix::Context & context, PinholeCameraType::EnumType camera_type, unsigned int width, unsigned int height, unsigned int downsampling, optix::int4 rendering_rect)
 {
     const string ptx_path = get_path_ptx("pinhole_camera.cu");
     string camera_name = (camera_type == PinholeCameraType::INVERSE_CAMERA_MATRIX) ? "pinhole_camera_w_matrix" : "pinhole_camera";
@@ -66,5 +66,10 @@ bool Camera::on_draw()
 	return changed;
 }
 
-int Camera::get_width() const { return data->render_bounds.z; }
-int Camera::get_height() const { return data->render_bounds.w; }
+unsigned int Camera::get_width() const { return data->render_bounds.z; }
+unsigned int Camera::get_height() const { return data->render_bounds.w; }
+
+int Camera::get_id() const
+{
+    return entry_point;
+}

@@ -60,22 +60,9 @@ std::string get_full_program_name(std::string shader, std::string suffix)
     return shader + suffix;
 }
 
-const char * get_suffix(RenderingMethodType::EnumType method)
+optix::Program ShaderFactory::createProgram(std::string file, std::string program_name, std::string m)
 {
-    switch (method)
-    {
-    case RenderingMethodType::RECURSIVE_RAY_TRACING: return "";
-    case RenderingMethodType::AMBIENT_OCCLUSION: return "_ao";
-    case RenderingMethodType::PATH_TRACING: return "_path_tracing";
-    case RenderingMethodType::NotValidEnumItem: return "";
-    default: return "";
-    }
-
-}
-
-optix::Program ShaderFactory::createProgram(std::string file, std::string program_name, RenderingMethodType::EnumType m)
-{
-    const char * method = get_suffix(m);
+    const char * method = m.c_str();
     optix::Program result;
     try
     {

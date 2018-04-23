@@ -4,19 +4,14 @@
 
 #include <cereal/archives/json.hpp>
 #include <fstream>
-#include <string>
 #include "obj_loader.h"
 #include "singular_light.h"
 #include "obj_scene.h"
-#include "folders.h"
 #include "simple_tracing.h"
 #include "parameter_parser.h"
-#include "HDRLoader.h"
 #include "material_library.h"
 #include "ambient_occlusion.h"
 #include "path_tracing.h"
-#include "logger.h"
-//#include "procedural_loader.h"
 #include "sphere.h"
 #include "dialogs.h"
 #include <ImageLoader.h>
@@ -55,21 +50,6 @@ using optix::make_float3;
 using optix::Acceleration;
 using optix::Aabb;
 using optix::Buffer;
-
-
-void ObjScene::add_result_image(const string& image_file)
-{
-	comparison_image = loadTexture(context->getContext(), image_file, optix::make_float3(0, 1, 0));
-	context["comparison_texture"]->setInt(comparison_image->getId());
-}
-
-void ObjScene::execute_on_scene_elements(function<void(Object&)> operation)
-{
-    for (std::unique_ptr<Object> & m : mMeshes)
-    {
-        operation(*m);
-    }
-}
 
 void ObjScene::collect_image(unsigned int frame) const
 {
@@ -113,14 +93,10 @@ bool ObjScene::key_pressed(int key, int action, int modifier)
 		gui->toggleVisibility();
 		return true;
 	}
-	break;
 	case GLFW_KEY_R:
 	{
 		Logger::info << "Reloading all shaders..." << std::endl;
-		execute_on_scene_elements([=](Object & m)
-		{
-			m.reload_shader();
-		});
+        mScene->reload();
 	}
 	break;
 	default: return false;
@@ -131,23 +107,17 @@ bool ObjScene::key_pressed(int key, int action, int modifier)
 
 ObjScene::ObjScene(const std::vector<std::string>& obj_filenames, optix::int4 rendering_r)
 	: context(m_context),
-	current_miss_program(), filenames(obj_filenames), method(nullptr), m_frame(0u),
-	deforming(false)
+	current_miss_program(), filenames(obj_filenames), m_frame(0u)
 {
-	calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
 	custom_rr = rendering_r;
-	mMeshes.clear();
 	current_render_task = make_unique<RenderTaskFrames>(1000, "res.raw", false);
 }
 
 ObjScene::ObjScene()
 	: context(m_context),
      filenames(1, "test.obj"),
-	m_frame(0u),
-	deforming(false)
+	m_frame(0u)
 {
-	calc_absorption[0] = calc_absorption[1] = calc_absorption[2] = 0.0f;
-	mMeshes.clear();
 	custom_rr = optix::make_int4(-1);
 	current_render_task = make_unique<RenderTaskFrames>(1000, "res.raw", false);
 }
@@ -158,9 +128,9 @@ inline ObjScene::~ObjScene()
 	ObjScene::clean_up();
 }
 
-double to_milliseconds(std::chrono::high_resolution_clock::duration & dur)
+float to_milliseconds(std::chrono::high_resolution_clock::duration & dur)
 {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count() / 1e6;
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count() / 1e6f;
 }
 
 bool ObjScene::draw_gui()
@@ -218,10 +188,7 @@ bool ObjScene::draw_gui()
 		ImmediateGUIDraw::SameLine();
 		if (ImmediateGUIDraw::Button("Reset Shaders"))
 		{
-			execute_on_scene_elements([=](Object & m)
-			{
-				m.reload_shader();
-			});
+            mScene->reload();
 		}
 
 		if (ImmediateGUIDraw::Button("Save RAW image"))
@@ -260,7 +227,7 @@ bool ObjScene::draw_gui()
 
 		if (ImmediateGUIDraw::Button("Center debug pixel"))
 		{
-			set_debug_pixel((int)(zoomed_area.x + zoomed_area.z / 2), (int)(zoomed_area.y + zoomed_area.w / 2));
+			set_debug_pixel(zoomed_area.x + zoomed_area.z / 2, zoomed_area.y + zoomed_area.w / 2);
 		}
 
 		ImmediateGUIDraw::InputInt4("Zoom window", (int*)&zoom_debug_window);
@@ -301,15 +268,10 @@ bool ObjScene::draw_gui()
 		changed |= miss_program->on_draw();
 	}
 
-	if (ImmediateGUIDraw::CollapsingHeader("Meshes"))
+	if (ImmediateGUIDraw::CollapsingHeader("Scene"))
 	{
-		execute_on_scene_elements([&](Object & m)
-		{
-			changed |= m.on_draw();
-		});
+        changed = mScene->on_draw();
 	}
-
-	changed |= camera->on_draw();
 
 	if (ImmediateGUIDraw::CollapsingHeader("Heterogenous materials"))
 	{
@@ -356,17 +318,7 @@ bool ObjScene::draw_gui()
 
 void ObjScene::serialize_scene()
 {
-	std::stringstream ss;
-	{
-		cereal::XMLOutputArchive output_archive(ss);
-		output_archive(mMeshes[0]);
-	}
-	Logger::info << ss.str();
-
-	cereal::XMLInputArchiveOptix iarchive(context, ss);
-	std::unique_ptr<Object> m;
-    iarchive(m);
-
+    mScene->serialize();
 }
 
 
@@ -385,14 +337,15 @@ void ObjScene::create_3d_noise(float frequency)
     sampler->setMipLevelCount(1u);
     sampler->setArraySize(1u);
     // Create buffer with single texel set to default_color
-    float* buffer_data = static_cast<float*>(buffer->map());
+    float* buffer_data;
+    buffer_data = static_cast<float*>(buffer->map());
 
     for (int i = 0; i < 256; i++)
         for (int j = 0; j < 256; j++)
             for (int k = 0; k < 256; k++)
             {
                 int idx = 256 * 256 * i + 256 * j + k;
-                //buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
+                buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
             }
     buffer->unmap();
 
@@ -400,13 +353,14 @@ void ObjScene::create_3d_noise(float frequency)
     context["noise_tex"]->setInt(sampler->getId());
 }
 
-void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_camera_data)
+void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_data)
 {
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(2000);
 	setDebugEnabled(debug_mode_enabled);
 	context->setPrintLaunchIndex(407,56);
 
+    mScene = std::make_unique<Scene>(context);
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
 	ScatteringMaterial::initializeDefaultMaterials();
@@ -418,10 +372,16 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	}
 
     auto camera_type = PinholeCameraType::to_enum(ConfigParameters::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), std::string("Type of the camera. Types: ") + PinholeCameraType::get_full_string()));
-    int camera_width = ConfigParameters::get_parameter<int>("camera", "window_width", 512, "The width of the window");
-    int camera_height = ConfigParameters::get_parameter<int>("camera", "window_height", 512, "The height of the window");
+    unsigned int camera_width = ConfigParameters::get_parameter<unsigned int>("camera", "window_width", 512, "The width of the window");
+    unsigned int camera_height = ConfigParameters::get_parameter<unsigned int>("camera", "window_height", 512, "The height of the window");
     int downsampling = ConfigParameters::get_parameter<int>("camera", "camera_downsampling", 1, "");
-    camera = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
+    auto camerau = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
+    mScene->set_current_camera(std::move(camerau));
+
+    std::shared_ptr<Camera> camera = mScene->get_current_camera();
+    RenderingMethodType::EnumType t = RenderingMethodType::to_enum(ConfigParameters::get_parameter<string>("config", "rendering_type", RenderingMethodType::to_string(RenderingMethodType::RECURSIVE_RAY_TRACING), std::string("Rendering method. ") + RenderingMethodType::get_full_string()));
+    set_rendering_method(t);
+
 
     ShaderFactory::init(context);
 	ShaderInfo info = ShaderInfo(12, "volume_shader.cu", "Volume path tracer");
@@ -448,7 +408,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 
 	// Setup context
 	context->setRayTypeCount(RayType::count());
-	context->setStackSize(ConfigParameters::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
+	context->setStackSize((RTsize)ConfigParameters::get_parameter<int>("config", "stack_size", 2000, "Allocated stack size for context"));
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
 
 	// Constant colors
@@ -465,17 +425,10 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	returned_buffer = tonemap_output_buffer;
 
 	// Create group for scene objects and float acceleration structure
-	scene = context->createGroup();
-	scene->setChildCount(static_cast<unsigned int>(filenames.size()));
-	Acceleration acceleration = context->createAcceleration("Bvh");
-	scene->setAcceleration(acceleration);
-	acceleration->markDirty();
 
 	// We need the scene bounding box for placing the camera
 	Aabb bbox(make_float3(-1,-1,-1), make_float3(1,1,1));
 	
-    RenderingMethodType::EnumType t = RenderingMethodType::to_enum(ConfigParameters::get_parameter<string>("config", "rendering_type", RenderingMethodType::to_string(RenderingMethodType::RECURSIVE_RAY_TRACING), std::string("Rendering method. ") + RenderingMethodType::get_full_string()));
-	set_rendering_method(t);
 
 	// Load geometry from OBJ files into the group of scene objects
 	vector<TriangleLight> lights(0);
@@ -484,18 +437,15 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	AISceneLoader l = AISceneLoader(s.c_str(), context);
 #endif
 	m_scene_bounding_box = bbox;
-	scene->setChildCount(0);
 	for (unsigned int i = 0; i < filenames.size(); ++i)
 	{
 		// Load OBJ scene
 		Logger::info <<"Loading obj " << filenames[i]  << "..." <<endl;
 		ObjLoader* loader = new ObjLoader((Folders::data_folder + filenames[i]).c_str(), context);
-        vector<std::unique_ptr<Object>> v = loader->load(get_object_transform(filenames[i]));
+        vector<std::unique_ptr<Object>> v = loader->load();
 		for (auto& c : v)
 		{
-			c->transform_changed_event = std::bind(&ObjScene::transform_changed, this);
-			mMeshes.push_back(std::move(c));
-			scene->addChild(mMeshes.back()->get_dynamic_handle());
+            mScene->add_object(std::move(c));
 		}
 
 	    m_scene_bounding_box.include(loader->getSceneBBox());
@@ -507,12 +457,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 		delete loader;
 	}
 	
-	context["importance_sample_area_lights"]->setUint(mImportanceSampleAreaLights);
-
-    execute_on_scene_elements([=](Object & m)
-    {
-        m.set_method(t);
-    });
+	context["importance_sample_area_lights"]->setUint(static_cast<unsigned int>(mImportanceSampleAreaLights));
 
 	// Procedural objects
 	vector<ProceduralMesh*> procedural;
@@ -557,8 +502,6 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 //		}
 //	}
 
-    context["top_object"]->set(scene);
-    context["top_shadower"]->set(scene);
 
 	// Add light sources depending on chosen shader
     set_miss_program();
@@ -587,7 +530,7 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	Logger::info <<"Loading camera parameters..."<<endl;
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	
-    create_3d_noise(noise_frequency);
+    //create_3d_noise(noise_frequency);
 
     load_camera_extrinsics(init_camera_data);
 
@@ -598,8 +541,6 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 
 	gui = std::make_unique<ImmediateGUI>();
 
-	comparison_image = loadTexture(context->getContext(), "", make_float3(0));
-
     ObjMaterial params;
 
     params.illum = 12;
@@ -609,10 +550,6 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 	params.name = "ketchup";
 
     material_ketchup = std::make_shared<MaterialHost>(context,params);
-    execute_on_scene_elements([=](Object & m)
-    {
-        //m.add_material(material_ketchup);
-    });
 
 	context["show_difference_image"]->setInt(show_difference_image);
 	context["merl_brdf_multiplier"]->setFloat(make_float3(1));
@@ -639,12 +576,6 @@ void ObjScene::initialize_scene(GLFWwindow * window, InitialCameraData& init_cam
 
 }
 
-void update_timer(double & current, double n)
-{
-	current = n;
-}
-
-
 void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 {
 	display = true;
@@ -652,8 +583,8 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		return;
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
 
-	camera->update_camera(s_camera_data);
-	camera->set_into_gpu(context);
+    mScene->get_current_camera()->update_camera(s_camera_data);
+
     miss_program->set_into_gpu(context);
 
     context["tonemap_multiplier"]->setFloat(tonemap_multiplier);
@@ -662,7 +593,6 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	auto total0 = currentTime();
 
     auto t0 = currentTime();
-
 	if (m_camera_changed)
 	{
 		reset_renderer();
@@ -671,23 +601,15 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 
 	context["frame"]->setUint(m_frame++);
 
-	if (deforming)
-		scene->getAcceleration()->markDirty();
-
-    method->pre_trace();
-    execute_on_scene_elements([=](Object & m)
-    {
-		m.load();
-        m.pre_trace();
-    });
+    mScene->pre_trace();
     auto t1 = currentTime();
     render_time_pre_trace = t1-t0;
 
-    unsigned int width = camera->get_width();
-	unsigned int height = camera->get_height();
-	
+    unsigned int width = mScene->get_current_camera()->get_width();
+	unsigned int height = mScene->get_current_camera()->get_height();
+
 	t0 = currentTime();
-	context->launch(camera->get_entry_point(), width, height);
+    mScene->trace();
 
 	t1 = currentTime();
     render_time_main = t1-t0;
@@ -695,12 +617,8 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	// Apply tone mapping
 	t0 = currentTime();
 
+    mScene->post_trace();
 
-	method->post_trace();
-	execute_on_scene_elements([=](Object & m)
-	{
-		m.post_trace();
-	});
 	t1 = currentTime();
     render_time_post = t1-t0;
 
@@ -708,11 +626,10 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 	t0 = currentTime();
 	context->launch(tonemap_entry_point, width, height);
 
-	if (debug_mode_enabled == true)
+	if (debug_mode_enabled)
 	{
 		context["zoom_window"]->setUint(zoom_debug_window);
 		context["image_part_to_zoom"]->setUint(zoomed_area);
-
 		context->launch(debug_entry_point, width, height);
 	}
 	t1 = currentTime();
@@ -730,7 +647,7 @@ void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
 		}
         auto l = total1 - total0;
 
-		current_render_task->update(to_milliseconds(l) / 1000.0);
+		current_render_task->update(to_milliseconds(l) / 1000.0f);
 	}
 
 	collect_image(m_frame);
@@ -860,18 +777,7 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 	context["area_lights"]->set(area_light_buffer);
 }
 
-optix::GeometryGroup ObjScene::get_geometry_group(unsigned int idx)
-{
-	RTobject object;
-	rtGroupGetChild(scene->get(), idx, &object);
-	RTgeometrygroup temp = reinterpret_cast<RTgeometrygroup>(object);
-	return optix::GeometryGroup::take(temp);
-}
 
-optix::Matrix4x4 ObjScene::get_object_transform(string filename)
-{
-	return optix::Matrix4x4::identity();
-}
 
 
 bool ObjScene::export_raw(const string& raw_p, optix::Buffer out, int frames)
@@ -940,7 +846,7 @@ bool ObjScene::export_raw(const string& raw_p, optix::Buffer out, int frames)
 	return true;
 }
 
-void ObjScene::do_resize(unsigned int width, unsigned int height)
+void ObjScene::do_resize(unsigned int , unsigned int )
 {
 }
 
@@ -964,26 +870,22 @@ void ObjScene::post_draw_callback()
 		reset_renderer();
 	}
 	gui->end_window();
-	static const int console_height = 300;
-	//gui->start_window("Console", 20, camera->get_height() - console_height - 20 , camera->get_width() - 40 , console_height);
-	//ImGui::Text("%s", console_log.str().c_str());
-	//gui->end_window();
 }
 
-void ObjScene::set_debug_pixel(int i, int y)
+void ObjScene::set_debug_pixel(unsigned int x, unsigned int y)
 {
-	Logger::info <<"Setting debug pixel to " << to_string(i) << " << " << to_string(y) <<endl;
-	context->setPrintLaunchIndex(i, y);
-	context["debug_index"]->setUint(i, y);
+	Logger::info <<"Setting debug pixel to " << to_string(x) << " << " << to_string(y) <<endl;
+	context->setPrintLaunchIndex(x, y);
+	context["debug_index"]->setUint(x, y);
 }
 
 bool ObjScene::mouse_pressed(int x, int y, int button, int action, int mods)
 {
-	y = camera->get_height() - y;
-	if (button == GLFW_MOUSE_BUTTON_RIGHT && debug_mode_enabled)
+	y = mScene->get_current_camera()->get_height() - y;
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && debug_mode_enabled && x > 0 && y > 0)
 	{
-		set_debug_pixel(x, y);
-		zoomed_area = optix::make_uint4(x - (int)zoomed_area.z / 2, y - (int)zoomed_area.w / 2, zoomed_area.z, zoomed_area.w);
+		set_debug_pixel(static_cast<unsigned int>(x), static_cast<unsigned int>(y));
+		zoomed_area = optix::make_uint4(x - zoomed_area.z / 2, y - zoomed_area.w / 2, zoomed_area.z, zoomed_area.w);
 		return true;
 	}
 	return gui->mousePressed(x, y, button, action, mods);
@@ -1017,22 +919,23 @@ void ObjScene::set_miss_program()
 
 void ObjScene::set_rendering_method(RenderingMethodType::EnumType t)
 {
+    std::unique_ptr<RenderingMethod> m;
 	switch (t)
 	{
 	case RenderingMethodType::RECURSIVE_RAY_TRACING:
-		method = std::make_unique<SimpleTracing>(context);
+		m = std::make_unique<SimpleTracing>(context);
 		break;
 	case RenderingMethodType::AMBIENT_OCCLUSION:
-		method = std::make_unique<AmbientOcclusion>(context);
+		m = std::make_unique<AmbientOcclusion>(context);
 		break;
 	case RenderingMethodType::PATH_TRACING:
-		method = std::make_unique<PathTracing>(context);
+		m = std::make_unique<PathTracing>(context);
 		break;
 	default:
 		Logger::error<<"The selected rendering method is not valid or no longer supported."<< endl;
 		break;
 	}
-    method->init();
+    mScene->set_method(std::move(m));
 }
 
 
@@ -1051,18 +954,6 @@ void ObjScene::setDebugEnabled(bool var)
 	}
 }
 
-void ObjScene::updateGlassObjects()
-{
-	Logger::info<<"Updating glass objects"<<endl;
-	float3* abs = reinterpret_cast<float3*>(&calc_absorption);
-	*abs = global_absorption_override / global_absorption_inv_multiplier;
-	execute_on_scene_elements([=](Object& object)
-		{
-			object.mMaterial["ior"]->setFloat(global_ior_override);
-			object.mMaterial["absorption"]->setFloat(*abs);
-		});
-}
-
 
 void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 {
@@ -1078,7 +969,7 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 
 	float vfov = ConfigParameters::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
 
-	float ratio = camera->get_width() / (float)camera->get_height();
+	float ratio = mScene->get_current_camera()->get_width() / (float)mScene->get_current_camera()->get_height();
 	float hfov = rad2deg(2.0f*atanf(ratio*tanf(deg2rad(0.5f*(vfov)))));
 
     if (use_auto_camera)
@@ -1104,7 +995,3 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 	reset_renderer();
 }
 
-void ObjScene::transform_changed()
-{
-	scene->getAcceleration()->markDirty();
-}

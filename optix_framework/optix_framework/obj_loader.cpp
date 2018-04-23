@@ -281,7 +281,7 @@ std::vector<std::unique_ptr<Object>> ObjLoader::createGeometryInstances(GLMmodel
     MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, (int)num_triangles, bbox };
     std::unique_ptr<Object> rtMesh = std::make_unique<Object>(m_context);
     std::string name = obj_group->name;
-    std::unique_ptr<Geometry2> geom = std::make_unique<Geometry2>(m_context);
+    std::unique_ptr<Geometry> geom = std::make_unique<Geometry>(m_context);
     geom->init(name.c_str(), meshdata);
     rtMesh->init(name.c_str(), std::move(geom), materialData);
     
@@ -289,7 +289,6 @@ std::vector<std::unique_ptr<Object>> ObjLoader::createGeometryInstances(GLMmodel
   }
     return instances;
 }
-
 
 bool ObjLoader::isMyFile( const char* filename )
 {

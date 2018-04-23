@@ -14,6 +14,7 @@ public:
     void init() override;
 
     void pre_trace() override;
+	std::string get_suffix() const { return "_path_tracing"; }
 
 };
 

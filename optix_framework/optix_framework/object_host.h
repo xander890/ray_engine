@@ -13,21 +13,23 @@
 #include "optix_utils.h"
 #include "mesh.h"
 
+class Scene;
+
 class Object
 {
 public:
     explicit Object(optix::Context ctx);
 
-    void init(const char* name, std::unique_ptr<Geometry2> geom, std::shared_ptr<MaterialHost> material);
+    void init(const char* name, std::unique_ptr<Geometry> geom, std::shared_ptr<MaterialHost> material);
 
-    std::shared_ptr<Geometry2> mGeometry;
+    std::shared_ptr<Geometry> mGeometry;
     optix::Context  mContext;
     optix::Material mMaterial = nullptr;
 
     void reload_shader();
+    void reload_material();
     void load();
 
-    void set_method(RenderingMethodType::EnumType method);
     void set_shader(int illum);
     void set_shader(const std::string & source);
     void add_material(std::shared_ptr<MaterialHost> material);
@@ -41,17 +43,18 @@ public:
 
     optix::GeometryInstance get_geometry_instance() { return mGeometryInstance;  }
     optix::GeometryGroup get_static_handle() { return mGeometryGroup; }
-    optix::Transform get_dynamic_handle() { return mOptixTransform; }
+    optix::Transform get_dynamic_handle() { return mTransform->get_transform(); }
 
     typedef std::function<void()> TransformChangedDelegate;
     TransformChangedDelegate transform_changed_event = nullptr;
-//    MeshData mMeshData;
+
+    const Scene& get_scene() const { return *scene; }
+
 
 private:
     Object() {}
     optix::GeometryInstance mGeometryInstance = nullptr;
     optix::GeometryGroup mGeometryGroup = nullptr;
-    optix::Transform mOptixTransform = nullptr;
 
     std::unique_ptr<Shader> mShader;
     std::unique_ptr<Transform> mTransform;
@@ -92,4 +95,6 @@ private:
     }
 
     int mMeshID;
+    Scene* scene;
+    friend class Scene;
 };

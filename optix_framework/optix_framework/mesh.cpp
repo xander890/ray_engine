@@ -9,13 +9,13 @@
 #include <array>
 #include "object_host.h"
 
-Geometry2::Geometry2(optix::Context ctx) : mContext(ctx)
+Geometry::Geometry(optix::Context ctx) : mContext(ctx)
 {
 	static int id = 0;
 	mMeshID = id++;
 }
 
-void Geometry2::init(const char* name, MeshData meshdata)
+void Geometry::init(const char* name, MeshData meshdata)
 {
     mMeshName = name;
     mMeshData = meshdata;
@@ -37,7 +37,7 @@ void Geometry2::init(const char* name, MeshData meshdata)
 	load();
 }
 
-void Geometry2::load_geometry()
+void Geometry::load_geometry()
 {
 	if (!mReloadGeometry)
 		return;
@@ -57,7 +57,7 @@ void Geometry2::load_geometry()
 	mReloadGeometry = false;
 }
 
-void Geometry2::load()
+void Geometry::load()
 {
 	load_geometry();
 }
@@ -65,7 +65,7 @@ void Geometry2::load()
 
 
 
-void Geometry2::create_and_bind_optix_data()
+void Geometry::create_and_bind_optix_data()
 {
     if (!mGeometry)
     {
@@ -74,7 +74,7 @@ void Geometry2::create_and_bind_optix_data()
 }
 
 
-bool Geometry2::on_draw()
+bool Geometry::on_draw()
 {
 	bool changed = false;
 	return changed;

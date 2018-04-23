@@ -16,6 +16,7 @@
 #include <camera_host.h>
 #include <chrono>
 #include <sstream>
+#include "scene.h"
 
 class MissProgram;
 class ImmediateGUI;
@@ -63,7 +64,7 @@ public:
 	void do_resize(unsigned int width, unsigned int height) override;
 	void resize(unsigned int width, unsigned int height) override;
 	void post_draw_callback() override;
-	void set_debug_pixel(int i, int y);
+	void set_debug_pixel(unsigned int x, unsigned int y);
 	bool mouse_pressed(int x, int y,int button, int action, int mods) override;
 	bool mouse_moving(int x, int y) override;
 	void reset_renderer();
@@ -90,51 +91,27 @@ private:
 	void set_miss_program();
     std::unique_ptr<MissProgram> miss_program = nullptr;
 
-	// Geometry and transformation getters
-	optix::GeometryGroup get_geometry_group(unsigned int idx);
-	optix::Matrix4x4 get_object_transform(std::string filename);
-
 	static bool export_raw(const std::string& name, optix::Buffer buffer, int frames);
 	void set_rendering_method(RenderingMethodType::EnumType t);
 	std::vector<std::string> filenames;
 
-	optix::Group scene;
-	//std::vector<optix::uint2> lights;
-	std::unique_ptr<RenderingMethod> method;
-
 	unsigned int m_frame;
-	bool deforming;
-	std::unique_ptr<Camera> camera = nullptr;
 	optix::Buffer output_buffer;
 
 	std::unique_ptr<ImmediateGUI> gui = nullptr;
-	void add_result_image(const std::string& image_file);
-    std::vector<std::unique_ptr<Object>> mMeshes;
-    std::shared_ptr<MaterialHost> material_ketchup;
-
-    void execute_on_scene_elements(std::function<void(Object&)> operation);
+	std::unique_ptr<Scene> mScene;
+	std::shared_ptr<MaterialHost> material_ketchup;
 
 	void setDebugEnabled(bool var);
 	float tonemap_multiplier = 1.0f;
 	float tonemap_exponent = 1.0f;
 
-	optix::float3 global_absorption_override = optix::make_float3(0.0f);
-	float global_absorption_inv_multiplier = 1.0f;
-	float global_ior_override = 1.5f;
-	float calc_absorption[3];
-	void updateGlassObjects();
 	std::vector<MPMLMedium*> available_media;
-	int current_medium = 0;
 
 	optix::Buffer rendering_output_buffer;
 	optix::Buffer tonemap_output_buffer;
 	optix::Buffer debug_output_buffer;
 	optix::Buffer returned_buffer;
-
-	int mtx_method = 1;
-	
-	optix::TextureSampler comparison_image;
-	float comparison_image_weight = 0.0;
 
 	void load_camera_extrinsics(InitialCameraData & data);
 
@@ -143,8 +120,6 @@ private:
 	optix::uint4 zoom_debug_window = optix::make_uint4(20,20,300,300);
 	optix::uint4 zoomed_area = optix::make_uint4(0);
 
-	std::vector<std::string> parameters_override;
-
 	std::chrono::high_resolution_clock::duration render_time_main = std::chrono::high_resolution_clock::duration::zero();
     std::chrono::high_resolution_clock::duration render_time_pre_trace = std::chrono::high_resolution_clock::duration::zero();
     std::chrono::high_resolution_clock::duration render_time_post = std::chrono::high_resolution_clock::duration::zero();
@@ -152,14 +127,12 @@ private:
 
 	bool mbPaused = false;
 
-	void transform_changed();
 	bool mImportanceSampleAreaLights = false;
 
 	unsigned int tonemap_entry_point;
 	unsigned int debug_entry_point;
 
 	bool start_render_task_when_ready = false;
-	std::stringstream console_log;
 
     void serialize_scene();
 };

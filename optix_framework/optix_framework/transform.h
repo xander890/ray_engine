@@ -6,10 +6,8 @@
 class Transform : public std::enable_shared_from_this<Transform>
 {
 public:
-	Transform();
+	Transform(optix::Context & ctx);
 	~Transform();
-	Transform(Transform&&) noexcept;
-	Transform& operator=(Transform&&) noexcept;
 
 	optix::Matrix4x4 get_matrix();
 	bool on_draw();
@@ -17,6 +15,8 @@ public:
 	void translate(const optix::float3 & t);
 	void rotate(float angle, const optix::float3 & axis);
 	void scale(const optix::float3 & s);
+	void load();
+	optix::Transform get_transform() { return mTransform; }
 
 private:
 	optix::float3 mTranslation = optix::make_float3(0,0,0);
@@ -32,5 +32,7 @@ private:
 	{
 		archive(CEREAL_NVP(mTranslation), CEREAL_NVP(mScale), CEREAL_NVP(mRotationAngle), CEREAL_NVP(mRotationAngle));
 	}
+	optix::Context context;
+	optix::Transform mTransform = nullptr;
 };
 

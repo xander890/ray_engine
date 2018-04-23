@@ -14,12 +14,18 @@ Object::Object(optix::Context ctx) : mContext(ctx)
     mMeshID = id++;
 }
 
-void Object::init(const char* name, std::unique_ptr<Geometry2> geometry, std::shared_ptr<MaterialHost> material)
+void Object::init(const char* name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost> material)
 {
     mMeshName = name;
     mGeometry = std::move(geometry);
     mMaterialData.resize(1);
     mMaterialData[0] = material;
+
+    if (mTransform == nullptr)
+    {
+        mTransform = std::make_unique<Transform>(mContext);
+    }
+
     // Load triangle_mesh programs
     if (!mIntersectProgram.get()) {
         std::string path = get_path_ptx("triangle_mesh.cu");
@@ -42,7 +48,7 @@ void Object::init(const char* name, std::unique_ptr<Geometry2> geometry, std::sh
     }
 
     set_shader(mMaterialData[0]->get_data().illum);
-    load();
+    mReloadMaterials = mReloadShader = mReloadGeometry = true;
 }
 
 void Object::load_materials()
@@ -74,7 +80,6 @@ void Object::load_geometry()
         return;
     create_and_bind_optix_data();
 
-
     BufPtr<optix::Aabb> bptr = BufPtr<optix::Aabb>(mBBoxBuffer->getId());
     mGeometryInstance["local_bounding_box"]->setUserData(sizeof(BufPtr<optix::Aabb>), &bptr);
     mGeometry->load();
@@ -95,11 +100,11 @@ void Object::load_transform()
 {
     if (!mTransform)
     {
-        mTransform = std::make_unique<Transform>();
+        mTransform = std::make_unique<Transform>(mContext);
     }
     if (mTransform->has_changed())
     {
-        mOptixTransform->setMatrix(false, mTransform->get_matrix().getData(), nullptr);
+        mTransform->load();
         mGeometryGroup->getAcceleration()->markDirty();
         if(transform_changed_event != nullptr)
             transform_changed_event();
@@ -117,13 +122,6 @@ void Object::load()
     load_materials();
     load_shader();
     load_transform();
-}
-
-void Object::set_method(RenderingMethodType::EnumType method)
-{
-    mShader->set_method(method);
-    mReloadShader = true;
-    mReloadMaterials = true;
 }
 
 void Object::set_shader(int illum)
@@ -160,12 +158,6 @@ void Object::create_and_bind_optix_data()
         bind = true;
     }
 
-    if (!mOptixTransform)
-    {
-        mOptixTransform = mContext->createTransform();
-        bind = true;
-    }
-
     if (!mGeometryGroup)
     {
         mGeometryGroup = mContext->createGeometryGroup();
@@ -188,7 +180,7 @@ void Object::create_and_bind_optix_data()
         acceleration->markDirty();
         mGeometryGroup->setChild(0, mGeometryInstance);
 
-        mOptixTransform->setChild(mGeometryGroup);
+        mTransform->get_transform()->setChild(mGeometryGroup);
     }
 }
 
@@ -262,4 +254,9 @@ void Object::pre_trace()
 void Object::post_trace()
 {
     mShader->post_trace_mesh(*this);
+}
+
+void Object::reload_material()
+{
+    mReloadMaterials = true;
 }

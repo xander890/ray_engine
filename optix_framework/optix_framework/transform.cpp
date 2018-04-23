@@ -1,12 +1,7 @@
 #include "transform.h"
 #include "immediate_gui.h"
 
-Transform::Transform() {
-}
-
 Transform::~Transform() = default;
-Transform::Transform(Transform&&) noexcept = default;
-Transform& Transform::operator=(Transform&&) noexcept = default;
 
 optix::Matrix4x4 Transform::get_matrix()
 {
@@ -20,17 +15,17 @@ optix::Matrix4x4 Transform::get_matrix()
 
 bool Transform::on_draw()
 {
-	mHasChanged |= ImmediateGUIDraw::InputFloat3("Translate##TranslateTransform" + id, &mTranslation.x , 2);
+	mHasChanged |= ImmediateGUIDraw::InputFloat3((std::string("Translate##TranslateTransform") + std::to_string(id)).c_str(), &mTranslation.x , 2);
 
 	static optix::float3 val = mRotationAxis;
-	if (ImmediateGUIDraw::InputFloat3("Rotation axis##RotationAxisTransform" + id, &val.x, 2))
+	if (ImmediateGUIDraw::InputFloat3((std::string("Rotation axis##RotationAxisTransform") + std::to_string(id)).c_str(), &val.x, 2))
 	{
 		mHasChanged = true;
 		mRotationAxis = optix::normalize(val);
 	}
 
-	mHasChanged |= ImmediateGUIDraw::InputFloat("Rotation angle##RotationAngleTransform" + id, &mRotationAngle, 2);
-	mHasChanged |= ImmediateGUIDraw::InputFloat3("Scale##ScaleTransform" + id, &mScale.x, 2);
+	mHasChanged |= ImmediateGUIDraw::InputFloat((std::string("Rotation angle##RotationAngleTransform") + std::to_string(id)).c_str(), &mRotationAngle, 2);
+	mHasChanged |= ImmediateGUIDraw::InputFloat3((std::string("Scale##ScaleTransform") + std::to_string(id)).c_str(), &mScale.x, 2);
 	return mHasChanged;
 }
 
@@ -56,4 +51,18 @@ void Transform::scale(const optix::float3 & s)
 {
 	mHasChanged = true;
 	mScale = s;
+}
+
+Transform::Transform(optix::Context & ctx)
+{
+	context = ctx;
+	if(mTransform.get() == nullptr)
+	{
+		mTransform = context->createTransform();
+	}
+}
+
+void Transform::load()
+{
+	mTransform->setMatrix(false, get_matrix().getData(), nullptr);
 }

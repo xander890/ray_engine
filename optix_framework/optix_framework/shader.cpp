@@ -2,6 +2,7 @@
 #include "../optprops/Medium.h"
 #include "object_host.h"
 #include "shader_factory.h"
+#include "scene.h"
 
 void Shader::initialize_mesh(Object &object)
 {
@@ -34,13 +35,13 @@ Shader::Shader(const Shader & cp)
 	illum = cp.illum;
 	shader_path = cp.shader_path;
 	shader_name = cp.shader_name;
-	method = cp.method;
 }
 
 void Shader::set_hit_programs(Object &object)
 {
 	Logger::info << "Loading closest hit programs..." << std::endl;
-	auto chit = ShaderFactory::createProgram(shader_path, "shade", method);
+
+	auto chit = ShaderFactory::createProgram(shader_path, "shade", object.get_scene().get_method().get_suffix());
     auto chitd = ShaderFactory::createProgram("depth_ray.cu", "depth");
 	auto chita = ShaderFactory::createProgram("depth_ray.cu", "attribute_closest_hit");
 	auto ahit = ShaderFactory::createProgram(shader_path, "any_hit_shadow");

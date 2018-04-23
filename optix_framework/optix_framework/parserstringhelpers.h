@@ -65,6 +65,8 @@ inline bool tovalue(std::string p) {return (p == "true") ? true : false;}
 template<>
 inline int tovalue(std::string p) {return std::stoi(p);}
 template<>
+inline unsigned int tovalue(std::string p) {return std::stoi(p);}
+template<>
 inline float tovalue(std::string p) {return (float)std::stod(p);}
 
 // Two  dims

@@ -1,9 +1,11 @@
 #pragma once
 #include <vector>
 #include "folders.h"
+#include "rendering_method.h"
 #include <optix_world.h>
 #include <map>
 #include <enums.h>
+#include <memory>
 
 class Object;
 
@@ -20,7 +22,7 @@ class Shader
 public:    
 
 	Shader(const ShaderInfo & info) : illum(info.illum), shader_path(info.cuda_shader_path),
-		shader_name(info.name), method()
+		shader_name(info.name)
 	{
 	}
 
@@ -34,7 +36,6 @@ public:
 	virtual void load_data(Object &object) {}
 
     virtual void initialize_shader(optix::Context context);
-    void set_method(RenderingMethodType::EnumType m) { method = m; }
 
 	virtual bool on_draw();
 
@@ -51,7 +52,5 @@ protected:
 	int illum;
 	std::string shader_path;
 	std::string shader_name;
-	RenderingMethodType::EnumType method = RenderingMethodType::PATH_TRACING;
-
 };
 

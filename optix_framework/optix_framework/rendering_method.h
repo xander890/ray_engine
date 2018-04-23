@@ -12,6 +12,7 @@ public:
     virtual ~RenderingMethod() = default;
     RenderingMethod(optix::Context & context);
 	virtual void init() = 0;
+	virtual std::string get_suffix() const = 0;
 	virtual void pre_trace() {}
 	virtual void post_trace() {}
 
