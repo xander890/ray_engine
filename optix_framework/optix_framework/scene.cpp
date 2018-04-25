@@ -8,6 +8,7 @@
 #include "rendering_method.h"
 #include "camera_host.h"
 #include <algorithm>
+#include <fstream>
 #include "scattering_material.h"
 #include "miss_program.h"
 #include "immediate_gui.h"
@@ -67,12 +68,6 @@ bool Scene::on_draw()
 
 std::string Scene::serialize()
 {
-    std::stringstream ss;
-    {
-        cereal::XMLOutputArchive output_archive(ss);
-        output_archive(mMeshes[0]);
-    }
-    Logger::info << ss.str();
 
     //cereal::XMLInputArchiveOptix iarchive(context, ss);
     //std::unique_ptr<Object> m;

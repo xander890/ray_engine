@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <host_device_common.h>
+#include <optix_serialize.h>
 
 class RenderingMethod;
 class Object;
@@ -48,5 +49,12 @@ private:
     std::shared_ptr<Camera> mCurrentCamera;
 
     void transform_changed();
+
+    friend class cereal::access;
+    template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive(CEREAL_NVP(miss_program));
+    }
 };
 

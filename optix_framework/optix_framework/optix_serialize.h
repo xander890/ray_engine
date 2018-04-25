@@ -6,6 +6,9 @@
 #include "cereal/types/memory.hpp"
 #include <xml_archive.hpp>
 #include <cereal/archives/json.hpp>
+#include <cereal/types/base_class.hpp>
+#include <cereal/cereal.hpp>
+#include <cereal/types/polymorphic.hpp>
 
 namespace cereal
 {

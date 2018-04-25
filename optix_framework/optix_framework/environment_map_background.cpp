@@ -29,8 +29,8 @@ void EnvironmentMap::init(optix::Context & ctx)
     properties.environment_map_tex_id = environment_sampler->get_id();
     properties.importance_sample_envmap = 1;
 
-    texture_width = environment_sampler->get_width();
-    texture_height = environment_sampler->get_height();
+    int texture_width = environment_sampler->get_width();
+    int texture_height = environment_sampler->get_height();
 
     sampling_properties.env_luminance = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
     sampling_properties.marginal_f = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
@@ -128,6 +128,9 @@ void EnvironmentMap::presample_environment_map()
 {
     properties.lightmap_rotation_matrix = get_offset_lightmap_rotation_matrix(envmap_deltas.x, envmap_deltas.y, envmap_deltas.z, properties.lightmap_rotation_matrix);
     // Environment importance sampling pre-pass
+    int texture_width = environment_sampler->get_width();
+    int texture_height = environment_sampler->get_height();
+
     if (environment_sampler.get() != nullptr)
     {
         Logger::info << "Presampling envmaps... (size " << std::to_string(texture_width) << " " << std::to_string(texture_height) << ")" << std::endl;

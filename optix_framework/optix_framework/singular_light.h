@@ -9,10 +9,10 @@
 #include "host_device_common.h"
 struct SingularLightData
 {
-  optix::float3 direction;
-  LightType::Type type;
-  optix::float3 emission;
-  int casts_shadow; 
+  optix::float3 direction   DEFAULT(optix::make_float3(0,0,1));
+  LightType::Type type      DEFAULT(LightType::DIRECTIONAL);
+  optix::float3 emission    DEFAULT(optix::make_float3(1,1,1));
+  int casts_shadow          DEFAULT(1);
 };
 
 #endif // DIRECTIONAL_H

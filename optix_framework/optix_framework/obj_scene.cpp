@@ -312,7 +312,14 @@ bool ObjScene::draw_gui()
 
 void ObjScene::serialize_scene()
 {
-    mScene->serialize();
+    std::stringstream ss;
+    {
+        cereal::XMLOutputArchive output_archive(ss);
+        output_archive(mScene);
+    }
+    std::ofstream test("text.xml", std::ofstream::out);
+    test << ss.str();
+    test.close();
 }
 
 
@@ -729,8 +736,7 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 		break;
 	case LightType::AREA:
 		{
-			size_t size = area_lights.size();
-			if (size == 0)
+			if (area_lights.size() == 0)
 			{
 				Logger::warning << "Warning: no area lights in scene. " <<
 					"The only contribution will come from the ambient light (if any). " <<
@@ -740,16 +746,11 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 				float3 zero = make_float3(0.0f);
 				TriangleLight t = {zero, zero, zero, zero, zero, 0.0f};
 				area_lights.push_back(t);
-				size++;
 			}
 
-            area_light_buffer->setSize(size);
-
-			if (size > 0)
-			{
-                memcpy(area_light_buffer->map(), &area_lights[0], size * sizeof(TriangleLight));
-                area_light_buffer->unmap();
-			}
+            area_light_buffer->setSize(area_lights.size());
+            memcpy(area_light_buffer->map(), &area_lights[0], area_lights.size() * sizeof(TriangleLight));
+            area_light_buffer->unmap();
 		}
 		break;
 	default: break;
@@ -758,8 +759,6 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 	context["singular_lights"]->set(dir_light_buffer);
 	context["area_lights"]->set(area_light_buffer);
 }
-
-
 
 
 bool ObjScene::export_raw(const string& raw_p, optix::Buffer out, int frames)
@@ -881,7 +880,7 @@ void ObjScene::set_miss_program(BackgroundType::EnumType program)
 	{
 	case BackgroundType::ENVIRONMENT_MAP:
 	{
-        string env_map_name = ConfigParameters::get_parameter<string>("light", "environment_map", "pisa.hdr", "Environment map file");
+        string env_map_name = ConfigParameters::get_parameter<string>("light", "environment_map", "summer_road2.hdr", "Environment map file");
         miss_program = std::make_unique<EnvironmentMap>(env_map_name);
 	}
     break;

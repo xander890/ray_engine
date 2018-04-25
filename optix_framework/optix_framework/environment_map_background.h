@@ -4,11 +4,12 @@
 #include "immediate_gui.h"
 #include "texture.h"
 #include <memory>
+#include "optix_serialize.h"
 
 class EnvironmentMap : public MissProgram
 {
 public:
-    EnvironmentMap(std::string envmap_file) : envmap_file(envmap_file), texture_width(0), texture_height(0),
+    EnvironmentMap(std::string envmap_file = "") : envmap_file(envmap_file),
                                               camera_1(0), camera_2(0), camera_3(0)
 	{
 	}
@@ -30,12 +31,19 @@ private:
     optix::Buffer property_buffer;
     optix::Buffer sampling_property_buffer;
     std::string envmap_file;
-    int texture_width, texture_height;
     int camera_1, camera_2, camera_3;
 	std::string envmap_path;
 
     void presample_environment_map();
     bool resample_envmaps = true;
 
+	friend class cereal::access;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive( cereal::virtual_base_class<MissProgram>(this), CEREAL_NVP(environment_sampler));
+	}
+
 };
 
+CEREAL_REGISTER_TYPE(EnvironmentMap)

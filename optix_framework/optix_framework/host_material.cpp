@@ -166,7 +166,6 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 
 MaterialHost::~MaterialHost() = default;
 
-
 const MaterialDataCommon& MaterialHost::get_data()
 {
 	if (mHasChanged || scattering_material->hasChanged())

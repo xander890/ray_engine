@@ -38,6 +38,7 @@ static __inline__ __device__ __host__ optix::float3 sky_color(int ray_depth, opt
 
 #ifndef __CUDA_ARCH__
 #include "parameter_parser.h"
+#include "optix_serialize.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include "miss_program.h"
@@ -45,7 +46,7 @@ static __inline__ __device__ __host__ optix::float3 sky_color(int ray_depth, opt
 class SkyModel : public MissProgram
 {
 public:
-	SkyModel(optix::float3 up, optix::float3 north) : up(up), north(north) {  }
+	SkyModel(optix::float3 up = optix::make_float3(0,0,1), optix::float3 north = optix::make_float3(1,0,0)) : up(up), north(north) {  }
 	~SkyModel(void);
 	optix::float3 get_sky_color(optix::float3 v);
 	void get_directional_light(SingularLightData & light) const;
@@ -56,12 +57,12 @@ public:
 
 private:
 
-	int day;
-	int hour;
-	float latitude;
+	int day = 12;
+	int hour = 15;
+	float latitude = 45.0f;
 	optix::float3 up;
 	optix::float3 north;
-	float turbidity;
+	float turbidity = 2.0f;
 	PerezData perez_data;
 	optix::float3 sky_factor;
 	float cos_sun_theta;
@@ -90,7 +91,15 @@ private:
 private:
     virtual bool get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program) override;
 
+    friend class cereal::access;
+    template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive(cereal::virtual_base_class<MissProgram>(this), CEREAL_NVP(up), CEREAL_NVP(north), CEREAL_NVP(day), CEREAL_NVP(hour), CEREAL_NVP(latitude) , CEREAL_NVP(turbidity));
+    }
 };
+
+CEREAL_REGISTER_TYPE(SkyModel)
 #endif // !__CUDA_ARCH__
 
 #endif // sky_model_h__

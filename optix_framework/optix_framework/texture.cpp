@@ -5,7 +5,7 @@
 #include <cstring>
 #include "texture.h"
 
-Texture::Texture(optix::Context &context)
+Texture::Texture(optix::Context context)
 {
     textureSampler = context->createTextureSampler();
     textureSampler->setWrapMode(0, RT_WRAP_REPEAT);
@@ -49,15 +49,24 @@ void Texture::set_size(int w, int h, int d)
     width = w > 0? static_cast<unsigned int>(w) : 1;
     height = h > 0? static_cast<unsigned int>(h) : 1;
     depth = d > 0? static_cast<unsigned int>(d) : 1;
-    int dims = 1;
-    dims += h > 0? 1 : 0;
-    dims += d > 0? 1 : 0;
-    RTsize dimensions[3] = {(RTsize)width, (RTsize)height, (RTsize)depth};
-    textureBuffer->setSize(dims, &dimensions[0]);
+    dimensions = 1;
+    dimensions += h > 0? 1 : 0;
+    dimensions += d > 0? 1 : 0;
+    RTsize dims[3] = {(RTsize)width, (RTsize)height, (RTsize)depth};
+    textureBuffer->setSize(dimensions, &dims[0]);
 }
 
 Texture::~Texture()
 {
     textureSampler->destroy();
     textureBuffer->destroy();
+}
+
+void Texture::set_size(int dimensions, int *dims)
+{
+    RTsize * d = new RTsize[dimensions];
+    for(int i = 0; i < dimensions; i++)
+        d[i] = (RTsize)dims[i];
+    textureBuffer->setSize(dimensions, &d[0]);
+    delete[] d;
 }
