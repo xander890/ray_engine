@@ -3,8 +3,10 @@
 
 #include <string>
 #include <iosfwd>
+#include "texture.h"
+#include <memory>
 
-optix::TextureSampler loadRAWTexture(optix::Context& context,
+std::unique_ptr<Texture> loadRAWTexture(optix::Context& context,
 	const std::string& filename,
 	const optix::float3& default_color);
 

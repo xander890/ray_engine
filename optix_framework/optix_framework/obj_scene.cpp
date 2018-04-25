@@ -318,21 +318,12 @@ void ObjScene::serialize_scene()
 
 void ObjScene::create_3d_noise(float frequency)
 {
-    static TextureSampler sampler = context->createTextureSampler();
-    static optix::Buffer buffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, 256u, 256u, 256u);
-    static PerlinNoise p(1337);
+    static Texture tex(context);
+    tex.set_size(256,256,256);
 
-    sampler->setWrapMode(0, RT_WRAP_REPEAT);
-    sampler->setWrapMode(1, RT_WRAP_REPEAT);
-    sampler->setWrapMode(2, RT_WRAP_REPEAT);
-    sampler->setIndexingMode(RT_TEXTURE_INDEX_NORMALIZED_COORDINATES);
-    sampler->setReadMode(RT_TEXTURE_READ_ELEMENT_TYPE);
-    sampler->setMaxAnisotropy(1.0f);
-    sampler->setMipLevelCount(1u);
-    sampler->setArraySize(1u);
+    static PerlinNoise p(1337);
     // Create buffer with single texel set to default_color
-    float* buffer_data;
-    buffer_data = static_cast<float*>(buffer->map());
+    float* buffer_data = static_cast<float*>(tex.map_data());
 
     for (int i = 0; i < 256; i++)
         for (int j = 0; j < 256; j++)
@@ -341,10 +332,8 @@ void ObjScene::create_3d_noise(float frequency)
                 int idx = 256 * 256 * i + 256 * j + k;
                 buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
             }
-    buffer->unmap();
-
-    sampler->setBuffer(0u, 0u, buffer);
-    context["noise_tex"]->setInt(sampler->getId());
+    tex.unmap_data();
+    context["noise_tex"]->setInt(tex.get_id());
 }
 
 void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_data)
@@ -538,9 +527,9 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
     ObjMaterial params;
 
     params.illum = 12;
-    params.ambient_tex = loadTexture(m_context, "", make_float3(0))->getId();
-    params.diffuse_tex = loadTexture(m_context, "", make_float3(1, 0, 0))->getId();
-    params.specular_tex = loadTexture(m_context, "", make_float3(0))->getId();
+    params.ambient_tex = loadTexture(m_context, "", make_float3(0));
+    params.diffuse_tex = loadTexture(m_context, "", make_float3(1, 0, 0));
+    params.specular_tex = loadTexture(m_context, "", make_float3(0));
 	params.name = "ketchup";
 
     material_ketchup = std::make_shared<MaterialHost>(context,params);

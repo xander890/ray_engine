@@ -25,6 +25,8 @@
 
 #include <string>
 #include <iosfwd>
+#include "texture.h"
+#include <memory>
 
 //-----------------------------------------------------------------------------
 //
@@ -35,7 +37,7 @@
 // Creates a TextureSampler object for the given PPM file.  If filename is 
 // empty or PPMLoader fails, a 1x1 texture is created with the provided default
 // texture color.
-optix::TextureSampler loadPPMTexture( optix::Context context,
+std::unique_ptr<Texture> loadPPMTexture( optix::Context context,
                                              const std::string& ppm_filename,
                                              const optix::float3& default_color );
 
@@ -52,7 +54,7 @@ public:
   PPMLoader( const std::string& filename, const bool vflip = false );
   ~PPMLoader();
 
-  optix::TextureSampler loadTexture( optix::Context context,
+    std::unique_ptr<Texture> loadTexture( optix::Context context,
                                               const optix::float3& default_color,
                                               bool linearize_gamma = false);
 

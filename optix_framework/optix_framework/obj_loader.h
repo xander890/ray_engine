@@ -35,13 +35,13 @@ class MaterialHost;
 struct ObjMaterial
 {
 	std::string name = "empty";        /* name of material */
-	int diffuse_tex = -1;       // Kd diffuse component
-	int ambient_tex = -1;       // Ka ambient component
-	int specular_tex = -1;      // Ks specular component
+	std::shared_ptr<Texture> diffuse_tex = nullptr;       // Kd diffuse component
+	std::shared_ptr<Texture> ambient_tex = nullptr;       // Ka ambient component
+	std::shared_ptr<Texture> specular_tex = nullptr;      // Ks specular component
 	optix::float3 emissive = optix::make_float3(0);      // emissive component
-	optix::float3 absorption = optix::make_float3(0);;   // Added: absorption.
-	optix::float3 scattering = optix::make_float3(0);;   // Added: absorption.
-	optix::float3 asymmetry = optix::make_float3(0);;   // Added: absorption.
+	optix::float3 absorption = optix::make_float3(0);   // Added: absorption.
+	optix::float3 scattering = optix::make_float3(0);   // Added: absorption.
+	optix::float3 asymmetry = optix::make_float3(0);   // Added: absorption.
 	float scale = 1;   // Added: absorption.
 	float shininess = 1;        // Ns specular exponent
 	float refraction = 0;       // Tr
@@ -49,6 +49,7 @@ struct ObjMaterial
 	float alpha = 1;            // d
 	float reflectivity = 1;     // reflection
 	int   illum = 0;           // illum
+
 };
 
 //-----------------------------------------------------------------------------

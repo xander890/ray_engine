@@ -73,7 +73,6 @@ void GlossyShader::initialize_mesh(Object& object)
         buff->unmap();
     }
     optix_mat["merl_brdf_buffer"]->setBuffer(buff);
-    optix_mat["diffuse_map"]->setTextureSampler(createOneElementSampler(optix_mat->getContext(), reflectance));
     optix_mat["merl_brdf_buffer"]->setBuffer(buff);
 
 }

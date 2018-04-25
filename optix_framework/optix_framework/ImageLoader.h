@@ -25,6 +25,8 @@
 
 #include <string>
 #include <iosfwd>
+#include "texture.h"
+#include <memory>
 
 //-----------------------------------------------------------------------------
 //
@@ -35,8 +37,8 @@
 // Creates a TextureSampler object for the given image file.  If filename is 
 // empty or the image loader fails, a 1x1 texture is created with the provided 
 // default texture color.
-optix::TextureSampler loadTexture( optix::Context context,
+std::unique_ptr<Texture> loadTexture( optix::Context context,
                                             const std::string& filename,
                                             const optix::float3& default_color );
 
-optix::TextureSampler createOneElementSampler(optix::Context context, const optix::float3& default_color);
+std::unique_ptr<Texture> createOneElementSampler(optix::Context context, const optix::float3& default_color);

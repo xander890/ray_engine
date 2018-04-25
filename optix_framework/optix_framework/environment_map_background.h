@@ -2,6 +2,8 @@
 #include "miss_program.h"
 #include "environment_map.h"
 #include "immediate_gui.h"
+#include "texture.h"
+#include <memory>
 
 class EnvironmentMap : public MissProgram
 {
@@ -23,7 +25,7 @@ private:
     EnvmapImportanceSamplingData sampling_properties;
 
     optix::float3 envmap_deltas;
-    optix::TextureSampler environment_sampler;
+    std::unique_ptr<Texture> environment_sampler = nullptr;
     optix::Context context;
     optix::Buffer property_buffer;
     optix::Buffer sampling_property_buffer;

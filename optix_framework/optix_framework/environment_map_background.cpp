@@ -26,13 +26,11 @@ void EnvironmentMap::init(optix::Context & ctx)
     std::string ptx_path = get_path_ptx("env_cameras.cu");
 	envmap_path = Folders::texture_folder + envmap_file;
     environment_sampler = loadTexture(context->getContext(), envmap_path, make_float3(1.0f));
-    properties.environment_map_tex_id = environment_sampler->getId();
+    properties.environment_map_tex_id = environment_sampler->get_id();
     properties.importance_sample_envmap = 1;
 
-    RTsize w, h;
-    environment_sampler.get()->getBuffer(0, 0)->getSize(w, h);
-    texture_width = static_cast<int>(w);
-    texture_height = static_cast<int>(h);
+    texture_width = environment_sampler->get_width();
+    texture_height = environment_sampler->get_height();
 
     sampling_properties.env_luminance = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
     sampling_properties.marginal_f = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
@@ -87,10 +85,9 @@ bool EnvironmentMap::on_draw()
 			std::string filePath;
 			if (Dialogs::openFileDialog(filePath))
 			{
-				environment_sampler->destroy();
+				environment_sampler.reset();
 				environment_sampler = loadTexture(context->getContext(), filePath, make_float3(1.0f));
-				int id = environment_sampler->getId();
-				properties.environment_map_tex_id = id;
+				properties.environment_map_tex_id = environment_sampler->get_id();
 				envmap_path = filePath;
 				resample_envmaps = true;
 				changed = true;

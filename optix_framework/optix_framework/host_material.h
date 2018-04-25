@@ -6,6 +6,7 @@
 
 struct ObjMaterial;
 class ScatteringMaterial;
+class Texture;
 
 class MaterialHost : public std::enable_shared_from_this<MaterialHost>
 {
@@ -25,6 +26,7 @@ private:
     std::string mMaterialName;
     MaterialDataCommon mMaterialData;
     std::unique_ptr<ScatteringMaterial> scattering_material;
+	std::vector<std::shared_ptr<Texture>> textures;
 
 	static std::unique_ptr<ObjMaterial> user_defined_material;
 

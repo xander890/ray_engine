@@ -337,9 +337,9 @@ ObjMaterial ObjLoader::convert_mat(GLMmaterial& mat, optix::Context ctx)
 	std::string diffuse_map = strlen(mat.diffuse_map) ? Folders::texture_folder + mat.diffuse_map : "";
 	std::string specular_map = strlen(mat.specular_map) ? Folders::texture_folder + mat.specular_map : "";
 
-	params.ambient_tex = loadTexture(ctx, ambient_map, Ka)->getId();
-	params.diffuse_tex = loadTexture(ctx, diffuse_map, Kd)->getId();
-	params.specular_tex = loadTexture(ctx, specular_map, Ks)->getId();
+	params.ambient_tex = std::move(loadTexture(ctx, ambient_map, Ka));
+	params.diffuse_tex = std::move(loadTexture(ctx, diffuse_map, Kd));
+	params.specular_tex = std::move(loadTexture(ctx, specular_map, Ks));
 	return params;
 }
 

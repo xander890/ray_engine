@@ -11,6 +11,7 @@
 #pragma warning (disable : 4244)
 #pragma warning (disable : 4305)
 #include <quantized_diffusion_helpers.h>
+#include "texture.h"
 
 using optix::float3;
 
@@ -100,11 +101,11 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
     static int id;
     mMaterialID = id++;
 
-	mMaterialData.ambient_map = data->ambient_tex;
-	mMaterialData.diffuse_map = data->diffuse_tex;
+	mMaterialData.ambient_map = data->ambient_tex->get_id();
+	mMaterialData.diffuse_map = data->diffuse_tex->get_id();
 	mMaterialData.illum = data->illum;
 	mMaterialData.shininess = data->shininess;
-	mMaterialData.specular_map = data->specular_tex;
+	mMaterialData.specular_map = data->specular_tex->get_id();
 
 	if (is_valid_material(*data))
 	{
@@ -158,8 +159,9 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 			mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
 		}
 	}
-
-	
+	textures.push_back(std::move(mat.ambient_tex));
+	textures.push_back(std::move(mat.diffuse_tex));
+	textures.push_back(std::move(mat.specular_tex));
 }
 
 MaterialHost::~MaterialHost() = default;

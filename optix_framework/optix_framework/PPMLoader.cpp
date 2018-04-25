@@ -165,7 +165,7 @@ void PPMLoader::getLine( std::ifstream& file_in, std::string& s )
 //
 //-----------------------------------------------------------------------------
 
-optix::TextureSampler PPMLoader::loadTexture( optix::Context context,
+std::unique_ptr<Texture> PPMLoader::loadTexture( optix::Context context,
                                               const float3& default_color,
                                               bool linearize_gamma)
 {
@@ -186,44 +186,29 @@ optix::TextureSampler PPMLoader::loadTexture( optix::Context context,
 
   // Create tex sampler and populate with default values
 
-
-  optix::TextureSampler sampler = context->createTextureSampler();
-  sampler->setWrapMode( 0, RT_WRAP_REPEAT );
-  sampler->setWrapMode( 1, RT_WRAP_REPEAT );
-  sampler->setWrapMode( 2, RT_WRAP_REPEAT );
-  sampler->setIndexingMode( RT_TEXTURE_INDEX_NORMALIZED_COORDINATES );
-  sampler->setReadMode( RT_TEXTURE_READ_NORMALIZED_FLOAT );
-  sampler->setMaxAnisotropy( 1.0f );
-  sampler->setMipLevelCount( 1u );
-  sampler->setArraySize( 1u );
+   std::unique_ptr<Texture> tex = std::make_unique<Texture>(context);
 
   if (failed() ) {
 
-	  
     // Create buffer with single texel set to default_color
-    optix::Buffer buffer = context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_FLOAT4, 1u, 1u );
-    float* buffer_data = static_cast<float*>( buffer->map() );
+    float* buffer_data = tex->map_data();
     buffer_data[0] = default_color.x;
     buffer_data[1] = default_color.y;
     buffer_data[2] = default_color.z;
     buffer_data[3] = 1.0f;
-    buffer->unmap();
+    tex->unmap_data();
 
-    sampler->setBuffer( 0u, 0u, buffer );
-    // Although it would be possible to use nearest filtering here, we chose linear
-    // to be consistent with the textures that have been loaded from a file. This
-    // allows OptiX to perform some optimizations.
-    sampler->setFilteringModes( RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE );
-
-    return sampler;
+    return tex;
   }
 
   const unsigned int nx = width();
   const unsigned int ny = height();
 
   // Create buffer and populate with PPM data
-  optix::Buffer buffer = context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_FLOAT4, nx, ny );
-  float* buffer_data = static_cast<float*>(buffer->map());
+  tex->set_size(nx,ny);
+
+  // Create buffer and populate with RAW data
+  float* buffer_data = tex->map_data();
 
   float avg = 0.0f;
 
@@ -246,12 +231,9 @@ optix::TextureSampler PPMLoader::loadTexture( optix::Context context,
     }
   }
 
-  buffer->unmap();
+  tex->unmap_data();
 
-  sampler->setBuffer( 0u, 0u, buffer );
-  sampler->setFilteringModes( RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE );
-
-  return sampler;
+  return tex;
 }
 
   
@@ -261,7 +243,7 @@ optix::TextureSampler PPMLoader::loadTexture( optix::Context context,
 //
 //-----------------------------------------------------------------------------
 
-optix::TextureSampler loadPPMTexture( optix::Context context,
+std::unique_ptr<Texture> loadPPMTexture( optix::Context context,
                                       const std::string& filename,
                                       const optix::float3& default_color )
 {
