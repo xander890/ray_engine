@@ -21,5 +21,5 @@ RT_PROGRAM void any_hit_shadow() { rtTerminateRay(); }
 RT_PROGRAM void shade()
 {
   float3 normal = rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal);
-  prd_radiance.result = normalize(normal)*0.5f + 0.5f;
+  prd_radiance.result = normalize(normal) * 0.5f + 0.5f;
 }

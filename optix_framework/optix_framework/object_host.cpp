@@ -82,6 +82,7 @@ void Object::load_geometry()
 
     BufPtr<optix::Aabb> bptr = BufPtr<optix::Aabb>(mBBoxBuffer->getId());
     mGeometryInstance["local_bounding_box"]->setUserData(sizeof(BufPtr<optix::Aabb>), &bptr);
+    mGeometryInstance["current_geometry_node"]->set(mTransform->get_transform());
     mGeometry->load();
     mReloadGeometry = false;
 }

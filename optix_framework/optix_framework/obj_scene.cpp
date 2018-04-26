@@ -41,7 +41,7 @@
 #include "camera_host.h"
 #include "structs.h"
 #include "bssrdf_visualizer.h"
-
+#include "light_host.h"
 using namespace std;
 using optix::uint2;
 using optix::TextureSampler;
@@ -564,6 +564,10 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 	 //Logger::info << ss.str() << std::endl;
 	//Logger::set_logger_output(console_log);
 
+    auto l = std::make_unique<SingularLight>();
+    l->init(context);
+    mScene->add_light(std::move(l));
+
 }
 
 void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
@@ -741,11 +745,6 @@ void ObjScene::add_lights(vector<TriangleLight>& area_lights)
 				Logger::warning << "Warning: no area lights in scene. " <<
 					"The only contribution will come from the ambient light (if any). " <<
 					"Objects are emissive if their ambient color is not zero." << endl;
-
-				// Dummy light to evaluate environment map.
-				float3 zero = make_float3(0.0f);
-				TriangleLight t = {zero, zero, zero, zero, zero, 0.0f};
-				area_lights.push_back(t);
 			}
 
             area_light_buffer->setSize(area_lights.size());

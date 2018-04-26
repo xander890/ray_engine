@@ -9,8 +9,9 @@ class SingularLight
 {
 public:
     virtual void init(optix::Context & context);
-    virtual void set_into_gpu();
+    virtual SingularLightData get_data();
     virtual bool on_draw();
+    virtual bool has_changed();
 
 private:
     friend class cereal::access;
@@ -23,4 +24,7 @@ private:
 
     optix::Context mContext;
     std::unique_ptr<SingularLightData> mData = nullptr;
+    bool mHasChanged = true;
+    optix::float3 mColor;
+    float mIntensity;
 };

@@ -260,6 +260,17 @@ namespace IMPROVED_ENUM_NAME
 		return res;
 	}
 
+	STATIC_METHOD inline const std::string get_option_string()
+	{
+		std::string data = "";
+		auto f = first();
+		while(f != NotValidEnumItem)
+		{
+			data += to_string(f) + '\0';
+			f = next(f);
+		}
+		return data;
+	}
 #endif
 	// Free temporary macros:
 	///////////////////////////

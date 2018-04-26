@@ -12,7 +12,6 @@ rtBuffer<SingularLightData, 1> singular_lights;
 // Area light code
 rtBuffer<TriangleLight, 1> area_lights;
 
-rtDeclareVariable(int, light_type, , );
 rtDeclareVariable(unsigned int, importance_sample_area_lights, , ) = 0;
 
 __forceinline__ __device__
@@ -41,7 +40,7 @@ void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal
 
     float atten = (l.type == LightType::POINT) ? dot(wi, wi) : 1.0f;
     radiance = V * l.emission / atten;
-    radiance /= singular_light_size(); // Pdf of choosing one of the lights.
+    radiance *= singular_light_size(); // Pdf of choosing one of the lights.
     casts_shadows = l.casts_shadow;
 }
 
@@ -68,27 +67,28 @@ __device__ __forceinline__ void evaluate_area_light(const float3& hit_point, con
 
 __device__ __inline__ void evaluate_direct_light(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index, float tmin = scene_epsilon)
 {
-    switch (light_type)
+    float area_probability = 1.0f;
+    float singular_probability = 1.0f;
+
+    if(area_light_size() == 0)
+        area_probability = 0.0f;
+    if(singular_light_size() == 0)
+        singular_probability = 0.0f;
+
+    area_probability /= area_probability + singular_probability;
+
+    if(sampler->next1D() < area_probability)
     {
-    case LightType::AREA:  evaluate_area_light(hit_point, normal, wi, radiance, casts_shadows, sampler, light_index);  break;
-    default:
-    case LightType::SKY:
-    case LightType::POINT:
-    case LightType::DIRECTIONAL:   evaluate_singular_light(hit_point, normal, wi, radiance, casts_shadows, sampler, light_index); break;
+        evaluate_area_light(hit_point, normal, wi, radiance, casts_shadows, sampler, light_index);
+        radiance /= area_probability;
+    }
+    else
+    {
+        evaluate_singular_light(hit_point, normal, wi, radiance, casts_shadows, sampler, light_index);
+        radiance /= 1 - area_probability;
     }
 }
 
-__device__ __forceinline__ int light_size()
-{
-    switch (light_type)
-    {
-    case LightType::AREA: return area_light_size();  
-    default:
-    case LightType::SKY:
-	case LightType::POINT: 
-    case LightType::DIRECTIONAL: return singular_light_size(); 
-    }
-}
 
 __device__ __inline__ void sample_light(const float3& position, const float3 & normal, const uint& ray_depth, TEASampler* sampler, float3 & wi, float3 & Li)
 {

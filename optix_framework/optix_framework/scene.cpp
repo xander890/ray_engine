@@ -12,6 +12,7 @@
 #include "scattering_material.h"
 #include "miss_program.h"
 #include "immediate_gui.h"
+#include "light_host.h"
 
 void Scene::execute_on_scene_elements(std::function<void(Object&)> operation)
 {
@@ -79,6 +80,9 @@ void Scene::pre_trace()
     mCurrentCamera->set_into_gpu(context);
     miss_program->set_into_gpu(context);
     method->pre_trace();
+
+
+
     execute_on_scene_elements([=](Object & m)
     {
         m.load();
@@ -175,5 +179,11 @@ void Scene::set_miss_program(std::unique_ptr<MissProgram> miss)
 {
     miss->init(context);
     miss_program = std::move(miss);
+}
+
+int Scene::add_light(std::unique_ptr<SingularLight> light)
+{
+    light->init(context);
+    mLights.push_back(std::move(light));
 }
 

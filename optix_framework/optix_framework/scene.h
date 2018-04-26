@@ -11,6 +11,7 @@ class RenderingMethod;
 class Object;
 class Camera;
 class MissProgram;
+class SingularLight;
 
 class Scene
 {
@@ -33,6 +34,7 @@ public:
 
     int add_object(std::unique_ptr<Object> object);
     int add_camera(std::unique_ptr<Camera> camera);
+    int add_light(std::unique_ptr<SingularLight> light);
 
     void set_current_camera(int camera_id);
     void set_current_camera(std::unique_ptr<Camera> camera);
@@ -42,6 +44,7 @@ public:
 private:
     std::vector<std::shared_ptr<Object>> mMeshes;
     std::vector<std::shared_ptr<Camera>> mCameras;
+    std::vector<std::shared_ptr<SingularLight>> mLights;
     optix::Group scene;
     optix::Context context;
     std::unique_ptr<RenderingMethod> method;

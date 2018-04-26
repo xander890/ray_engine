@@ -106,15 +106,14 @@ RT_PROGRAM void shade()
 		const HitInfo data(hit_pos, normal);
 		// Direct illumination
 		float3 direct = make_float3(0.0f); 
-		for (unsigned int i = 0; i < light_size(); i++)
+		for (int j = 0; j < N; j++)
 		{
-			for (int j = 0; j < N; j++)
-			{
-				float3 wi, L; int sh;
-				evaluate_direct_light(hit_pos, normal, wi, L, sh, prd_radiance.sampler, i);
-				direct += L;
-			}
+			unsigned int l;
+			float3 wi, L; int sh;
+			evaluate_direct_light(hit_pos, normal, wi, L, sh, prd_radiance.sampler, l);
+			direct += L;
 		}
+
 		direct /= static_cast<float>(N);
 
 		float3 env = make_float3(0.0f);

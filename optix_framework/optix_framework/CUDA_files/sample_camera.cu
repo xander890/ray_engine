@@ -84,14 +84,9 @@ RT_PROGRAM void sample_camera()
     float3 light_radiance;
 
     float3 Le = make_float3(0.0f);
-    uint lights = light_size();
-    uint light_idx = (lights + 1)*sampler.next1D();
-
 
 	sample_light(sample.pos, sample.normal, 0, &sampler, light_vector, light_radiance);
-
-    float cos_theta = dot(light_vector, sample.normal);
-    Le += light_radiance;        
+    Le += light_radiance;
     sample.dir = light_vector;
 	 
     // Compute transmitted radiance

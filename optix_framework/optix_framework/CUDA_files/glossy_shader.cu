@@ -156,16 +156,14 @@ RT_PROGRAM void shade()
 
 		// Direct illumination
 		float3 direct = make_float3(0.0f);
-		for (unsigned int i = 0; i < light_size(); i++)
+		for (int j = 0; j < N; j++)
 		{
-			for (int j = 0; j < N; j++)
-			{
-				float3 wi, L; int sh;
-				evaluate_direct_light(data.hit_point, data.hit_normal, wi, L, sh, prd_radiance.sampler, i);
-				
-				float3 f_d = get_brdf(hit_pos, brdf_normal, wi, wo);
-				direct += L * f_d;
-			}
+			float3 wi, L; int sh;
+			unsigned int l;
+			evaluate_direct_light(data.hit_point, data.hit_normal, wi, L, sh, prd_radiance.sampler, l);
+
+			float3 f_d = get_brdf(hit_pos, brdf_normal, wi, wo);
+			direct += L * f_d;
 		}
 		direct /= static_cast<float>(N);
 
