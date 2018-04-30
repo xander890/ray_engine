@@ -3,6 +3,7 @@
 #include "optix_utils.h"
 #include "GL/glew.h"
 #include <bssrdf_creator.h>
+#include "object_host.h"
 
 int HemisphereBSSRDFShader::entry_point_output = -1;
 
@@ -67,12 +68,12 @@ void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
 
 }
 
-void HemisphereBSSRDFShader::initialize_mesh(Geometry& object)
+void HemisphereBSSRDFShader::initialize_mesh(Object& object)
 {
 
 }
 
-void HemisphereBSSRDFShader::pre_trace_mesh(Geometry& object)
+void HemisphereBSSRDFShader::pre_trace_mesh(Object& object)
 {	
 	ref_impl->render();
 
@@ -83,7 +84,7 @@ void HemisphereBSSRDFShader::pre_trace_mesh(Geometry& object)
 	mBSSRDFBufferTexture->unmap();
 }
 
-void HemisphereBSSRDFShader::post_trace_mesh(Geometry & object)
+void HemisphereBSSRDFShader::post_trace_mesh(Object & object)
 {
 	context->launch(entry_point_output, mCameraWidth, mCameraHeight);
 }
@@ -102,7 +103,7 @@ bool HemisphereBSSRDFShader::on_draw()
 	return false;
 }
 
-void HemisphereBSSRDFShader::load_data(Geometry & object)
+void HemisphereBSSRDFShader::load_data(Object & object)
 {
 	int s = mBSSRDFHemisphereTex->getId();
 	context["resulting_flux_tex"]->setUserData(sizeof(TexPtr),&(s));

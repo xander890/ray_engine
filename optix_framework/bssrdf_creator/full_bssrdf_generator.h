@@ -21,10 +21,10 @@ public:
 
 	FullBSSRDFGenerator(const char * config, bool offline_render);
 	~FullBSSRDFGenerator();
-	void initialize_scene(GLFWwindow * window, InitialCameraData& camera_data) override;
+	void initialize_scene(GLFWwindow * window) override;
 
 	// Update camera shader with new viewing params and then trace
-	void trace(const RayGenCameraData& camera_data) override;
+	void trace() override;
 
 	// Return the output buffer to be displayed
 	virtual optix::Buffer get_output_buffer();
@@ -44,6 +44,7 @@ public:
 	void scene_initialized() override;
 
 	void set_render_task(std::unique_ptr<RenderTask>& task);
+	Camera * get_camera();
 private:
 
 	void set_external_bssrdf(const std::string & file);

@@ -3,6 +3,7 @@
 #include "immediate_gui.h"
 #include "dialogs.h"
 #include <fstream>
+#include <camera_host.h>
 #include "cputimer.h"
 #include "GLFW/glfw3.h"
 #include "GLFWDisplay.h"
@@ -95,7 +96,7 @@ FullBSSRDFGenerator::~FullBSSRDFGenerator()
 {
 }
 
-void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraData & camera_data)
+void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window)
 {
 	m_context->setPrintEnabled(mDebug);
 // 	test_forward_dipole();
@@ -108,7 +109,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window, InitialCameraDat
 	top_node->setAcceleration(accel);
 	m_context["top_shadower"]->set(top_node);
 	m_context["top_object"]->set(top_node);
-	m_context["frame"]->setInt(0);
+	m_context["frame"]->setUint(0);
 
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
@@ -212,14 +213,14 @@ float average(float * data, size_t size)
 }
 
 
-void FullBSSRDFGenerator::trace(const RayGenCameraData & camera_data)
+void FullBSSRDFGenerator::trace()
 {
 	static int frame = 0;
 
 	if (!mPaused)
 	{
 
-		m_context["frame"]->setInt(frame);
+		m_context["frame"]->setUint(frame);
 
 		mCurrentBssrdfRenderer->load_data();
 
@@ -700,4 +701,10 @@ void FullBSSRDFGenerator::set_render_task(std::unique_ptr<RenderTask>& task)
 		current_render_task = std::move(task);
 	else
 		Logger::error << "Wait of end of current task before setting a new one." << std::endl;
+}
+
+Camera *FullBSSRDFGenerator::get_camera()
+{
+	CameraParameters c;
+	return new Camera(m_context, c);
 }
