@@ -26,6 +26,15 @@ int singular_light_size() { return singular_lights.size(); }
 __forceinline__ __device__
 void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index)
 {
+    if(singular_light_size() == 0)
+    {
+        light_index = 0;
+        radiance = make_float3(0);
+        wi = hit_normal;
+        casts_shadows = 0;
+        return;
+    }
+
     light_index = int(sampler->next1D() * singular_light_size());
     SingularLightData l = singular_lights[light_index];
     wi = (l.type == LightType::POINT)? l.direction - hit_point  : -l.direction ;
@@ -33,7 +42,7 @@ void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal
 
     float V = 1.0f;
 
-    if (l.casts_shadow)
+    if (l.casts_shadow == 1)
     {
         V = trace_shadow_ray(hit_point, wi, scene_epsilon, RT_DEFAULT_MAX);
     }
@@ -42,6 +51,8 @@ void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal
     radiance = V * l.emission / atten;
     radiance *= singular_light_size(); // Pdf of choosing one of the lights.
     casts_shadows = l.casts_shadow;
+
+    optix_print("Singular light evaluation V %f \n", V);
 }
 
 __forceinline__ __device__

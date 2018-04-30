@@ -233,12 +233,13 @@ std::unique_ptr<Texture> loadHDRTexture( optix::Context& context,
   HDRLoader hdr( filename );
   if ( hdr.failed() ) {
 
-    float* buffer_data = tex->map_data();
+    float* buffer_data = new float[4];
     buffer_data[0] = default_color.x;
     buffer_data[1] = default_color.y;
     buffer_data[2] = default_color.z;
     buffer_data[3] = 1.0f;
-    tex->unmap_data();
+    tex->set_data(buffer_data, 4 * sizeof(float));
+    delete[] buffer_data;
 
     return tex;
   }
@@ -248,7 +249,7 @@ std::unique_ptr<Texture> loadHDRTexture( optix::Context& context,
 
   tex->set_size(nx,ny);
   // Create buffer and populate with RAW data
-  float* buffer_data = tex->map_data();
+  float* buffer_data = new float[nx*ny*4];
 
   float total = 0.0f;
   for ( unsigned int i = 0; i < nx; ++i ) {
@@ -266,7 +267,8 @@ std::unique_ptr<Texture> loadHDRTexture( optix::Context& context,
   }
   std::cout << (total / nx) / ny << std::endl;
 
-  tex->unmap_data();
+  tex->set_data(buffer_data, nx*ny*4*sizeof(float));
+  delete[] buffer_data;
   return tex;
 }
 

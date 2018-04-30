@@ -109,9 +109,6 @@ std::vector<std::unique_ptr<Object>> ObjLoader::load(const optix::Matrix4x4& tra
   // Create a GeometryInstance and Geometry for each obj group
   createMaterialParams( model );
   auto meshes = createGeometryInstances( model );
-  
-  // Create a data for sampling light sources
-  createLightBuffer( model, transform );
 
   glmDelete( model );
   return meshes;
@@ -271,6 +268,7 @@ std::vector<std::unique_ptr<Object>> ObjLoader::createGeometryInstances(GLMmodel
 	  mbuffer_data[ i ] = 0; // See above TODO
 
 	}
+
 	vindex_buffer->unmap();
 	tindex_buffer->unmap();
 	nindex_buffer->unmap();
@@ -316,7 +314,8 @@ ObjMaterial ObjLoader::convert_mat(GLMmaterial& mat, optix::Context ctx)
 	params.name = std::string(mat.name);
 	params.reflectivity = mat.reflectivity;
 	params.refraction = mat.refraction;
-	params.emissive = make_float3(mat.emissive[0], mat.emissive[1], mat.emissive[2]);
+	float am = mat.ambient[0] + mat.ambient[1] + mat.ambient[2];
+	params.is_emissive = am > 0;
 	params.absorption = make_float3(mat.absorption[0], mat.absorption[1], mat.absorption[2]);
 	params.asymmetry = make_float3(mat.asymmetry[0], mat.asymmetry[1], mat.asymmetry[2]);
 	params.scattering = make_float3(mat.scattering[0], mat.scattering[1], mat.scattering[2]);
@@ -354,88 +353,88 @@ void ObjLoader::createMaterialParams( GLMmodel* model )
   }
 }
 
-void ObjLoader::extractAreaLights(const GLMmodel * model, const optix::Matrix4x4 & transform, unsigned int & num_light, std::vector<TriangleLight> & lights)
-{
-	unsigned int group_count = 0u;
-
-	if (model->nummaterials > 0)
-	{
-		for ( GLMgroup* obj_group = model->groups; obj_group != 0; obj_group = obj_group->next, group_count++ ) 
-		{
-			unsigned int num_triangles = obj_group->numtriangles;
-			if ( num_triangles == 0 ) continue; 
-			GLMmaterial& mat = model->materials[obj_group->material];
-
-			if ( (mat.ambient[0] + mat.ambient[1] + mat.ambient[2]) > 0.0f ) 
-			{
-				// extract necessary data
-				for ( unsigned int i = 0; i < obj_group->numtriangles; ++i ) 
-				{
-					// indices for vertex data
-					unsigned int tindex = obj_group->triangles[i];
-					int3 vindices;
-					vindices.x = model->triangles[ tindex ].vindices[0]; 
-					vindices.y = model->triangles[ tindex ].vindices[1]; 
-					vindices.z = model->triangles[ tindex ].vindices[2]; 
-
-					TriangleLight light;
-					light.v1 = *((float3*)&model->vertices[vindices.x * 3]);
-					float4 v = make_float4( light.v1, 1.0f );
-					light.v1 = make_float3( transform*v);
-
-					light.v2 = *((float3*)&model->vertices[vindices.y * 3]);
-					v = make_float4( light.v2, 1.0f );
-					light.v2 = make_float3( transform*v);
-
-					light.v3 = *((float3*)&model->vertices[vindices.z * 3]);
-					v = make_float4( light.v3, 1.0f );
-					light.v3 = make_float3( transform*v);
-
-					float3 area_vec = cross(light.v2 - light.v1, light.v3 - light.v1);
-					light.area = 0.5f* length(area_vec);
-
-					// normal vector
-					light.normal = normalize(area_vec);
-
-					light.emission = make_float3( mat.ambient[0], mat.ambient[1], mat.ambient[2] );
-
-					lights.push_back(light);
-
-					num_light++;
-				}
-			}
-		}
-	}
-}
-
-void ObjLoader::createLightBuffer( GLMmodel* model, const optix::Matrix4x4& transform )
-{
-  // create a buffer for the next-event estimation
-  m_light_buffer = m_context->createBuffer( RT_BUFFER_INPUT );
-  m_light_buffer->setFormat( RT_FORMAT_USER );
-  m_light_buffer->setElementSize( sizeof( TriangleLight ) );
-
-  // light sources
-  unsigned int num_light = 0;
-  extractAreaLights(model, transform, num_light, m_lights);  
-  // write to the buffer
-  m_light_buffer->setSize( 0 );
-  if (num_light != 0)
-  {
-	m_light_buffer->setSize( num_light );
-	memcpy( m_light_buffer->map(), &m_lights[0], num_light * sizeof( TriangleLight ) );
-	m_light_buffer->unmap();
-  }
-  
-}
-
-void ObjLoader::getAreaLights(std::vector<TriangleLight> & lights)
-{
-	for(int i = 0; i < m_lights.size();i++)
-	{
-		lights.push_back(m_lights[i]); //copy
-	}
-}
+//void ObjLoader::extractAreaLights(const GLMmodel * model, const optix::Matrix4x4 & transform, unsigned int & num_light, std::vector<TriangleLight> & lights)
+//{
+//	unsigned int group_count = 0u;
+//
+//	if (model->nummaterials > 0)
+//	{
+//		for ( GLMgroup* obj_group = model->groups; obj_group != 0; obj_group = obj_group->next, group_count++ )
+//		{
+//			unsigned int num_triangles = obj_group->numtriangles;
+//			if ( num_triangles == 0 ) continue;
+//			GLMmaterial& mat = model->materials[obj_group->material];
+//
+//			if ( (mat.ambient[0] + mat.ambient[1] + mat.ambient[2]) > 0.0f )
+//			{
+//				// extract necessary data
+//				for ( unsigned int i = 0; i < obj_group->numtriangles; ++i )
+//				{
+//					// indices for vertex data
+//					unsigned int tindex = obj_group->triangles[i];
+//					int3 vindices;
+//					vindices.x = model->triangles[ tindex ].vindices[0];
+//					vindices.y = model->triangles[ tindex ].vindices[1];
+//					vindices.z = model->triangles[ tindex ].vindices[2];
+//
+//					TriangleLight light;
+//					light.v1 = *((float3*)&model->vertices[vindices.x * 3]);
+//					float4 v = make_float4( light.v1, 1.0f );
+//					light.v1 = make_float3( transform*v);
+//
+//					light.v2 = *((float3*)&model->vertices[vindices.y * 3]);
+//					v = make_float4( light.v2, 1.0f );
+//					light.v2 = make_float3( transform*v);
+//
+//					light.v3 = *((float3*)&model->vertices[vindices.z * 3]);
+//					v = make_float4( light.v3, 1.0f );
+//					light.v3 = make_float3( transform*v);
+//
+//					float3 area_vec = cross(light.v2 - light.v1, light.v3 - light.v1);
+//					light.area = 0.5f* length(area_vec);
+//
+//					// normal vector
+//					light.normal = normalize(area_vec);
+//
+//					light.emission = make_float3( mat.ambient[0], mat.ambient[1], mat.ambient[2] );
+//
+//					lights.push_back(light);
+//
+//					num_light++;
+//				}
+//			}
+//		}
+//	}
+//}
+//
+//void ObjLoader::createLightBuffer( GLMmodel* model, const optix::Matrix4x4& transform )
+//{
+//  // create a buffer for the next-event estimation
+//  m_light_buffer = m_context->createBuffer( RT_BUFFER_INPUT );
+//  m_light_buffer->setFormat( RT_FORMAT_USER );
+//  m_light_buffer->setElementSize( sizeof( TriangleLight ) );
+//
+//  // light sources
+//  unsigned int num_light = 0;
+//  extractAreaLights(model, transform, num_light, m_lights);
+//  // write to the buffer
+//  m_light_buffer->setSize( 0 );
+//  if (num_light != 0)
+//  {
+//	m_light_buffer->setSize( num_light );
+//	memcpy( m_light_buffer->map(), &m_lights[0], num_light * sizeof( TriangleLight ) );
+//	m_light_buffer->unmap();
+//  }
+//
+//}
+//
+//void ObjLoader::getAreaLights(std::vector<TriangleLight> & lights)
+//{
+//	for(int i = 0; i < m_lights.size();i++)
+//	{
+//		lights.push_back(m_lights[i]); //copy
+//	}
+//}
 
 
 

@@ -66,11 +66,6 @@ void SampleScene::clean_up()
   m_context = 0;
 }
 
-void
-SampleScene::trace( const RayGenCameraData& camera_data, bool& display )
-{
-  trace(camera_data);
-}
 
 void SampleScene::resize(unsigned int width, unsigned int height)
 {

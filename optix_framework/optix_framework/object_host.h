@@ -18,6 +18,7 @@ class Scene;
 class Object
 {
 public:
+    friend class Scene;
     explicit Object(optix::Context ctx);
 
     void init(const char* name, std::unique_ptr<Geometry> geom, std::shared_ptr<MaterialHost> material);

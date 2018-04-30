@@ -26,7 +26,6 @@ public:
     void trace();
     void post_trace();
 
-    std::string serialize();
     void set_method(std::unique_ptr<RenderingMethod> method);
     const RenderingMethod& get_method() const { return *method; }
     void set_miss_program(std::unique_ptr<MissProgram> method);
@@ -52,12 +51,19 @@ private:
     std::shared_ptr<Camera> mCurrentCamera;
 
     void transform_changed();
+    void update_area_lights();
+    void update_singular_lights();
+    optix::Buffer mAreaLightBuffer = nullptr;
+    optix::Buffer mSingularLightBuffer = nullptr;
 
     friend class cereal::access;
     template<class Archive>
     void serialize(Archive & archive)
     {
         archive(CEREAL_NVP(miss_program));
+        archive(CEREAL_NVP(mLights));
+        archive(CEREAL_NVP(mCameras));
+        archive(CEREAL_NVP(mMeshes));
     }
 };
 

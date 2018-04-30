@@ -29,6 +29,7 @@
 #include <cstdio> //sprintf
 #include <sstream>
 #include "logger.h"
+#include "camera_host.h"
 
 // #define NVTX_ENABLE enables the nvToolsExt stuff from Nsight in NsightHelper.h
 //#define NVTX_ENABLE
@@ -41,7 +42,6 @@ using namespace optix;
 //-----------------------------------------------------------------------------
 
 Mouse*         GLFWDisplay::m_mouse = nullptr;
-PinholeCamera* GLFWDisplay::m_camera = nullptr;
 SampleScene*   GLFWDisplay::m_scene = nullptr;
 GLFWwindow*    GLFWDisplay::m_window = nullptr;
 bool           GLFWDisplay::m_display_frames = true;
@@ -122,24 +122,17 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   int buffer_height;
   try {
     // Set up scene
-    SampleScene::InitialCameraData camera_data;
-    m_scene->initialize_scene( m_window, camera_data );
+    m_scene->initialize_scene( m_window );
 
     // Initialize camera according to scene params
-    m_camera = new PinholeCamera( camera_data.eye,
-                                 camera_data.lookat,
-                                 camera_data.up,
-								camera_data.vfov, // hfov is ignored when using keep vertical
-                                 camera_data.vfov,
-                                 PinholeCamera::KeepVertical );
+
 
     Buffer buffer = m_scene->get_output_buffer();
     RTsize buffer_width_rts, buffer_height_rts;
     buffer->getSize( buffer_width_rts, buffer_height_rts );
     buffer_width  = static_cast<int>(buffer_width_rts);
     buffer_height = static_cast<int>(buffer_height_rts);
-	m_camera->setAspectRatio(buffer_width / (float)buffer_height);
-    m_mouse = new Mouse( m_camera, buffer_width, buffer_height );
+    m_mouse = new Mouse( m_scene->get_camera(), buffer_width, buffer_height );
 	m_mouse->handleMouseFunc(0, 0, -1, GLFW_PRESS, 0);
   } catch( Exception& e ){
     Logger::error << ( e.getErrorString().c_str() );
@@ -180,27 +173,13 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E 
   }
 }
 
-void GLFWDisplay::setCamera(SampleScene::InitialCameraData& camera_data)
-{
-  m_camera->setParameters(camera_data.eye,
-                         camera_data.lookat,
-                         camera_data.up,
-                         camera_data.hfov, 
-                         camera_data.vfov,
-                         PinholeCamera::KeepVertical );
-}
-
-
-
-
-
 
 void GLFWDisplay::resize(GLFWwindow * window, int width, int height)
 {
   // disallow size 0
   width  = max(1, width);
   height = max(1, height);
-  m_camera->setAspectRatio(width / (float)height);
+  m_scene->get_camera()->setAspectRatio(width / (float)height);
 
   m_scene->signalCameraChanged();
   m_mouse->handleResize( width, height );
@@ -366,15 +345,11 @@ void GLFWDisplay::display()
 
   try {
     // render the scene
-    float3 eye, U, V, W;
-    m_camera->getEyeUVW( eye, U, V, W );
-    // Don't be tempted to just start filling in the values outside of a constructor, 
+    // Don't be tempted to just start filling in the values outside of a constructor,
     // because if you add a parameter it's easy to forget to add it here.
 
-    SampleScene::RayGenCameraData camera_data( eye, U, V, W );
-
     {
-      m_scene->trace( camera_data, display_requested );
+      m_scene->trace( );
     }
 
     if( display_requested && m_display_frames ) {
@@ -415,15 +390,7 @@ void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int act
 	case GLFW_KEY_Q:
 		quit();
 		break;
-
-	case GLFW_KEY_C:
-		float3 eye, lookat, up;
-		float hfov, vfov;
-
-		m_camera->getEyeLookUpFOV(eye, lookat, up, hfov, vfov);
-		std::cerr << '"' << eye << lookat << up << vfov << '"' << std::endl;
-		break;
-	default:
+        default:
 		return;
 	}
 }

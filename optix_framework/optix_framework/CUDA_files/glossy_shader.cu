@@ -103,9 +103,9 @@ __device__ __inline__ float torrance_sparrow_brdf_sampled(const optix::float3 & 
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() {
-	//float3 emission = make_float3(tex2D(ambient_map, texcoord.x, texcoord.y));
+	float3 emission = make_float3(rtTex2D<float4>(get_material().ambient_map, texcoord.x, texcoord.y));
 	// optix_print("%f %f %f", emission.x,emission.y,emission.z);
-	//shadow_hit(prd_shadow, emission);
+	shadow_hit(prd_shadow, emission);
 }
 
 __inline__ __device__ float3 get_importance_sampled_brdf(const float3& hit_pos, float3 & normal, const float3 & wi, const float3 & new_normal, const float3 & out_v)
@@ -126,12 +126,11 @@ __inline__ __device__ float3 get_brdf(const float3& hit_pos, float3 & normal, co
 	}
 	else
 	{
-       
         const MaterialDataCommon& mat = get_material();
         float3 k_d = make_float3(rtTex2D<float4>(mat.diffuse_map, texcoord.x, texcoord.y));
         float3 k_s = make_float3(rtTex2D<float4>(mat.specular_map, texcoord.x, texcoord.y));
         float3 f_d = k_d * M_1_PIf;
-        f = f_d + torrance_sparrow_brdf(normal, normalize(wi), normalize(out_v), mat.relative_ior) * k_s;
+        f = f_d;// + torrance_sparrow_brdf(normal, normalize(wi), normalize(out_v), mat.relative_ior) * k_s;
 	}
 	return f;
 }
@@ -202,7 +201,7 @@ RT_PROGRAM void shade()
 			optix::Ray ray_t = optix::make_Ray(hit_pos, hemi_vec,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 			rtTrace(top_object, ray_t, prd);
 			float3 f_d = get_brdf(hit_pos, brdf_normal, hemi_vec, wo) * M_PIf;
-			indirect = prd.result * f_d / max(1e-6,prob); //Cosine cancels out
+			indirect = prd.result * f_d / max(1e-6f,prob); //Cosine cancels out
 		}
 
 		prd_radiance.result = emission + direct + env + indirect;

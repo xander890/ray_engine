@@ -26,7 +26,7 @@ class Object;
 class MaterialHost;
 class RenderingMethod;
 struct MPMLMedium;
-
+class Camera;
 
 class ObjScene : public SampleScene
 {
@@ -49,14 +49,9 @@ public:
     float noise_frequency = 25;
 	int use_heterogenous_materials = 0;
 
-	void initialize_scene(GLFWwindow * window,InitialCameraData& camera_data) override;
-	void trace(const RayGenCameraData& camera_data, bool& display) override;
+	void initialize_scene(GLFWwindow * window) override;
+	void trace() override;
 
-	void trace(const RayGenCameraData& camera_data) override
-	{
-		bool display = true;
-		trace(camera_data, display);
-	}
 
 	void collect_image(unsigned int frame) const;
 	bool key_pressed(int key, int x, int y) override;
@@ -77,6 +72,9 @@ public:
 
 	std::string override_mat = "";
 	void add_override_material_file(std::string mat);
+
+    Camera* get_camera() override;
+
 private:
 	optix::Context context;
 	bool debug_mode_enabled = false;
@@ -86,7 +84,7 @@ private:
 	optix::Aabb m_scene_bounding_box;
 	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height);
 
-	void add_lights(std::vector<TriangleLight>& area_lights);
+	void add_lights();
 	void set_miss_program(BackgroundType::EnumType miss_program);
 
 	static bool export_raw(const std::string& name, optix::Buffer buffer, int frames);
@@ -111,7 +109,7 @@ private:
 	optix::Buffer debug_output_buffer;
 	optix::Buffer returned_buffer;
 
-	void load_camera_extrinsics(InitialCameraData & data);
+	void load_camera_extrinsics();
 
 	optix::int4 custom_rr;
 

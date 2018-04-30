@@ -15,7 +15,10 @@ using optix::float3;
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 
 // Any hit program for shadows
-RT_PROGRAM void any_hit_shadow() { rtTerminateRay(); }
+RT_PROGRAM void any_hit_shadow()
+{
+    rtTerminateRay();
+}
 
 // Closest hit program for ambient light = illumination model 0
 RT_PROGRAM void shade() 

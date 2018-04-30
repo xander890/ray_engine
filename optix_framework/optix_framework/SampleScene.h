@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 struct GLFWwindow;
+class Camera;
+
 class SampleScene 
 {
 protected:
@@ -78,13 +80,11 @@ public:
   //----------------------------------------------------------------------------
 
   // Create the optix scene and return initial viewing parameters
-  virtual void   initialize_scene(GLFWwindow * window, InitialCameraData& camera_data )=0;
+  virtual void   initialize_scene(GLFWwindow * window )=0;
   
   // Update camera shader with new viewing params and then trace
-  virtual void   trace( const RayGenCameraData& camera_data )=0;
+  virtual void   trace( )=0;
 
-  // Update camera shader with new viewing params and then trace
-  virtual void   trace( const RayGenCameraData& camera_data, bool& display );
  
   // Return the output buffer to be displayed
   virtual optix::Buffer get_output_buffer()=0;
@@ -115,6 +115,8 @@ public:
 
   virtual void post_draw_callback() {};
   virtual void scene_initialized() {};
+
+  virtual Camera * get_camera() = 0;
   // Accessor
   optix::Context& get_context() { return m_context; }
 

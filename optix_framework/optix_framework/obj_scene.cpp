@@ -42,6 +42,7 @@
 #include "structs.h"
 #include "bssrdf_visualizer.h"
 #include "light_host.h"
+
 using namespace std;
 using optix::uint2;
 using optix::TextureSampler;
@@ -180,9 +181,7 @@ bool ObjScene::draw_gui()
 		if (ImmediateGUIDraw::Button("Reset Camera"))
 		{
 			changed = true;
-			InitialCameraData i;
-			load_camera_extrinsics(i);
-			GLFWDisplay::setCamera(i);
+			load_camera_extrinsics();
 		}
 
 		ImmediateGUIDraw::SameLine();
@@ -330,7 +329,7 @@ void ObjScene::create_3d_noise(float frequency)
 
     static PerlinNoise p(1337);
     // Create buffer with single texel set to default_color
-    float* buffer_data = static_cast<float*>(tex.map_data());
+    float* buffer_data = new float[256*256*256];
 
     for (int i = 0; i < 256; i++)
         for (int j = 0; j < 256; j++)
@@ -339,12 +338,13 @@ void ObjScene::create_3d_noise(float frequency)
                 int idx = 256 * 256 * i + 256 * j + k;
                 buffer_data[idx] = (float)p.noise(i / (256.0f) * frequency, j / (256.0f) * frequency, k / (256.0f) * frequency);
             }
-    tex.unmap_data();
+    tex.set_data(buffer_data, 256*256*256*sizeof(float));
     context["noise_tex"]->setInt(tex.get_id());
 }
 
-void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_data)
+void ObjScene::initialize_scene(GLFWwindow *)
 {
+
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(2000);
 	setDebugEnabled(debug_mode_enabled);
@@ -361,12 +361,20 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 		MaterialHost::set_default_material(v[0]);
 	}
 
-    auto camera_type = PinholeCameraType::to_enum(ConfigParameters::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), std::string("Type of the camera. Types: ") + PinholeCameraType::get_full_string()));
+
+    CameraParameters params;
     unsigned int camera_width = ConfigParameters::get_parameter<unsigned int>("camera", "window_width", 512, "The width of the window");
     unsigned int camera_height = ConfigParameters::get_parameter<unsigned int>("camera", "window_height", 512, "The height of the window");
-    int downsampling = ConfigParameters::get_parameter<int>("camera", "camera_downsampling", 1, "");
-    auto camerau = std::make_unique<Camera>(context, camera_type, camera_width, camera_height, downsampling, custom_rr);
-    mScene->set_current_camera(std::move(camerau));
+    params.width = camera_width;
+    params.height = camera_height;
+    params.downsampling = ConfigParameters::get_parameter<int>("camera", "camera_downsampling", 1, "");
+    params.vfov = ConfigParameters::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
+    float ratio = camera_width / (float)camera_height;
+    params.hfov = rad2deg(2.0f*atanf(ratio*tanf(deg2rad(0.5f*(params.vfov)))));
+    params.rendering_rect = custom_rr;
+
+    auto id = mScene->add_camera(std::make_unique<Camera>(context, params));
+    mScene->set_current_camera(id);
 
     std::shared_ptr<Camera> camera = mScene->get_current_camera();
     RenderingMethodType::EnumType t = RenderingMethodType::to_enum(ConfigParameters::get_parameter<string>("config", "rendering_type", RenderingMethodType::to_string(RenderingMethodType::RECURSIVE_RAY_TRACING), std::string("Rendering method. ") + RenderingMethodType::get_full_string()));
@@ -421,11 +429,8 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 	
 
 	// Load geometry from OBJ files into the group of scene objects
-	vector<TriangleLight> lights(0);
 	Logger::info << "Loading obj files..." << endl;
-#ifdef NEW_SCENE
-	AISceneLoader l = AISceneLoader(s.c_str(), context);
-#endif
+
 	m_scene_bounding_box = bbox;
 	for (unsigned int i = 0; i < filenames.size(); ++i)
 	{
@@ -439,7 +444,6 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 		}
 
 	    m_scene_bounding_box.include(loader->getSceneBBox());
-		loader->getAreaLights(lights);
 		// Set material shaders
 
 		// Add geometry group to the group of scene objects
@@ -491,12 +495,13 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 //			scene->setChild(static_cast<unsigned int>(filenames.size()) + i, geometry_group);
 //		}
 //	}
+    load_camera_extrinsics();
 
 
 	// Add light sources depending on chosen shader
     set_miss_program(current_miss_program);
 
-	add_lights(lights);
+	add_lights();
 
 
 	Logger::info << "Loading programs..." << endl;
@@ -522,7 +527,6 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 	
     //create_3d_noise(noise_frequency);
 
-    load_camera_extrinsics(init_camera_data);
 
 	// Set ray tracing epsilon for intersection tests
 	float scene_epsilon = 1.e-4f * max_dim;
@@ -531,15 +535,15 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 
 	gui = std::make_unique<ImmediateGUI>();
 
-    ObjMaterial params;
+    ObjMaterial mat;
 
-    params.illum = 12;
-    params.ambient_tex = loadTexture(m_context, "", make_float3(0));
-    params.diffuse_tex = loadTexture(m_context, "", make_float3(1, 0, 0));
-    params.specular_tex = loadTexture(m_context, "", make_float3(0));
-	params.name = "ketchup";
+    mat.illum = 12;
+    mat.ambient_tex = loadTexture(m_context, "", make_float3(0));
+    mat.diffuse_tex = loadTexture(m_context, "", make_float3(1, 0, 0));
+    mat.specular_tex = loadTexture(m_context, "", make_float3(0));
+    mat.name = "ketchup";
 
-    material_ketchup = std::make_shared<MaterialHost>(context,params);
+    material_ketchup = std::make_shared<MaterialHost>(context,mat);
 
 	context["show_difference_image"]->setInt(show_difference_image);
 	context["merl_brdf_multiplier"]->setFloat(make_float3(1));
@@ -548,13 +552,8 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 
 	Logger::info << "Compiling context and creating bvhs..." << endl;
 
-	RayGenCameraData dummy;
-	dummy.eye = make_float3(0,0,0);
-	dummy.U = make_float3(1,0,0);
-	dummy.V = make_float3(0,1,0);
-	dummy.W = make_float3(0,0,1);
 	context["max_depth"]->setInt(0);
-	trace(dummy);
+	trace();
 	context["max_depth"]->setInt(ConfigParameters::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
 	reset_renderer();
     Logger::info<<"Scene initialized."<<endl;
@@ -564,21 +563,14 @@ void ObjScene::initialize_scene(GLFWwindow * , InitialCameraData& init_camera_da
 	 //Logger::info << ss.str() << std::endl;
 	//Logger::set_logger_output(console_log);
 
-    auto l = std::make_unique<SingularLight>();
-    l->init(context);
-    mScene->add_light(std::move(l));
 
 }
 
-void ObjScene::trace(const RayGenCameraData& s_camera_data, bool& display)
+void ObjScene::trace()
 {
-	display = true;
 	if (mbPaused)
 		return;
 	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
-
-    mScene->get_current_camera()->update_camera(s_camera_data);
-
     context["tonemap_multiplier"]->setFloat(tonemap_multiplier);
 	context["tonemap_exponent"]->setFloat(tonemap_exponent);
 
@@ -696,67 +688,10 @@ optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format,
 	return buffer;
 }
 
-void ObjScene::add_lights(vector<TriangleLight>& area_lights)
+void ObjScene::add_lights()
 {
-	Logger::info << "Adding light buffers to scene..." << endl;
-    LightType::Type default_light_type = LightType::to_enum(ConfigParameters::get_parameter<string>("light", "default_light_type", LightType::to_string(LightType::DIRECTIONAL), "Type of the default light"));
-
-	float3 light_dir = ConfigParameters::get_parameter<float3>("light","default_directional_light_direction", make_float3(0.0f, -1.0f, 0.0f), "Direction of the default directional light");
-	float3 light_radiance = ConfigParameters::get_parameter<float3>("light", "default_directional_light_intensity", make_float3(5.0f), "Intensity of the default directional light");
-	float3 light_pos = ConfigParameters::get_parameter<float3>("light", "default_point_light_position", make_float3(0.08f, 0.1f, 0.11f), "Position of the default point light.");
-	float3 light_intensity = ConfigParameters::get_parameter<float3>("light", "default_point_light_intensity", make_float3(0.05f), "Intensity of the default point light.");
-	int shadows = ConfigParameters::get_parameter<int>("light", "shadows", 1, "Use shadows in rendering.");
-
-	std::string ptx_path_light = get_path_ptx("light_programs.cu");
-
     Buffer dir_light_buffer = create_buffer<SingularLightData>(context);
-    Buffer area_light_buffer = create_buffer<TriangleLight>(context);
-
-    context["light_type"]->setInt(static_cast<unsigned int>(default_light_type));
-	switch (default_light_type)
-	{
-	case LightType::SKY:
-		{
-			SingularLightData light;
-
-			static_cast<const SkyModel&>(mScene->get_miss_program()).get_directional_light(light);
-            memcpy(dir_light_buffer->map(), &light, sizeof(SingularLightData));
-            dir_light_buffer->unmap();
-		}
-		break;
-	case LightType::DIRECTIONAL:
-		{
-            SingularLightData light = { normalize(light_dir), LightType::DIRECTIONAL, light_radiance, shadows };
-            memcpy(dir_light_buffer->map(), &light, sizeof(SingularLightData));
-            dir_light_buffer->unmap();
-		}
-		break;
-	case LightType::POINT:
-		{
-            SingularLightData light = { light_pos, LightType::POINT, light_intensity, shadows };
-            memcpy(dir_light_buffer->map(), &light, sizeof(SingularLightData));
-            dir_light_buffer->unmap();
-		}
-		break;
-	case LightType::AREA:
-		{
-			if (area_lights.size() == 0)
-			{
-				Logger::warning << "Warning: no area lights in scene. " <<
-					"The only contribution will come from the ambient light (if any). " <<
-					"Objects are emissive if their ambient color is not zero." << endl;
-			}
-
-            area_light_buffer->setSize(area_lights.size());
-            memcpy(area_light_buffer->map(), &area_lights[0], area_lights.size() * sizeof(TriangleLight));
-            area_light_buffer->unmap();
-		}
-		break;
-	default: break;
-	}
-
 	context["singular_lights"]->set(dir_light_buffer);
-	context["area_lights"]->set(area_light_buffer);
 }
 
 
@@ -879,7 +814,7 @@ void ObjScene::set_miss_program(BackgroundType::EnumType program)
 	{
 	case BackgroundType::ENVIRONMENT_MAP:
 	{
-        string env_map_name = ConfigParameters::get_parameter<string>("light", "environment_map", "summer_road2.hdr", "Environment map file");
+        string env_map_name = "summer_road2.hdr";
         miss_program = std::make_unique<EnvironmentMap>(env_map_name);
 	}
     break;
@@ -890,7 +825,7 @@ void ObjScene::set_miss_program(BackgroundType::EnumType program)
     break;
     case BackgroundType::CONSTANT_BACKGROUND:
 	default:
-        float3 color = ConfigParameters::get_parameter<float3>("light", "background_constant_color", make_float3(0.5), "Environment map file");
+        float3 color = make_float3(0.5);
         miss_program = std::make_unique<ConstantBackground>(color);
         break;
     }
@@ -935,36 +870,28 @@ void ObjScene::setDebugEnabled(bool var)
 }
 
 
-void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
+void ObjScene::load_camera_extrinsics()
 {
-    auto camera_type = PinholeCameraType::to_enum(ConfigParameters::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));  
+    auto camera_type = PinholeCameraType::to_enum(ConfigParameters::get_parameter<string>("camera", "camera_definition_type", PinholeCameraType::to_string(PinholeCameraType::EYE_LOOKAT_UP_VECTORS), "Type of the camera."));
 
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	float3 eye = m_scene_bounding_box.center();
 	eye.z += 3 * max_dim;
 
 	bool use_auto_camera = ConfigParameters::get_parameter<bool>("camera", "use_auto_camera", false, "Use a automatic placed camera or use the current data.");
-
     optix::Matrix3x3 camera_matrix = optix::Matrix3x3::identity();
 
-	float vfov = ConfigParameters::get_parameter<float>("camera", "camera_fov", 53, "The camera FOVs (h|v)");
-
-	float ratio = mScene->get_current_camera()->get_width() / (float)mScene->get_current_camera()->get_height();
-	float hfov = rad2deg(2.0f*atanf(ratio*tanf(deg2rad(0.5f*(vfov)))));
 
     if (use_auto_camera)
 	{
-		camera_data = InitialCameraData(eye, // eye
-			m_scene_bounding_box.center(), // lookat
-			make_float3(0.0f, 1.0f, 0.0f), // up
-			hfov, vfov);
+        mScene->get_current_camera()->setEyeLookatUp(eye, m_scene_bounding_box.center(), make_float3(0.0f, 1.0f, 0.0f));
 	}
 	else
 	{
 		eye = ConfigParameters::get_parameter<float3>("camera", "camera_position", make_float3(1, 0, 0), "The camera initial position");
 		float3 lookat = ConfigParameters::get_parameter<float3>("camera", "camera_lookat_point", make_float3(0, 0, 0), "The camera initial lookat point");
 		float3 up = ConfigParameters::get_parameter<float3>("camera", "camera_up", make_float3(0, 1, 0), "The camera initial up");
-		camera_data = InitialCameraData(eye, lookat, up, hfov, vfov);
+        mScene->get_current_camera()->setEyeLookatUp(eye,lookat, up);
 	}
 
 	if (camera_type == PinholeCameraType::INVERSE_CAMERA_MATRIX)
@@ -972,6 +899,11 @@ void ObjScene::load_camera_extrinsics(InitialCameraData & camera_data)
 		camera_matrix = ConfigParameters::get_parameter<optix::Matrix3x3>("camera", "inv_camera_matrix", optix::Matrix3x3::identity(), "The camera inverse calibration matrix K^-1 * R^-1");
 	}
 
-	reset_renderer();
+    reset_renderer();
+}
+
+Camera *ObjScene::get_camera()
+{
+    return mScene->get_current_camera().get();
 }
 

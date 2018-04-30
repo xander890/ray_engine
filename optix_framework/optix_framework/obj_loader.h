@@ -38,7 +38,6 @@ struct ObjMaterial
 	std::shared_ptr<Texture> diffuse_tex = nullptr;       // Kd diffuse component
 	std::shared_ptr<Texture> ambient_tex = nullptr;       // Ka ambient component
 	std::shared_ptr<Texture> specular_tex = nullptr;      // Ks specular component
-	optix::float3 emissive = optix::make_float3(0);      // emissive component
 	optix::float3 absorption = optix::make_float3(0);   // Added: absorption.
 	optix::float3 scattering = optix::make_float3(0);   // Added: absorption.
 	optix::float3 asymmetry = optix::make_float3(0);   // Added: absorption.
@@ -49,7 +48,7 @@ struct ObjMaterial
 	float alpha = 1;            // d
 	float reflectivity = 1;     // reflection
 	int   illum = 0;           // illum
-
+	bool   is_emissive = false;
 };
 
 //-----------------------------------------------------------------------------
@@ -72,7 +71,7 @@ public:
 
   virtual optix::Aabb getSceneBBox()const { return m_aabb; }
 
-  virtual void getAreaLights(std::vector<TriangleLight> & lights);
+  //virtual void getAreaLights(std::vector<TriangleLight> & lights);
   static bool isMyFile(const char* filename);
 
   std::vector<std::shared_ptr<MaterialHost>> getMaterialParameters()
@@ -90,9 +89,9 @@ protected:
   void createMaterialParams( GLMmodel* model );
   std::shared_ptr<MaterialHost> getMaterial(unsigned int index);
 
-  void createLightBuffer( GLMmodel* model, const optix::Matrix4x4& transform );
+  //void createLightBuffer( GLMmodel* model, const optix::Matrix4x4& transform );
 
-  void extractAreaLights(const GLMmodel * model, const optix::Matrix4x4 & transform, unsigned int & num_light, std::vector<TriangleLight> & lights);
+  //void extractAreaLights(const GLMmodel * model, const optix::Matrix4x4 & transform, unsigned int & num_light, std::vector<TriangleLight> & lights);
 
   std::vector<TriangleLight> m_lights;
   std::string            m_pathname;

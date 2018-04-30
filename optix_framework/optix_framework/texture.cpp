@@ -26,22 +26,13 @@ TexPtr Texture::get_id()
     return textureSampler->getId();
 }
 
-void Texture::unmap_data()
-{
-    textureBuffer->unmap();
-}
-
-float* Texture::map_data()
-{
-    return reinterpret_cast<float*>(textureBuffer->map());
-}
-
 void Texture::set_data(float *data, size_t size)
 {
     assert(size <= width*height*4*sizeof(float));
-    float * dest = map_data();
+    float * dest = reinterpret_cast<float*>(textureBuffer->map());
     memcpy(dest, data, size);
-    unmap_data();
+    memcpy(mData, data, size);
+    textureBuffer->unmap();
 }
 
 void Texture::set_size(int w, int h, int d)
@@ -52,8 +43,8 @@ void Texture::set_size(int w, int h, int d)
     dimensions = 1;
     dimensions += h > 0? 1 : 0;
     dimensions += d > 0? 1 : 0;
-    RTsize dims[3] = {(RTsize)width, (RTsize)height, (RTsize)depth};
-    textureBuffer->setSize(dimensions, &dims[0]);
+    int dims[3] = {width, height, depth};
+    set_size(dimensions, dims);
 }
 
 Texture::~Texture()
@@ -65,8 +56,24 @@ Texture::~Texture()
 void Texture::set_size(int dimensions, int *dims)
 {
     RTsize * d = new RTsize[dimensions];
+    int total_size = 1;
     for(int i = 0; i < dimensions; i++)
-        d[i] = (RTsize)dims[i];
+    {
+        d[i] = (RTsize) dims[i];
+        total_size *= d[i];
+    }
     textureBuffer->setSize(dimensions, &d[0]);
     delete[] d;
+    if(mData != nullptr)
+    {
+        delete[] mData;
+    }
+    mData = new float[total_size*4];
+}
+
+optix::float4 Texture::get_texel(int i, int j, int k) const
+{
+    int idx = (i * get_width() + j) * get_height() + k;
+    auto res = reinterpret_cast<optix::float4*>(&mData[idx * 4]);
+    return *res;
 }

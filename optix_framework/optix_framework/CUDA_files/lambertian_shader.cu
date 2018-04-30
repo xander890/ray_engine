@@ -40,7 +40,6 @@ rtDeclareVariable(float3, eye, , );
 RT_PROGRAM void any_hit_shadow() {
     const MaterialDataCommon & material = get_material();
     float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
-	 //optix_print("%f %f %f", emission.x,emission.y,emission.z);
 	shadow_hit(prd_shadow, emission);
 }
 

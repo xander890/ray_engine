@@ -19,6 +19,12 @@ public:
     std::string get_name() { return mMaterialName; }
 	bool hasChanged();
 	static void set_default_material(ObjMaterial mat);
+	bool is_emissive();
+	const std::vector<std::shared_ptr<Texture>>& get_textures() {return textures;}
+
+	std::shared_ptr<Texture> get_ambient_texture() {return textures[0]; }
+	std::shared_ptr<Texture> get_diffuse_texture() {return textures[1]; }
+	std::shared_ptr<Texture> get_specular_texture() {return textures[2]; }
 
 private:
 	bool mHasChanged = true;
@@ -42,6 +48,7 @@ private:
 	optix::float4 ka_gui = optix::make_float4(0, 0, 0, 1);
 	optix::float4 kd_gui = optix::make_float4(0, 0, 0, 1);
 	optix::float4 ks_gui = optix::make_float4(0, 0, 0, 1);
+	bool mIsEmissive = false;
 };
 
 

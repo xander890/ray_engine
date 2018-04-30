@@ -25,7 +25,7 @@ rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 
 rtDeclareVariable(int, max_depth, , );
 
-static __device__ __inline__ void shadow_hit(PerRayData_shadow & shadow_payload, float3 & emission)
+static __device__ __inline__ void shadow_hit(PerRayData_shadow & shadow_payload, optix::float3 & emission)
 {
 	if (!(emission.x + emission.y + emission.z > 0.0f))
 	{

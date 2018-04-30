@@ -26,7 +26,7 @@
 #include <SampleScene.h>
 
 class Mouse;
-class PinholeCamera;
+class Camera;
 struct GLFWwindow;
 
 //-----------------------------------------------------------------------------
@@ -49,7 +49,6 @@ public:
   static void setRequiresDisplay( const bool requires_display )
   { m_requires_display = requires_display; }
   static bool isDisplayAvailable() { return m_requires_display; }
-  static void setCamera(SampleScene::InitialCameraData& camera_data);
 
 //  static bool isBenchmark() { return m_cur_continuous_mode == CDBenchmark || m_cur_continuous_mode == CDBenchmarkTimed ||
 //    m_app_continuous_mode == CDBenchmark || m_app_continuous_mode == CDBenchmarkTimed; }
@@ -92,7 +91,6 @@ private:
   static void resize(GLFWwindow * window, int width, int height);
 
   static Mouse*         m_mouse;
-  static PinholeCamera* m_camera;
   static SampleScene*   m_scene;
   static GLFWwindow * m_window;
 

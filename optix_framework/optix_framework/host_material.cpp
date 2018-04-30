@@ -107,6 +107,10 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 	mMaterialData.shininess = data->shininess;
 	mMaterialData.specular_map = data->specular_tex->get_id();
 
+	textures.push_back(std::move(mat.ambient_tex));
+	textures.push_back(std::move(mat.diffuse_tex));
+	textures.push_back(std::move(mat.specular_tex));
+
 	if (is_valid_material(*data))
 	{
 		Logger::info << mMaterialName << " is a valid obj material. Using obj parameters. " << std::endl;
@@ -159,9 +163,8 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 			mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
 		}
 	}
-	textures.push_back(std::move(mat.ambient_tex));
-	textures.push_back(std::move(mat.diffuse_tex));
-	textures.push_back(std::move(mat.specular_tex));
+
+	mIsEmissive = mat.is_emissive;
 }
 
 MaterialHost::~MaterialHost() = default;
@@ -188,4 +191,9 @@ std::unique_ptr<ObjMaterial> MaterialHost::user_defined_material = nullptr;
 void MaterialHost::set_default_material(ObjMaterial mat)
 {
 	user_defined_material = std::make_unique<ObjMaterial>(mat);
+}
+
+bool MaterialHost::is_emissive()
+{
+    return mIsEmissive;
 }

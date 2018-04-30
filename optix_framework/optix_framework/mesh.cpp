@@ -79,3 +79,20 @@ bool Geometry::on_draw()
 	bool changed = false;
 	return changed;
 }
+
+void Geometry::get_flattened_vertices(std::vector<optix::float3> &triangles)
+{
+    optix::float3 * vertices = reinterpret_cast<optix::float3*>(mMeshData.mVbuffer->map());
+    optix::int3 * vertices_indices = reinterpret_cast<optix::int3*>(mMeshData.mVIbuffer->map());
+
+    for(int i = 0; i < mMeshData.mNumTriangles; i++)
+    {
+        optix::int3 vi = vertices_indices[i];
+        triangles.push_back(vertices[vi.x]);
+        triangles.push_back(vertices[vi.y]);
+        triangles.push_back(vertices[vi.z]);
+    }
+
+    mMeshData.mVbuffer->unmap();
+    mMeshData.mVIbuffer->unmap();
+}

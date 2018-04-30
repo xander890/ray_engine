@@ -19,15 +19,15 @@ public:
     int get_depth() const { return depth; }
 
     TexPtr get_id();
-    float * map_data();
-    void unmap_data();
     void set_data(float * data, size_t size);
+    optix::float4 get_texel(int x, int y = 0, int z = 0) const;
 
 private:
     optix::Buffer textureBuffer;
     optix::TextureSampler textureSampler;
     unsigned int width, height, depth;
     unsigned int dimensions;
+    float * mData = nullptr;
 
     friend class cereal::access;
 

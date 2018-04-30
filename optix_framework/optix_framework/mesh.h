@@ -120,6 +120,8 @@ public:
     MeshData mMeshData;
     optix::Geometry get_geometry() { return mGeometry; }
 
+    void get_flattened_vertices(std::vector<optix::float3> & triangles);
+
 private:
     Geometry() {}
 

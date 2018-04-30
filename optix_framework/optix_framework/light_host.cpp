@@ -28,6 +28,9 @@ bool SingularLight::on_draw()
 SingularLightData SingularLight::get_data()
 {
     mData->emission = mColor * mIntensity;
+    if(mData->type == LightType::DIRECTIONAL)
+        mData->direction = normalize(mData->direction);
+    mHasChanged = false;
     return *mData;
 }
 

@@ -29,6 +29,7 @@
 
 #define GLFW_MOTION -1
 #include "logger.h"
+#include "camera_host.h"
 
 //-----------------------------------------------------------------------------
 // 
@@ -40,37 +41,6 @@ using namespace optix;
 
 namespace {
 
-  /*
-    Assigns src to dst if 
-    src is not inf and nan!
-    
-    dst = isReal(src) ? src : dst;
-  */
-
-  float assignWithCheck( float& dst, const float &src )
-  {
-    if( ISFINITE( src ) ) {
-      dst = src;
-    }
-
-    return dst;
-  }
-
-  /*
-    Assigns src to dst if all src 
-    components are neither inf nor nan!
-    
-    dst = isReal(src) ? src : dst;
-  */
-
-  float3 assignWithCheck( float3& dst, const float3 &src )
-  {
-    if( ISFINITE( src.x ) && ISFINITE( src.y ) && ISFINITE( src.z ) ) {
-      dst = src;
-    }
-
-    return dst;
-  }
 
 
   inline float Clamp(float val, float min, float max)
@@ -132,34 +102,7 @@ namespace {
     }
   }
 
-  Matrix4x4 initWithBasis( const float3& u,
-                                 const float3& v,
-                                 const float3& w,
-                                 const float3& t )
-  {
-    float m[16];
-    m[0] = u.x;
-    m[1] = v.x;
-    m[2] = w.x;
-    m[3] = t.x;
-    
-    m[4] = u.y;
-    m[5] = v.y;
-    m[6] = w.y;
-    m[7] = t.y;
 
-    m[8] = u.z;
-    m[9] = v.z;
-    m[10] = w.z;
-    m[11] = t.z;
-
-    m[12] = 0.0f;
-    m[13] = 0.0f;
-    m[14] = 0.0f;
-    m[15] = 1.0f;
-
-    return Matrix4x4( m );
-  }
 
 
   inline float det3 (float a, float b, float c,
@@ -257,7 +200,7 @@ namespace {
 //
 //-----------------------------------------------------------------------------
 
-Mouse::Mouse(PinholeCamera* camera, int xres, int yres)
+Mouse::Mouse(Camera* camera, int xres, int yres)
   : camera(camera)
   , xres(xres)
   , yres(yres)
@@ -431,145 +374,3 @@ void Mouse::transform( const optix::Matrix4x4& trans )
 //
 //-----------------------------------------------------------------------------
 
-PinholeCamera::PinholeCamera(float3 eye, float3 lookat, float3 up, float hfov, float vfov, AspectRatioMode arm)
-  : eye(eye)
-  , lookat(lookat)
-  , up(up)
-  , hfov(hfov)
-  , vfov(vfov)
-  , aspectRatioMode(arm)
-{
-  setup();
-}
-
-void PinholeCamera::setAspectRatio(float ratio)
-{
-  float realRatio = ratio;
-
-  const float* inputAngle = 0;
-  float* outputAngle = 0;
-  switch(aspectRatioMode) {
-  case PinholeCamera::KeepHorizontal:
-    inputAngle = &hfov;
-    outputAngle = &vfov;
-    realRatio = 1.f/ratio;
-    break;
-  case PinholeCamera::KeepVertical:
-    inputAngle = &vfov;
-    outputAngle = &hfov;
-    break;
-  case PinholeCamera::KeepNone:
-    return;
-    break;
-  }
-
-  *outputAngle = rad2deg(2.0f*atanf(realRatio*tanf(deg2rad(0.5f*(*inputAngle)))));
-
-  setup();
-}
-
-void PinholeCamera::setParameters(float3 eye_in, float3 lookat_in, float3 up_in, float hfov_in, float vfov_in, PinholeCamera::AspectRatioMode aspectRatioMode_in)
-{
-  eye = eye_in;
-  lookat = lookat_in;
-  up = up_in;
-  hfov = hfov_in;
-  vfov = vfov_in;
-  aspectRatioMode = aspectRatioMode_in;
-  
-  setup();
-}
-
-void PinholeCamera::setup()
-{
-  lookdir = assignWithCheck( lookdir, lookat-eye );  // do not normalize lookdir -- implies focal length
-  float lookdir_len = length( lookdir );
-  up = assignWithCheck( up, normalize(up));
-  camera_u = assignWithCheck( camera_u, normalize( cross(lookdir, up) ) );
-  camera_v = assignWithCheck( camera_v, normalize( cross(camera_u, lookdir) ) );
-  float ulen = lookdir_len * tanf(deg2rad(hfov*0.5f));
-  camera_u = assignWithCheck( camera_u, camera_u * ulen );
-  float vlen = lookdir_len * tanf(deg2rad(vfov*0.5f));
-  camera_v = assignWithCheck( camera_v, camera_v * vlen );
-}
-
-void PinholeCamera::getEyeUVW(float3& eye_out, float3& U, float3& V, float3& W)
-{
-  eye_out = eye;
-  U = camera_u;
-  V = camera_v;
-  W = lookdir;
-}
-
-void PinholeCamera::getEyeLookUpFOV(float3& eye_out, float3& lookat_out, float3& up_out, float& HFOV_out, float& VFOV_out)
-{
-  eye_out = eye;
-  lookat_out = lookat;
-  up_out = up;
-  HFOV_out = hfov;
-  VFOV_out = vfov;
-}
-
-void PinholeCamera::scaleFOV(float scale)
-{
-  const float fov_min = 0.0f;
-  const float fov_max = 120.0f;
-  float hfov_new = rad2deg(2*atanf(scale*tanf(deg2rad(hfov*0.5f))));
-  hfov_new = Clamp(hfov_new, fov_min, fov_max);
-  float vfov_new = rad2deg(2*atanf(scale*tanf(deg2rad(vfov*0.5f))));
-  vfov_new = Clamp(vfov_new, fov_min, fov_max);
-
-  hfov = assignWithCheck( hfov, hfov_new );
-  vfov = assignWithCheck( vfov, vfov_new );
-
-  setup();
-}
-
-void PinholeCamera::translate(float2 t)
-{
-  float3 trans = camera_u*t.x + camera_v*t.y;
-
-  eye = assignWithCheck( eye, eye + trans );
-  lookat = assignWithCheck( lookat, lookat + trans );
-
-  setup();
-}
-
-
-// Here scale will move the eye point closer or farther away from the
-// lookat point.  If you want an invertable value feed it
-// (previous_scale/(previous_scale-1)
-void PinholeCamera::dolly(float scale)
-{
-  // Better make sure the scale isn't exactly one.
-  if (scale == 1.0f) return;
-  float3 d = (lookat - eye) * scale;
-  eye  = assignWithCheck( eye, eye + d );
-
-  setup();
-}
-
-void PinholeCamera::transform( const Matrix4x4& trans )
-{
-  float3 cen = lookat;         // TODO: Add logic for various rotation types (eg, flythrough)
-
-  Matrix4x4 frame = initWithBasis( normalize(camera_u),
-                                         normalize(camera_v),
-                                         normalize(-lookdir),
-                                         cen );
-  Matrix4x4 frame_inv = inverse( frame );
-
-  Matrix4x4 final_trans = frame * trans * frame_inv;
-  float4 up4     = make_float4( up );
-  float4 eye4    = make_float4( eye );
-  eye4.w         = 1.0f;
-  float4 lookat4 = make_float4( lookat );
-  lookat4.w      = 1.0f;
-
-
-  up     = assignWithCheck( up, make_float3( final_trans*up4 ) );
-  eye    = assignWithCheck( eye, make_float3( final_trans*eye4 ) );
-  lookat = assignWithCheck( lookat, make_float3( final_trans*lookat4 ) );
-
-  setup();
-}

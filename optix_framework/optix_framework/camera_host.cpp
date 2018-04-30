@@ -6,58 +6,82 @@
 #include "shader_factory.h"
 #include "immediate_gui.h"
 #include "optix_utils.h"
+#include "math_helpers.h"
 #include <memory>
 
 using namespace optix;
 using namespace std;
+#define ISFINITE std::isfinite
 
-Camera::Camera(optix::Context & context, PinholeCameraType::EnumType camera_type, unsigned int width, unsigned int height, unsigned int downsampling, optix::int4 rendering_rect)
+/*
+  Assigns src to dst if
+  src is not inf and nan!
+
+  dst = isReal(src) ? src : dst;
+*/
+
+float assignWithCheck( float& dst, const float &src )
 {
-    const string ptx_path = get_path_ptx("pinhole_camera.cu");
-    string camera_name = (camera_type == PinholeCameraType::INVERSE_CAMERA_MATRIX) ? "pinhole_camera_w_matrix" : "pinhole_camera";
-    Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, camera_name);
-	entry_point = add_entry_point(context, ray_gen_program);
-    context->setExceptionProgram(entry_point, context->createProgramFromPTXFile(ptx_path, "exception"));
+	if( ISFINITE( src ) ) {
+		dst = src;
+	}
 
-    data = std::make_unique<CameraData>();
-	data->camera_size = make_uint2(width, height);
-	if (std::any_of(&rendering_rect.x, &rendering_rect.w, [](int & v){ return v == -1; }))
-	{
-		data->rendering_rectangle = make_uint4(0, 0, width, height);
-	}
-	else
-	{
-		data->rendering_rectangle = make_uint4(rendering_rect.x, rendering_rect.y, rendering_rect.z, rendering_rect.w);
-	}
-	data->downsampling = downsampling;
-	data->rendering_rectangle.z /= downsampling;
-	data->rendering_rectangle.w /= downsampling;
-	data->U = make_float3(0);
-	data->V = make_float3(0);
-	data->W = make_float3(0);
-	data->eye = make_float3(0);
-	data->inv_calibration_matrix = optix::Matrix3x3::identity();
-	data->render_bounds = make_uint4(0, 0, width, height);
+	return dst;
 }
 
-void Camera::update_camera(const SampleScene::RayGenCameraData& camera_data)
+/*
+  Assigns src to dst if all src
+  components are neither inf nor nan!
+
+  dst = isReal(src) ? src : dst;
+*/
+
+float3 assignWithCheck( float3& dst, const float3 &src )
 {
-	data->W = camera_data.W;
-	data->U = camera_data.U;
-	data->V = camera_data.V;
-	data->eye = camera_data.eye;
+	if( ISFINITE( src.x ) && ISFINITE( src.y ) && ISFINITE( src.z ) ) {
+		dst = src;
+	}
+
+	return dst;
 }
 
-void Camera::set_into_gpu(optix::Context & context) { 
-    context["camera_data"]->setUserData(sizeof(CameraData), data.get()); 
+Matrix4x4 initWithBasis( const float3& u,
+		const float3& v,
+		const float3& w,
+		const float3& t )
+{
+	float m[16];
+	m[0] = u.x;
+	m[1] = v.x;
+	m[2] = w.x;
+	m[3] = t.x;
+
+	m[4] = u.y;
+	m[5] = v.y;
+	m[6] = w.y;
+	m[7] = t.y;
+
+	m[8] = u.z;
+	m[9] = v.z;
+	m[10] = w.z;
+	m[11] = t.z;
+
+	m[12] = 0.0f;
+	m[13] = 0.0f;
+	m[14] = 0.0f;
+	m[15] = 1.0f;
+
+	return Matrix4x4( m );
 }
+
+
 
 bool Camera::on_draw()
 {
 	bool changed = false;
 	if (ImmediateGUIDraw::CollapsingHeader("Camera"))
 	{
-		ImmediateGUIDraw::InputFloat3("Camera eye", (float*)&data->eye, -1, ImGuiInputTextFlags_ReadOnly);
+		ImmediateGUIDraw::InputFloat3("Camera eye", (float*)&eye, -1, ImGuiInputTextFlags_ReadOnly);
 		ImmediateGUIDraw::InputFloat3("Camera U", (float*)&data->U, -1, ImGuiInputTextFlags_ReadOnly);
 		ImmediateGUIDraw::InputFloat3("Camera V", (float*)&data->V, -1, ImGuiInputTextFlags_ReadOnly);
 		ImmediateGUIDraw::InputFloat3("Camera W", (float*)&data->W, -1, ImGuiInputTextFlags_ReadOnly);
@@ -72,4 +96,168 @@ unsigned int Camera::get_height() const { return data->render_bounds.w; }
 int Camera::get_id() const
 {
     return entry_point;
+}
+
+void Camera::init()
+{
+	const string ptx_path = get_path_ptx("pinhole_camera.cu");
+	string camera_name = "pinhole_camera";
+	Program ray_gen_program = mContext->createProgramFromPTXFile(ptx_path, camera_name);
+	entry_point = add_entry_point(mContext, ray_gen_program);
+	mContext->setExceptionProgram(entry_point, mContext->createProgramFromPTXFile(ptx_path, "exception"));
+
+	data = std::make_unique<CameraData>();
+}
+
+
+void Camera::setAspectRatio(float ratio)
+{
+	float realRatio = ratio;
+
+	const float* inputAngle = 0;
+	float* outputAngle = 0;
+	switch(parameters->ratio_mode) {
+		case KeepHorizontal:
+			inputAngle = &parameters->hfov;
+			outputAngle = &parameters->vfov;
+			realRatio = 1.f/ratio;
+			break;
+		case KeepVertical:
+			inputAngle = &parameters->vfov;
+			outputAngle = &parameters->hfov;
+			break;
+		case KeepNone:
+			return;
+			break;
+	}
+
+	*outputAngle = rad2deg(2.0f*atanf(realRatio*tanf(deg2rad(0.5f*(*inputAngle)))));
+
+	setup();
+}
+
+
+void Camera::setup()
+{
+    data->eye = eye;
+	data->W = assignWithCheck( data->W, lookat - eye );  // do not normalize data->W -- implies focal length
+	float W_len = length( data->W );
+	up = assignWithCheck( up, normalize(up));
+	data->U = assignWithCheck( data->U, normalize( cross(data->W, up) ) );
+	data->V = assignWithCheck( data->V, normalize( cross(data->U, data->W) ) );
+	float ulen = W_len * tanf(deg2rad(parameters->hfov*0.5f));
+	data->U = assignWithCheck( data->U, data->U * ulen );
+	float vlen = W_len * tanf(deg2rad(parameters->vfov*0.5f));
+	data->V = assignWithCheck( data->V, data->V * vlen );
+	mContext["camera_data"]->setUserData(sizeof(CameraData), data.get());
+}
+
+void Camera::getEyeUVW(float3& eye_out, float3& U, float3& V, float3& W)
+{
+	eye_out = eye;
+	U = data->U;
+	V = data->V;
+	W = data->W;
+}
+
+void Camera::scaleFOV(float scale)
+{
+	const float fov_min = 0.0f;
+	const float fov_max = 120.0f;
+	float hfov_new = rad2deg(2*atanf(scale*tanf(deg2rad(parameters->hfov*0.5f))));
+	hfov_new = clamp(hfov_new, fov_min, fov_max);
+	float vfov_new = rad2deg(2*atanf(scale*tanf(deg2rad(parameters->vfov*0.5f))));
+	vfov_new = clamp(vfov_new, fov_min, fov_max);
+
+	parameters->hfov = assignWithCheck( parameters->hfov, hfov_new );
+	parameters->vfov = assignWithCheck( parameters->vfov, vfov_new );
+
+	setup();
+}
+
+void Camera::translate(float2 t)
+{
+	float3 trans = data->U*t.x + data->V*t.y;
+
+	eye = assignWithCheck( eye, eye + trans );
+	lookat = assignWithCheck( lookat, lookat + trans );
+
+	setup();
+}
+
+
+// Here scale will move the eye point closer or farther away from the
+// lookat point.  If you want an invertable value feed it
+// (previous_scale/(previous_scale-1)
+void Camera::dolly(float scale)
+{
+	// Better make sure the scale isn't exactly one.
+	if (scale == 1.0f) return;
+	float3 d = (lookat - eye) * scale;
+	eye  = assignWithCheck( eye, eye + d );
+
+	setup();
+}
+
+void Camera::transform( const Matrix4x4& trans )
+{
+	float3 cen = lookat;         // TODO: Add logic for various rotation types (eg, flythrough)
+
+	Matrix4x4 frame = initWithBasis( normalize(data->U),
+			normalize(data->V),
+			normalize(-data->W),
+			cen );
+	Matrix4x4 frame_inv = frame.inverse();
+
+	Matrix4x4 final_trans = frame * trans * frame_inv;
+	float4 up4     = make_float4( up );
+	float4 eye4    = make_float4( eye );
+	eye4.w         = 1.0f;
+	float4 lookat4 = make_float4( lookat );
+	lookat4.w      = 1.0f;
+
+
+	up     = assignWithCheck( up, make_float3( final_trans*up4 ) );
+	eye    = assignWithCheck( eye, make_float3( final_trans*eye4 ) );
+	lookat = assignWithCheck( lookat, make_float3( final_trans*lookat4 ) );
+
+	setup();
+}
+
+Camera::Camera(optix::Context &context, CameraParameters parameters, float3 eye, float3 lookat, float3 up):
+        eye(eye),
+		lookat(lookat)
+		, up(up)
+		, mContext(context)
+{
+	init();
+	setParameters(parameters);
+    setup();
+}
+
+void Camera::setParameters(CameraParameters param)
+{
+	parameters = std::make_unique<CameraParameters>(param);
+	if (std::any_of(&parameters->rendering_rect.x, &parameters->rendering_rect.w, [](int & v){ return v == -1; }))
+	{
+		data->rendering_rectangle = make_uint4(0, 0, parameters->width, parameters->height);
+	}
+	else
+	{
+		data->rendering_rectangle = make_uint4(parameters->rendering_rect.x, parameters->rendering_rect.y, parameters->rendering_rect.z, parameters->rendering_rect.w);
+	}
+	data->downsampling = parameters->downsampling;
+	data->rendering_rectangle.z /= parameters->downsampling;
+	data->rendering_rectangle.w /= parameters->downsampling;
+	data->inv_calibration_matrix = optix::Matrix3x3::identity();
+	data->render_bounds = make_uint4(0, 0, parameters->width, parameters->height);
+	data->camera_size = make_uint2(parameters->width, parameters->height);
+}
+
+void Camera::setEyeLookatUp(float3 eye_in, float3 lookat_in, float3 up_in)
+{
+    eye = eye_in;
+    lookat = lookat_in;
+    up = up_in;
+    setup();
 }
