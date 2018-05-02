@@ -3,7 +3,7 @@
 #include <optix_world.h>
 #include "optix_serialize.h"
 
-class Transform : public std::enable_shared_from_this<Transform>
+class Transform
 {
 public:
 	Transform(optix::Context & ctx);
@@ -27,10 +27,28 @@ private:
 	bool mHasChanged = true;
 
 	friend class cereal::access;
+
+    static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<Transform> & construct )
+    {
+        construct(archive.get_context());
+        archive(
+                cereal::make_nvp("translation", construct->mTranslation),
+                cereal::make_nvp("scale", construct->mScale),
+                cereal::make_nvp("rotation_axis", construct->mRotationAxis),
+                cereal::make_nvp("rotation_angle", construct->mRotationAngle)
+        );
+        construct->load();
+    }
+
 	template<class Archive>
-	void serialize(Archive & archive)
+	void save(Archive & archive) const
 	{
-		archive(CEREAL_NVP(mTranslation), CEREAL_NVP(mScale), CEREAL_NVP(mRotationAngle), CEREAL_NVP(mRotationAngle));
+		archive(
+                cereal::make_nvp("translation", mTranslation),
+                cereal::make_nvp("scale", mScale),
+                cereal::make_nvp("rotation_axis", mRotationAxis),
+                cereal::make_nvp("rotation_angle", mRotationAngle)
+        );
 	}
 	optix::Context context;
 	optix::Transform mTransform = nullptr;

@@ -35,7 +35,7 @@ bool SceneGUI::on_draw(Scene * scene)
             if(Dialogs::openFileDialog(path, "*.obj"))
             {
                 ObjLoader* loader = new ObjLoader(path.c_str(), scene->context);
-                std::vector<std::unique_ptr<Object>> v = loader->load();
+                std::vector<std::unique_ptr<Object>>& v = loader->load();
                 for (auto& c : v)
                 {
                     scene->add_object(std::move(c));

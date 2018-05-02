@@ -34,10 +34,6 @@ rtDeclareVariable(float3, texcoord, attribute texcoord, );
 // Monte carlo variables
 rtDeclareVariable(unsigned int, N, , );
 
-rtDeclareVariable(int, max_splits, , );
-rtDeclareVariable(int, use_split, , );
-
-
 rtDeclareVariable(float, exponent_blinn, , );
 rtDeclareVariable(optix::float2, exponent_aniso, , );
 rtDeclareVariable(optix::float3, object_x_axis, , );

@@ -19,14 +19,6 @@ rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
-
-
-
-
-
-// Russian roulette variables
-rtDeclareVariable(int, max_splits, , );
-
 rtBuffer<float3, 1> normalized_cie_rgb; 
 rtBuffer<float, 1> normalized_cie_rgb_cdf;
 rtDeclareVariable(float, normalized_cie_rgb_step, , );

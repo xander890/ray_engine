@@ -20,24 +20,10 @@ void Geometry::init(const char* name, MeshData meshdata)
     mMeshName = name;
     mMeshData = meshdata;
     // Load triangle_mesh programs
-    if (!mIntersectProgram.get()) {
-        std::string path = get_path_ptx("triangle_mesh.cu");
-        mIntersectProgram = mContext->createProgramFromPTXFile(path, "mesh_intersect");
-    }
-
-    if (!mBoundingboxProgram.get()) {
-        std::string path = get_path_ptx("triangle_mesh.cu");
-        mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "mesh_bounds");
-    }
-
-    if (!mBBoxBuffer.get())
-    {
-        mBBoxBuffer = create_buffer<optix::Aabb>(mContext);
-    }
 	load();
 }
 
-void Geometry::load_geometry()
+void Geometry::load()
 {
 	if (!mReloadGeometry)
 		return;
@@ -58,16 +44,23 @@ void Geometry::load_geometry()
 	mReloadGeometry = false;
 }
 
-void Geometry::load()
-{
-	load_geometry();
-}
-
-
 
 
 void Geometry::create_and_bind_optix_data()
 {
+    if (!mIntersectProgram.get()) {
+        std::string path = get_path_ptx("triangle_mesh.cu");
+        mIntersectProgram = mContext->createProgramFromPTXFile(path, "mesh_intersect");
+    }
+
+    if (!mBoundingboxProgram.get()) {
+        std::string path = get_path_ptx("triangle_mesh.cu");
+        mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "mesh_bounds");
+    }
+    if (!mBBoxBuffer.get())
+    {
+        mBBoxBuffer = create_buffer<optix::Aabb>(mContext);
+    }
     if (!mGeometry)
     {
         mGeometry = mContext->createGeometry();

@@ -342,8 +342,9 @@ void GLFWDisplay::display()
 {
 
   bool display_requested = m_requires_display;
+  m_mouse->setCamera(m_scene->get_camera());
 
-  try {
+    try {
     // render the scene
     // Don't be tempted to just start filling in the values outside of a constructor,
     // because if you add a parameter it's easy to forget to add it here.

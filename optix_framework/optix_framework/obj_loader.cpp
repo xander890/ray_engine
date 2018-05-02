@@ -21,19 +21,8 @@
 
 #include <obj_loader.h>
 
-#include <iostream>
 #include <fstream>
-#include <sstream>
-#include <vector>
-#include <cassert>
-#include <string.h>
-#include <optixu/optixu.h>
 #include <ImageLoader.h>
-#include <area_light.h>
-
-#include "object_host.h"
-#include "host_material.h"
-#include <scattering_material.h>
 
 //------------------------------------------------------------------------------
 // 
@@ -77,12 +66,12 @@ ObjLoader::ObjLoader( const char* filename,
   //m_pathname = m_filename.substr(0,m_filename.find_last_of("/\\")+1);
 }
 
-std::vector<std::unique_ptr<Object>> ObjLoader::load()
+std::vector<std::unique_ptr<Object>>& ObjLoader::load()
 {
    return load( optix::Matrix4x4::identity() );
 }
 
-std::vector<std::unique_ptr<Object>> ObjLoader::load(const optix::Matrix4x4& transform)
+std::vector<std::unique_ptr<Object>>& ObjLoader::load(const optix::Matrix4x4& transform)
 {
   // parse the OBJ file
 	std::string s = m_filename;
@@ -98,10 +87,10 @@ std::vector<std::unique_ptr<Object>> ObjLoader::load(const optix::Matrix4x4& tra
 
   // Create a GeometryInstance and Geometry for each obj group
   createMaterialParams( model );
-  auto meshes = createGeometryInstances( model );
+  createGeometryInstances( model );
 
   glmDelete( model );
-  return meshes;
+  return m_meshes;
 }
 
 
@@ -183,14 +172,16 @@ std::vector<ObjMaterial> ObjLoader::parse_mtl_file(std::string mat, optix::Conte
 	model->usePerVertexColors = 0;
 	_glmReadMTL(model, &writable[0]);
 	std::vector<ObjMaterial> vec;
-	for (unsigned int i = 0; i < model->nummaterials; i++)
-		vec.push_back(convert_mat(*model->materials, ctx));
+    std::string folder = mat.substr(0,mat.find_last_of("/\\")+1);
+
+    for (unsigned int i = 0; i < model->nummaterials; i++)
+		vec.push_back(convert_mat(folder, *model->materials, ctx));
 	return vec;
 }
 
-std::vector<std::unique_ptr<Object>> ObjLoader::createGeometryInstances(GLMmodel* model)
+void ObjLoader::createGeometryInstances(GLMmodel* model)
 {
-  std::vector<std::unique_ptr<Object>> instances;
+
 
   // Loop over all groups -- grab the triangles and material props from each group
   unsigned int triangle_count = 0u;
@@ -272,10 +263,9 @@ std::vector<std::unique_ptr<Object>> ObjLoader::createGeometryInstances(GLMmodel
     std::unique_ptr<Geometry> geom = std::make_unique<Geometry>(m_context);
     geom->init(name.c_str(), meshdata);
     rtMesh->init(name.c_str(), std::move(geom), materialData);
-    
-	instances.push_back( std::move(rtMesh) );
+
+	  m_meshes.push_back( std::move(rtMesh) );
   }
-    return instances;
 }
 
 bool ObjLoader::isMyFile( const char* filename )
@@ -293,7 +283,7 @@ std::shared_ptr<MaterialHost> ObjLoader::getMaterial(unsigned int index)
   return nullptr;
 }
 
-ObjMaterial ObjLoader::convert_mat(GLMmaterial& mat, optix::Context ctx)
+ObjMaterial ObjLoader::convert_mat(std::string folder, GLMmaterial& mat, optix::Context ctx)
 {
 	ObjMaterial params;
 
@@ -322,9 +312,9 @@ ObjMaterial ObjLoader::convert_mat(GLMmaterial& mat, optix::Context ctx)
 		mat.specular[2]);
 
 	// load textures relatively to OBJ main file
-	std::string ambient_map = strlen(mat.ambient_map) ? Folders::texture_folder + mat.ambient_map : "";
-	std::string diffuse_map = strlen(mat.diffuse_map) ? Folders::texture_folder + mat.diffuse_map : "";
-	std::string specular_map = strlen(mat.specular_map) ? Folders::texture_folder + mat.specular_map : "";
+	std::string ambient_map = strlen(mat.ambient_map) ? folder + mat.ambient_map : "";
+	std::string diffuse_map = strlen(mat.diffuse_map) ? folder + mat.diffuse_map : "";
+	std::string specular_map = strlen(mat.specular_map) ? folder + mat.specular_map : "";
 
 	params.ambient_tex = std::move(loadTexture(ctx, ambient_map, Ka));
 	params.diffuse_tex = std::move(loadTexture(ctx, diffuse_map, Kd));
@@ -335,11 +325,13 @@ ObjMaterial ObjLoader::convert_mat(GLMmaterial& mat, optix::Context ctx)
 void ObjLoader::createMaterialParams( GLMmodel* model )
 {
   m_material_params.resize( model->nummaterials );
-  for ( unsigned int i = 0; i < model->nummaterials; ++i ) {
+  std::string folder = m_filename.substr(0,m_filename.find_last_of("/\\")+1);
 
-	GLMmaterial& mat = model->materials[i];
-	ObjMaterial params = convert_mat(mat, m_context);
-    m_material_params[i] = std::make_shared<MaterialHost>(m_context, params);
+  for ( unsigned int i = 0; i < model->nummaterials; ++i )
+  {
+        GLMmaterial& mat = model->materials[i];
+        ObjMaterial params = convert_mat(folder, mat, m_context);
+        m_material_params[i] = std::make_shared<MaterialHost>(m_context, params);
   }
 }
 

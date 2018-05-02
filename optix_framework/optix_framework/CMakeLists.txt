@@ -209,7 +209,7 @@ CUDA_files/bssrdf_plane_visualizer.cu
 CUDA_files/chull.cu
 CUDA_files/constant_background.cu
 CUDA_files/constant_shader.cu
-CUDA_files/depth_ray.cu
+CUDA_files/util_rays.cu
 CUDA_files/dispersion_shader.cu
 CUDA_files/debug_camera.cu
 CUDA_files/environment_map_background.cu

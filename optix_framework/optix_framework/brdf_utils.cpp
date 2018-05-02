@@ -75,7 +75,6 @@ void read_brdf_f(const std::string& merl_folder, const std::string& name, vector
     }
 }
 
-
 void read_all_brdfs(const char * merl_folder, const char * merl_database, std::map<std::string, vector<float>*>& brdfs)
 {
     std::vector<std::string> brdf_names;

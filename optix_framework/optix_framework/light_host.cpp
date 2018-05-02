@@ -8,7 +8,6 @@
 void SingularLight::init(optix::Context &context)
 {
     mContext = context;
-    mData = std::make_unique<SingularLightData>();
     mColor = normalize(mData->emission);
     mIntensity = length(mData->emission);
 }
@@ -37,5 +36,10 @@ SingularLightData SingularLight::get_data()
 bool SingularLight::has_changed()
 {
     return mHasChanged;
+}
+
+SingularLight::SingularLight()
+{
+    mData = std::make_unique<SingularLightData>();
 }
 

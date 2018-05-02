@@ -134,14 +134,14 @@ int main( int argc, char** argv )
 		size_t idx = filename.find_last_of('.');
 		if(idx < filename.length())
 		{
-		file_extension = filename.substr(idx, filename.length() - idx);
-		lower_case_string(file_extension);
+			file_extension = filename.substr(idx, filename.length() - idx);
+			lower_case_string(file_extension);
 		}
 
 		if(file_extension == ".obj")
 		{
-		filenames.push_back(filename);
-		lower_case_string(filenames.back());
+			filenames.push_back(filename);
+			lower_case_string(filenames.back());
 		}
 	}
 	}

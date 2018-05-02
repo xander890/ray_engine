@@ -11,23 +11,24 @@ class Texture
 public:
     Texture(optix::Context context);
     ~Texture();
-    void set_size(int width, int height = -1, int depth = -1);
-    void set_size(int dimensions, int * dims);
+    void set_size(size_t width, size_t height = 0, size_t depth = 0);
+    void set_size(size_t dimensions, size_t * dims);
 
-    int get_width() const { return width; }
-    int get_height() const { return height; }
-    int get_depth() const { return depth; }
+    size_t get_width() const { return mDimensions[0]; }
+    size_t get_height() const { return mDimensions[1]; }
+    size_t get_depth() const { return mDimensions[2]; }
 
     TexPtr get_id();
     void set_data(float * data, size_t size);
-    optix::float4 get_texel(int x, int y = 0, int z = 0) const;
+    optix::float4 get_texel(size_t x, size_t y = 0, size_t z = 0) const;
 
 private:
     optix::Buffer textureBuffer;
     optix::TextureSampler textureSampler;
-    unsigned int width, height, depth;
-    unsigned int dimensions;
+    RTsize mDimensions[3];
+    RTsize mDimensionality;
     float * mData = nullptr;
+    size_t get_number_of_elements() const { return mDimensions[0]*mDimensions[1]*mDimensions[2]*4; }
 
     friend class cereal::access;
 
@@ -46,23 +47,31 @@ private:
     static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<Texture> & construct )
     {
         construct(archive.get_context());
-        int width,height,depth,dimensions;
-        archive( CEREAL_NVP(width),  CEREAL_NVP(height),  CEREAL_NVP(depth),  CEREAL_NVP(dimensions));
-        int dims[3] = {width, height, depth};
+        size_t dimensions;
+        size_t dims[3];
+        archive(
+                cereal::make_nvp("width", dims[0]),
+                cereal::make_nvp("height", dims[1]),
+                cereal::make_nvp("depth", dims[2]),
+                cereal::make_nvp("dimensionality", dimensions)
+        );
         construct->set_size(dimensions, dims);
-        void * vals = construct->textureBuffer->map();
-        archive.loadBinaryValue(vals, width*height*depth*4*sizeof(float), "texture");
-        construct->textureBuffer->unmap();
+        float * vals = new float[construct->get_number_of_elements()];
+        archive.loadBinaryValue(vals,construct->get_number_of_elements()*sizeof(float), "texture");
+        construct->set_data(vals, construct->get_number_of_elements()*sizeof(float));
+        delete[] vals;
     }
 };
 
 template<>
 inline void Texture::save(cereal::XMLOutputArchiveOptix & archive) const
 {
-    archive( CEREAL_NVP(width),  CEREAL_NVP(height),  CEREAL_NVP(depth),  CEREAL_NVP(dimensions));
-    const void * v = textureBuffer->map();
-    archive.saveBinaryValue(v, width*height*depth*4*sizeof(float), "texture");
-    textureBuffer->unmap();
+    archive(
+            cereal::make_nvp("width", mDimensions[0]),
+            cereal::make_nvp("height", mDimensions[1]),
+            cereal::make_nvp("depth", mDimensions[2]),
+            cereal::make_nvp("dimensionality", mDimensionality));
+    archive.saveBinaryValue(mData, get_number_of_elements()*sizeof(float), "texture");
 }
 
 

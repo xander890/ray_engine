@@ -16,7 +16,7 @@ bool BSSRDF::on_draw()
 {
 }
 
-void BSSRDF::load(const float relative_ior, const ScatteringMaterialProperties &props)
+void BSSRDF::load(const float, const ScatteringMaterialProperties &)
 {
 }
 

@@ -1,18 +1,29 @@
 #pragma once
 #include "material.h"
 #include <memory>
-#include <cereal/access.hpp>
-#include <cereal/cereal.hpp>
+#include <optix_serialize.h>
+#include "texture.h"
+#include "scattering_material.h"
 
 struct ObjMaterial;
-class ScatteringMaterial;
-class Texture;
+
+namespace cereal
+{
+	template<class Archive>
+	void serialize(Archive &archive, MaterialDataCommon &m)
+	{
+		archive(cereal::make_nvp("illum", m.illum));
+		archive(cereal::make_nvp("relative_ior", m.relative_ior));
+		archive(cereal::make_nvp("shininess", m.shininess));
+		archive(cereal::make_nvp("ior_complex_real_sq", m.ior_complex_real_sq));
+		archive(cereal::make_nvp("ior_complex_imag_sq", m.ior_complex_imag_sq));
+	}
+}
 
 class MaterialHost : public std::enable_shared_from_this<MaterialHost>
 {
 public:
 	MaterialHost(optix::Context& ctx, ObjMaterial& data);
-    ~MaterialHost();
 
 	bool on_draw(std::string id);
     const MaterialDataCommon& get_data(); 
@@ -27,6 +38,7 @@ public:
 	std::shared_ptr<Texture> get_specular_texture() {return textures[2]; }
 
 private:
+	MaterialHost(optix::Context& ctx);
 	bool mHasChanged = true;
     int mMaterialID;
     std::string mMaterialName;
@@ -38,16 +50,29 @@ private:
 
 	friend class cereal::access;
 	template<class Archive>
-	void serialize(Archive & archive)
+	void save(Archive & archive) const
 	{
-		archive(cereal::make_nvp("name", mMaterialName), CEREAL_NVP(mMaterialData.illum), CEREAL_NVP(mMaterialData.relative_ior), CEREAL_NVP(mMaterialData.shininess), CEREAL_NVP(scattering_material));
+		archive(cereal::make_nvp("name", mMaterialName));
+		archive(cereal::make_nvp("material_data", mMaterialData));
+		archive(cereal::make_nvp("scattering_material",scattering_material));
+		archive(cereal::make_nvp("is_emissive", mIsEmissive));
+		archive(cereal::make_nvp("textures", textures));
 	}
-	optix::Context mContext;
 
-	bool first_time_gui = true;
-	optix::float4 ka_gui = optix::make_float4(0, 0, 0, 1);
-	optix::float4 kd_gui = optix::make_float4(0, 0, 0, 1);
-	optix::float4 ks_gui = optix::make_float4(0, 0, 0, 1);
+	static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<MaterialHost> & construct )
+	{
+		construct(archive.get_context());
+		archive(cereal::make_nvp("name", construct->mMaterialName));
+		archive(cereal::make_nvp("material_data", construct->mMaterialData));
+		archive(cereal::make_nvp("scattering_material", construct->scattering_material));
+		archive(cereal::make_nvp("is_emissive", construct->mIsEmissive));
+		archive(cereal::make_nvp("textures", construct->textures));
+		construct->mMaterialData.ambient_map = construct->textures[0]->get_id();
+		construct->mMaterialData.diffuse_map = construct->textures[1]->get_id();
+		construct->mMaterialData.specular_map = construct->textures[2]->get_id();
+	}
+
+	optix::Context mContext;
 	bool mIsEmissive = false;
 };
 

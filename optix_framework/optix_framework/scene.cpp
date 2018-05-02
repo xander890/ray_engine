@@ -38,7 +38,7 @@ Scene::Scene(optix::Context context)
     this->context = context;
     mMeshes.clear();
     scene = context->createGroup();
-    optix::Acceleration acceleration = context->createAcceleration("Bvh");
+    acceleration = context->createAcceleration("Bvh");
     scene->setAcceleration(acceleration);
     acceleration->markDirty();
     scene->setChildCount(0);
@@ -89,7 +89,7 @@ void Scene::trace()
 void Scene::set_method(std::unique_ptr<RenderingMethod> m)
 {
     method = std::move(m);
-    method->init();
+    method->init(context);
     execute_on_scene_elements([=](Object & m)
     {
         m.reload_shader();
@@ -97,15 +97,44 @@ void Scene::set_method(std::unique_ptr<RenderingMethod> m)
     });
 }
 
-int Scene::add_object(std::unique_ptr<Object> object)
+int Scene::add_object(std::shared_ptr<Object> object)
 {
     object->transform_changed_event = std::bind(&Scene::transform_changed, this);
     object->scene = this;
-    mMeshes.push_back(std::shared_ptr<Object>(std::move(object)));
+    mMeshes.push_back(std::shared_ptr<Object>(object));
     scene->addChild(mMeshes.back()->get_dynamic_handle());
     mMeshes.back()->load();
     update_area_lights();
     return mMeshes.size();
+}
+
+int Scene::add_camera(std::shared_ptr<Camera> camera)
+{
+    mCameras.push_back(camera);
+    return mCameras.back()->get_id();
+}
+
+int Scene::add_light(std::shared_ptr<SingularLight> light)
+{
+    light->init(context);
+    mLights.push_back(light);
+    mSingularLightBuffer->setSize(mLights.size());
+    update_singular_lights();
+}
+
+int Scene::add_object(std::unique_ptr<Object> object)
+{
+    return add_object(std::shared_ptr<Object>(std::move(object)));
+}
+
+int Scene::add_camera(std::unique_ptr<Camera> camera)
+{
+    return add_camera(std::shared_ptr<Camera>(std::move(camera)));
+}
+
+int Scene::add_light(std::unique_ptr<SingularLight> light)
+{
+    return add_light(std::shared_ptr<SingularLight>(std::move(light)));
 }
 
 void Scene::transform_changed()
@@ -113,11 +142,7 @@ void Scene::transform_changed()
     scene->getAcceleration()->markDirty();
 }
 
-int Scene::add_camera(std::unique_ptr<Camera> camera)
-{
-    mCameras.push_back(std::move(camera));
-    return mCameras.back()->get_id();
-}
+
 
 void Scene::set_current_camera(int camera_id)
 {
@@ -164,13 +189,7 @@ void Scene::set_miss_program(std::unique_ptr<MissProgram> miss)
     miss_program = std::move(miss);
 }
 
-int Scene::add_light(std::unique_ptr<SingularLight> light)
-{
-    light->init(context);
-    mLights.push_back(std::move(light));
-    mSingularLightBuffer->setSize(mLights.size());
-    update_singular_lights();
-}
+
 
 void Scene::update_area_lights()
 {
@@ -258,5 +277,18 @@ void Scene::remove_light(int light_id)
         mLights.erase(mLights.begin() + light_id);
         update_singular_lights();
     }
+}
+
+Scene::~Scene()
+{
+    mLights.clear();
+    mCameras.clear();
+    mMeshes.clear();
+    scene->destroy();
+    acceleration->destroy();
+    method.reset();
+    miss_program.reset();
+    mAreaLightBuffer->destroy();
+    mSingularLightBuffer->destroy();
 }
 

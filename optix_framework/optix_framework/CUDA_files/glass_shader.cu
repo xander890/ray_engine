@@ -18,10 +18,6 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 
-// Russian roulette variables
-rtDeclareVariable(int, max_splits, , );
-
-
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() { 
     const MaterialDataCommon & material = get_material();

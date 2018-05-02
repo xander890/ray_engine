@@ -42,7 +42,7 @@ public:
   bool handleMoveFunc(int x, int y);
   void handlePassiveMotionFunc(int x, int y);
   void handleResize(int new_xres, int new_yres);
-
+  void setCamera(Camera * ncamera) {camera = ncamera;}
 
 private:
   struct InteractionState {

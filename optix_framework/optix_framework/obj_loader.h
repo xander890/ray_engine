@@ -28,7 +28,7 @@
 #include <area_light.h>
 #include "shader.h"
 #include "mesh.h"
-#include <memory>
+#include "object_host.h"
 
 class MaterialHost;
 
@@ -64,8 +64,8 @@ public:
   
   virtual ~ObjLoader() {} // makes sure CRT objects are destroyed on the correct heap
 	
-  virtual std::vector<std::unique_ptr<Object>> load();
-  virtual std::vector<std::unique_ptr<Object>> load(const optix::Matrix4x4& transform);
+  virtual std::vector<std::unique_ptr<Object>>& load();
+  virtual std::vector<std::unique_ptr<Object>>& load(const optix::Matrix4x4& transform);
 
   virtual optix::Aabb getSceneBBox()const { return m_aabb; }
 
@@ -78,11 +78,11 @@ public:
   }
 
   static std::vector<ObjMaterial> parse_mtl_file(std::string mtl, optix::Context & ctx);
-  static ObjMaterial convert_mat(GLMmaterial& mat, optix::Context ctx);
+  static ObjMaterial convert_mat(std::string folder, GLMmaterial& mat, optix::Context ctx);
 
 protected:
 
-  std::vector<std::unique_ptr<Object>> createGeometryInstances(GLMmodel* model);
+  void createGeometryInstances(GLMmodel* model);
   void loadVertexData( GLMmodel* model, const optix::Matrix4x4& transform );
   void createMaterialParams( GLMmodel* model );
   std::shared_ptr<MaterialHost> getMaterial(unsigned int index);
@@ -100,7 +100,7 @@ protected:
 
   optix::Aabb            m_aabb;
   std::vector<std::shared_ptr<MaterialHost>> m_material_params;
-
+  std::vector<std::unique_ptr<Object>> m_meshes;
 };
 
 

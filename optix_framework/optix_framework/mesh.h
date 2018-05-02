@@ -125,9 +125,7 @@ public:
     optix::Buffer get_bounding_box_buffer() {return mBBoxBuffer; }
 
 private:
-    Geometry() {}
 
-	void load_geometry();
     void create_and_bind_optix_data();
     optix::Program         mIntersectProgram;
     optix::Program         mBoundingboxProgram;
@@ -138,18 +136,19 @@ private:
 
 	friend class cereal::access;
 	// Serialization
-	template<class Archive>
-	void load(Archive & archive)
-	{
-		archive(cereal::make_nvp("name", mMeshName));
-        archive(cereal::make_nvp("data", mMeshData));
-	}
+    static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<Geometry> & construct )
+    {
+        construct(archive.get_context());
+        archive(cereal::make_nvp("name", construct->mMeshName));
+        archive(cereal::make_nvp("geometry", construct->mMeshData));
+        construct->load();
+    }
 
     template<class Archive>
     void save(Archive & archive) const
     {
         archive(cereal::make_nvp("name", mMeshName));
-        archive(cereal::make_nvp("data", mMeshData));
+        archive(cereal::make_nvp("geometry", mMeshData));
     }
 
     int mMeshID;

@@ -21,10 +21,8 @@ void EnvironmentMap::init(optix::Context & ctx)
 
     envmap_deltas = ConfigParameters::get_parameter<float3>("light", "envmap_deltas", make_float3(0), "Rotation offsetof environment map.");
     properties.lightmap_multiplier = make_float3(ConfigParameters::get_parameter<float>("light", "lightmap_multiplier", (1.0f), "Environment map multiplier"));
-    bool is_env = false;
-    is_env = true;
+
     std::string ptx_path = get_path_ptx("env_cameras.cu");
-	envmap_path = Folders::texture_folder + envmap_file;
     environment_sampler = loadTexture(context->getContext(), envmap_path, make_float3(1.0f));
     properties.environment_map_tex_id = environment_sampler->get_id();
     properties.importance_sample_envmap = 1;

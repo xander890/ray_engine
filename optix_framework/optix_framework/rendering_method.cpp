@@ -2,9 +2,3 @@
 #include "material_library.h"
 #include "host_device_common.h"
 
-
-RenderingMethod::RenderingMethod(optix::Context & context) : context(context)
-{
-}
-
-

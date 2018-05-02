@@ -77,7 +77,7 @@ public:
 
 private:
 	optix::Context context;
-	bool debug_mode_enabled = true;
+	bool debug_mode_enabled = false;
 
 	bool collect_images = false;
 	bool show_difference_image = false;
@@ -96,6 +96,7 @@ private:
 
 	std::unique_ptr<ImmediateGUI> gui = nullptr;
 	std::unique_ptr<Scene> mScene;
+	std::unique_ptr<Scene> mNewScene;
 	std::shared_ptr<MaterialHost> material_ketchup;
 
 	void setDebugEnabled(bool var);

@@ -1,4 +1,4 @@
-
+#pragma once
 #include "SampleScene.h"
 #include <memory>
 #include <optix_world.h>
@@ -8,6 +8,7 @@
 class SingularLight
 {
 public:
+    SingularLight();
     virtual void init(optix::Context & context);
     virtual SingularLightData get_data();
     virtual bool on_draw();
@@ -15,11 +16,17 @@ public:
 
 private:
     friend class cereal::access;
-    template<typename Archive>
 
-    void serialize(Archive & archive)
+    void save(cereal::XMLOutputArchiveOptix & archive) const
     {
         archive(cereal::make_nvp("direction", mData->direction), cereal::make_nvp("type", mData->type), cereal::make_nvp("emission", mData->emission), cereal::make_nvp("casts_shadows", mData->casts_shadow));
+    }
+
+    void load(cereal::XMLInputArchiveOptix & archive)
+    {
+        mContext = archive.get_context();
+        archive(cereal::make_nvp("direction", mData->direction), cereal::make_nvp("type", mData->type), cereal::make_nvp("emission", mData->emission), cereal::make_nvp("casts_shadows", mData->casts_shadow));
+        init(mContext);
     }
 
     optix::Context mContext;

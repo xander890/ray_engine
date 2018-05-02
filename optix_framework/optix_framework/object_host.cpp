@@ -12,6 +12,7 @@ Object::Object(optix::Context ctx) : mContext(ctx)
 {
     static int id = 0;
     mMeshID = id++;
+    mReloadMaterials = mReloadShader = mReloadGeometry = true;
 }
 
 void Object::init(const char* name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost> material)
@@ -26,14 +27,7 @@ void Object::init(const char* name, std::unique_ptr<Geometry> geometry, std::sha
         mTransform = std::make_unique<Transform>(mContext);
     }
 
-
-    if (!mMaterialBuffer.get())
-    {
-        mMaterialBuffer = create_buffer<MaterialDataCommon>(mContext);
-    }
-
     set_shader(mMaterialData[0]->get_data().illum);
-    mReloadMaterials = mReloadShader = mReloadGeometry = true;
 }
 
 void Object::load_materials()
@@ -74,6 +68,11 @@ void Object::load_geometry()
 
 void Object::load_shader()
 {
+    if(mShader == nullptr)
+    {
+        set_shader(mMaterialData[0]->get_data().illum);
+    }
+
     if (mReloadShader)
     {
         mShader->initialize_mesh(*this);
@@ -147,6 +146,12 @@ void Object::create_and_bind_optix_data()
     if (!mGeometryGroup)
     {
         mGeometryGroup = mContext->createGeometryGroup();
+        bind = true;
+    }
+
+    if (!mMaterialBuffer.get())
+    {
+        mMaterialBuffer = create_buffer<MaterialDataCommon>(mContext);
         bind = true;
     }
 
@@ -250,6 +255,7 @@ void Object::reload_material()
 Object::~Object()
 {
     mGeometry.reset();
+    mShader->tear_down_mesh(*this);
     mMaterial->destroy();
     mShader.reset();
     mTransform.reset();

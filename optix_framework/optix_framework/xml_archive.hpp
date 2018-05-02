@@ -412,7 +412,7 @@ namespace cereal
           itsNodes.emplace( root );
       }
 
-       optix::Context get_context() {return mContext;}
+       optix::Context &get_context() {return mContext;}
 
       ~XMLInputArchiveOptix() CEREAL_NOEXCEPT = default;
 

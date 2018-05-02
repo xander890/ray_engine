@@ -32,12 +32,11 @@ enum DefaultScatteringMaterial
     Count = 17
 };
 
-
 class ScatteringMaterial
 {
 public:
 
-    ScatteringMaterial(optix::float3 absorption, optix::float3 scattering, optix::float3 meancosine, float scale = 1.0f, const char * name = "");
+    ScatteringMaterial(optix::float3 absorption = optix::make_float3(0.5f), optix::float3 scattering = optix::make_float3(0.5f), optix::float3 meancosine = optix::make_float3(0.0), float scale = 1.0f, const char * name = "");
 	ScatteringMaterial(DefaultScatteringMaterial material, float prop_scale = 1.0f);
 
     ScatteringMaterial& operator=(const ScatteringMaterial& cp);

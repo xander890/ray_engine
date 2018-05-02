@@ -2,7 +2,8 @@
 #include "material_library.h"
 #include "optical_helper.h"
 
-void SimpleTracing::init()
-{
 
+void SimpleTracing::init(optix::Context &ctx)
+{
+    RenderingMethod::init(ctx);
 }

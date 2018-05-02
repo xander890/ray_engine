@@ -31,3 +31,5 @@ RT_PROGRAM void attribute_closest_hit()
 	prd_attr.depth = t_hit;
 	prd_attr.normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 }
+
+RT_PROGRAM void empty() {}

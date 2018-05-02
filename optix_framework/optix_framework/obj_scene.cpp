@@ -150,6 +150,7 @@ bool ObjScene::draw_gui()
 	if(ImmediateGUIDraw::Button("Serialize"))
 	{
 		serialize_scene();
+        changed = true;
 	}
 
 	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
@@ -311,14 +312,22 @@ bool ObjScene::draw_gui()
 
 void ObjScene::serialize_scene()
 {
+    Logger::info << "Serializing..." << std::endl;
     std::stringstream ss;
     {
-        cereal::XMLOutputArchive output_archive(ss);
+        cereal::XMLOutputArchiveOptix output_archive(ss);
         output_archive(mScene);
     }
     std::ofstream test("text.xml", std::ofstream::out);
     test << ss.str();
     test.close();
+    Logger::info << "Reloading..." << std::endl;
+    std::ifstream testopen("text.xml", std::ofstream::in);
+    {
+        cereal::XMLInputArchiveOptix input_archive(context, testopen);
+        input_archive(mNewScene);
+    }
+    mScene = std::move(mNewScene);
 }
 
 
@@ -344,12 +353,10 @@ void ObjScene::create_3d_noise(float frequency)
 
 void ObjScene::initialize_scene(GLFWwindow *)
 {
-
 	Logger::info << "Initializing scene." << endl;
 	context->setPrintBufferSize(2000);
 	setDebugEnabled(debug_mode_enabled);
 	context->setPrintLaunchIndex(407,56);
-
     mScene = std::make_unique<Scene>(context);
 	Folders::init();
 	MaterialLibrary::load(Folders::mpml_file.c_str());
@@ -360,7 +367,6 @@ void ObjScene::initialize_scene(GLFWwindow *)
 		auto v = ObjLoader::parse_mtl_file(override_mat, context);
 		MaterialHost::set_default_material(v[0]);
 	}
-
 
     CameraParameters params;
     unsigned int camera_width = ConfigParameters::get_parameter<unsigned int>("camera", "window_width", 512, "The width of the window");
@@ -413,9 +419,6 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	context["bad_color"]->setFloat(0.0f, 1.0f, 0.0f);
     context["bg_color"]->setFloat(0.3f, 0.3f, 0.3f);
 	
-	bool use_abs = ConfigParameters::get_parameter<bool>("config", "use_absorption", true, "Use absorption in rendering.");
-	Logger::debug << "Absorption is " << (use_abs ? "ON" : "OFF") << endl;
-
 	// Tone mapping pass
 	rendering_output_buffer = createPBOOutputBuffer("output_buffer", RT_FORMAT_FLOAT4, RT_BUFFER_INPUT_OUTPUT, camera->get_width(), camera->get_height());
 	tonemap_output_buffer = createPBOOutputBuffer("tonemap_output_buffer", RT_FORMAT_UNSIGNED_BYTE4, RT_BUFFER_INPUT_OUTPUT, camera->get_width(), camera->get_height());
@@ -437,10 +440,10 @@ void ObjScene::initialize_scene(GLFWwindow *)
 		// Load OBJ scene
 		Logger::info <<"Loading obj " << filenames[i]  << "..." <<endl;
 		ObjLoader* loader = new ObjLoader((Folders::data_folder + filenames[i]).c_str(), context);
-        vector<std::unique_ptr<Object>> v = loader->load();
-		for (auto& c : v)
+        std::vector<std::unique_ptr<Object>>& v = loader->load(optix::Matrix4x4::identity());
+		for (int i = 0; i < v.size(); i++)
 		{
-            mScene->add_object(std::move(c));
+             mScene->add_object(std::move(v[i]));
 		}
 
 	    m_scene_bounding_box.include(loader->getSceneBBox());
@@ -557,11 +560,6 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	context["max_depth"]->setInt(ConfigParameters::get_parameter<int>("config", "max_depth", 5, "Maximum recursion depth of the raytracer"));
 	reset_renderer();
     Logger::info<<"Scene initialized."<<endl;
-	 //std::stringstream ss;
-	 //cereal::JSONOutputArchive archive(ss);
-	 //archive(*mMeshes[0]);
-	 //Logger::info << ss.str() << std::endl;
-	//Logger::set_logger_output(console_log);
 
 
 }
@@ -814,8 +812,15 @@ void ObjScene::set_miss_program(BackgroundType::EnumType program)
 	{
 	case BackgroundType::ENVIRONMENT_MAP:
 	{
-        string env_map_name = "summer_road2.hdr";
-        miss_program = std::make_unique<EnvironmentMap>(env_map_name);
+        std::string path;
+        if(Dialogs::openFileDialog(path))
+        {
+            miss_program = std::make_unique<EnvironmentMap>(path);
+        }
+        else
+        {
+            return;
+        }
 	}
     break;
 	case BackgroundType::SKY_MODEL:
@@ -838,13 +843,13 @@ void ObjScene::set_rendering_method(RenderingMethodType::EnumType t)
 	switch (t)
 	{
 	case RenderingMethodType::RECURSIVE_RAY_TRACING:
-		m = std::make_unique<SimpleTracing>(context);
+		m = std::make_unique<SimpleTracing>();
 		break;
 	case RenderingMethodType::AMBIENT_OCCLUSION:
-		m = std::make_unique<AmbientOcclusion>(context);
+		m = std::make_unique<AmbientOcclusion>();
 		break;
 	case RenderingMethodType::PATH_TRACING:
-		m = std::make_unique<PathTracing>(context);
+		m = std::make_unique<PathTracing>();
 		break;
 	default:
 		Logger::error<<"The selected rendering method is not valid or no longer supported."<< endl;

@@ -9,7 +9,7 @@
 class EnvironmentMap : public MissProgram
 {
 public:
-    EnvironmentMap(std::string envmap_file = "") : envmap_file(envmap_file),
+    EnvironmentMap(std::string envmap_file = "") : envmap_path(envmap_file),
                                               camera_1(0), camera_2(0), camera_3(0)
 	{
 	}
@@ -30,7 +30,6 @@ private:
     optix::Context context;
     optix::Buffer property_buffer;
     optix::Buffer sampling_property_buffer;
-    std::string envmap_file;
     int camera_1, camera_2, camera_3;
 	std::string envmap_path;
 

@@ -69,25 +69,31 @@ private:
     float3 eye, lookat, up;
 
 	friend class cereal::access;
-    template<class Archive>
-    void load(Archive & archive)
-    {
-        archive(cereal::make_nvp("name", name));
-        archive(cereal::make_nvp("parameters", parameters));
-        archive(cereal::make_nvp("eye", eye));
-        archive(cereal::make_nvp("lookat", lookat));
-        archive(cereal::make_nvp("up", up));
-    }
 
     template<class Archive>
     void save(Archive & archive) const
     {
         archive(cereal::make_nvp("name", name));
-        archive(cereal::make_nvp("parameters", parameters));
+        archive(cereal::make_nvp("parameters", *parameters));
         archive(cereal::make_nvp("eye", eye));
         archive(cereal::make_nvp("lookat", lookat));
         archive(cereal::make_nvp("up", up));
     }
+
+    static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<Camera> & construct )
+    {
+        std::string name;
+        CameraParameters parameters;
+        optix::float3 eye,lookat,up;
+        archive(cereal::make_nvp("name", name));
+        archive(cereal::make_nvp("parameters", parameters));
+        archive(cereal::make_nvp("eye", eye));
+        archive(cereal::make_nvp("lookat", lookat));
+        archive(cereal::make_nvp("up", up));
+        optix::Context ctx = archive.get_context();
+        construct(ctx, parameters, name, eye, lookat, up);
+    }
+
     optix::Context mContext;
 };
 

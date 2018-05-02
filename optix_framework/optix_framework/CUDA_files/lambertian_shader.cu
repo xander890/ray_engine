@@ -30,8 +30,6 @@ rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
 // Monte carlo variables
 rtDeclareVariable(unsigned int, N, , );
-rtDeclareVariable(int, max_splits, , );
-rtDeclareVariable(int, use_split, , );
 
 
 rtDeclareVariable(float3, eye, , );

@@ -27,12 +27,16 @@ bool findAndReturnMaterial(const std::string name, ScatteringMaterial & s)
 
 bool MaterialHost::on_draw(std::string id = "")
 {
+	static bool first_time_gui = true;
+
 	bool changed = false;
 	std::string myid = id + "Material" + std::to_string(mMaterialID);
 	std::string newgroup = mMaterialName + " (ID: " + std::to_string(mMaterialID) + ") ##" + myid;
 	if (ImmediateGUIDraw::TreeNode(newgroup.c_str()))
 	{
-
+		static optix::float4 ka_gui = optix::make_float4(0, 0, 0, 1);
+		static optix::float4 kd_gui = optix::make_float4(0, 0, 0, 1);
+		static optix::float4 ks_gui = optix::make_float4(0, 0, 0, 1);
 		if (first_time_gui)
 		{
 			get_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
@@ -98,7 +102,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 
 	mMaterialName = data->name;
 	std::transform(mMaterialName.begin(), mMaterialName.end(), mMaterialName.begin(), ::tolower);	
-    static int id;
+    static int id = 0;
     mMaterialID = id++;
 
 	mMaterialData.ambient_map = data->ambient_tex->get_id();
@@ -110,6 +114,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 	textures.push_back(std::move(mat.ambient_tex));
 	textures.push_back(std::move(mat.diffuse_tex));
 	textures.push_back(std::move(mat.specular_tex));
+
 	if (is_valid_material(*data))
 	{
 		Logger::info << mMaterialName << " is a valid obj material. Using obj parameters. " << std::endl;
@@ -166,7 +171,6 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 	mIsEmissive = mat.is_emissive;
 }
 
-MaterialHost::~MaterialHost() = default;
 
 const MaterialDataCommon& MaterialHost::get_data()
 {
@@ -195,4 +199,9 @@ void MaterialHost::set_default_material(ObjMaterial mat)
 bool MaterialHost::is_emissive()
 {
     return mIsEmissive;
+}
+
+MaterialHost::MaterialHost(optix::Context &ctx)
+{
+	mContext = ctx;
 }

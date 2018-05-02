@@ -54,7 +54,6 @@ public:
     optix::Material mMaterial = nullptr;
 
 private:
-    Object() {}
 
     void load_materials();
     void load_geometry();
@@ -64,19 +63,24 @@ private:
 
     friend class cereal::access;
     // Serialization
-    template<class Archive>
-    void load(Archive & archive)
+    static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<Object> & construct )
     {
-        archive(cereal::make_nvp("name", mMeshName));
-        //archive(cereal::make_nvp("data", mMeshData));
-        //archive(cereal::make_nvp("materials",mMaterialData));
+        construct(archive.get_context());
+        archive(cereal::make_nvp("name", construct->mMeshName));
+        archive(cereal::make_nvp("geometry", construct->mGeometry));
+        archive(cereal::make_nvp("transform", construct->mTransform));
+        archive(cereal::make_nvp("materials",construct->mMaterialData));
+        construct->create_and_bind_optix_data();
+        construct->set_shader(construct->mMaterialData[0]->get_data().illum);
+        construct->mReloadMaterials = construct->mReloadShader = construct->mReloadGeometry = true;
     }
 
     template<class Archive>
     void save(Archive & archive) const
     {
         archive(cereal::make_nvp("name", mMeshName));
-        //archive(cereal::make_nvp("data", mMeshData));
+        archive(cereal::make_nvp("geometry", mGeometry));
+        archive(cereal::make_nvp("transform", mTransform));
         archive(cereal::make_nvp("materials",mMaterialData));
     }
 
