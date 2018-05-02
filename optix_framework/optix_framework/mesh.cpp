@@ -54,6 +54,7 @@ void Geometry::load_geometry()
     mGeometry["tindex_buffer"]->setBuffer(mMeshData.mTIbuffer);
     mGeometry["num_triangles"]->setUint(mMeshData.mNumTriangles);
     mGeometry->markDirty();
+    initialize_buffer<optix::Aabb>(mBBoxBuffer, mMeshData.mBoundingBox);
 	mReloadGeometry = false;
 }
 
@@ -95,4 +96,19 @@ void Geometry::get_flattened_vertices(std::vector<optix::float3> &triangles)
 
     mMeshData.mVbuffer->unmap();
     mMeshData.mVIbuffer->unmap();
+}
+
+Geometry::~Geometry()
+{
+    mIntersectProgram->destroy();
+    mBoundingboxProgram->destroy();
+    mBBoxBuffer->destroy();
+    // FIXME
+    //mMeshData.mVbuffer->destroy();
+    mMeshData.mVIbuffer->destroy();
+    //mMeshData.mNbuffer->destroy();
+    mMeshData.mNIbuffer->destroy();
+    //mMeshData.mTBuffer->destroy();
+    mMeshData.mTIbuffer->destroy();
+    mGeometry->destroy();
 }

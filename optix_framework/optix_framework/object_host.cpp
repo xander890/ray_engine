@@ -26,25 +26,10 @@ void Object::init(const char* name, std::unique_ptr<Geometry> geometry, std::sha
         mTransform = std::make_unique<Transform>(mContext);
     }
 
-    // Load triangle_mesh programs
-    if (!mIntersectProgram.get()) {
-        std::string path = get_path_ptx("triangle_mesh.cu");
-        mIntersectProgram = mContext->createProgramFromPTXFile(path, "mesh_intersect");
-    }
-
-    if (!mBoundingboxProgram.get()) {
-        std::string path = get_path_ptx("triangle_mesh.cu");
-        mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "mesh_bounds");
-    }
 
     if (!mMaterialBuffer.get())
     {
         mMaterialBuffer = create_buffer<MaterialDataCommon>(mContext);
-    }
-
-    if (!mBBoxBuffer.get())
-    {
-        mBBoxBuffer = create_buffer<optix::Aabb>(mContext);
     }
 
     set_shader(mMaterialData[0]->get_data().illum);
@@ -80,7 +65,7 @@ void Object::load_geometry()
         return;
     create_and_bind_optix_data();
 
-    BufPtr<optix::Aabb> bptr = BufPtr<optix::Aabb>(mBBoxBuffer->getId());
+    BufPtr<optix::Aabb> bptr = BufPtr<optix::Aabb>(mGeometry->get_bounding_box_buffer()->getId());
     mGeometryInstance["local_bounding_box"]->setUserData(sizeof(BufPtr<optix::Aabb>), &bptr);
     mGeometryInstance["current_geometry_node"]->set(mTransform->get_transform());
     mGeometry->load();
@@ -172,13 +157,13 @@ void Object::create_and_bind_optix_data()
         mGeometryInstance->setMaterialCount(1);
         mGeometryInstance->setMaterial(0, mMaterial);
 
-        optix::Acceleration acceleration = mContext->createAcceleration(std::string("Trbvh"));
-        acceleration->setProperty("refit", "0");
-        acceleration->setProperty("vertex_buffer_name", "vertex_buffer");
-        acceleration->setProperty("index_buffer_name", "vindex_buffer");
+        mAcceleration = mContext->createAcceleration(std::string("Trbvh"));
+        mAcceleration->setProperty("refit", "0");
+        mAcceleration->setProperty("vertex_buffer_name", "vertex_buffer");
+        mAcceleration->setProperty("index_buffer_name", "vindex_buffer");
 
-        mGeometryGroup->setAcceleration(acceleration);
-        acceleration->markDirty();
+        mGeometryGroup->setAcceleration(mAcceleration);
+        mAcceleration->markDirty();
         mGeometryGroup->setChild(0, mGeometryInstance);
 
         mTransform->get_transform()->setChild(mGeometryGroup);
@@ -260,4 +245,20 @@ void Object::post_trace()
 void Object::reload_material()
 {
     mReloadMaterials = true;
+}
+
+Object::~Object()
+{
+    mGeometry.reset();
+    mMaterial->destroy();
+    mShader.reset();
+    mTransform.reset();
+    for(auto & m : mMaterialData)
+    {
+        m.reset();
+    }
+    mGeometryInstance->destroy();
+    mGeometryGroup->destroy();
+    mAcceleration->destroy();
+    mMaterialBuffer->destroy();
 }

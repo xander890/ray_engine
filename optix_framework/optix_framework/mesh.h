@@ -109,6 +109,7 @@ class Geometry
 {
 public:
     explicit Geometry(optix::Context ctx);
+    ~Geometry();
 
     void init(const char* name, MeshData meshdata);
 
@@ -121,18 +122,17 @@ public:
     optix::Geometry get_geometry() { return mGeometry; }
 
     void get_flattened_vertices(std::vector<optix::float3> & triangles);
+    optix::Buffer get_bounding_box_buffer() {return mBBoxBuffer; }
 
 private:
     Geometry() {}
 
 	void load_geometry();
-
     void create_and_bind_optix_data();
     optix::Program         mIntersectProgram;
     optix::Program         mBoundingboxProgram;
     optix::Buffer          mBBoxBuffer;
     std::string            mMeshName;
-
 
 	bool mReloadGeometry = true;
 

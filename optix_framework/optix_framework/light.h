@@ -51,8 +51,6 @@ void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal
     radiance = V * l.emission / atten;
     radiance *= singular_light_size(); // Pdf of choosing one of the lights.
     casts_shadows = l.casts_shadow;
-
-    optix_print("Singular light evaluation V %f \n", V);
 }
 
 __forceinline__ __device__
@@ -86,7 +84,18 @@ __device__ __inline__ void evaluate_direct_light(const float3& hit_point, const 
     if(singular_light_size() == 0)
         singular_probability = 0.0f;
 
-    area_probability /= area_probability + singular_probability;
+    float joint = area_probability + singular_probability;
+
+    if(joint == 0.0f)
+    {
+        radiance = make_float3(0.0f);
+        wi = normal;
+        casts_shadows = 1;
+        light_index = 0;
+        return;
+    }
+
+    area_probability /= joint;
 
     if(sampler->next1D() < area_probability)
     {

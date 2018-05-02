@@ -6,6 +6,7 @@
 #include <vector>
 #include <host_device_common.h>
 #include <optix_serialize.h>
+#include "scene_gui.h"
 
 class RenderingMethod;
 class Object;
@@ -17,6 +18,7 @@ class Scene
 {
 public:
     Scene(optix::Context context);
+
     void execute_on_scene_elements(std::function<void(Object&)> operation);
 
     void reload();
@@ -34,6 +36,10 @@ public:
     int add_object(std::unique_ptr<Object> object);
     int add_camera(std::unique_ptr<Camera> camera);
     int add_light(std::unique_ptr<SingularLight> light);
+    void remove_object(int object_id);
+    void remove_camera(int camera_id);
+    void remove_light(int light_id);
+
 
     void set_current_camera(int camera_id);
     void set_current_camera(std::unique_ptr<Camera> camera);
@@ -65,5 +71,8 @@ private:
         archive(CEREAL_NVP(mCameras));
         archive(CEREAL_NVP(mMeshes));
     }
+
+    friend class SceneGUI;
+    std::unique_ptr<SceneGUI> mGUI = nullptr;
 };
 

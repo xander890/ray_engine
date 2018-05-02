@@ -15,6 +15,7 @@
 #include "light_host.h"
 #include "area_light.h"
 #include "texture.h"
+#include "scene_gui.h"
 
 void Scene::execute_on_scene_elements(std::function<void(Object&)> operation)
 {
@@ -48,45 +49,12 @@ Scene::Scene(optix::Context context)
 
     mAreaLightBuffer = create_buffer<TriangleLight>(context, RT_BUFFER_INPUT, 0);
     mSingularLightBuffer = create_buffer<SingularLightData>(context, RT_BUFFER_INPUT, 0);
+    mGUI = std::make_unique<SceneGUI>();
 }
 
 bool Scene::on_draw()
 {
-    bool changed = false;
-
-    if (ImmediateGUIDraw::CollapsingHeader("Meshes"))
-    {
-        execute_on_scene_elements([&](Object &m)
-        {
-            changed |= m.on_draw();
-        });
-    }
-
-    if (ImmediateGUIDraw::CollapsingHeader("Camera"))
-    {
-        changed |= mCurrentCamera->on_draw();
-    }
-
-    if (ImmediateGUIDraw::CollapsingHeader("Background"))
-    {
-        changed |= miss_program->on_draw();
-    }
-
-    if (ImmediateGUIDraw::CollapsingHeader("Lights"))
-    {
-        if(ImmediateGUIDraw::Button("Add light"))
-        {
-            changed = true;
-            std::unique_ptr<SingularLight> l = std::make_unique<SingularLight>();
-            add_light(std::move(l));
-        }
-        for(auto & l : mLights)
-        {
-            changed |= l->on_draw();
-        }
-    }
-
-    return changed;
+    return mGUI->on_draw(this);
 }
 
 
@@ -257,5 +225,38 @@ void Scene::update_singular_lights()
     }
     mSingularLightBuffer->unmap();
     context["singular_lights"]->setBuffer(mSingularLightBuffer);
+}
+
+void Scene::remove_object(int object_id)
+{
+    if(object_id >= 0 && object_id < mMeshes.size())
+    {
+        scene->removeChild(mMeshes[object_id]->get_dynamic_handle());
+        mMeshes.erase(mMeshes.begin() + object_id);
+        scene->getAcceleration()->markDirty();
+        for(auto & m : mMeshes)
+        {
+            m->mAcceleration->markDirty();
+            m->mGeometry->get_geometry()->markDirty();
+        }
+        update_area_lights();
+    }
+}
+
+void Scene::remove_camera(int camera_id)
+{
+    if(camera_id >= 0 && camera_id < mCameras.size())
+    {
+        mCameras.erase(mCameras.begin() + camera_id);
+    }
+}
+
+void Scene::remove_light(int light_id)
+{
+    if(light_id >= 0 && light_id < mLights.size())
+    {
+        mLights.erase(mLights.begin() + light_id);
+        update_singular_lights();
+    }
 }
 

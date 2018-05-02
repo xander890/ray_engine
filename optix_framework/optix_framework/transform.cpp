@@ -1,7 +1,10 @@
 #include "transform.h"
 #include "immediate_gui.h"
 
-Transform::~Transform() = default;
+Transform::~Transform()
+{
+	mTransform->destroy();
+}
 
 optix::Matrix4x4 Transform::get_matrix()
 {

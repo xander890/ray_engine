@@ -64,8 +64,6 @@ public:
   
   virtual ~ObjLoader() {} // makes sure CRT objects are destroyed on the correct heap
 	
-  virtual void setIntersectProgram( optix::Program program );
-  virtual void setBboxProgram(optix::Program program);
   virtual std::vector<std::unique_ptr<Object>> load();
   virtual std::vector<std::unique_ptr<Object>> load(const optix::Matrix4x4& transform);
 
@@ -94,14 +92,12 @@ protected:
   //void extractAreaLights(const GLMmodel * model, const optix::Matrix4x4 & transform, unsigned int & num_light, std::vector<TriangleLight> & lights);
 
   std::vector<TriangleLight> m_lights;
-  std::string            m_pathname;
   std::string            m_filename;
   optix::Context         m_context;
   optix::Buffer          m_vbuffer;
   optix::Buffer          m_nbuffer;
   optix::Buffer          m_tbuffer;
 
-  optix::Buffer          m_light_buffer;
   optix::Aabb            m_aabb;
   std::vector<std::shared_ptr<MaterialHost>> m_material_params;
 

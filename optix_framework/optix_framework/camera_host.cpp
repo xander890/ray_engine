@@ -79,14 +79,20 @@ Matrix4x4 initWithBasis( const float3& u,
 bool Camera::on_draw()
 {
 	bool changed = false;
-	if (ImmediateGUIDraw::CollapsingHeader("Camera"))
-	{
-		ImmediateGUIDraw::InputFloat3("Camera eye", (float*)&eye, -1, ImGuiInputTextFlags_ReadOnly);
-		ImmediateGUIDraw::InputFloat3("Camera U", (float*)&data->U, -1, ImGuiInputTextFlags_ReadOnly);
-		ImmediateGUIDraw::InputFloat3("Camera V", (float*)&data->V, -1, ImGuiInputTextFlags_ReadOnly);
-		ImmediateGUIDraw::InputFloat3("Camera W", (float*)&data->W, -1, ImGuiInputTextFlags_ReadOnly);
-		changed |= ImmediateGUIDraw::InputInt4("Render Bounds", (int*)&data->render_bounds);
-	}
+    static char buf[64] = "";
+    strcpy(buf, name.c_str());
+    if(ImmediateGUIDraw::InputText("Name", buf, 64))
+    {
+        name = std::string(buf);
+    }
+    changed |= ImmediateGUIDraw::InputFloat3("Camera eye", &eye.x, -1);
+    changed |= ImmediateGUIDraw::InputFloat3("Look at", &lookat.x, -1);
+    changed |= ImmediateGUIDraw::InputFloat3("Up", &up.x, -1);
+    changed |= ImmediateGUIDraw::InputInt4("Render Bounds", (int*)&data->render_bounds.x);
+
+    if(changed)
+        setup();
+
 	return changed;
 }
 
@@ -107,6 +113,7 @@ void Camera::init()
 	mContext->setExceptionProgram(entry_point, mContext->createProgramFromPTXFile(ptx_path, "exception"));
 
 	data = std::make_unique<CameraData>();
+    name = "camera_" + std::to_string(entry_point);
 }
 
 
@@ -224,13 +231,15 @@ void Camera::transform( const Matrix4x4& trans )
 	setup();
 }
 
-Camera::Camera(optix::Context &context, CameraParameters parameters, float3 eye, float3 lookat, float3 up):
+Camera::Camera(optix::Context &context, CameraParameters parameters, const std::string& mname, float3 eye, float3 lookat, float3 up):
         eye(eye),
 		lookat(lookat)
 		, up(up)
 		, mContext(context)
 {
 	init();
+    if(mname != "")
+        name = mname;
 	setParameters(parameters);
     setup();
 }

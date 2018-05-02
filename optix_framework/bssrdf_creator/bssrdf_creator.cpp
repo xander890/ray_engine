@@ -360,8 +360,6 @@ void BSSRDFRendererModel::load_data()
 	mBSSRDF->load(1.1f, *cc);
 	auto type = mBSSRDF->get_type();
 	context["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &type);
-
-
 	mProperties->unmap();
 }
 

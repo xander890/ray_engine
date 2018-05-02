@@ -20,12 +20,9 @@ class Object
 public:
     friend class Scene;
     explicit Object(optix::Context ctx);
+    ~Object();
 
     void init(const char* name, std::unique_ptr<Geometry> geom, std::shared_ptr<MaterialHost> material);
-
-    std::shared_ptr<Geometry> mGeometry;
-    optix::Context  mContext;
-    optix::Material mMaterial = nullptr;
 
     void reload_shader();
     void reload_material();
@@ -42,6 +39,8 @@ public:
     void pre_trace();
     void post_trace();
 
+    std::shared_ptr<Geometry> get_geometry() { return mGeometry; }
+
     optix::GeometryInstance get_geometry_instance() { return mGeometryInstance;  }
     optix::GeometryGroup get_static_handle() { return mGeometryGroup; }
     optix::Transform get_dynamic_handle() { return mTransform->get_transform(); }
@@ -50,32 +49,18 @@ public:
     TransformChangedDelegate transform_changed_event = nullptr;
 
     const Scene& get_scene() const { return *scene; }
+    const std::string& get_name() { return mMeshName; }
 
+    optix::Material mMaterial = nullptr;
 
 private:
     Object() {}
-    optix::GeometryInstance mGeometryInstance = nullptr;
-    optix::GeometryGroup mGeometryGroup = nullptr;
-
-    std::unique_ptr<Shader> mShader;
-    std::unique_ptr<Transform> mTransform;
 
     void load_materials();
     void load_geometry();
     void load_shader();
     void load_transform();
-
-    std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
     void create_and_bind_optix_data();
-    optix::Program         mIntersectProgram;
-    optix::Program         mBoundingboxProgram;
-    optix::Buffer          mMaterialBuffer;
-    optix::Buffer          mBBoxBuffer;
-    std::string            mMeshName;
-
-    bool mReloadShader = true;
-    bool mReloadGeometry = true;
-    bool mReloadMaterials = true;
 
     friend class cereal::access;
     // Serialization
@@ -98,4 +83,21 @@ private:
     int mMeshID;
     Scene* scene;
     friend class Scene;
+
+    optix::GeometryInstance mGeometryInstance = nullptr;
+    optix::GeometryGroup mGeometryGroup = nullptr;
+    optix::Acceleration mAcceleration = nullptr;
+
+    std::shared_ptr<Geometry> mGeometry;
+    optix::Context  mContext;
+    std::unique_ptr<Shader> mShader;
+    std::unique_ptr<Transform> mTransform;
+    std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
+    optix::Buffer          mMaterialBuffer;
+    std::string            mMeshName;
+
+    bool mReloadShader = true;
+    bool mReloadGeometry = true;
+    bool mReloadMaterials = true;
+
 };

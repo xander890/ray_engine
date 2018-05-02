@@ -74,22 +74,12 @@ ObjLoader::ObjLoader( const char* filename,
   m_aabb(),
   m_lights()
 {
-  m_pathname = m_filename.substr(0,m_filename.find_last_of("/\\")+1);
+  //m_pathname = m_filename.substr(0,m_filename.find_last_of("/\\")+1);
 }
 
 std::vector<std::unique_ptr<Object>> ObjLoader::load()
 {
    return load( optix::Matrix4x4::identity() );
-}
-
-void ObjLoader::setIntersectProgram( optix::Program intersect_program )
-{
- // m_intersect_program = intersect_program;
-}
-
-void ObjLoader::setBboxProgram( optix::Program bbox_program )
-{
- // m_bbox_program = bbox_program;
 }
 
 std::vector<std::unique_ptr<Object>> ObjLoader::load(const optix::Matrix4x4& transform)

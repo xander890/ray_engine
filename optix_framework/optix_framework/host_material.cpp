@@ -110,7 +110,6 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 	textures.push_back(std::move(mat.ambient_tex));
 	textures.push_back(std::move(mat.diffuse_tex));
 	textures.push_back(std::move(mat.specular_tex));
-
 	if (is_valid_material(*data))
 	{
 		Logger::info << mMaterialName << " is a valid obj material. Using obj parameters. " << std::endl;

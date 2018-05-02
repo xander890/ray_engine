@@ -77,7 +77,7 @@ public:
 
 private:
 	optix::Context context;
-	bool debug_mode_enabled = false;
+	bool debug_mode_enabled = true;
 
 	bool collect_images = false;
 	bool show_difference_image = false;

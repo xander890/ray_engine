@@ -41,7 +41,7 @@ public:
 	std::unique_ptr<CameraData> data;
     std::unique_ptr<CameraParameters> parameters;
 
-    Camera(optix::Context & context, CameraParameters parameters, float3 eye = optix::make_float3(0), float3 lookat= optix::make_float3(1,0,0), float3 up = optix::make_float3(0,1,0));
+    Camera(optix::Context & context, CameraParameters parameters, const std::string& name = "", float3 eye = optix::make_float3(0), float3 lookat= optix::make_float3(1,0,0), float3 up = optix::make_float3(0,1,0));
 
     void setup();
     void getEyeUVW(float3& eye, float3& U, float3& V, float3& W);
@@ -61,7 +61,8 @@ public:
 
 	unsigned int get_entry_point() const { return entry_point; }
 
-private:	
+private:
+    std::string name;
 	unsigned int entry_point;
     void init();
 
@@ -71,6 +72,7 @@ private:
     template<class Archive>
     void load(Archive & archive)
     {
+        archive(cereal::make_nvp("name", name));
         archive(cereal::make_nvp("parameters", parameters));
         archive(cereal::make_nvp("eye", eye));
         archive(cereal::make_nvp("lookat", lookat));
@@ -80,6 +82,7 @@ private:
     template<class Archive>
     void save(Archive & archive) const
     {
+        archive(cereal::make_nvp("name", name));
         archive(cereal::make_nvp("parameters", parameters));
         archive(cereal::make_nvp("eye", eye));
         archive(cereal::make_nvp("lookat", lookat));
