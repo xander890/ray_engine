@@ -1,40 +1,30 @@
 #ifndef glossy_h__
 #define glossy_h__
 #include "shader.h"
+#include "brdf_host.h"
 
 struct MERLBrdf
 {
-    std::vector<float> data;
-    optix::float3 reflectance;
     std::string name;
 };
 
-class GlossyShader : public Shader
+class BRDFShader : public Shader
 {
 public:
-    virtual ~GlossyShader() = default;
-    GlossyShader(const ShaderInfo& shader_info) : Shader(shader_info) {}
-	GlossyShader(const GlossyShader &) = default;
+    virtual ~BRDFShader() = default;
+    BRDFShader(const ShaderInfo& shader_info) : Shader(shader_info) {}
+	BRDFShader(const BRDFShader &) = default;
 
     void initialize_shader(optix::Context context) override;
     
     void initialize_mesh(Object & object) override;
     void pre_trace_mesh(Object & object) override;
-	virtual Shader* clone() override { return new GlossyShader(*this); }
+	virtual Shader* clone() override { return new BRDFShader(*this); }
+    bool on_draw() override;
 
 private:
-    void set_data(Object& object);
-	// FIXME proper struct & copy constructor
-	float blinn_exponent;
-    optix::float2 anisotropic_exp;
-	optix::float3 x_axis_anisotropic;
-
-	// FIXME move me somewhere elses
-	std::vector<std::string> brdf_names;
-	std::string merl_folder;
-	std::map<std::string, MERLBrdf> merl_database;
-	optix::float3 merl_correction;
-    bool use_merl_brdf;
+    // FIXME proper duplication.
+    std::shared_ptr<BRDF> mBRDF;
 };
 
 

@@ -28,11 +28,28 @@ class RenderingMethod;
 struct MPMLMedium;
 class Camera;
 
+struct RayTracerParameters
+{
+    size_t print_buffer_size = 2000;
+    optix::int2 print_index = optix::make_int2(407, 56);
+    bool debug_enabled = false;
+    size_t stack_size = 30000;
+    optix::float3 exception_color = optix::make_float3(0,0,1);
+    int max_depth = 10;
+    float scene_epsilon_fraction = 1e-4f;
+    bool use_auto_camera = true;
+};
+
+struct TonemapParameters
+{
+	float exponent = 1.8f, multiplier = 1.0f;
+};
+
 class ObjScene : public SampleScene
 {
 public:
 
-	ObjScene(const std::vector<std::string>& obj_filenames, optix::int4 rendering_r = optix::make_int4(-1));
+	ObjScene(const std::vector<std::string>& filenames);
 	ObjScene();
 
 	virtual ~ObjScene();
@@ -52,7 +69,6 @@ public:
 	void initialize_scene(GLFWwindow * window) override;
 	void trace() override;
 
-
 	void collect_image(unsigned int frame) const;
 	bool key_pressed(int key, int x, int y) override;
 	optix::Buffer get_output_buffer() override;
@@ -70,21 +86,16 @@ public:
 
 	void set_render_task(std::unique_ptr<RenderTask>& task);
 
-	std::string override_mat = "";
-	void add_override_material_file(std::string mat);
-
     Camera* get_camera() override;
 
 private:
 	optix::Context context;
-	bool debug_mode_enabled = false;
 
 	bool collect_images = false;
 	bool show_difference_image = false;
 	optix::Aabb m_scene_bounding_box;
 	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height);
 
-	void add_lights();
 	void set_miss_program(BackgroundType::EnumType miss_program);
 
 	static bool export_raw(const std::string& name, optix::Buffer buffer, int frames);
@@ -97,11 +108,8 @@ private:
 	std::unique_ptr<ImmediateGUI> gui = nullptr;
 	std::unique_ptr<Scene> mScene;
 	std::unique_ptr<Scene> mNewScene;
-	std::shared_ptr<MaterialHost> material_ketchup;
 
 	void setDebugEnabled(bool var);
-	float tonemap_multiplier = 1.0f;
-	float tonemap_exponent = 1.0f;
 
 	std::vector<MPMLMedium*> available_media;
 
@@ -110,9 +118,8 @@ private:
 	optix::Buffer debug_output_buffer;
 	optix::Buffer returned_buffer;
 
-	void load_camera_extrinsics();
+	void load_default_camera();
 
-	optix::int4 custom_rr;
 
 	optix::uint4 zoom_debug_window = optix::make_uint4(20,20,300,300);
 	optix::uint4 zoomed_area = optix::make_uint4(0);
@@ -131,6 +138,8 @@ private:
 
 	bool start_render_task_when_ready = false;
 
+    RayTracerParameters parameters;
+	TonemapParameters tonemap_parameters;
     void serialize_scene();
 };
 

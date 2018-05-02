@@ -51,14 +51,12 @@ int main( int argc, char** argv )
 	std::string output_file = "rendering.raw";
 	std::string config_file = "config.xml";
 	bool accel_caching_on = false;
-	optix::int4 rendering_rect = optix::make_int4(-1);
-	//std::map<std::string, std::string> parameters;
 	bool auto_mode = false;
 	int frames = -1;
 	float time = -1.0f;
-	std::string material_override_mtl = "";
 	std::vector<std::string> additional_parameters;
 	bool nodisplay = false;
+    bool scene_found = false;
 
 	for ( int i = 1; i < argc; ++i )
 	{
@@ -86,13 +84,6 @@ int main( int argc, char** argv )
 		output_file = argv[++i];
 		lower_case_string(output_file);
 	}
-	else if (arg == "--material_override")
-	{
-		if (i == argc - 1)
-			printUsageAndExit(argv[0]);
-		material_override_mtl = argv[++i];
-		lower_case_string(material_override_mtl);
-	}
 	else if (arg == "--parameter_override")
 	{
 		do
@@ -112,22 +103,7 @@ int main( int argc, char** argv )
 		auto_mode = true;
 		frames = std::stoi(argv[++i]);
 	}
-	else if (arg == "--rectangle")
-	{
-		if (i == argc - 1)
-				printUsageAndExit( argv[0] );
-		rendering_rect.x = std::stoi(argv[++i]);
-		if (i == argc - 1)
-			printUsageAndExit(argv[0]);
-		rendering_rect.y = std::stoi(argv[++i]);
-		if (i == argc - 1)
-			printUsageAndExit(argv[0]);
-		rendering_rect.z = std::stoi(argv[++i]);
-		if (i == argc - 1)
-			printUsageAndExit(argv[0]);
-		rendering_rect.w = std::stoi(argv[++i]);
-	}
-	else 
+	else
 	{
 		filename = argv[i];
 		std::string file_extension;
@@ -138,15 +114,26 @@ int main( int argc, char** argv )
 			lower_case_string(file_extension);
 		}
 
-		if(file_extension == ".obj")
+        if(file_extension == ".xml")
+        {
+            if(scene_found)
+            {
+                Logger::error << "Only one scene file can be provided on command line." << std::endl;
+                exit(2);
+            }
+            scene_found = true;
+            filenames.push_back(filename);
+            lower_case_string(filenames.back());
+        }
+
+        if(file_extension == ".obj")
 		{
 			filenames.push_back(filename);
 			lower_case_string(filenames.back());
 		}
 	}
 	}
-	//if ( filenames.size() == 0 ) 
-	//  filenames.push_back(string("./meshes/") + "closed_bunny_vn.obj");
+
 	ConfigParameters::init(config_file);
 	ConfigParameters::override_parameters(additional_parameters);
 
@@ -154,6 +141,7 @@ int main( int argc, char** argv )
 	GLFWDisplay::init( argc, argv );
 	
 	std::unique_ptr<RenderTask> task = nullptr;
+
 	if (auto_mode)
 	{
 		if(frames > 0 && time > 0)
@@ -175,13 +163,11 @@ int main( int argc, char** argv )
 		}
 	}
 
-
 	try 
 	{
-		ObjScene * scene_o = new ObjScene(filenames, rendering_rect);
+		ObjScene * scene_o = new ObjScene(filenames);
 		SampleScene * scene = scene_o;
-		if (material_override_mtl.size() > 0)
-			scene_o->add_override_material_file(material_override_mtl);
+
 		if (auto_mode)
 		{
 			scene_o->set_render_task(task);
@@ -189,12 +175,11 @@ int main( int argc, char** argv )
 		}	
 
 		GLFWDisplay::run( "Optix Renderer", scene );
-
-	} 
+	}
 	catch(optix::Exception & e )
 	{
-	Logger::error<<  (e.getErrorString().c_str());
-	exit(1);
+        Logger::error<< (e.getErrorString().c_str());
+        exit(1);
 	}
 	return 0;
 }

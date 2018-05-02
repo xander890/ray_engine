@@ -14,8 +14,8 @@
 #include <environment_map.h>
 
 //#define IMPORTANCE_SAMPLE_BRDF
-#include <merl_common.h>
 #include <material_device.h>
+#include <brdf.h>
 #include "device_environment_map.h"
 
 using namespace optix;
@@ -29,106 +29,15 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 
-
-
 // Monte carlo variables
 rtDeclareVariable(unsigned int, N, , );
 
-rtDeclareVariable(float, exponent_blinn, , );
-rtDeclareVariable(optix::float2, exponent_aniso, , );
-rtDeclareVariable(optix::float3, object_x_axis, , );
-rtDeclareVariable(optix::float3, merl_brdf_multiplier, , );
-
-rtBuffer<float, 1> merl_brdf_buffer;
-rtDeclareVariable(uint, has_merl_brdf, , ) = 0;
-rtDeclareVariable(float3, eye, , );
-
-// Glossy BRDF functions
-
-
-__device__ __inline__
-float geometric_term_torrance_sparrow(const optix::float3& n, const optix::float3& wi, const optix::float3& wo, const optix::float3& wh)
-{
-	float n_dot_h = fabsf(dot(n, wh));
-	float n_dot_o = fabsf(dot(n, wo));
-	float n_dot_i = fabsf(dot(n, wi));
-	float i_dot_o = fabsf(dot(wo, wh));
-	float min_io = fminf(n_dot_o, n_dot_i);
-	return fminf(1.0f, min_io * n_dot_h * 2.0f / i_dot_o);
-}
-
-
-__device__ __inline__
-float blinn_microfacet_distribution(const optix::float3& n, const optix::float3& brdf_normal)
-{
-    const MaterialDataCommon & material = get_material();
-	float cos_theta = fabsf(dot(n, brdf_normal));
-	float D = 0.5f * M_1_PIf * (material.shininess + 2.0f) * pow(cos_theta, material.shininess);
-	return D;
-}
-
-__device__ __inline__ float torrance_sparrow_brdf(const optix::float3 & n, const optix::float3 & wi, const optix::float3 & wo, float ior)
-{
-	float cos_o = dot(n, wo);
-	float cos_i = dot(n, wi);
-	optix::float3 brdf_normal = normalize(wi + wo);
-	float cos_brdf_normali = dot(wi, brdf_normal);
-	float cos_brdf_normalo = dot(wo, brdf_normal);
-	if (cos_brdf_normalo / cos_o <= 0.0f || cos_brdf_normali / cos_i <= 0.0f)
-		return 0.0f;
-
-	float D = blinn_microfacet_distribution(n, brdf_normal);
-	float G = geometric_term_torrance_sparrow(n, wi, wo, brdf_normal);
-	float F = fresnel_R(cos_o, ior);
-	float S = 4.0f * cos_o * cos_i;
-	return abs(D * F * G / S);
-}
-
-__device__ __inline__ float torrance_sparrow_brdf_sampled(const optix::float3 & n, const optix::float3 & wi, const optix::float3 & wo, const optix::float3 & brdf_normalj, float ior)
-{
-
-	float cos_o = dot(n, wo);
-	float cos_i = dot(n, wo);
-	float cos_brdf_normali = dot(wi, brdf_normalj);
-	float cos_h = dot(n, brdf_normalj);
-	if (cos_o <= 0.0f || cos_h <= 0.0f)
-		return 0.0f;
-	float F = fresnel_R(cos_brdf_normali, ior);
-	return min(2.0f * cos_i / cos_o, min(cos_h / (cos_o * cos_h), 2.0f)) * F;
-}
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() {
 	float3 emission = make_float3(rtTex2D<float4>(get_material().ambient_map, texcoord.x, texcoord.y));
 	// optix_print("%f %f %f", emission.x,emission.y,emission.z);
 	shadow_hit(prd_shadow, emission);
-}
-
-__inline__ __device__ float3 get_importance_sampled_brdf(const float3& hit_pos, float3 & normal, const float3 & wi, const float3 & new_normal, const float3 & out_v)
-{
-    const MaterialDataCommon & material = get_material();
-	float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
-    float3 k_s = make_float3(rtTex2D<float4>(material.specular_map, texcoord.x, texcoord.y));
-	float3 f_d = k_d * M_1_PIf;
-	return f_d + torrance_sparrow_brdf_sampled(normal, normalize(wi), normalize(out_v), new_normal, material.relative_ior) * k_s;
-}
-
-__inline__ __device__ float3 get_brdf(const float3& hit_pos, float3 & normal, const float3 & wi, const float3 & out_v)
-{
-	float3 f;
-	if (has_merl_brdf == 1)
-	{
-		f = merl_brdf_multiplier * lookup_brdf_val(merl_brdf_buffer, normal, normalize(wi), normalize(out_v));
-	}
-	else
-	{
-        const MaterialDataCommon& mat = get_material();
-        float3 k_d = make_float3(rtTex2D<float4>(mat.diffuse_map, texcoord.x, texcoord.y));
-        float3 k_s = make_float3(rtTex2D<float4>(mat.specular_map, texcoord.x, texcoord.y));
-        float3 f_d = k_d * M_1_PIf;
-        f = f_d;// + torrance_sparrow_brdf(normal, normalize(wi), normalize(out_v), mat.relative_ior) * k_s;
-	}
-	return f;
 }
 
 
@@ -144,11 +53,11 @@ RT_PROGRAM void shade()
 
 	hit_pos = ray.origin + t_hit * ray.direction;
 	hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
+	float recip_ior = 1.0f / material.relative_ior;
 
 	if (prd_radiance.depth < max_depth)
 	{
 		HitInfo data(hit_pos, brdf_normal);
-
 		// Direct illumination
 		float3 direct = make_float3(0.0f);
 		for (int j = 0; j < N; j++)
@@ -157,7 +66,13 @@ RT_PROGRAM void shade()
 			unsigned int l;
 			evaluate_direct_light(data.hit_point, data.hit_normal, wi, L, sh, prd_radiance.sampler, l);
 
-			float3 f_d = get_brdf(hit_pos, brdf_normal, wi, wo);
+			BRDFGeometry g;
+			g.texcoord = texcoord;
+			g.wi = wi;
+			g.wo = wo;
+			g.n = brdf_normal;
+
+			float3 f_d = brdf(g, recip_ior, material, *prd_radiance.sampler);
 			direct += L * f_d;
 		}
 		direct /= static_cast<float>(N);
@@ -169,7 +84,14 @@ RT_PROGRAM void shade()
 			sample_environment(wi, L, data, prd_radiance.sampler);
 			float cos_theta = dot(wi, brdf_normal);
 			if (cos_theta <= 0.0) continue;
-			float3 f_d = get_brdf(hit_pos, brdf_normal, wi, wo);
+
+			BRDFGeometry g;
+			g.texcoord = texcoord;
+			g.wi = wi;
+			g.wo = wo;
+			g.n = brdf_normal;
+
+			float3 f_d = brdf(g, recip_ior, material, *prd_radiance.sampler);
 			env += L * f_d * cos_theta;
 		}
 		env /= static_cast<float>(N);
@@ -196,8 +118,15 @@ RT_PROGRAM void shade()
 			float3 hemi_vec = sample_hemisphere_cosine(prd_radiance.sampler->next2D(), brdf_normal);
 			optix::Ray ray_t = optix::make_Ray(hit_pos, hemi_vec,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 			rtTrace(top_object, ray_t, prd);
-			float3 f_d = get_brdf(hit_pos, brdf_normal, hemi_vec, wo) * M_PIf;
-			indirect = prd.result * f_d / max(1e-6f,prob); //Cosine cancels out
+
+			BRDFGeometry g;
+			g.texcoord = texcoord;
+			g.wi = hemi_vec;
+			g.wo = wo;
+			g.n = brdf_normal;
+
+			float3 f_d = brdf(g, recip_ior, material, *prd_radiance.sampler) * M_PIf;
+			indirect = prd.result * f_d / fmaxf(1e-6f,prob); //Cosine cancels out
 		}
 
 		prd_radiance.result = emission + direct + env + indirect;

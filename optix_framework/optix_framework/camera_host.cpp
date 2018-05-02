@@ -270,3 +270,14 @@ void Camera::setEyeLookatUp(float3 eye_in, float3 lookat_in, float3 up_in)
     up = up_in;
     setup();
 }
+
+void Camera::setAsOtherCamera(std::shared_ptr<Camera> &camera)
+{
+	setParameters(*camera->parameters);
+	eye = camera->eye;
+	lookat = camera->lookat;
+	up = camera->up;
+    name = camera->name;
+    entry_point = camera->entry_point;
+	setup();
+}

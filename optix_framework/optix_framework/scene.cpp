@@ -49,7 +49,14 @@ Scene::Scene(optix::Context context)
 
     mAreaLightBuffer = create_buffer<TriangleLight>(context, RT_BUFFER_INPUT, 0);
     mSingularLightBuffer = create_buffer<SingularLightData>(context, RT_BUFFER_INPUT, 0);
+
+    context["singular_lights"]->setBuffer(mSingularLightBuffer);
+    context["area_lights"]->setBuffer(mAreaLightBuffer);
+
     mGUI = std::make_unique<SceneGUI>();
+
+    CameraParameters def;
+    mCurrentCamera = std::make_shared<Camera>(context, def);
 }
 
 bool Scene::on_draw()
@@ -149,25 +156,10 @@ void Scene::set_current_camera(int camera_id)
     auto val = std::find_if(mCameras.begin(), mCameras.end(), [=](std::shared_ptr<Camera>&camera){ return camera->get_id() == camera_id; });
     if(val != mCameras.end())
     {
-        mCurrentCamera = *val;
+        mCurrentCamera->setAsOtherCamera(*val);
     }
 }
 
-void Scene::set_current_camera(std::unique_ptr<Camera> camera)
-{
-    int camera_id = camera->get_id();
-    auto val = std::find_if(mCameras.begin(), mCameras.end(), [=](std::shared_ptr<Camera>&cam){ return camera_id == cam->get_id(); });
-    if(val != mCameras.end())
-    {
-        mCurrentCamera = *val;
-    }
-    else
-    {
-        add_camera(std::move(camera));
-        mCurrentCamera = mCameras.back();
-    }
-
-}
 
 std::shared_ptr<Camera> Scene::get_current_camera()
 {
@@ -188,8 +180,6 @@ void Scene::set_miss_program(std::unique_ptr<MissProgram> miss)
     miss->init(context);
     miss_program = std::move(miss);
 }
-
-
 
 void Scene::update_area_lights()
 {
@@ -232,7 +222,6 @@ void Scene::update_area_lights()
     void * buf = mAreaLightBuffer->map();
     memcpy(buf, &lights[0], lights.size() * sizeof(TriangleLight));
     mAreaLightBuffer->unmap();
-    context["area_lights"]->setBuffer(mAreaLightBuffer);
 }
 
 void Scene::update_singular_lights()
@@ -243,7 +232,6 @@ void Scene::update_singular_lights()
         l[i] = mLights[i]->get_data();
     }
     mSingularLightBuffer->unmap();
-    context["singular_lights"]->setBuffer(mSingularLightBuffer);
 }
 
 void Scene::remove_object(int object_id)

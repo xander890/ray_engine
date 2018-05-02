@@ -46,7 +46,6 @@ public:
 
 
     void set_current_camera(int camera_id);
-    void set_current_camera(std::unique_ptr<Camera> camera);
     std::shared_ptr<Camera> get_current_camera();
     std::shared_ptr<Camera> get_camera(int camera_id);
 

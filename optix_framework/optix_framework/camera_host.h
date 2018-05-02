@@ -52,6 +52,7 @@ public:
     void setAspectRatio(float ratio);
     void setParameters(CameraParameters parameters);
     void setEyeLookatUp(float3 eye, float3 lookat, float3 up);
+    void setAsOtherCamera(std::shared_ptr<Camera>& camera);
 
 	virtual bool on_draw();
 

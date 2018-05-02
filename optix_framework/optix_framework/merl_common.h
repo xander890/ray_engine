@@ -121,7 +121,7 @@ static __host__ __device__ __inline__  unsigned int phi_diff_index(float phi_dif
 
 // Given a pair of incoming/outgoing angles, look up the BRDF.
 #ifdef __CUDA_ARCH__
-static __device__ __inline__ optix::float3 lookup_brdf_val(optix::buffer<float, 1> & brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
+static __device__ __inline__ optix::float3 lookup_brdf_val(BufPtr1D<float> & brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
 #else
 static __host__ __device__ __inline__ optix::float3 lookup_brdf_val(float* brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
 #endif
@@ -141,7 +141,7 @@ static __host__ __device__ __inline__ optix::float3 lookup_brdf_val(float* brdf,
 
 #ifdef __CUDA_ARCH__
 static __device__ __inline__ optix::float3 lookup_brdf_val(
-  optix::buffer<float, 1> & brdf, const optix::float3& n, const optix::float3& normalized_wi, const optix::float3& normalized_wo)
+  BufPtr1D<float> & brdf, const optix::float3& n, const optix::float3& normalized_wi, const optix::float3& normalized_wo)
 #else
 static __host__ __device__ __inline__ optix::float3 lookup_brdf_val(
   float* brdf, const optix::float3& n, const optix::float3& normalized_wi, const optix::float3& normalized_wo)

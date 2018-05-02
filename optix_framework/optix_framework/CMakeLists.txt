@@ -19,6 +19,7 @@ set(HEADERS
     approximate_standard_dipole.h
     area_light.h
     box.h
+    brdf.h
     brdf_utils.h
     bssrdf.h
     bssrdf_host.h
@@ -132,7 +133,7 @@ set(HEADERS
     subsurface_scattering_sampled_common.h
     subsurface_scattering_sampled.h
         hemisphere_partitions.h
-        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h)
+        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h brdf_properties.h)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp
@@ -200,7 +201,7 @@ set(SRCS
     sky_model.cpp
     sphere.cpp
     transform.cpp
-        object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h)
+        object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h)
 
 set(CUDA_SOURCES
 CUDA_files/absorbing_glass.cu
@@ -232,7 +233,7 @@ CUDA_files/tonemap_camera.cu
 CUDA_files/triangle_mesh.cu
 CUDA_files/volume_shader.cu
 CUDA_files/volume_shader_heterogenous.cu
-)
+ )
     
 source_group("Headers" FILES ${HEADERS})
 source_group("Source Files" FILES ${SRCS})
