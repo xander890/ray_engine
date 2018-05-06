@@ -7,4 +7,14 @@ public:
 	ForwardDipole(optix::Context & ctx);
 	void load(const float relative_ior, const ScatteringMaterialProperties &props) override {}
 	bool on_draw() override {}
+
+private:
+	friend class cereal::access;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+				cereal::base_class<BSSRDF>(this)
+		);
+	}
 };

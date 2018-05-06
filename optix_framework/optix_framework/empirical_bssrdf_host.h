@@ -24,7 +24,18 @@ private:
     std::string mBSSRDFFile;
     std::unique_ptr<BSSRDFImporter> mBSSRDFLoader = nullptr;
     std::unique_ptr<BSSRDFParameterManager> mManager = nullptr;
-	float mCorrection = DEFAULT_EMPIRICAL_CORRECTION;
+
+	float mCorrection = 1.0f;
 	unsigned int mInterpolation = 0;
     EmpiricalBSSRDFNonPlanarity::Type mNonPlanarSurfacesHandles = EmpiricalBSSRDFNonPlanarity::UNCHANGED;
+
+	friend class cereal::access;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		// FIXME handle load save properly.
+		archive(
+				cereal::base_class<BSSRDF>(this)
+		);
+	}
 };

@@ -9,12 +9,9 @@
 class EnvironmentMap : public MissProgram
 {
 public:
-    EnvironmentMap(std::string envmap_file = "") : envmap_path(envmap_file),
-                                              camera_1(0), camera_2(0), camera_3(0)
-	{
-	}
+    EnvironmentMap(std::string envmap_file = "");
 
-    virtual ~EnvironmentMap() {}
+    virtual ~EnvironmentMap();
 
     virtual void init(optix::Context & ctx) override;
     virtual void set_into_gpu(optix::Context & ctx) override;
@@ -30,8 +27,9 @@ private:
     optix::Context context;
     optix::Buffer property_buffer;
     optix::Buffer sampling_property_buffer;
-    int camera_1, camera_2, camera_3;
-	std::string envmap_path;
+
+    unsigned int camera_1, camera_2, camera_3;
+	std::string envmap_path = "";
 
     void presample_environment_map();
     bool resample_envmaps = true;
@@ -40,7 +38,13 @@ private:
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( cereal::virtual_base_class<MissProgram>(this), CEREAL_NVP(environment_sampler));
+		archive(
+			 cereal::virtual_base_class<MissProgram>(this),
+	    	 cereal::make_nvp("texture", environment_sampler),
+			 cereal::make_nvp("delta_rotation", environment_sampler),
+             cereal::make_nvp("light_multiplier", properties.lightmap_multiplier),
+             cereal::make_nvp("importance_sample", properties.importance_sample_envmap)
+		);
 	}
 
 };

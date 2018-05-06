@@ -120,7 +120,6 @@ private:
 
 	void load_default_camera();
 
-
 	optix::uint4 zoom_debug_window = optix::make_uint4(20,20,300,300);
 	optix::uint4 zoomed_area = optix::make_uint4(0);
 
@@ -141,6 +140,9 @@ private:
     RayTracerParameters parameters;
 	TonemapParameters tonemap_parameters;
     void serialize_scene();
+
+	void save_parameters(const std::string & config_file);
+	void load_parameters(const std::string & config_file);
 };
 
 #endif // OBJSCENE_H

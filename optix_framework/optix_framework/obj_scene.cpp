@@ -2,7 +2,6 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
-#include <cereal/archives/json.hpp>
 #include <fstream>
 #include "obj_loader.h"
 #include "singular_light.h"
@@ -349,9 +348,13 @@ void ObjScene::initialize_scene(GLFWwindow *)
 
 	setDebugEnabled(parameters.debug_enabled);
 
-	Folders::init();
-	MaterialLibrary::load(Folders::mpml_file.c_str());
-	ScatteringMaterial::initializeDefaultMaterials();
+    std::string mpml_file = Folders::data_folder + "/mpml/media.mpml";
+
+    if(exists(mpml_file.c_str()))
+    	MaterialLibrary::load(Folders::data_folder.c_str());
+
+    ScatteringMaterial::initializeDefaultMaterials();
+    load_parameters("ray_tracing_parameters.xml");
 
     ShaderFactory::init(context);
     ShaderInfo info = ShaderInfo(12, "volume_shader.cu", "Volume path tracer");
@@ -450,48 +453,8 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	
 	context["importance_sample_area_lights"]->setUint(static_cast<unsigned int>(mImportanceSampleAreaLights));
 
-	// Procedural objects
-	vector<ProceduralMesh*> procedural;
 
-	std::ifstream pscenefile(Folders::data_folder + "./procedural/procedural_scene.txt");
-	if (pscenefile) // same as: if (myfile.good())
-	{
-		std::string line;
-		while (getline(pscenefile, line)) // same as: while (getline( myfile, line ).good())
-		{
-			std::stringstream ss(line);
-			procedural.push_back(ProceduralMesh::unserialize(ss));
-		}
-		pscenefile.close();
-	}
-
-	
-//	for (int i = 0; i < procedural.size(); i++)
-//	{
-//		GeometryGroup geometry_group = context->createGeometryGroup();
-//		ProceduralMesh* mesh = procedural[i];
-//		if (mesh != nullptr)
-//		{
-//			ObjLoader* loader = new ProceduralLoader(mesh, context, geometry_group);
-//			loader->load();
-//			m_scene_bounding_box.include(loader->getSceneBBox());
-//			loader->getAreaLights(lights);
-//			delete loader;
-//
-//			// Set material shaders
-//			for (unsigned int j = 0; j < geometry_group->getChildCount(); ++j)
-//			{
-////				GeometryInstance gi = geometry_group->getChild(j);
-////				addMERLBRDFtoGeometry(gi, use_merl_brdf);
-//
-//                // FIXME
-//				//method->init(gi);
-//			}
-//
-//			// Add geometry group to the group of scene objects
-//			scene->setChild(static_cast<unsigned int>(filenames.size()) + i, geometry_group);
-//		}
-//	}
+    // FIXME PROCEDURAL SCENES
     load_default_camera();
 
 
@@ -536,6 +499,7 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	context["max_depth"]->setInt(parameters.max_depth);
 	reset_renderer();
     Logger::info<<"Scene initialized."<<endl;
+    save_parameters("ray_tracing_parameters.xml");
 
 
 }
@@ -852,3 +816,49 @@ Camera *ObjScene::get_camera()
     return mScene->get_current_camera().get();
 }
 
+
+template<class Archive>
+void serialize(Archive& ar, RayTracerParameters & in)
+{
+    ar(
+            cereal::make_nvp("print_buffer_size", in.print_buffer_size),
+            cereal::make_nvp("print_index", in.print_index),
+            cereal::make_nvp("debug_enabled", in.debug_enabled),
+            cereal::make_nvp("stack_size", in.stack_size),
+            cereal::make_nvp("exception_color", in.exception_color),
+            cereal::make_nvp("max_depth", in.max_depth),
+            cereal::make_nvp("scene_epsilon_fraction", in.scene_epsilon_fraction),
+            cereal::make_nvp("use_auto_camera", in.use_auto_camera)
+    );
+}
+
+template<class Archive>
+void serialize(Archive& ar, TonemapParameters & in)
+{
+    ar(
+            cereal::make_nvp("exponent", in.exponent),
+            cereal::make_nvp("multiplier", in.multiplier)
+    );
+}
+
+void ObjScene::load_parameters(const std::string &config_file)
+{
+    if(!exists(config_file.c_str()))
+        return;
+    std::ifstream input(config_file);
+    cereal::XMLInputArchiveOptix archive(context,input);
+    archive(cereal::make_nvp("data_folder",Folders::data_folder);
+    archive(Folders::ptx_path);
+    archive(parameters);
+    archive(tonemap_parameters);
+}
+
+void ObjScene::save_parameters(const std::string &config_file)
+{
+    std::ofstream output(config_file);
+    cereal::XMLOutputArchiveOptix archive(output);
+    archive(Folders::data_folder);
+    archive(Folders::ptx_path);
+    archive(parameters);
+    archive(tonemap_parameters);
+}

@@ -32,4 +32,17 @@ protected:
 	static int entry_point_output;
 	optix::Buffer mParameters;
 	std::unique_ptr<BSSRDF> mBSSRDF;
+
+private:
+
+	BSSRDFPlaneRenderer() : Shader() {}
+	friend class cereal::access;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(cereal::base_class<Shader>(this));
+	}
+
 };
+
+CEREAL_REGISTER_TYPE(BSSRDFPlaneRenderer)

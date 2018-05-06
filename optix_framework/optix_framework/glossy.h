@@ -1,19 +1,14 @@
-#ifndef glossy_h__
-#define glossy_h__
+#pragma once
 #include "shader.h"
+#include "optix_serialize.h"
 #include "brdf_host.h"
-
-struct MERLBrdf
-{
-    std::string name;
-};
 
 class BRDFShader : public Shader
 {
 public:
     virtual ~BRDFShader() = default;
     BRDFShader(const ShaderInfo& shader_info) : Shader(shader_info) {}
-	BRDFShader(const BRDFShader &) = default;
+	BRDFShader(const BRDFShader &);
 
     void initialize_shader(optix::Context context) override;
     
@@ -23,9 +18,20 @@ public:
     bool on_draw() override;
 
 private:
+
+    BRDFShader() : Shader() {}
+
     // FIXME proper duplication.
-    std::shared_ptr<BRDF> mBRDF;
+    std::unique_ptr<BRDF> mBRDF;
+
+	friend class cereal::access;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(cereal::base_class<Shader>(this), mBRDF);
+	}
+
 };
 
-
-#endif // glossy_h__
+CEREAL_REGISTER_TYPE(BRDFShader)
+CEREAL_REGISTER_POLYMORPHIC_RELATION(Shader, BRDFShader)

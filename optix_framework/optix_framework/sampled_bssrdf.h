@@ -35,4 +35,15 @@ public:
 
 private:
     std::string get_current_shader_source();
+
+    SampledBSSRDF() : Shader() {}
+    friend class cereal::access;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(cereal::base_class<Shader>(this));
+	}
+
 };
+
+CEREAL_REGISTER_TYPE(SampledBSSRDF)

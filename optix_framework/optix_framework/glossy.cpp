@@ -10,6 +10,7 @@
 #include "dialogs.h"
 #include <algorithm>
 
+
 void BRDFShader::initialize_shader(optix::Context context)
 {
     Shader::initialize_shader(context);
@@ -41,11 +42,18 @@ bool BRDFShader::on_draw()
         std::string path;
         if(type == BRDFType::MERL && Dialogs::openFileDialog(path))
         {
-            std::dynamic_pointer_cast<MERLBRDF>(mBRDF)->set_merl_file(path);
+            MERLBRDF* other = dynamic_cast<MERLBRDF*>(mBRDF.get());
+            other->set_merl_file(path);
         }
     }
 
     mBRDF->on_draw();
     return changed;
 
+}
+
+BRDFShader::BRDFShader(const BRDFShader & other) : Shader(other.info)
+{
+    context = other.context;
+    mBRDF = std::make_unique<BRDF>(*other.mBRDF);
 }

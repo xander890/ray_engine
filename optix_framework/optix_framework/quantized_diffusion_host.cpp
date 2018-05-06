@@ -28,7 +28,6 @@ void QuantizedDiffusion::load(const float relative_ior, const ScatteringMaterial
 		QuantizedDiffusionProperties * props = reinterpret_cast<QuantizedDiffusionProperties*>(mPropertyBuffer->map());
 		*props = mProperties;
 		mPropertyBuffer->unmap();
-
 	}
 }
 

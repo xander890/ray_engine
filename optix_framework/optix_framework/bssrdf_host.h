@@ -19,5 +19,21 @@ public:
 protected:
 	optix::Context mContext;
 	ScatteringDipole::Type mType;
+
+	friend class cereal::access;
+	template<class Archive>
+	void load(Archive & archive)
+	{
+		std::string s;
+		archive(cereal::make_nvp("type", s));
+		mType = ScatteringDipole::to_enum(s);
+	}
+
+	template<class Archive>
+	void save(Archive & archive) const
+	{
+		archive(cereal::make_nvp("type", ScatteringDipole::to_string(mType)));
+	}
+
 };
 

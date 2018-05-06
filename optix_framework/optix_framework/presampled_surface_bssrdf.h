@@ -1,6 +1,4 @@
-#ifndef PRESAMPLED_H
-#define PRESAMPLED_H
-
+#pragma once
 #include <shader.h>
 #include <mesh.h>
 #include <bssrdf_host.h>
@@ -26,8 +24,15 @@ private:
 	optix::Buffer mCdfBuffer;
 	std::unique_ptr<BSSRDF> mBSSRDF;
 	bool mExcludeBackFaces = false;
+
+	PresampledSurfaceBssrdf() : Shader() {}
+	friend class cereal::access;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(cereal::base_class<Shader>(this));
+	}
+
 };
 
-
-
-#endif // PRESAMPLED_H
+CEREAL_REGISTER_TYPE(PresampledSurfaceBssrdf)

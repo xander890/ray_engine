@@ -7,6 +7,7 @@
 #include "brdf_utils.h"
 #include "string_utils.h"
 #include "immediate_gui.h"
+#include "object_host.h"
 
 std::unique_ptr<BRDF> BRDF::create(optix::Context &ctx, BRDFType::Type type)
 {
@@ -37,15 +38,8 @@ void BRDF::load(Object &obj)
 void MERLBRDF::set_merl_file(std::string file)
 {
     read_brdf_f("", file, data);
-    mMerlBuffer = mContext->createBuffer(RT_BUFFER_INPUT);
-    mMerlBuffer->setFormat(RT_FORMAT_FLOAT);
-    mMerlBuffer->setSize(data.size());
-
-    void* b = mMerlBuffer->map();
-    memcpy(b, data.data(), data.size() * sizeof(float));
-    mMerlBuffer->unmap();
+    mName = file.substr(file.find_last_of("/\\") + 1);
     reflectance = integrate_brdf(data, 100000);
-    mInit = true;
 }
 
 void MERLBRDF::load(Object &obj)
@@ -53,11 +47,50 @@ void MERLBRDF::load(Object &obj)
     BRDF::load(obj);
 
     if(!mInit)
-        return;
+        init();
 
     obj.mMaterial["merl_brdf_multiplier"]->setFloat(merl_correction);
     BufPtr1D<float> ptr = BufPtr1D<float>(mMerlBuffer->getId());
     obj.mMaterial["merl_brdf_buffer"]->setUserData(sizeof(BufPtr1D<float>), &ptr);
+}
+
+void MERLBRDF::init()
+{
+    if(mMerlBuffer.get() == nullptr)
+    {
+        mMerlBuffer = mContext->createBuffer(RT_BUFFER_INPUT);
+        mMerlBuffer->setFormat(RT_FORMAT_FLOAT);
+        mMerlBuffer->setSize(data.size());
+    }
+    reflectance = integrate_brdf(data, 100000);
+    void* b = mMerlBuffer->map();
+    memcpy(b, data.data(), data.size() * sizeof(float));
+    mMerlBuffer->unmap();
+    mInit = true;
+}
+
+MERLBRDF::MERLBRDF(const MERLBRDF &other) : BRDF(other)
+{
+    merl_correction = optix::make_float3(1);
+    data = other.data;
+    reflectance = other.reflectance;
+    mName = other.mName;
+}
+
+MERLBRDF &MERLBRDF::operator=(const MERLBRDF &other)
+{
+    mContext = other.mContext;
+    mType = other.mType;
+    merl_correction = optix::make_float3(1);
+    data = other.data;
+    reflectance = other.reflectance;
+    mName = other.mName;
+}
+
+bool MERLBRDF::on_draw()
+{
+    ImmediateGUIDraw::TextWrapped("%f %f %f \n", reflectance.x, reflectance.y, reflectance.z);
+    return false;
 }
 
 
@@ -78,4 +111,10 @@ bool BRDF::selector_gui(BRDFType::Type & type, std::string id)
     }
     return false;
 #undef ID_STRING
+}
+
+BRDF::BRDF(const BRDF &other)
+{
+    mContext = other.mContext;
+    mType = other.mType;
 }

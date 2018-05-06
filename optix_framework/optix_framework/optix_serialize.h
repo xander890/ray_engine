@@ -1,19 +1,15 @@
 #pragma once
 #include <optix_world.h>
-#include "logger.h"
 #include <cereal/access.hpp>
 #include <cereal/types/vector.hpp>
 #include "cereal/types/memory.hpp"
-#include <xml_archive.hpp>
-#include <cereal/archives/json.hpp>
+#include <cereal/types/polymorphic.hpp>
 #include <cereal/types/base_class.hpp>
 #include <cereal/cereal.hpp>
-#include <cereal/types/polymorphic.hpp>
+#include <xml_archive.hpp>
 
 namespace cereal
 {
-
-    using XMLOutputArchive = XMLOutputArchiveOptix;
 
 	template<class Archive> void serialize(Archive & archive, optix::float1 & m) { archive(make_nvp("x", m.x)); }
 	template<class Archive> void serialize(Archive & archive, optix::float2 & m) { archive(make_nvp("x", m.x), make_nvp("y", m.y)); }

@@ -4,9 +4,6 @@
 #include "enums.h"
 #include <memory>
 #include "rendering_method.h"
-#include <cereal/access.hpp>
-#include <cereal/types/vector.hpp>
-#include "cereal/types/memory.hpp"
 #include "host_material.h"
 #include "transform.h"
 #include "optix_serialize.h"
@@ -24,7 +21,7 @@ struct MeshData
     optix::Aabb   mBoundingBox;
 };
 
-inline void save_buffer(cereal::XMLOutputArchive & archive, optix::Buffer buffer, std::string name)
+inline void save_buffer(cereal::XMLOutputArchiveOptix & archive, optix::Buffer buffer, std::string name)
 {
     void * data = buffer->map();
     RTsize dim = buffer->getDimensionality();
@@ -50,7 +47,7 @@ template<class Archive>  void save(Archive & ar, MeshData const & m)
 }
 
 template<>
-inline void save(cereal::XMLOutputArchive & ar, MeshData const & m)
+inline void save(cereal::XMLOutputArchiveOptix & ar, MeshData const & m)
 {
     save_buffer(ar, m.mVbuffer, "vertex_buffer");
     save_buffer(ar, m.mNbuffer, "normal_buffer");

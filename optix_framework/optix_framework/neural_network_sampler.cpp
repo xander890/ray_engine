@@ -6,12 +6,6 @@
 
 using Eigen::MatrixXf;
 
-bool exists(const char *fileName)
-{
-    // Check if a file exists
-    std::ifstream infile(fileName);
-    return infile.good();
-}
 
 NeuralNetworkSampler::NeuralNetworkSampler(optix::Context & ctx) : mContext(ctx)
 {

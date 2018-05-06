@@ -3,8 +3,7 @@
 //
 #pragma once
 #include "host_device_common.h"
-#include <cereal/cereal.hpp>
-#include "xml_archive.hpp"
+#include "optix_serialize.h"
 
 class Texture
 {

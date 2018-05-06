@@ -12,7 +12,6 @@ public:
 	virtual void initialize_shader(optix::Context ctx) override
 	{
 		Shader::initialize_shader(ctx);
-		max_vol_samples = ConfigParameters::get_parameter<int>("config", "maximum_volume_steps", max_vol_samples, "Maximum rays in VPT.");
 	}
 
 	virtual void load_data(Object &object) override
@@ -40,4 +39,17 @@ public:
 
 	unsigned int max_vol_samples = 1000000;
 	unsigned int mVolumePTMode = VOLUME_PT_INCLUDE_DIRECT_TRANSMISSION | VOLUME_PT_INCLUDE_SINGLE_SCATTERING | VOLUME_PT_INCLUDE_MULTIPLE_SCATTERING;
+
+private:
+    VolumePathTracer() : Shader() {}
+	friend class cereal::access;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(cereal::base_class<Shader>(this), cereal::make_nvp("maximum_volume_steps", max_vol_samples), cereal::make_nvp("volume_mode", mVolumePTMode));
+	}
+
+
 };
+
+CEREAL_REGISTER_TYPE(VolumePathTracer)

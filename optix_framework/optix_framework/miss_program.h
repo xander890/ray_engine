@@ -1,6 +1,6 @@
 #pragma once
 #include <optix_world.h>
-#include <cereal/access.hpp>
+#include <optix_serialize.h>
 
 class MissProgram
 {

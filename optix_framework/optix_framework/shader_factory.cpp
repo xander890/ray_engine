@@ -79,12 +79,12 @@ optix::Program ShaderFactory::createProgram(std::string file, std::string progra
 
 void ShaderFactory::add_shader(std::unique_ptr<Shader> shader)
 {
-	if (get_shader_map().count(shader->illum) != 0)
+	if (get_shader_map().count(shader->info.illum) != 0)
 	{
 		Logger::warning << "Replacing shader! Be careful to know what you are doing!" << std::endl;
 	}
 	std::shared_ptr<Shader> s = std::move(shader);
-	get_shader_map()[s->illum] = s;
+	get_shader_map()[s->info.illum] = s;
 }
 
 void ShaderFactory::init(optix::Context& ctx)

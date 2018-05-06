@@ -4,9 +4,6 @@
 #include "enums.h"
 #include <memory>
 #include "rendering_method.h"
-#include <cereal/access.hpp>
-#include <cereal/types/vector.hpp>
-#include "cereal/types/memory.hpp"
 #include "host_material.h"
 #include "transform.h"
 #include "optix_serialize.h"
@@ -70,8 +67,8 @@ private:
         archive(cereal::make_nvp("geometry", construct->mGeometry));
         archive(cereal::make_nvp("transform", construct->mTransform));
         archive(cereal::make_nvp("materials",construct->mMaterialData));
+        archive(cereal::make_nvp("shader",construct->mShader));
         construct->create_and_bind_optix_data();
-        construct->set_shader(construct->mMaterialData[0]->get_data().illum);
         construct->mReloadMaterials = construct->mReloadShader = construct->mReloadGeometry = true;
     }
 
@@ -82,6 +79,8 @@ private:
         archive(cereal::make_nvp("geometry", mGeometry));
         archive(cereal::make_nvp("transform", mTransform));
         archive(cereal::make_nvp("materials",mMaterialData));
+
+        archive(cereal::make_nvp("shader", mShader));
     }
 
     int mMeshID;

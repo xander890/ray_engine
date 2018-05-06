@@ -90,7 +90,3 @@ void read_all_brdfs(const char * merl_folder, const char * merl_database, std::m
 }
 
 
-void read_all_brdfs(std::map<std::string, vector<float>*>& brdfs)
-{
-	read_all_brdfs(Folders::merl_folder.c_str(), Folders::merl_database_file.c_str(), brdfs);
-}

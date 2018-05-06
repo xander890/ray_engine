@@ -11,18 +11,18 @@ class Object;
 
 struct ShaderInfo
 {
-	ShaderInfo(int illum, std::string path, std::string n) : illum(illum), cuda_shader_path(path), name(n) {}
-    std::string cuda_shader_path;
-    std::string name;
+
+	ShaderInfo(int illum = 0, std::string path = "", std::string n = "") : illum(illum), shader_path(path), shader_name(n) {}
+    std::string shader_path;
+    std::string shader_name;
     int illum;
 };
+
 
 class Shader
 {
 public:    
-
-	Shader(const ShaderInfo & info) : illum(info.illum), shader_path(info.cuda_shader_path),
-		shader_name(info.name)
+	Shader(const ShaderInfo & info) : info(info)
 	{
 	}
 
@@ -40,20 +40,34 @@ public:
 
 	virtual bool on_draw();
 
-    int get_illum() const { return illum; }
-    std::string get_name() const { return shader_name; }
+    int get_illum() const { return info.illum; }
+    std::string get_name() const { return info.shader_name; }
 	void set_source(const std::string & source);
 
 protected:
 	Shader(const Shader & cp);
+    Shader() {}
 
     void set_hit_programs(Object &object);
 	void remove_hit_programs(Object &object);
 
 	optix::Context context;
-	int illum;
-	std::string shader_path;
-	std::string shader_name;
+	ShaderInfo info;
+
+private:
+
+    friend class cereal::access;
+    template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive(cereal::make_nvp("name", info.shader_name),cereal::make_nvp("shader_path", info.shader_path), cereal::make_nvp("illum", info.illum));
+    }
 
 };
 
+template<>
+inline void Shader::serialize(cereal::XMLInputArchiveOptix & archive)
+{
+    archive(cereal::make_nvp("name", info.shader_name),cereal::make_nvp("shader_path", info.shader_path), cereal::make_nvp("illum", info.illum));
+    context = archive.get_context();
+}

@@ -1,15 +1,19 @@
-#ifndef  __FOLDERS_H__
-#define  __FOLDERS_H__
+#pragma once
 #include <string>
+#include "optix_serialize.h"
+#include <fstream>
+
+inline bool exists(const char *fileName)
+{
+    // Check if a file exists
+    std::ifstream infile(fileName);
+    return infile.good();
+}
 
 class Folders
 {
 public:
-	static void init();	
-	static std::string mpml_file;
 	static std::string data_folder;
-	static std::string merl_folder;
-	static std::string merl_database_file;
 	static std::string ptx_path;
 };
 
@@ -20,6 +24,5 @@ static const char* const get_path_ptx(const std::string& base)
 	return path.c_str();
 }
 
-#endif /* __FOLDERS_H__ */
 
 

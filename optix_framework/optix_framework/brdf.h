@@ -72,7 +72,9 @@ __forceinline__ __device__ optix::float3 brdf(const BRDFGeometry & geometry, con
             break;
         case BRDFType::MERL:
         {
-            f = merl_brdf_multiplier * lookup_brdf_val(merl_brdf_buffer, geometry.n, geometry.wi, geometry.wo);
+            auto merl = lookup_brdf_val(merl_brdf_buffer, geometry.n, geometry.wi, geometry.wo);
+            optix_print("Mult %f %f %f, val %f %f %f\n", merl_brdf_multiplier.x, merl_brdf_multiplier.y, merl_brdf_multiplier.z, merl.x, merl.y, merl.z);
+            f = merl_brdf_multiplier * merl;
         }
 
         break;

@@ -19,16 +19,14 @@ void EnvironmentMap::init(optix::Context & ctx)
     context = ctx;
     ctx["envmap_enabled"]->setInt(1);
 
-    envmap_deltas = ConfigParameters::get_parameter<float3>("light", "envmap_deltas", make_float3(0), "Rotation offsetof environment map.");
-    properties.lightmap_multiplier = make_float3(ConfigParameters::get_parameter<float>("light", "lightmap_multiplier", (1.0f), "Environment map multiplier"));
+    if(envmap_path != "")
+        environment_sampler = loadTexture(context->getContext(), envmap_path, make_float3(1.0f));
 
-    std::string ptx_path = get_path_ptx("env_cameras.cu");
-    environment_sampler = loadTexture(context->getContext(), envmap_path, make_float3(1.0f));
     properties.environment_map_tex_id = environment_sampler->get_id();
-    properties.importance_sample_envmap = 1;
+    std::string ptx_path = get_path_ptx("env_cameras.cu");
 
-    int texture_width = environment_sampler->get_width();
-    int texture_height = environment_sampler->get_height();
+    auto texture_width = environment_sampler->get_width();
+    auto texture_height = environment_sampler->get_height();
 
     sampling_properties.env_luminance = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
     sampling_properties.marginal_f = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
@@ -70,7 +68,6 @@ void EnvironmentMap::set_into_gpu(optix::Context & ctx)
 bool EnvironmentMap::on_draw()
 {
 	bool changed = false;
-	const char* env_map_correction_group = "Environment map";
 	if (ImmediateGUIDraw::TreeNode("Environment map"))
 	{
 		char txt[512];
@@ -126,20 +123,35 @@ void EnvironmentMap::presample_environment_map()
 {
     properties.lightmap_rotation_matrix = get_offset_lightmap_rotation_matrix(envmap_deltas.x, envmap_deltas.y, envmap_deltas.z, properties.lightmap_rotation_matrix);
     // Environment importance sampling pre-pass
-    int texture_width = environment_sampler->get_width();
-    int texture_height = environment_sampler->get_height();
+    auto texture_width = environment_sampler->get_width();
+    auto texture_height = environment_sampler->get_height();
 
     if (environment_sampler.get() != nullptr)
     {
         Logger::info << "Presampling envmaps... (size " << std::to_string(texture_width) << " " << std::to_string(texture_height) << ")" << std::endl;
-        context->launch((camera_1), texture_width, texture_height);
+        context->launch(camera_1, texture_width, texture_height);
         Logger::info << "Step 1 complete." << std::endl;
-        context->launch((camera_2), texture_width, texture_height);
+        context->launch(camera_2, texture_width, texture_height);
         Logger::info << "Step 2 complete." << std::endl;
-        context->launch((camera_3), texture_width, texture_height);
+        context->launch(camera_3, texture_width, texture_height);
         Logger::info << "Step 3 complete." << std::endl;
         resample_envmaps = false;
         Logger::info << "Done." << std::endl;
     }
 
+}
+
+EnvironmentMap::EnvironmentMap(std::string envmap_file) : envmap_path(envmap_file),
+                                                          camera_1(0), camera_2(0), camera_3(0)
+{
+    envmap_deltas = optix::make_float3(0);
+    properties.lightmap_multiplier = optix::make_float3(1.0f);
+    properties.importance_sample_envmap = 1;
+}
+
+EnvironmentMap::~EnvironmentMap()
+{
+    environment_sampler.reset();
+    property_buffer->destroy();
+    sampling_property_buffer->destroy();
 }
