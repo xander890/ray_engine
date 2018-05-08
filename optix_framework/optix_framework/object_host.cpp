@@ -15,7 +15,7 @@ Object::Object(optix::Context ctx) : mContext(ctx)
     mReloadMaterials = mReloadShader = mReloadGeometry = true;
 }
 
-void Object::init(const char* name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost> material)
+void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost> material)
 {
     mMeshName = name;
     mGeometry = std::move(geometry);
@@ -191,6 +191,14 @@ bool Object::on_draw()
         if (ImmediateGUIDraw::TreeNode((std::string("Transform##Transform") + mMeshName).c_str()))
         {
             changed |= mTransform->on_draw();
+            ImmediateGUIDraw::TreePop();
+        }
+
+        if (ImmediateGUIDraw::TreeNode((std::string("Geometry##Geometry") + mMeshName).c_str()))
+        {
+            bool g_changed = mGeometry->on_draw();
+            changed |= g_changed;
+            mReloadGeometry = g_changed;
             ImmediateGUIDraw::TreePop();
         }
 

@@ -48,6 +48,8 @@ bool MaterialHost::on_draw(std::string id = "")
 		if (ImmediateGUIDraw::InputFloat3((std::string("Ambient##Ambient") + myid).c_str(), &ka_gui.x))
 		{
 			set_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
+			if(optix::dot(optix::make_float3(ka_gui), optix::make_float3(1)) > 0)
+				mIsEmissive = true;
 		}
 		if (ImmediateGUIDraw::InputFloat3((std::string("Diffuse##Diffuse") + myid).c_str(), &kd_gui.x))
 		{

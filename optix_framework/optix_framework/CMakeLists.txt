@@ -94,8 +94,7 @@ set(HEADERS
     plint.h
     PPMLoader.h
     presampled_surface_bssrdf.h
-    procedural_mesh.h
-    quantized_diffusion.h
+        quantized_diffusion.h
     quantized_diffusion_helpers.h
     quantized_diffusion_host.h
     random.h
@@ -133,7 +132,7 @@ set(HEADERS
     subsurface_scattering_sampled_common.h
     subsurface_scattering_sampled.h
         hemisphere_partitions.h
-        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h brdf_properties.h)
+        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h brdf_properties.h geometry.cpp geometry.h)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp
@@ -186,8 +185,7 @@ set(SRCS
     plint.cpp
     PPMLoader.cpp
     presampled_surface_bssrdf.cpp
-    procedural_mesh.cpp
-    quantized_diffusion_host.cpp
+        quantized_diffusion_host.cpp
     RawLoader.cpp
     rendering_method.cpp
     render_task.cpp
@@ -201,7 +199,7 @@ set(SRCS
     sky_model.cpp
     sphere.cpp
     transform.cpp
-        object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h)
+        object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h geometry.cpp geometry.h)
 
 set(CUDA_SOURCES
 CUDA_files/absorbing_glass.cu

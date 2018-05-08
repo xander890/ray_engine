@@ -19,7 +19,7 @@ __forceinline__ __device__ void get_reference_scene_geometry(const float theta_i
         optix::float3 &wi, optix::float3 &ni, optix::float3 &xo, optix::float3 &no)
 {
     wi = normalize(optix::make_float3(-sinf(theta_i), 0, cosf(theta_i)));
-    // Geometry
+    // MeshGeometry
     xi = optix::make_float3(0, 0, 0);
     ni = optix::make_float3(0, 0, 1);
     xo = xi + r * optix::make_float3(cosf(theta_s), sinf(theta_s), 0);

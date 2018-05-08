@@ -108,7 +108,7 @@ int Scene::add_object(std::shared_ptr<Object> object)
 {
     object->transform_changed_event = std::bind(&Scene::transform_changed, this);
     object->scene = this;
-    mMeshes.push_back(std::shared_ptr<Object>(object));
+    mMeshes.push_back(object);
     scene->addChild(mMeshes.back()->get_dynamic_handle());
     mMeshes.back()->load();
     update_area_lights();

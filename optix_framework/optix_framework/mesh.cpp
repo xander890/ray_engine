@@ -9,13 +9,12 @@
 #include <array>
 #include "object_host.h"
 
-Geometry::Geometry(optix::Context ctx) : mContext(ctx)
+MeshGeometry::MeshGeometry(optix::Context ctx) : Geometry(ctx)
 {
-	static int id = 0;
-	mMeshID = id++;
+
 }
 
-void Geometry::init(const char* name, MeshData meshdata)
+void MeshGeometry::init(const char* name, MeshData meshdata)
 {
     mMeshName = name;
     mMeshData = meshdata;
@@ -23,7 +22,7 @@ void Geometry::init(const char* name, MeshData meshdata)
 	load();
 }
 
-void Geometry::load()
+void MeshGeometry::load()
 {
 	if (!mReloadGeometry)
 		return;
@@ -44,37 +43,14 @@ void Geometry::load()
 	mReloadGeometry = false;
 }
 
-
-
-void Geometry::create_and_bind_optix_data()
-{
-    if (!mIntersectProgram.get()) {
-        std::string path = get_path_ptx("triangle_mesh.cu");
-        mIntersectProgram = mContext->createProgramFromPTXFile(path, "mesh_intersect");
-    }
-
-    if (!mBoundingboxProgram.get()) {
-        std::string path = get_path_ptx("triangle_mesh.cu");
-        mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "mesh_bounds");
-    }
-    if (!mBBoxBuffer.get())
-    {
-        mBBoxBuffer = create_buffer<optix::Aabb>(mContext);
-    }
-    if (!mGeometry)
-    {
-        mGeometry = mContext->createGeometry();
-    }
-}
-
-
-bool Geometry::on_draw()
+bool MeshGeometry::on_draw()
 {
 	bool changed = false;
+    ImmediateGUIDraw::TextWrapped("Triangles: %d\n", mMeshData.mNumTriangles);
 	return changed;
 }
 
-void Geometry::get_flattened_vertices(std::vector<optix::float3> &triangles)
+void MeshGeometry::get_flattened_vertices(std::vector<optix::float3> &triangles)
 {
     optix::float3 * vertices = reinterpret_cast<optix::float3*>(mMeshData.mVbuffer->map());
     optix::int3 * vertices_indices = reinterpret_cast<optix::int3*>(mMeshData.mVIbuffer->map());
@@ -91,11 +67,8 @@ void Geometry::get_flattened_vertices(std::vector<optix::float3> &triangles)
     mMeshData.mVIbuffer->unmap();
 }
 
-Geometry::~Geometry()
+MeshGeometry::~MeshGeometry()
 {
-    mIntersectProgram->destroy();
-    mBoundingboxProgram->destroy();
-    mBBoxBuffer->destroy();
     // FIXME
     //mMeshData.mVbuffer->destroy();
     mMeshData.mVIbuffer->destroy();
@@ -103,5 +76,4 @@ Geometry::~Geometry()
     mMeshData.mNIbuffer->destroy();
     //mMeshData.mTBuffer->destroy();
     mMeshData.mTIbuffer->destroy();
-    mGeometry->destroy();
 }

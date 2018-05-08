@@ -13,10 +13,28 @@
 #include "light_host.h"
 #include "dialogs.h"
 #include "obj_loader.h"
+#include "sphere.h"
+#include "ImageLoader.h"
+#include "plint.h"
+#include "box.h"
+
+std::shared_ptr<MaterialHost> get_default_material(optix::Context ctx)
+{
+    ObjMaterial objmat;
+
+    objmat.ambient_tex = std::move(createOneElementSampler(ctx, optix::make_float4(0)));
+    objmat.diffuse_tex = std::move(createOneElementSampler(ctx, optix::make_float4(1)));
+    objmat.specular_tex = std::move(createOneElementSampler(ctx, optix::make_float4(0)));
+
+    auto b = new MaterialHost(ctx, objmat);
+    return std::shared_ptr<MaterialHost>(b);
+}
 
 bool SceneGUI::on_draw(Scene * scene)
 {
     bool changed = false;
+
+    optix::Context context = scene->context;
 
     if (ImmediateGUIDraw::CollapsingHeader("Meshes"))
     {
@@ -43,6 +61,35 @@ bool SceneGUI::on_draw(Scene * scene)
                 changed = true;
             }
         }
+
+        static int primitive = 0;
+        ImmediateGUIDraw::Combo("Primitive", &primitive, "Sphere\0Plint\0Box", 3);
+
+        if(ImmediateGUIDraw::Button("Add primitive"))
+        {
+            std::shared_ptr<Object> c = std::make_shared<Object>(context);
+            std::unique_ptr<Geometry> g;
+            std::string name;
+            if(primitive == 0)
+            {
+                g = std::make_unique<Sphere>(context, optix::make_float3(0), 1.0f);
+                name = "sphere";
+            }
+            else if (primitive == 1){
+                g = std::make_unique<Plint>(context, optix::make_float3(0), 1, 2, 1);
+                name = "plint";
+            }
+            else
+            {
+                g = std::make_unique<Box>(context, optix::make_float3(0), 1, 1, 1);
+                name = "box";
+
+            }
+            auto m = get_default_material(context);
+            c->init(name.c_str(), std::move(g), m);
+            scene->add_object(c);
+        }
+
         ImmediateGUIDraw::SameLine();
         if(ImmediateGUIDraw::Button("Remove mesh"))
         {

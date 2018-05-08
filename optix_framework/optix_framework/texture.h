@@ -5,6 +5,7 @@
 #include "host_device_common.h"
 #include "optix_serialize.h"
 
+
 class Texture
 {
 public:
@@ -22,6 +23,7 @@ public:
     optix::float4 get_texel(size_t x, size_t y = 0, size_t z = 0) const;
 
 private:
+    int mID;
     optix::Buffer textureBuffer;
     optix::TextureSampler textureSampler;
     RTsize mDimensions[3];

@@ -297,17 +297,28 @@ void ObjScene::serialize_scene()
 {
     Logger::info << "Serializing..." << std::endl;
     std::stringstream ss;
+	std::shared_ptr<std::stringstream> bin = std::make_shared<std::stringstream>();
+
     {
         cereal::XMLOutputArchiveOptix output_archive(ss);
+		output_archive.setBinaryStream(bin);
         output_archive(mScene);
     }
     std::ofstream test("text.xml", std::ofstream::out);
     test << ss.str();
     test.close();
-    Logger::info << "Reloading..." << std::endl;
+
+	std::ofstream test_binary("text_binary.xml", std::ofstream::out);
+    test_binary << bin->str();
+    test_binary.close();
+
+	Logger::info << "Reloading..." << std::endl;
+
     std::ifstream testopen("text.xml", std::ofstream::in);
+    std::ifstream testopenbinary("text_binary.xml", std::ofstream::in);
     {
         cereal::XMLInputArchiveOptix input_archive(context, testopen);
+		input_archive.setBinaryStream(testopenbinary);
         input_archive(mNewScene);
     }
     mScene = std::move(mNewScene);
@@ -847,18 +858,18 @@ void ObjScene::load_parameters(const std::string &config_file)
         return;
     std::ifstream input(config_file);
     cereal::XMLInputArchiveOptix archive(context,input);
-    archive(cereal::make_nvp("data_folder",Folders::data_folder);
-    archive(Folders::ptx_path);
-    archive(parameters);
-    archive(tonemap_parameters);
+    archive(cereal::make_nvp("data_folder",Folders::data_folder));
+    archive(cereal::make_nvp("ptx_folder",Folders::ptx_path));
+    archive(cereal::make_nvp("renderer_parameters",parameters));
+    archive(cereal::make_nvp("tonemap_parameters",tonemap_parameters));
 }
 
 void ObjScene::save_parameters(const std::string &config_file)
 {
     std::ofstream output(config_file);
     cereal::XMLOutputArchiveOptix archive(output);
-    archive(Folders::data_folder);
-    archive(Folders::ptx_path);
-    archive(parameters);
-    archive(tonemap_parameters);
+    archive(cereal::make_nvp("data_folder",Folders::data_folder));
+    archive(cereal::make_nvp("ptx_folder",Folders::ptx_path));
+    archive(cereal::make_nvp("renderer_parameters",parameters));
+    archive(cereal::make_nvp("tonemap_parameters",tonemap_parameters));
 }

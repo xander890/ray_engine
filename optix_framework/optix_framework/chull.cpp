@@ -1,34 +1,75 @@
 #include "chull.h"
 #include "folders.h"
+#include "optix_utils.h"
 
 using namespace optix;
 using namespace std;
 
-void ConvexHull::init()
+void ConvexHull::create_and_bind_optix_data()
 {
-	intersect_program = context->createProgramFromPTXFile(get_path_ptx("chull.cu"), "chull_intersect");
-	bbox_program = context->createProgramFromPTXFile(get_path_ptx("chull.cu"), "chull_bounds");
+	if (!mIntersectProgram.get()) {
+		std::string path = get_path_ptx("chull.cu");
+		mIntersectProgram = mContext->createProgramFromPTXFile(path, "chull_intersect");
+	}
 
-	ProceduralMesh::init();
+	if (!mBoundingboxProgram.get()) {
+		std::string path = get_path_ptx("chull.cu");
+		mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "chull_bounds");
+	}
+	if (!mBBoxBuffer.get())
+	{
+		mBBoxBuffer = create_buffer<optix::Aabb>(mContext);
+	}
+	if (!mGeometry)
+	{
+		mGeometry = mContext->createGeometry();
+	}
 
-	Buffer plane_buffer = context->createBuffer(RT_BUFFER_INPUT);
-	vector<Plane> planes;
-	make_planes(planes, bbox);
-	size_t nsides = planes.size();
+	if(!mPlaneBuffer)
+	{
+		mPlaneBuffer = mContext->createBuffer(RT_BUFFER_INPUT);
+	}
 
-	plane_buffer->setFormat(RT_FORMAT_FLOAT4);
-	plane_buffer->setSize(nsides);
+}
 
-	float4* chplane = (float4*)plane_buffer->map();
+bool ConvexHull::on_draw()
+{
+	return false;
+}
+
+void ConvexHull::load()
+{
+	if (!mReloadGeometry)
+		return;
+
+	create_and_bind_optix_data();
+
+    mPlanes.clear();
+    mBoundingBox.invalidate();
+	make_planes(mPlanes, mBoundingBox);
+	size_t nsides = mPlanes.size();
+
+	mPlaneBuffer->setFormat(RT_FORMAT_FLOAT4);
+	mPlaneBuffer->setSize(nsides);
+
+	float4* chplane = (float4*)mPlaneBuffer->map();
 
 	for (int i = 0; i < nsides; i++){
-		float3 p = planes[i].point;
-		float3 n = normalize(planes[i].normal);
+		float3 p = mPlanes[i].point;
+		float3 n = normalize(mPlanes[i].normal);
 		chplane[i] = make_float4(n, -dot(n, p));
 	}
-	plane_buffer->unmap();
-	geometry["planes"]->setBuffer(plane_buffer);
-	geometry["chull_bbmin"]->setFloat(bbox.m_min);
-	geometry["chull_bbmax"]->setFloat(bbox.m_max);
+
+	mPlaneBuffer->unmap();
+	mGeometry["planes"]->setBuffer(mPlaneBuffer);
+	mGeometry["chull_bbmin"]->setFloat(mBoundingBox.m_min);
+	mGeometry["chull_bbmax"]->setFloat(mBoundingBox.m_max);
+
+	mGeometry->setPrimitiveCount(1);
+	mGeometry->setIntersectionProgram(mIntersectProgram);
+	mGeometry->setBoundingBoxProgram(mBoundingboxProgram);
+	mGeometry->markDirty();
+	initialize_buffer<optix::Aabb>(mBBoxBuffer, mBoundingBox);
+	mReloadGeometry = false;
 }
 

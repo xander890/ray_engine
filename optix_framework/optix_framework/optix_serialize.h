@@ -48,3 +48,43 @@ namespace cereal
 
 }
 
+inline void save_buffer(cereal::XMLOutputArchiveOptix & archive, optix::Buffer buffer, std::string name)
+{
+	void * data = buffer->map();
+	RTsize dim = buffer->getDimensionality();
+	std::vector<RTsize> dims = std::vector<RTsize>(dim);
+	buffer->getSize(dim, &dims[0]);
+	RTsize total_size = 1;
+	for(int i = 0; i < dim; i++)
+		total_size *= dims[i];
+
+	RTsize element = buffer->getElementSize();
+	archive.saveBinaryValue(data, total_size * element, name.c_str());
+	buffer->unmap();
+	archive(cereal::make_nvp(name + "_element_size", element));
+	archive(cereal::make_nvp(name + "_dimensionality", dim));
+	archive(cereal::make_nvp(name + "_size", dims));
+}
+
+inline void load_buffer(cereal::XMLInputArchiveOptix & archive, optix::Buffer & buffer, std::string name)
+{
+	RTsize element, dim;
+	archive(cereal::make_nvp(name + "_element_size", element));
+	archive(cereal::make_nvp(name + "_dimensionality", dim));
+
+	std::vector<RTsize> dims = std::vector<RTsize>(dim);
+	archive(cereal::make_nvp(name + "_size", dims));
+
+	buffer = archive.get_context()->createBuffer(RT_BUFFER_INPUT);
+	buffer->setFormat(RT_FORMAT_USER);
+	buffer->setSize(dim, &dims[0]);
+	buffer->setElementSize(element);
+
+	RTsize total_size = 1;
+	for(int i = 0; i < dim; i++)
+		total_size *= dims[i];
+
+	void * data = buffer->map();
+	archive.loadBinaryValue(data, total_size * element, name.c_str());
+	buffer->unmap();
+}

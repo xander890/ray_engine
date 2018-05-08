@@ -158,8 +158,6 @@ std::unique_ptr<Texture> loadRAWTexture(optix::Context& context,
 		buffer_data[3] = 1.0f;
 		tex->set_data(buffer_data, 4 * sizeof(float));
 		delete[] buffer_data;
-
-
 		return tex;
 	}
 

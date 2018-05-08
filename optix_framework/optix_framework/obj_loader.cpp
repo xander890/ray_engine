@@ -85,7 +85,7 @@ std::vector<std::unique_ptr<Object>>& ObjLoader::load(const optix::Matrix4x4& tr
   // Create vertex data buffers to be shared by all Geometries
   loadVertexData( model, transform );
 
-  // Create a GeometryInstance and Geometry for each obj group
+  // Create a GeometryInstance and MeshGeometry for each obj group
   createMaterialParams( model );
   createGeometryInstances( model );
 
@@ -260,7 +260,7 @@ void ObjLoader::createGeometryInstances(GLMmodel* model)
     MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, (int)num_triangles, bbox };
     std::unique_ptr<Object> rtMesh = std::make_unique<Object>(m_context);
     std::string name = obj_group->name;
-    std::unique_ptr<Geometry> geom = std::make_unique<Geometry>(m_context);
+    std::unique_ptr<MeshGeometry> geom = std::make_unique<MeshGeometry>(m_context);
     geom->init(name.c_str(), meshdata);
     rtMesh->init(name.c_str(), std::move(geom), materialData);
 

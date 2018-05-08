@@ -135,34 +135,85 @@ namespace cereal
                          for the values of default parameters */
       XMLOutputArchiveOptix( std::ostream & stream, Options const & options = Options::Default() ) :
         OutputArchive<XMLOutputArchiveOptix>(this),
-        itsStream(stream),
+        itsRegularStream(stream),
         itsOutputType( options.itsOutputType ),
         itsIndent( options.itsIndent )
       {
         // rapidxml will delete all allocations when xml_document is cleared
-        auto node = itsXML.allocate_node( rapidxml::node_declaration );
-        node->append_attribute( itsXML.allocate_attribute( "version", "1.0" ) );
-        node->append_attribute( itsXML.allocate_attribute( "encoding", "utf-8" ) );
-        itsXML.append_node( node );
+        auto node = itsRegularXML.allocate_node( rapidxml::node_declaration );
+        node->append_attribute( itsRegularXML.allocate_attribute( "version", "1.0" ) );
+        node->append_attribute( itsRegularXML.allocate_attribute( "encoding", "utf-8" ) );
+        itsRegularXML.append_node( node );
 
         // allocate root node
-        auto root = itsXML.allocate_node( rapidxml::node_element, xml_detail::CEREAL_XML_STRING );
-        itsXML.append_node( root );
-        itsNodes.emplace( root );
+        auto root = itsRegularXML.allocate_node( rapidxml::node_element, xml_detail::CEREAL_XML_STRING );
+        itsRegularXML.append_node( root );
+        itsRegularNodes.emplace( root );
 
         // set attributes on the streams
-        itsStream << std::boolalpha;
-        itsStream.precision( options.itsPrecision );
-        itsOS << std::boolalpha;
-        itsOS.precision( options.itsPrecision );
+        itsRegularStream << std::boolalpha;
+        itsRegularStream.precision( options.itsPrecision );
+
+       auto bnode = itsBinaryXML.allocate_node( rapidxml::node_declaration );
+       bnode->append_attribute( itsBinaryXML.allocate_attribute( "version", "1.0" ) );
+       bnode->append_attribute( itsBinaryXML.allocate_attribute( "encoding", "utf-8" ) );
+       itsBinaryXML.append_node( bnode );
+
+          // allocate root node
+        auto broot = itsBinaryXML.allocate_node( rapidxml::node_element, xml_detail::CEREAL_XML_STRING );
+        itsBinaryXML.append_node( broot );
+        itsBinaryNodes.emplace( broot );
+
+          itsBinaryOS << std::boolalpha;
+          itsBinaryOS.precision( options.itsPrecision );
+
+        itsRegularOS << std::boolalpha;
+        itsRegularOS.precision( options.itsPrecision );
+
+        itsStream = &itsRegularStream;
+        itsXML = &itsRegularXML;
+        itsOS = &itsRegularOS;
+        itsNodes = &itsRegularNodes;
       }
 
       //! Destructor, flushes the XML
       ~XMLOutputArchiveOptix() CEREAL_NOEXCEPT
       {
         const int flags = itsIndent ? 0x0 : rapidxml::print_no_indenting;
-        rapidxml::print( itsStream, itsXML, flags );
-        itsXML.clear();
+        rapidxml::print( itsRegularStream, itsRegularXML, flags );
+        itsRegularXML.clear();
+        if(itsBinaryStream != nullptr)
+        {
+            rapidxml::print(*itsBinaryStream, itsBinaryXML, flags);
+            itsBinaryXML.clear();
+        }
+      }
+
+      void setBinaryStream(std::shared_ptr<std::ostream> stream)
+      {
+         itsBinaryStream = stream;
+      }
+
+      void setBinaryMode()
+      {
+          if(itsBinaryStream == nullptr)
+              return;
+
+          itsStream = itsBinaryStream.get();
+          itsXML = &itsBinaryXML;
+          itsNodes = &itsBinaryNodes;
+          itsOS = &itsBinaryOS;
+      }
+
+      void endBinaryMode()
+      {
+          if(itsBinaryStream == nullptr)
+              return;
+          itsStream = &itsRegularStream;
+          itsXML = &itsRegularXML;
+          itsNodes = &itsRegularNodes;
+          itsOS = &itsRegularOS;
+
       }
 
       //! Saves some binary data, encoded as a base64 string, with an optional name
@@ -171,17 +222,52 @@ namespace cereal
           it.  The node will be finished after it has been populated.  */
       void saveBinaryValue( const void * data, size_t size, const char * name = nullptr )
       {
-        itsNodes.top().name = name;
+          if(itsBinaryStream != nullptr)
+          {
+              itsNodes->top().name = name;
 
-        startNode();
+              startNode();
 
-        auto base64string = base64::encode( reinterpret_cast<const unsigned char *>( data ), size );
-        saveValue( base64string );
+              std::string base64string = base64::encode(reinterpret_cast<const unsigned char *>( data ), size);
+              std::hash<std::string> hashing_function;
+              std::string hash = std::to_string(hashing_function(base64string));
+              saveValue(hash);
 
-        if( itsOutputType )
-          itsNodes.top().node->append_attribute( itsXML.allocate_attribute( "type", "cereal binary data" ) );
+              if (itsOutputType)
+                  itsNodes->top().node->append_attribute(itsXML->allocate_attribute("type", "cereal binary data"));
 
-        finishNode();
+              finishNode();
+
+              setBinaryMode();
+              itsNodes->top().name = name;
+
+              startNode();
+
+              saveValue(base64string);
+
+              auto namePtr = itsXML->allocate_string( hash.data(), hash.length() + 1 );
+              itsNodes->top().node->append_attribute(itsXML->allocate_attribute("id", namePtr));
+
+              if (itsOutputType)
+                  itsNodes->top().node->append_attribute(itsXML->allocate_attribute("type", "cereal binary data"));
+
+              finishNode();
+              endBinaryMode();
+          }
+          else
+          {
+              itsNodes->top().name = name;
+
+              startNode();
+
+              auto base64string = base64::encode(reinterpret_cast<const unsigned char *>( data ), size);
+              saveValue(base64string);
+
+              if (itsOutputType)
+                  itsNodes->top().node->append_attribute(itsXML->allocate_attribute("type", "cereal binary data"));
+
+              finishNode();
+          }
       };
 
       //! @}
@@ -199,27 +285,27 @@ namespace cereal
       void startNode()
       {
         // generate a name for this new node
-        const auto nameString = itsNodes.top().getValueName();
+        const auto nameString = itsNodes->top().getValueName();
 
         // allocate strings for all of the data in the XML object
-        auto namePtr = itsXML.allocate_string( nameString.data(), nameString.length() + 1 );
+        auto namePtr = itsXML->allocate_string( nameString.data(), nameString.length() + 1 );
 
         // insert into the XML
-        auto node = itsXML.allocate_node( rapidxml::node_element, namePtr, nullptr, nameString.size() );
-        itsNodes.top().node->append_node( node );
-        itsNodes.emplace( node );
+        auto node = itsXML->allocate_node( rapidxml::node_element, namePtr, nullptr, nameString.size() );
+        itsNodes->top().node->append_node( node );
+        itsNodes->emplace( node );
       }
 
       //! Designates the most recently added node as finished
       void finishNode()
       {
-        itsNodes.pop();
+        itsNodes->pop();
       }
 
       //! Sets the name for the next node created with startNode
       void setNextName( const char * name )
       {
-        itsNodes.top().name = name;
+        itsNodes->top().name = name;
       }
 
       //! Saves some data, encoded as a string, into the current top level node
@@ -229,12 +315,12 @@ namespace cereal
       template <class T> inline
       void saveValue( T const & value )
       {
-        itsOS.clear(); itsOS.seekp( 0, std::ios::beg );
-        itsOS << value << std::ends;
+        itsOS->clear(); itsOS->seekp( 0, std::ios::beg );
+        *itsOS << value << std::ends;
 
-        auto strValue = itsOS.str();
+        auto strValue = itsOS->str();
 
-        // itsOS.str() may contain data from previous calls after the first '\0' that was just inserted
+        // itsOS->str() may contain data from previous calls after the first '\0' that was just inserted
         // and this data is counted in the length call. We make sure to remove that section so that the
         // whitespace validation is done properly
         strValue.resize(std::strlen(strValue.c_str()));
@@ -243,14 +329,14 @@ namespace cereal
         const auto len = strValue.length();
         if ( len > 0 && ( xml_detail::isWhitespace( strValue[0] ) || xml_detail::isWhitespace( strValue[len - 1] ) ) )
         {
-          itsNodes.top().node->append_attribute( itsXML.allocate_attribute( "xml:space", "preserve" ) );
+          itsNodes->top().node->append_attribute( itsXML->allocate_attribute( "xml:space", "preserve" ) );
         }
 
         // allocate strings for all of the data in the XML object
-        auto dataPtr = itsXML.allocate_string(strValue.c_str(), strValue.length() + 1 );
+        auto dataPtr = itsXML->allocate_string(strValue.c_str(), strValue.length() + 1 );
 
         // insert into the XML
-        itsNodes.top().node->append_node( itsXML.allocate_node( rapidxml::node_data, nullptr, dataPtr ) );
+        itsNodes->top().node->append_node( itsXML->allocate_node( rapidxml::node_data, nullptr, dataPtr ) );
       }
 
       //! Overload for uint8_t prevents them from being serialized as characters
@@ -276,17 +362,17 @@ namespace cereal
         const auto nameString = util::demangledName<T>();
 
         // allocate strings for all of the data in the XML object
-        auto namePtr = itsXML.allocate_string( nameString.data(), nameString.length() + 1 );
+        auto namePtr = itsXML->allocate_string( nameString.data(), nameString.length() + 1 );
 
-        itsNodes.top().node->append_attribute( itsXML.allocate_attribute( "type", namePtr ) );
+        itsNodes->top().node->append_attribute( itsXML->allocate_attribute( "type", namePtr ) );
       }
 
       //! Appends an attribute to the current top level node
       void appendAttribute( const char * name, const char * value )
       {
-        auto namePtr =  itsXML.allocate_string( name );
-        auto valuePtr = itsXML.allocate_string( value );
-        itsNodes.top().node->append_attribute( itsXML.allocate_attribute( namePtr, valuePtr ) );
+        auto namePtr =  itsXML->allocate_string( name );
+        auto valuePtr = itsXML->allocate_string( value );
+        itsNodes->top().node->append_attribute( itsXML->allocate_attribute( namePtr, valuePtr ) );
       }
 
     protected:
@@ -324,10 +410,21 @@ namespace cereal
       //! @}
 
     private:
-      std::ostream & itsStream;        //!< The output stream
-      rapidxml::xml_document<> itsXML; //!< The XML document
-      std::stack<NodeInfo> itsNodes;   //!< A stack of nodes added to the document
-      std::ostringstream itsOS;        //!< Used to format strings internally
+
+      std::ostream * itsStream;        //!< The output stream
+      rapidxml::xml_document<>* itsXML; //!< The XML document
+      std::stack<NodeInfo>* itsNodes;   //!< A stack of nodes added to the document
+      std::ostringstream* itsOS;        //!< Used to format strings internally
+
+      std::shared_ptr<std::ostream> itsBinaryStream;        //!< The output binary stream
+      rapidxml::xml_document<> itsBinaryXML; //!< The XML document
+      std::stack<NodeInfo> itsBinaryNodes;   //!< A stack of nodes added to the document
+      std::ostringstream itsBinaryOS;        //!< Used to format strings internally
+
+      std::ostream & itsRegularStream;        //!< The output stream
+      rapidxml::xml_document<> itsRegularXML; //!< The XML document
+      std::stack<NodeInfo> itsRegularNodes;   //!< A stack of nodes added to the document
+      std::ostringstream itsRegularOS;        //!< Used to format strings internally
       bool itsOutputType;              //!< Controls whether type information is printed
       bool itsIndent;                  //!< Controls whether indenting is used
   }; // XMLOutputArchiveOptix
@@ -385,12 +482,16 @@ namespace cereal
           @param stream The stream to read from.  Can be a stringstream or a file. */
       XMLInputArchiveOptix(optix::Context & ctx, std::istream & stream ) :
         InputArchive<XMLInputArchiveOptix>( this ), mContext(ctx),
-        itsData( std::istreambuf_iterator<char>( stream ), std::istreambuf_iterator<char>() )
+        itsRegularData( std::istreambuf_iterator<char>( stream ), std::istreambuf_iterator<char>() )
       {
+          itsData = &itsRegularData;
+          itsXML = &itsRegularXML;
+          itsNodes = &itsRegularNodes;
+
         try
         {
-          itsData.push_back('\0'); // rapidxml will do terrible things without the data being null terminated
-          itsXML.parse<rapidxml::parse_trim_whitespace | rapidxml::parse_no_data_nodes | rapidxml::parse_declaration_node>( reinterpret_cast<char *>( itsData.data() ) );
+          itsData->push_back('\0'); // rapidxml will do terrible things without the data being null terminated
+          itsXML->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_no_data_nodes | rapidxml::parse_declaration_node>( reinterpret_cast<char *>( itsData->data() ) );
         }
         catch( rapidxml::parse_error const & )
         {
@@ -405,11 +506,63 @@ namespace cereal
         }
 
         // Parse the root
-        auto root = itsXML.first_node( xml_detail::CEREAL_XML_STRING );
+        auto root = itsXML->first_node( xml_detail::CEREAL_XML_STRING );
         if( root == nullptr )
           throw Exception("Could not detect cereal root node - likely due to empty or invalid input");
         else
-          itsNodes.emplace( root );
+          itsNodes->emplace( root );
+      }
+
+      void setBinaryStream(std::istream &stream)
+      {
+          itsBinaryData = std::vector<char>( std::istreambuf_iterator<char>( stream ), std::istreambuf_iterator<char>() );
+
+          if(!itsBinaryXML)
+          {
+              itsBinaryXML = new rapidxml::xml_document<>();
+          }
+
+          try
+          {
+              itsBinaryData.push_back('\0'); // rapidxml will do terrible things without the data being null terminated
+              itsBinaryXML->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_no_data_nodes | rapidxml::parse_declaration_node>( reinterpret_cast<char *>( itsBinaryData.data() ) );
+          }
+          catch( rapidxml::parse_error const & )
+          {
+              //std::cerr << "-----Original-----" << std::endl;
+              //stream.seekg(0);
+              //std::cout << std::string( std::istreambuf_iterator<char>( stream ), std::istreambuf_iterator<char>() ) << std::endl;
+
+              //std::cerr << "-----Error-----" << std::endl;
+              //std::cerr << e.what() << std::endl;
+              //std::cerr << e.where<char>() << std::endl;
+              throw Exception("XML Parsing failed - likely due to invalid characters or invalid naming");
+          }
+
+          // Parse the root
+          auto root = itsBinaryXML->first_node( xml_detail::CEREAL_XML_STRING );
+          if( root == nullptr )
+              throw Exception("Could not detect cereal root node - likely due to empty or invalid input");
+          else
+              itsBinaryNodes.emplace( root );
+      }
+
+      void setBinaryMode()
+      {
+          if(itsBinaryXML == nullptr)
+              return;
+          itsXML = itsBinaryXML;
+          itsNodes = &itsBinaryNodes;
+          itsData = &itsBinaryData;
+      }
+
+      void endBinaryMode()
+      {
+          if(itsBinaryXML == nullptr)
+              return;
+          itsData = &itsRegularData;
+          itsXML = &itsRegularXML;
+          itsNodes = &itsRegularNodes;
       }
 
        optix::Context &get_context() {return mContext;}
@@ -424,20 +577,50 @@ namespace cereal
           to loading in/out of order */
       void loadBinaryValue( void * data, size_t size, const char * name = nullptr )
       {
-        setNextName( name );
-        startNode();
+          if(itsBinaryXML != nullptr)
+          {
+              setNextName(name);
+              startNode();
 
-        std::string encoded;
-        loadValue( encoded );
+              std::string hash;
+              loadValue(hash);
 
-        auto decoded = base64::decode( encoded );
+              finishNode();
 
-        if( size != decoded.size() )
-          throw Exception("Decoded binary data size does not match specified size");
+              setBinaryMode();
+              setNextName(name);
+              startNode();
 
-        std::memcpy( data, decoded.data(), decoded.size() );
+              std::string encoded;
+              loadValue(encoded);
 
-        finishNode();
+              auto decoded = base64::decode(encoded);
+
+              if (size != decoded.size())
+                  throw Exception("Decoded binary data size does not match specified size");
+
+              std::memcpy(data, decoded.data(), decoded.size());
+
+              finishNode();
+              endBinaryMode();
+          }
+          else
+          {
+              setNextName(name);
+              startNode();
+
+              std::string encoded;
+              loadValue(encoded);
+
+              auto decoded = base64::decode(encoded);
+
+              if (size != decoded.size())
+                  throw Exception("Decoded binary data size does not match specified size");
+
+              std::memcpy(data, decoded.data(), decoded.size());
+
+              finishNode();
+          }
       };
 
       //! @}
@@ -458,47 +641,47 @@ namespace cereal
           named after the NVP that is being loaded.  If that NVP does not exist, we throw an exception. */
       void startNode()
       {
-        auto next = itsNodes.top().child; // By default we would move to the next child node
-        auto const expectedName = itsNodes.top().name; // this is the expected name from the NVP, if provided
+        auto next = itsNodes->top().child; // By default we would move to the next child node
+        auto const expectedName = itsNodes->top().name; // this is the expected name from the NVP, if provided
 
         // If we were given an NVP name, look for it in the current level of the document.
         //    We only need to do this if either we have exhausted the siblings of the current level or
         //    the NVP name does not match the name of the node we would normally read next
         if( expectedName && ( next == nullptr || std::strcmp( next->name(), expectedName ) != 0 ) )
         {
-          next = itsNodes.top().search( expectedName );
+          next = itsNodes->top().search( expectedName );
 
           if( next == nullptr )
             throw Exception("XML Parsing failed - provided NVP (" + std::string(expectedName) + ") not found");
         }
 
-        itsNodes.emplace( next );
+        itsNodes->emplace( next );
       }
 
       //! Finishes reading the current node
       void finishNode()
       {
         // remove current
-        itsNodes.pop();
+        itsNodes->pop();
 
         // advance parent
-        itsNodes.top().advance();
+        itsNodes->top().advance();
 
         // Reset name
-        itsNodes.top().name = nullptr;
+        itsNodes->top().name = nullptr;
       }
 
       //! Retrieves the current node name
       //! will return @c nullptr if the node does not have a name
       const char * getNodeName() const
       {
-        return itsNodes.top().getChildName();
+        return itsNodes->top().getChildName();
       }
 
       //! Sets the name for the next node created with startNode
       void setNextName( const char * name )
       {
-        itsNodes.top().name = name;
+        itsNodes->top().name = name;
       }
 
       //! Loads a bool from the current top node
@@ -506,7 +689,7 @@ namespace cereal
                                           std::is_same<T, bool>::value> = traits::sfinae> inline
       void loadValue( T & value )
       {
-        std::istringstream is( itsNodes.top().node->value() );
+        std::istringstream is( itsNodes->top().node->value() );
         is.setf( std::ios::boolalpha );
         is >> value;
       }
@@ -517,7 +700,7 @@ namespace cereal
                                           sizeof(T) == sizeof(char)> = traits::sfinae> inline
       void loadValue( T & value )
       {
-        value = *reinterpret_cast<T*>( itsNodes.top().node->value() );
+        value = *reinterpret_cast<T*>( itsNodes->top().node->value() );
       }
 
       //! Load an int8_t from the current top node (ensures we parse entire number)
@@ -540,7 +723,7 @@ namespace cereal
                                           sizeof(T) < sizeof(long long)> = traits::sfinae> inline
       void loadValue( T & value )
       {
-        value = static_cast<T>( std::stoul( itsNodes.top().node->value() ) );
+        value = static_cast<T>( std::stoul( itsNodes->top().node->value() ) );
       }
 
       //! Loads a type best represented as an unsigned long long from the current top node
@@ -549,7 +732,7 @@ namespace cereal
                                           sizeof(T) >= sizeof(long long)> = traits::sfinae> inline
       void loadValue( T & value )
       {
-        value = static_cast<T>( std::stoull( itsNodes.top().node->value() ) );
+        value = static_cast<T>( std::stoull( itsNodes->top().node->value() ) );
       }
 
       //! Loads a type best represented as an int from the current top node
@@ -558,7 +741,7 @@ namespace cereal
                                           sizeof(T) <= sizeof(int)> = traits::sfinae> inline
       void loadValue( T & value )
       {
-        value = static_cast<T>( std::stoi( itsNodes.top().node->value() ) );
+        value = static_cast<T>( std::stoi( itsNodes->top().node->value() ) );
       }
 
       //! Loads a type best represented as a long from the current top node
@@ -567,7 +750,7 @@ namespace cereal
                                           sizeof(T) <= sizeof(long)> = traits::sfinae> inline
       void loadValue( T & value )
       {
-        value = static_cast<T>( std::stol( itsNodes.top().node->value() ) );
+        value = static_cast<T>( std::stol( itsNodes->top().node->value() ) );
       }
 
       //! Loads a type best represented as a long long from the current top node
@@ -576,7 +759,7 @@ namespace cereal
                                           sizeof(T) <= sizeof(long long)> = traits::sfinae> inline
       void loadValue( T & value )
       {
-        value = static_cast<T>( std::stoll( itsNodes.top().node->value() ) );
+        value = static_cast<T>( std::stoll( itsNodes->top().node->value() ) );
       }
 
       //! Loads a type best represented as a float from the current top node
@@ -584,12 +767,12 @@ namespace cereal
       {
         try
         {
-          value = std::stof( itsNodes.top().node->value() );
+          value = std::stof( itsNodes->top().node->value() );
         }
         catch( std::out_of_range const & )
         {
           // special case for denormalized values
-          std::istringstream is( itsNodes.top().node->value() );
+          std::istringstream is( itsNodes->top().node->value() );
           is >> value;
           if( std::fpclassify( value ) != FP_SUBNORMAL )
             throw;
@@ -601,12 +784,12 @@ namespace cereal
       {
         try
         {
-          value = std::stod( itsNodes.top().node->value() );
+          value = std::stod( itsNodes->top().node->value() );
         }
         catch( std::out_of_range const & )
         {
           // special case for denormalized values
-          std::istringstream is( itsNodes.top().node->value() );
+          std::istringstream is( itsNodes->top().node->value() );
           is >> value;
           if( std::fpclassify( value ) != FP_SUBNORMAL )
             throw;
@@ -618,12 +801,12 @@ namespace cereal
       {
         try
         {
-          value = std::stold( itsNodes.top().node->value() );
+          value = std::stold( itsNodes->top().node->value() );
         }
         catch( std::out_of_range const & )
         {
           // special case for denormalized values
-          std::istringstream is( itsNodes.top().node->value() );
+          std::istringstream is( itsNodes->top().node->value() );
           is >> value;
           if( std::fpclassify( value ) != FP_SUBNORMAL )
             throw;
@@ -634,7 +817,7 @@ namespace cereal
       template<class CharT, class Traits, class Alloc> inline
       void loadValue( std::basic_string<CharT, Traits, Alloc> & str )
       {
-        std::basic_istringstream<CharT, Traits> is( itsNodes.top().node->value() );
+        std::basic_istringstream<CharT, Traits> is( itsNodes->top().node->value() );
 
         str.assign( std::istreambuf_iterator<CharT, Traits>( is ),
                     std::istreambuf_iterator<CharT, Traits>() );
@@ -644,7 +827,7 @@ namespace cereal
       template <class T> inline
       void loadSize( T & value )
       {
-        value = getNumChildren( itsNodes.top().node );
+        value = getNumChildren( itsNodes->top().node );
       }
 
     protected:
@@ -727,9 +910,18 @@ namespace cereal
       //! @}
 
     private:
-      std::vector<char> itsData;       //!< The raw data loaded
-      rapidxml::xml_document<> itsXML; //!< The XML document
-      std::stack<NodeInfo> itsNodes;   //!< A stack of nodes read from the document
+      std::vector<char>* itsData;       //!< The raw data loaded
+      rapidxml::xml_document<>* itsXML; //!< The XML document
+      std::stack<NodeInfo>* itsNodes;   //!< A stack of nodes read from the document
+
+      std::vector<char> itsRegularData;       //!< The raw data loaded
+      rapidxml::xml_document<> itsRegularXML; //!< The XML document
+      std::stack<NodeInfo> itsRegularNodes;   //!< A stack of nodes read from the document
+
+      std::vector<char> itsBinaryData;       //!< The raw data loaded
+      rapidxml::xml_document<>* itsBinaryXML = nullptr; //!< The XML document
+      std::stack<NodeInfo> itsBinaryNodes;   //!< A stack of nodes read from the document
+
       optix::Context mContext;
   };
 

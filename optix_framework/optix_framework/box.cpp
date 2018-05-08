@@ -1,12 +1,11 @@
+#include <immediate_gui.h>
 #include "box.h"
-
-const std::string Box::id = "Box";
 
 void Box::make_planes(std::vector<Plane>& planes, optix::Aabb & bbox)
 {
 	bbox.m_min = min_val;
 	bbox.m_max = max_val;
-	
+
 	float3 center = (min_val + max_val) * 0.5f;
 
 	planes.push_back({ make_float3(max_val.x, center.y, center.z), make_float3( 1.0f,  0.0f,  0.0f) });
@@ -17,22 +16,9 @@ void Box::make_planes(std::vector<Plane>& planes, optix::Aabb & bbox)
 	planes.push_back({ make_float3(center.x, center.y, min_val.z), make_float3(0.0f, 0.0f, -1.0f) });
 }
 
-
-ProceduralMesh* Box::create(std::istream& i)
+bool Box::on_draw()
 {
-	float3 min_val;
-	i >> min_val.x;
-	i >> min_val.y;
-	i >> min_val.z;
-	float3 max_val;
-	i >> max_val.x;
-	i >> max_val.y;
-	i >> max_val.z;
-	return new Box(min_val, max_val);
-}
-
-void Box::serialize(std::ostream& o) const
-{
-	o << id << " " << material << " " << min_val.x << " " << min_val.y << " " << min_val.z;
-	o << " " << max_val.x << " " << max_val.y << " " << max_val.z;
+    mReloadGeometry |= ImmediateGUIDraw::InputFloat3("Min", &min_val.x);
+    mReloadGeometry |= ImmediateGUIDraw::InputFloat3("Max", &max_val.x);
+    return mReloadGeometry;
 }

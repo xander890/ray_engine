@@ -34,11 +34,11 @@
 //
 //-----------------------------------------------------------------------------
 
-std::unique_ptr<Texture> createOneElementSampler(optix::Context context, const optix::float3& default_color)
+std::unique_ptr<Texture> createOneElementSampler(optix::Context context, const optix::float4& default_color)
 {
     std::unique_ptr<Texture> tex = std::make_unique<Texture>(context);
 	tex->set_size(1);
-    float data[4] = {default_color.x, default_color.y, default_color.z, 1.0f};
+    float data[4] = {default_color.x, default_color.y, default_color.z, default_color.w};
 	tex->set_data(data, 4*sizeof(float));
     return tex;
 }
@@ -73,7 +73,7 @@ std::unique_ptr<Texture> loadTexture( optix::Context context,
   }
   else
   {
-      return createOneElementSampler(context, default_color);
+      return createOneElementSampler(context, make_float4(default_color,1));
   }
     
 }

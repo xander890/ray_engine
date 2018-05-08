@@ -19,11 +19,12 @@ Texture::Texture(optix::Context context)
     textureSampler->setFilteringModes(RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE);
     textureBuffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT4, 1u, 1u);
     textureSampler->setBuffer(0u, 0u, textureBuffer);
+    mID = textureSampler->getId();
 }
 
 TexPtr Texture::get_id()
 {
-    return textureSampler->getId();
+    return mID;
 }
 
 void Texture::set_data(float *data, size_t size)

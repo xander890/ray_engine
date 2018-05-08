@@ -1,31 +1,62 @@
 #include "sphere.h"
 #include "folders.h"
+#include "optix_utils.h"
+#include "immediate_gui.h"
 
-void Sphere::init()
+void Sphere::create_and_bind_optix_data()
 {
-	intersect_program = context->createProgramFromPTXFile(get_path_ptx("sphere.cu"), "sphere_intersect");
-	bbox_program = context->createProgramFromPTXFile(get_path_ptx("sphere.cu"), "sphere_bounds");
+	if (!mIntersectProgram.get()) {
+		std::string path = get_path_ptx("sphere.cu");
+		mIntersectProgram = mContext->createProgramFromPTXFile(path, "sphere_intersect");
+	}
 
-	ProceduralMesh::init();
-
-	geometry["center"]->setFloat(center);
-	geometry["radius"]->setFloat(radius);
+	if (!mBoundingboxProgram.get()) {
+		std::string path = get_path_ptx("sphere.cu");
+		mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "sphere_bounds");
+	}
+	if (!mBBoxBuffer.get())
+	{
+		mBBoxBuffer = create_buffer<optix::Aabb>(mContext);
+	}
+	if (!mGeometry)
+	{
+		mGeometry = mContext->createGeometry();
+	}
 }
 
-const std::string Sphere::id = "Sphere";
-
-ProceduralMesh* Sphere::create(std::istream& i)
+bool Sphere::on_draw()
 {
-	float3 center;
-	float radius;
-	i >> center.x;
-	i >> center.y;
-	i >> center.z;
-	i >> radius;
-	return new Sphere(center, radius);
+	if(ImmediateGUIDraw::InputFloat3("Center", &center.x))
+	{
+		mReloadGeometry = true;
+	}
+
+	if(ImmediateGUIDraw::InputFloat("Radius", &radius))
+	{
+		mReloadGeometry = true;
+	}
+
+	return mReloadGeometry;
 }
 
-void Sphere::serialize(std::ostream& o) const
+void Sphere::load()
 {
-	o << id << " " << material << " " << center.x << " " << center.y << " " << center.z << " " << radius;
+	if (!mReloadGeometry)
+		return;
+
+	create_and_bind_optix_data();
+
+	mBoundingBox.include(center - make_float3(radius));
+	mBoundingBox.include(center + make_float3(radius));
+
+	mGeometry->setPrimitiveCount(1);
+	mGeometry->setIntersectionProgram(mIntersectProgram);
+	mGeometry->setBoundingBoxProgram(mBoundingboxProgram);
+	mGeometry->markDirty();
+	initialize_buffer<optix::Aabb>(mBBoxBuffer, mBoundingBox);
+	mReloadGeometry = false;
+
+	mGeometry["center"]->setFloat(center);
+	mGeometry["radius"]->setFloat(radius);
 }
+

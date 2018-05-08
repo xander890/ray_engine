@@ -41,4 +41,4 @@ std::unique_ptr<Texture> loadTexture( optix::Context context,
                                             const std::string& filename,
                                             const optix::float3& default_color );
 
-std::unique_ptr<Texture> createOneElementSampler(optix::Context context, const optix::float3& default_color);
+std::unique_ptr<Texture> createOneElementSampler(optix::Context context, const optix::float4& default_color);
