@@ -41,7 +41,7 @@
 static __host__  __device__ __inline__ optix::float3 rotate_vector(const optix::float3& vector, const optix::float3& axis, float angle)
 {
   float sin_ang, cos_ang;
-  sincosf(angle, &sin_ang, &cos_ang);
+  sincosf(angle, sin_ang, cos_ang);
 
   optix::float3 out = vector*cos_ang;
 

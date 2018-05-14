@@ -102,7 +102,6 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window)
 // 	test_forward_dipole();
 	m_context->setPrintBufferSize(2000);
 	m_context->setPrintLaunchIndex(10000);
-	Folders::init();
 	m_context["scene_epsilon"]->setFloat(1e-3f);
 	auto top_node = m_context->createGroup();
 	auto accel = m_context->createAcceleration("Bvh");

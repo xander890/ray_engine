@@ -46,7 +46,7 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
     mSampleBuffer->setElementSize(sizeof(PositionSample));
     mSampleBuffer->setSize(mSamples);
 
-	auto s = ScatteringDipole::to_enum(ConfigParameters::get_parameter<std::string>("bssrdf", "bssrdf_model", ScatteringDipole::to_string(ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF), "Default dipole. Available : " + ScatteringDipole::get_full_string()));
+	auto s = ScatteringDipole::DIRECTIONAL_DIPOLE_BSSRDF; // FIXME SERIALIZE
 	mBSSRDF = BSSRDF::create(context, s);
 	mCdfBuffer = context->createBuffer(RT_BUFFER_INPUT);
 }

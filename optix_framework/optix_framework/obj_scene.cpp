@@ -28,6 +28,7 @@
 #include "cputimer.h"
 #include "sky_model.h"
 #include "bssrdf_visualizer.h"
+#include <algorithm>
 
 using namespace std;
 using optix::uint2;
@@ -109,7 +110,6 @@ ObjScene::ObjScene()
 
 inline ObjScene::~ObjScene()
 {
-	ConfigParameters::free();
 	ObjScene::clean_up();
 }
 
@@ -184,14 +184,6 @@ bool ObjScene::draw_gui()
 			}
 		}
 		ImmediateGUIDraw::SameLine();
-		if (ImmediateGUIDraw::Button("Save current configuration file"))
-		{
-			std::string filePath;
-			if (Dialogs::saveFileDialog(filePath))
-			{
-				ConfigParameters::dump_used_parameters(filePath);
-			}
-		}
 
 	}
 
@@ -577,7 +569,7 @@ void ObjScene::trace()
 		if (current_render_task->is_finished())
 		{
 			export_raw(current_render_task->get_destination_file(), rendering_output_buffer, m_frame);
-			ConfigParameters::dump_used_parameters(current_render_task->get_destination_file() + ".xml");
+			
 			current_render_task->end();
 		}
         auto l = total1 - total0;

@@ -134,9 +134,6 @@ int main( int argc, char** argv )
 	}
 	}
 
-	ConfigParameters::init(config_file);
-	ConfigParameters::override_parameters(additional_parameters);
-
 	GLFWDisplay::setRequiresDisplay(!nodisplay);
 	GLFWDisplay::init( argc, argv );
 	

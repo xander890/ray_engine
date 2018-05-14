@@ -37,7 +37,7 @@ __device__ __host__ __forceinline__ Float evalMonopole(
 	Float3 Hnorm = Float3(H / lHl);
 	Float lHlreg = (lHl > 1. / MTS_FWDSCAT_DIRECTION_MIN_MU) ?
 		1. / MTS_FWDSCAT_DIRECTION_MIN_MU : lHl;
-	Float cosTheta = clamp(dot(u0, Hnorm), -1., 1.);
+	Float cosTheta = optix::clamp(dot(u0, Hnorm), -1.f, 1.f);
 
 	double N = absorptionAndFloat3izationConstant(length, material.sigma_s, material.sigma_a, material.mu);
 	double G = N * exp(-C + E*dot(R, uL) + lHlreg*cosTheta - F*dot(R, R));

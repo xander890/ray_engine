@@ -10,7 +10,6 @@
 #define RTRT_GLM_H
 
 // For SUTILAPI
-#define _USE_MATH_DEFINES
 
 /* includes */
 

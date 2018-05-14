@@ -127,6 +127,7 @@ int Scene::add_light(std::shared_ptr<SingularLight> light)
     mLights.push_back(light);
     mSingularLightBuffer->setSize(mLights.size());
     update_singular_lights();
+	return mLights.size() - 1;
 }
 
 int Scene::add_object(std::unique_ptr<Object> object)
@@ -173,6 +174,7 @@ std::shared_ptr<Camera> Scene::get_camera(int camera_id)
     {
         return *val;
     }
+	return nullptr;
 }
 
 void Scene::set_miss_program(std::unique_ptr<MissProgram> miss)

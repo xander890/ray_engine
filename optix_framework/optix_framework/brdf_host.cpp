@@ -85,6 +85,7 @@ MERLBRDF &MERLBRDF::operator=(const MERLBRDF &other)
     data = other.data;
     reflectance = other.reflectance;
     mName = other.mName;
+	return *this;
 }
 
 bool MERLBRDF::on_draw()

@@ -6,7 +6,7 @@
 #include "logger.h"
 #include <map>
 
-
+/*
 class ConfigParameters
 {
 	struct NodeElem
@@ -56,4 +56,6 @@ protected:
 	
 	static void parse_doc();
 };
+*/
+
 #endif // parameter_parser_h__

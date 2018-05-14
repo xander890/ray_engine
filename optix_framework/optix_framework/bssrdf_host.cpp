@@ -14,6 +14,7 @@ BSSRDF::BSSRDF(optix::Context & ctx, ScatteringDipole::Type type)
 
 bool BSSRDF::on_draw()
 {
+	return false;
 }
 
 void BSSRDF::load(const float, const ScatteringMaterialProperties &)

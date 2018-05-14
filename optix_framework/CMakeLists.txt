@@ -57,6 +57,7 @@ OPTION(CUDA_REMOVE_GLOBAL_MEMORY_SPACE_WARNING "Suppress the \"Advisory: Cannot 
 # This passes a preprocessor definition to cl.exe when processing CUDA code.
 if(USING_WINDOWS_CL)
   list(APPEND CUDA_NVCC_FLAGS --compiler-options /D_USE_MATH_DEFINES)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 endif()
 
 find_package(OptiX REQUIRED)
@@ -102,4 +103,4 @@ add_subdirectory(nfd)
 add_subdirectory(gel)
 add_subdirectory(optix_framework)
 add_subdirectory(renderer)
-add_subdirectory(bssrdf_creator)
+#add_subdirectory(bssrdf_creator)
