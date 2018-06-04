@@ -5,7 +5,7 @@
 
 // Variables for shading
 rtDeclareVariable(optix::float3, shading_normal, attribute shading_normal, );
-rtDeclareVariable(optix::float3, texcoord, attribute texcoord, ); 
+rtDeclareVariable(optix::float2, texcoord, attribute texcoord, );
 
 using optix::rtTex2D;
 using optix::make_float3;
@@ -23,8 +23,7 @@ RT_PROGRAM void any_hit_shadow()
 // Closest hit program for ambient light = illumination model 0
 RT_PROGRAM void shade() 
 { 
-    float3 hit_pos = ray.origin + t_hit * ray.direction;
-    MaterialDataCommon mat = get_material(hit_pos);
+    MaterialDataCommon mat = get_material(texcoord);
     float3 k_d = make_float3(rtTex2D<float4>(mat.diffuse_map, texcoord.x, texcoord.y));	
 	prd_radiance.result = k_d;
 }

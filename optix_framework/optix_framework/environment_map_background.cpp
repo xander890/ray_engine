@@ -1,15 +1,10 @@
 #include "environment_map_background.h"
 #include "optix_helpers.h"
 #include "folders.h"
-#include "host_device_common.h"
-#include "environment_map.h"
-#include <cmath>
-#include "enums.h"
-#include "SampleScene.h"
+#include "logger.h"
 #include "ImageLoader.h"
 #include "optix_utils.h"
 #include "dialogs.h"
-#include "parameter_parser.h"
 
 #pragma warning(disable:4996) 
 using namespace optix;

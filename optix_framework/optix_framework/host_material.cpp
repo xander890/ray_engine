@@ -1,5 +1,4 @@
 #include "host_material.h"
-#include "parameter_parser.h"
 #include "material_library.h"
 #include "scattering_material.h"
 #include <algorithm>
@@ -11,7 +10,7 @@
 #pragma warning (disable : 4244)
 #pragma warning (disable : 4305)
 #include <quantized_diffusion_helpers.h>
-#include "texture.h"
+#include "logger.h"
 
 using optix::float3;
 
@@ -186,7 +185,7 @@ const MaterialDataCommon& MaterialHost::get_data()
 }
 
 
-bool MaterialHost::hasChanged()
+bool MaterialHost::has_changed()
 {
 	return mHasChanged || scattering_material->hasChanged();
 }

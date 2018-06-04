@@ -24,7 +24,7 @@ rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
-rtDeclareVariable(float3, texcoord, attribute texcoord, );
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
 
 
 
@@ -36,7 +36,7 @@ rtDeclareVariable(float3, eye, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() {
-    const MaterialDataCommon & material = get_material();
+    const MaterialDataCommon & material = get_material(texcoord);
     float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
 	shadow_hit(prd_shadow, emission);
 }
@@ -71,7 +71,7 @@ __inline__ __device__ float3 sample_procedural_tex(float3 & position_local)
 
 __inline__ __device__ float3 get_k_d()
 {
-    MaterialDataCommon material = get_material();
+    MaterialDataCommon material = get_material(texcoord);
 	float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
 	return k_d;
 }
@@ -91,7 +91,7 @@ __inline__ __device__ float3 shade_specular(const float3& hit_pos, const float3 
 
 RT_PROGRAM void shade()
 {
-	const MaterialDataCommon & material = get_material();
+	const MaterialDataCommon & material = get_material(texcoord);
 	float3 k_d = get_k_d();
 	optix_print("Lambertian Hit Kd = %f %f %f\n", k_d.x, k_d.y, k_d.z);
 	float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));

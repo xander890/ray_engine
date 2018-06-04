@@ -2,7 +2,7 @@
 #include <shader.h>
 #include <mesh.h>
 #include <string>
-#include <parameter_parser.h>
+
 class BSSRDFRenderer;
 
 class HemisphereBSSRDFShader : public Shader

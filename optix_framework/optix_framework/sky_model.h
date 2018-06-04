@@ -37,7 +37,6 @@ static __inline__ __device__ __host__ optix::float3 sky_color(int ray_depth, opt
 }
 
 #ifndef __CUDA_ARCH__
-#include "parameter_parser.h"
 #include "optix_serialize.h"
 #include <cmath>
 #include "miss_program.h"

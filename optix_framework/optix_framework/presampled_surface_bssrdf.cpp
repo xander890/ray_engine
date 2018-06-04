@@ -3,7 +3,6 @@
 #include "scattering_material.h"
 #include "immediate_gui.h"
 #include "optix_utils.h"
-#include "parameter_parser.h"
 #include "object_host.h"
 
 using optix::Buffer;

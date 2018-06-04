@@ -88,8 +88,6 @@ __host__ __device__ __inline__ optix::float2 cartesian_to_spherical(const optix:
     return optix::make_float2(acosf(v.z), atan2f(v.y, v.x));
 }
 
-
-
 __host__ __device__ __inline__ optix::float2 direction_to_uv_coord_cubemap(const optix::float3& direction, const optix::Matrix3x3& rotation = optix::Matrix3x3::identity())
 {
 	optix::float3 dir = rotation * direction;

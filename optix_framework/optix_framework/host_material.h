@@ -28,7 +28,7 @@ public:
 	bool on_draw(std::string id);
     const MaterialDataCommon& get_data(); 
     std::string get_name() { return mMaterialName; }
-	bool hasChanged();
+	bool has_changed();
 	static void set_default_material(ObjMaterial mat);
 	bool is_emissive();
 	const std::vector<std::shared_ptr<Texture>>& get_textures() {return textures;}

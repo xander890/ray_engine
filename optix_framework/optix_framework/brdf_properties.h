@@ -9,7 +9,7 @@
 
 struct BRDFGeometry
 {
-    optix::float3 texcoord;
+    optix::float2 texcoord;
     optix::float3 wi;
     optix::float3 wo;
     optix::float3 n;

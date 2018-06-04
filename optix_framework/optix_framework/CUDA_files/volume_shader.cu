@@ -16,6 +16,8 @@ using namespace optix;
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
+
 
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
@@ -126,7 +128,7 @@ RT_PROGRAM void shade()
     float3 hit_pos = ray.origin + t_hit*ray.direction;
     float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
     float3 w_i = -ray.direction;
-    const MaterialDataCommon & material = get_material();
+    const MaterialDataCommon & material = get_material(texcoord);
     float n1_over_n2 = 1.0f / material.relative_ior;
     float cos_theta_in = dot(normal, w_i);
 

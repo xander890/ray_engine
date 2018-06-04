@@ -459,7 +459,7 @@ extern "C" {
    * Cluster's bounding box and intersection programs are attached to the mesh.
    * The intersection program has the following attributes: 
    *  - @ref rtDeclareVariable(   int, primitive_id, attribute primitive_id, ); 
-   *  - @ref rtDeclareVariable(float3, texcoord, attribute texcoord, ); It is always zero
+   *  - @ref rtDeclareVariable(float2, texcoord, attribute texcoord, ); It is always zero
    *  - @ref rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
    *  - @ref rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); It is equal to geometric_normal
    *
@@ -497,7 +497,7 @@ extern "C" {
    * Cluster's bounding box and intersection programs are attached to the mesh.
    * The intersection program has the following attributes: 
    *  - @ref rtDeclareVariable(   int, primitive_id, attribute primitive_id, ); 
-   *  - @ref rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
+   *  - @ref rtDeclareVariable(float2, texcoord, attribute texcoord, );
    *  - @ref rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
    *  - @ref rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); 
    *

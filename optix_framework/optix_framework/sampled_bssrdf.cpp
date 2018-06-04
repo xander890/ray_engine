@@ -2,8 +2,8 @@
 #include "object_host.h"
 #include "immediate_gui.h"
 #include "scattering_material.h"
-#include "parameter_parser.h"
 #include "string_utils.h"
+#include "logger.h"
 
 inline float computeSamplingMfp(SamplingMfpType::Type e, const optix::float3& t)
 {

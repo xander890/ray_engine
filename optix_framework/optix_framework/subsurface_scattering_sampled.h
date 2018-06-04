@@ -20,7 +20,7 @@ rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
-rtDeclareVariable(float3, texcoord, attribute texcoord, );
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
 rtDeclareVariable(unsigned int, samples_per_pixel, , );
 
 rtDeclareVariable(BufPtr<BSSRDFSamplingProperties>, bssrdf_sampling_properties, , );

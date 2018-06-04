@@ -63,8 +63,6 @@ public:
 	bool draw_gui();
 
     void create_3d_noise(float frequency);
-    float noise_frequency = 25;
-	int use_heterogenous_materials = 0;
 
 	void initialize_scene(GLFWwindow * window) override;
 	void trace() override;

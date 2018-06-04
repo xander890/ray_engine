@@ -7,12 +7,19 @@
 #include "scattering_material.h"
 #include <algorithm>
 #include "immediate_gui.h"
+#include "dialogs.h"
+#include "ImageLoader.h"
+#include "obj_loader.h"
+#include "scene_gui.h"
 
 Object::Object(optix::Context ctx) : mContext(ctx)
 {
     static int id = 0;
     mMeshID = id++;
     mReloadMaterials = mReloadShader = mReloadGeometry = true;
+    mMaterialSelectionTexture = std::make_unique<Texture>(ctx, Texture::INT, 1);
+    int default_label = 0;
+    mMaterialSelectionTexture->set_data(&default_label, sizeof(int));
 }
 
 void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost> material)
@@ -32,7 +39,9 @@ void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::sha
 
 void Object::load_materials()
 {
-    bool one_material_changed = std::any_of(mMaterialData.begin(), mMaterialData.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->hasChanged();  });
+    auto id = mMaterialSelectionTexture->get_id();
+    mMaterial["material_selector"]->setUserData(sizeof(TexPtr), &id);
+    bool one_material_changed = std::any_of(mMaterialData.begin(), mMaterialData.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->has_changed();  });
     mReloadMaterials |= one_material_changed;
 
     if(!mReloadMaterials)
@@ -182,6 +191,23 @@ void Object::add_material(std::shared_ptr<MaterialHost> material)
     load_materials();
 }
 
+inline std::unique_ptr<Texture> create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr)
+{
+    std::unique_ptr<Texture> ret = std::make_unique<Texture>(ctx, Texture::INT, 1);
+    ret->set_size(ptr->get_width(), ptr->get_height());
+    for(int i = 0; i < ptr->get_width(); i++)
+    {
+        for(int j = 0; j < ptr->get_height(); j++)
+        {
+            float value = ptr->get_texel<optix::float4>(i,j).x;
+            int val = value > 0.5? 1 : 0;
+            ret->set_texel<int>(val, i, j);
+        }
+    }
+    ret->update();
+    return ret;
+}
+
 bool Object::on_draw()
 {
     ImmediateGUIDraw::PushItemWidth(200);
@@ -230,9 +256,27 @@ bool Object::on_draw()
             ImmediateGUIDraw::TreePop();
         }
 
-
         if (ImmediateGUIDraw::TreeNode((std::string("Materials##Materials") + mMeshName).c_str()))
         {
+            if(ImmediateGUIDraw::Button("Load material selection texture..."))
+            {
+                std::string d;
+                if(Dialogs::openFileDialog(d))
+                {
+                    auto t = loadTexture(mContext, d, optix::make_float3(0));
+                    mMaterialSelectionTexture = create_label_texture(mContext, t);
+                    mMaterialSelectionTexture->get_sampler()->setFilteringModes(RT_FILTER_NEAREST, RT_FILTER_NEAREST, RT_FILTER_NONE);
+                    load_materials();
+                }
+            }
+
+            if(ImmediateGUIDraw::Button("Add material"))
+            {
+                add_material(get_default_material(mContext));
+                load_materials();
+            }
+
+
             for (auto& m : mMaterialData)
             {
                 changed |= m->on_draw(mMeshName);

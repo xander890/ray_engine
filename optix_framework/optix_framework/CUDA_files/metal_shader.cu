@@ -17,11 +17,11 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
-rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() {
-    const MaterialDataCommon & material = get_material();
+    const MaterialDataCommon & material = get_material(texcoord);
     float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
 	shadow_hit(prd_shadow,emission);
 }
@@ -34,7 +34,7 @@ RT_PROGRAM void shade()
 
     if(prd_radiance.depth < max_depth)
     {
-        float3 R = fresnel_complex_R(-ray.direction, ffnormal, get_material().ior_complex_real_sq, get_material().ior_complex_imag_sq);
+        float3 R = fresnel_complex_R(-ray.direction, ffnormal, get_material(texcoord).ior_complex_real_sq, get_material(texcoord).ior_complex_imag_sq);
         PerRayData_radiance prd_new = prepare_new_pt_payload(prd_radiance);
 		float3 new_dir = reflect(ray.direction, ffnormal);
 

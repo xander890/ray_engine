@@ -17,7 +17,7 @@ rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
-rtDeclareVariable(float3, texcoord, attribute texcoord, );
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
 
 rtBuffer<float3, 1> normalized_cie_rgb; 
 rtBuffer<float, 1> normalized_cie_rgb_cdf;
@@ -30,7 +30,7 @@ rtDeclareVariable(float, ior_real_step, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() {
-    const MaterialDataCommon & material = get_material();
+    const MaterialDataCommon & material = get_material(texcoord);
 	float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
 
 	shadow_hit(prd_shadow, emission);
@@ -55,7 +55,7 @@ __forceinline__ __device__ unsigned int cdf_bsearch(float xi)
 RT_PROGRAM void shade()
 {
 	float3 color = make_float3(0.0f);
-    const MaterialDataCommon & material = get_material();
+    const MaterialDataCommon & material = get_material(texcoord);
 
 	if (prd_radiance.depth < max_depth)
 	{
@@ -142,7 +142,7 @@ RT_PROGRAM void shade_path_tracing(void)
 			//w = 1.0f;
 		}
 
-        float3 ior = get_material().ior_complex_real_sq;
+        float3 ior = get_material(texcoord).ior_complex_real_sq;
 		float index_of_refraction = sqrt(get_band(ior, band));
 #endif
 		// Setting up payload and glass rays.

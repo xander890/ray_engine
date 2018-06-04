@@ -19,7 +19,7 @@
  */
 
 
-
+#include <device_common_data.h>
 #include <optixu/optixu_math_namespace.h>
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixu_aabb_namespace.h>
@@ -29,11 +29,10 @@ using namespace optix;
 rtDeclareVariable(float3, boxmin, , );
 rtDeclareVariable(float3, boxmax, , );
 // Get an internal variable
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 // Attributes are variables with a specific function: they must be passed from this intersection program to
 // the shader program (in case there's something that needs to be shared). This is somewhat similar to the
 // openGL attribute variables passed to shaders
-rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); 
 
@@ -69,7 +68,7 @@ RT_PROGRAM void box_intersect(int)
 		if( rtPotentialIntersection(tmin) ) 
 		{
 			// If it is, we have a valid intersection so calculate normals for further shading
-			texcoord = make_float3( 0.0f );
+			texcoord = make_float2( 0.0f );
 			shading_normal = geometric_normal = boxnormal( tmin );
 			// Confirm the intersection and assigns it material 0
 			if(rtReportIntersection(0))
@@ -79,7 +78,7 @@ RT_PROGRAM void box_intersect(int)
 		{
 			if( rtPotentialIntersection( tmax ) ) 
 			{
-				texcoord = make_float3( 0.0f );
+				texcoord = make_float2( 0.0f );
 				shading_normal = geometric_normal = boxnormal( tmax );
 				rtReportIntersection(0);
 			}

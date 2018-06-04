@@ -7,7 +7,6 @@
 #include "singular_light.h"
 #include "obj_scene.h"
 #include "simple_tracing.h"
-#include "parameter_parser.h"
 #include "material_library.h"
 #include "ambient_occlusion.h"
 #include "path_tracing.h"
@@ -242,16 +241,6 @@ bool ObjScene::draw_gui()
 
     changed = mScene->on_draw();
 
-	if (ImmediateGUIDraw::CollapsingHeader("Heterogenous materials"))
-	{
-		ImmediateGUIDraw::Checkbox("Enable##EnableHeterogenousMaterials", (bool*)&use_heterogenous_materials);
-		if (ImmediateGUIDraw::InputFloat("Noise frequency##HeterogenousNoseFreq", &noise_frequency, 0.1f, 1.0f))
-		{
-			changed = true;
-			create_3d_noise(noise_frequency);
-		}
-	}
-
 	const bool is_active = current_render_task->is_active();
 	const int flag = is_active ? ImGuiTreeNodeFlags_DefaultOpen : 0;
 	if (ImmediateGUIDraw::CollapsingHeader("Render tasks", flag))
@@ -413,12 +402,6 @@ void ObjScene::initialize_scene(GLFWwindow *)
     unsigned int camera_width = camera->get_width();
     unsigned int camera_height = camera->get_height();
 
-	// Setup context
-
-	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
-
-	// Constant colors
-
 	// Tone mapping pass
 	rendering_output_buffer = createPBOOutputBuffer("output_buffer", RT_FORMAT_FLOAT4, RT_BUFFER_INPUT_OUTPUT, camera->get_width(), camera->get_height());
 	tonemap_output_buffer = createPBOOutputBuffer("tonemap_output_buffer", RT_FORMAT_UNSIGNED_BYTE4, RT_BUFFER_INPUT_OUTPUT, camera->get_width(), camera->get_height());
@@ -429,7 +412,6 @@ void ObjScene::initialize_scene(GLFWwindow *)
 
 	// We need the scene bounding box for placing the camera
 	Aabb bbox(make_float3(-1,-1,-1), make_float3(1,1,1));
-	
 
 	// Load geometry from OBJ files into the group of scene objects
 	Logger::info << "Loading obj files..." << endl;
@@ -456,10 +438,7 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	
 	context["importance_sample_area_lights"]->setUint(static_cast<unsigned int>(mImportanceSampleAreaLights));
 
-
-    // FIXME PROCEDURAL SCENES
     load_default_camera();
-
 
 	Logger::info << "Loading programs..." << endl;
 	// Set top level geometry in acceleration structure. 
@@ -477,7 +456,6 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	context["image_part_to_zoom"]->setUint(zoomed_area);
 	context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	// Environment cameras
-	
 
 	Logger::info <<"Loading camera parameters..."<<endl;
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
@@ -512,7 +490,6 @@ void ObjScene::trace()
 	if (mbPaused)
 		return;
 
-	context["use_heterogenous_materials"]->setInt(use_heterogenous_materials);
     context["tonemap_multiplier"]->setFloat(tonemap_parameters.multiplier);
 	context["tonemap_exponent"]->setFloat(tonemap_parameters.exponent);
 

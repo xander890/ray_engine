@@ -17,13 +17,13 @@ rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(unsigned int , maximum_volume_steps, , );
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
 
 
 __device__ __forceinline__ float get_volume_step()
 {   
     float m = local_bounding_box->maxExtent();
-    float max_voxels = 2.0f * rtTexSize(noise_tex).x;
-    float step = m / max_voxels;
+    float step = m / 1000;
     return step;
 }
 
@@ -146,7 +146,7 @@ RT_PROGRAM void shade()
     float3 hit_pos = ray.origin + t_hit*ray.direction;
     float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
     float3 w_i = -ray.direction;
-    const MaterialDataCommon & material = get_material();
+    const MaterialDataCommon & material = get_material(texcoord);
     const ScatteringMaterialProperties& props = material.scattering_properties;
     float n1_over_n2 = 1.0f / material.relative_ior;
     float cos_theta_in = dot(normal, w_i);

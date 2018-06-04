@@ -193,7 +193,7 @@ void Scene::update_area_lights()
             return;
         }
         auto texture = obj.get_main_material()->get_ambient_texture();
-        optix::float3 color = optix::make_float3(texture->get_texel(0,0,0));
+        optix::float3 color = optix::make_float3(texture->get_texel<optix::float4>(0,0,0));
 
         std::vector<optix::float3> vs;
         obj.mGeometry->get_flattened_vertices(vs);

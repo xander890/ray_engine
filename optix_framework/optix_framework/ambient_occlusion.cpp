@@ -1,5 +1,4 @@
 #include "ambient_occlusion.h"
-#include "parameter_parser.h"
 using namespace optix;
 
 

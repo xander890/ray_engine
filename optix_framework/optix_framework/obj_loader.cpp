@@ -23,6 +23,7 @@
 
 #include <fstream>
 #include <ImageLoader.h>
+#include "logger.h"
 
 //------------------------------------------------------------------------------
 // 
@@ -31,6 +32,7 @@
 //------------------------------------------------------------------------------
 using optix::Buffer;
 using optix::int3;
+using optix::float2;
 using optix::float3;
 using optix::float4;
 using optix::make_float3;
@@ -182,79 +184,105 @@ std::vector<ObjMaterial> ObjLoader::parse_mtl_file(std::string mat, optix::Conte
 void ObjLoader::createGeometryInstances(GLMmodel* model)
 {
 
+    float3* vbuffer_data = static_cast<float3*>( m_vbuffer->map() );
+    float3* nbuffer_data = static_cast<float3*>( m_nbuffer->map() );
+    optix::float2* tbuffer_data = static_cast<optix::float2*>( m_tbuffer->map() );
 
   // Loop over all groups -- grab the triangles and material props from each group
   unsigned int triangle_count = 0u;
   unsigned int group_count = 0u;
-  for ( GLMgroup* obj_group = model->groups;
-		obj_group != 0;
-		obj_group = obj_group->next, group_count++ ) {
+    for ( GLMgroup* obj_group = model->groups;
+        obj_group != 0;
+        obj_group = obj_group->next, group_count++ ) {
 
-	unsigned int num_triangles = obj_group->numtriangles;
-	if ( num_triangles == 0 ) continue; 
+    unsigned int num_triangles = obj_group->numtriangles;
+    if ( num_triangles == 0 ) continue;
 
-	// Create vertex index buffers
-	Buffer vindex_buffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_INT3, num_triangles );
-	int3* vindex_buffer_data = static_cast<int3*>( vindex_buffer->map() );
+    // Create vertex index buffers
+    Buffer vindex_buffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_INT3, num_triangles );
+    int3* vindex_buffer_data = static_cast<int3*>( vindex_buffer->map() );
 
-	Buffer tindex_buffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_INT3, num_triangles );
-	int3* tindex_buffer_data = static_cast<int3*>( tindex_buffer->map() );
+    Buffer tindex_buffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_INT3, num_triangles );
+    int3* tindex_buffer_data = static_cast<int3*>( tindex_buffer->map() );
 
-	Buffer nindex_buffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_INT3, num_triangles );
-	int3* nindex_buffer_data = static_cast<int3*>( nindex_buffer->map() );
+    Buffer nindex_buffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_INT3, num_triangles );
+    int3* nindex_buffer_data = static_cast<int3*>( nindex_buffer->map() );
 
-	Buffer mbuffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_UNSIGNED_INT, num_triangles );
-	unsigned int* mbuffer_data = static_cast<unsigned int*>( mbuffer->map() );
+    Buffer mbuffer = m_context->createBuffer( RT_BUFFER_INPUT, RT_FORMAT_UNSIGNED_INT, num_triangles );
+    unsigned int* mbuffer_data = static_cast<unsigned int*>( mbuffer->map() );
 
     optix::Aabb bbox;
 
-	for ( unsigned int i = 0; i < obj_group->numtriangles; ++i, ++triangle_count ) {
+    float avg = 0.0f;
+    float avg_sq = 0.0f;
 
-	  unsigned int tindex = obj_group->triangles[i];
-	  int3 vindices;
-	  vindices.x = model->triangles[ tindex ].vindices[0] - 1; 
-	  vindices.y = model->triangles[ tindex ].vindices[1] - 1; 
-	  vindices.z = model->triangles[ tindex ].vindices[2] - 1; 
-	  assert( vindices.x <= static_cast<int>(model->numvertices) );
-	  assert( vindices.y <= static_cast<int>(model->numvertices) );
-	  assert( vindices.z <= static_cast<int>(model->numvertices) );
-	  
-	  vindex_buffer_data[ i ] = vindices;
+    for ( unsigned int i = 0; i < obj_group->numtriangles; ++i, ++triangle_count ) {
 
-      if (vindices.x > 2 && vindices.y > 2 && vindices.z > 2)
-      {
-          float3 vx = *((float3*)&model->vertices[vindices.x * 3]); bbox.include(vx);
-          float3 vy = *((float3*)&model->vertices[vindices.y * 3]); bbox.include(vy);
-          float3 vz = *((float3*)&model->vertices[vindices.z * 3]); bbox.include(vz);
-      }
+      unsigned int tindex = obj_group->triangles[i];
+      int3 vindices;
+      vindices.x = model->triangles[ tindex ].vindices[0] - 1;
+      vindices.y = model->triangles[ tindex ].vindices[1] - 1;
+      vindices.z = model->triangles[ tindex ].vindices[2] - 1;
+      assert( vindices.x <= static_cast<int>(model->numvertices) );
+      assert( vindices.y <= static_cast<int>(model->numvertices) );
+      assert( vindices.z <= static_cast<int>(model->numvertices) );
 
-	  int3 nindices;
-	  nindices.x = model->triangles[ tindex ].nindices[0] - 1; 
-	  nindices.y = model->triangles[ tindex ].nindices[1] - 1; 
-	  nindices.z = model->triangles[ tindex ].nindices[2] - 1; 
-	  assert( nindices.x <= static_cast<int>(model->numnormals) );
-	  assert( nindices.y <= static_cast<int>(model->numnormals) );
-	  assert( nindices.z <= static_cast<int>(model->numnormals) );
+      vindex_buffer_data[ i ] = vindices;
 
-	  int3 tindices;
-	  tindices.x = model->triangles[ tindex ].tindices[0] - 1; 
-	  tindices.y = model->triangles[ tindex ].tindices[1] - 1; 
-	  tindices.z = model->triangles[ tindex ].tindices[2] - 1; 
-	  assert( tindices.x <= static_cast<int>(model->numtexcoords) );
-	  assert( tindices.y <= static_cast<int>(model->numtexcoords) );
-	  assert( tindices.z <= static_cast<int>(model->numtexcoords) );
 
-	  nindex_buffer_data[ i ] = nindices;
-	  tindex_buffer_data[ i ] = tindices;
-	  mbuffer_data[ i ] = 0; // See above TODO
+      int3 nindices;
+      nindices.x = model->triangles[ tindex ].nindices[0] - 1;
+      nindices.y = model->triangles[ tindex ].nindices[1] - 1;
+      nindices.z = model->triangles[ tindex ].nindices[2] - 1;
+      assert( nindices.x <= static_cast<int>(model->numnormals) );
+      assert( nindices.y <= static_cast<int>(model->numnormals) );
+      assert( nindices.z <= static_cast<int>(model->numnormals) );
 
-	}
+      int3 tindices;
+      tindices.x = model->triangles[ tindex ].tindices[0] - 1;
+      tindices.y = model->triangles[ tindex ].tindices[1] - 1;
+      tindices.z = model->triangles[ tindex ].tindices[2] - 1;
+      assert( tindices.x <= static_cast<int>(model->numtexcoords) );
+      assert( tindices.y <= static_cast<int>(model->numtexcoords) );
+      assert( tindices.z <= static_cast<int>(model->numtexcoords) );
 
-	vindex_buffer->unmap();
+      nindex_buffer_data[ i ] = nindices;
+      tindex_buffer_data[ i ] = tindices;
+      mbuffer_data[ i ] = 0; // See above TODO
+
+        float3 v0 = vbuffer_data[vindices.x];
+        float3 v1 = vbuffer_data[vindices.y];
+        float3 v2 = vbuffer_data[vindices.z];
+        float2 t0 = tbuffer_data[tindices.x];
+        float2 t1 = tbuffer_data[tindices.y];
+        float2 t2 = tbuffer_data[tindices.z];
+
+        float3 e0 = v1-v0;
+        float3 e1 = v2-v0;
+        float area_ws = 0.5f * length(cross(e0,e1));
+
+        float2 e0t = t1-t0;
+        float2 e1t = t2-t0;
+        float area_ts = 0.5f * fabsf(e0t.x*e1t.y - e0t.y*e1t.x);
+
+        float ratio = area_ws / area_ts;
+//        Logger::info << ratio << std::endl;
+        avg += ratio;
+        avg_sq += ratio*ratio;
+    }
+    avg /= obj_group->numtriangles;
+    avg_sq /= obj_group->numtriangles;
+    float var = avg_sq - avg*avg;
+    Logger::info << "Ratio average: " << avg << " std deviation: " << sqrt(var) << std::endl;
+
+    vindex_buffer->unmap();
 	tindex_buffer->unmap();
 	nindex_buffer->unmap();
 	mbuffer->unmap();
 
+    m_vbuffer->unmap();
+    m_nbuffer->unmap();
+    m_tbuffer->unmap();
 
     std::shared_ptr<MaterialHost> materialData = getMaterial(obj_group->material);
     MeshData meshdata = { m_vbuffer, m_nbuffer, m_tbuffer, vindex_buffer, nindex_buffer, tindex_buffer, (int)num_triangles, bbox };

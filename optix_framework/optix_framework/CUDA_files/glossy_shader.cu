@@ -27,7 +27,7 @@ rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
-rtDeclareVariable(float3, texcoord, attribute texcoord, );
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
 
 // Monte carlo variables
 rtDeclareVariable(unsigned int, N, , );
@@ -35,7 +35,7 @@ rtDeclareVariable(unsigned int, N, , );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() {
-	float3 emission = make_float3(rtTex2D<float4>(get_material().ambient_map, texcoord.x, texcoord.y));
+	float3 emission = make_float3(rtTex2D<float4>(get_material(texcoord).ambient_map, texcoord.x, texcoord.y));
 	// optix_print("%f %f %f", emission.x,emission.y,emission.z);
 	shadow_hit(prd_shadow, emission);
 }
@@ -43,7 +43,7 @@ RT_PROGRAM void any_hit_shadow() {
 
 RT_PROGRAM void shade()
 {
-    const MaterialDataCommon & material = get_material();
+    const MaterialDataCommon & material = get_material(texcoord);
 	float3 normal;
 	float3 hit_pos;
 	normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));

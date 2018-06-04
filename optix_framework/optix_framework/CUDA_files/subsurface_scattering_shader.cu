@@ -24,7 +24,7 @@ rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload,);
 // Variables for shading
 rtDeclareVariable(BufPtr<PositionSample>, sampling_output_buffer, ,);
 rtDeclareVariable(float3, shading_normal, attribute shading_normal,);
-rtDeclareVariable(float3, texcoord, attribute texcoord,);
+rtDeclareVariable(float2, texcoord, attribute texcoord,);
 rtDeclareVariable(int, exclude_backfaces, , );
 
 // Any hit program for shadows

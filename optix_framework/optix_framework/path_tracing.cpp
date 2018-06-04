@@ -1,5 +1,4 @@
 #include "path_tracing.h"
-#include "parameter_parser.h"
 
 void PathTracing::pre_trace()
 {

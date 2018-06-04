@@ -1,14 +1,13 @@
 
 
-#include <optixu/optixu_aabb.h>
+#include <device_common_data.h>
 #include <float.h>
 
 using namespace optix;
 
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
-rtDeclareVariable(float3, texcoord, attribute texcoord, );
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
 //
 // (NEW)
 // Bounding box program for programmable convex hull primitive
@@ -50,12 +49,12 @@ RT_PROGRAM void sphere_intersect(int primIdx)
 
 	if (rtPotentialIntersection(t0)){
 		shading_normal = geometric_normal = normalize(-l + t0*d);
-		texcoord = make_float3(0.0f);
+		texcoord = make_float2(0.0f);
 		rtReportIntersection(0);
 	}
 	else if (rtPotentialIntersection(t1)){
 		shading_normal = geometric_normal = normalize(-l + t1*d);
-		texcoord = make_float3(0.0f);
+		texcoord = make_float2(0.0f);
 		rtReportIntersection(0);
 	}
 }

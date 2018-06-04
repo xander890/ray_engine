@@ -1,6 +1,5 @@
 #include "glossy.h"
 #include "folders.h"
-#include "parameter_parser.h"
 #include "object_host.h"
 #include "brdf_utils.h"
 #include "merl_common.h"

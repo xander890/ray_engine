@@ -16,11 +16,11 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
-rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
+rtDeclareVariable(float2, texcoord, attribute texcoord, );
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() { 
-    const MaterialDataCommon & material = get_material();
+    const MaterialDataCommon & material = get_material(texcoord);
     float3 emission = make_float3(rtTex2D<float4>(material.ambient_map, texcoord.x, texcoord.y));
  shadow_hit(prd_shadow, emission);
 }
@@ -30,7 +30,7 @@ RT_PROGRAM void any_hit_shadow() {
 //RT_PROGRAM void shade() 
 //{ 
 //	float3 color = make_float3(0.0f);
-//    const MaterialDataCommon & material = get_material();
+//    const MaterialDataCommon & material = get_material(texcoord);
 //	
 //  if(prd_radiance.depth < max_depth)
 //  {
@@ -62,7 +62,7 @@ RT_PROGRAM void any_hit_shadow() {
 __device__ __forceinline__ void _shade()
 {
   float3 color = make_float3(0.0f);
-  const MaterialDataCommon & material = get_material();
+  const MaterialDataCommon & material = get_material(texcoord);
 
   if(prd_radiance.depth < max_depth)
   {

@@ -84,8 +84,7 @@ set(HEADERS
     optix_helpers.h
     optix_serialize.h
     optix_utils.h
-    parameter_parser.h
-    parserstringhelpers.h
+        parserstringhelpers.h
     path_tracing.h
     PerlinNoise.h
     phase_function.h
@@ -179,8 +178,7 @@ set(SRCS
     neural_network_sampler.cpp
     obj_loader.cpp
     obj_scene.cpp
-    parameter_parser.cpp
-    path_tracing.cpp
+        path_tracing.cpp
     PerlinNoise.cpp
     plint.cpp
     PPMLoader.cpp
@@ -229,6 +227,7 @@ CUDA_files/subsurface_scattering_sampled_neural_network.cu
 CUDA_files/subsurface_scattering_sampled_forward_dipole.cu
 CUDA_files/tonemap_camera.cu
 CUDA_files/triangle_mesh.cu
+CUDA_files/uv_shader.cu
 CUDA_files/volume_shader.cu
 CUDA_files/volume_shader_heterogenous.cu
  )
