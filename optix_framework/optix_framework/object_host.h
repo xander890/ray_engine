@@ -21,12 +21,9 @@ public:
 
     void init(const char* name, std::unique_ptr<Geometry> geom, std::shared_ptr<MaterialHost> material);
 
-    void reload_shader();
-    void reload_material();
+    void reload_materials();
     void load();
 
-    void set_shader(int illum);
-    void set_shader(const std::string & source);
     void add_material(std::shared_ptr<MaterialHost> material);
 
     std::shared_ptr<MaterialHost> get_main_material() { return mMaterialData[0]; }
@@ -54,7 +51,6 @@ private:
 
     void load_materials();
     void load_geometry();
-    void load_shader();
     void load_transform();
     void create_and_bind_optix_data();
 
@@ -67,9 +63,8 @@ private:
         archive(cereal::make_nvp("geometry", construct->mGeometry));
         archive(cereal::make_nvp("transform", construct->mTransform));
         archive(cereal::make_nvp("materials",construct->mMaterialData));
-        archive(cereal::make_nvp("shader",construct->mShader));
         construct->create_and_bind_optix_data();
-        construct->mReloadMaterials = construct->mReloadShader = construct->mReloadGeometry = true;
+        construct->mReloadMaterials = construct->mReloadGeometry = true;
     }
 
     template<class Archive>
@@ -79,7 +74,6 @@ private:
         archive(cereal::make_nvp("geometry", mGeometry));
         archive(cereal::make_nvp("transform", mTransform));
         archive(cereal::make_nvp("materials",mMaterialData));
-        archive(cereal::make_nvp("shader", mShader));
     }
 
     int mMeshID;
@@ -92,7 +86,6 @@ private:
 
     std::shared_ptr<Geometry> mGeometry;
     optix::Context  mContext;
-    std::unique_ptr<Shader> mShader;
     std::unique_ptr<Transform> mTransform;
     std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
     optix::Buffer          mMaterialBuffer;
@@ -100,8 +93,6 @@ private:
     std::unique_ptr<Texture> mMaterialSelectionTextureLabel;
     std::unique_ptr<Texture> mMaterialSelectionTexture;
 
-
-    bool mReloadShader = true;
     bool mReloadGeometry = true;
     bool mReloadMaterials = true;
 

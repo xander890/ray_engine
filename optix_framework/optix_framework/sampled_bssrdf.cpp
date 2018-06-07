@@ -112,7 +112,7 @@ void SampledBSSRDF::load_data(Object & object)
 
         if(mReloadShader)
         {
-            object.set_shader(mCurrentShaderSource);
+            object.get_main_material()->set_shader(mCurrentShaderSource);
             mReloadShader = false;
         }
 	}

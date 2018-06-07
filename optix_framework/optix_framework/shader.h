@@ -30,10 +30,24 @@ public:
     virtual ~Shader();
 
 	virtual Shader* clone() = 0;
+
+	// Initializes mesh for rendering. Adds optix variables on the specific mesh/etc.
+	// Executed once when the mesh is initialized with this particular shader.
     virtual void initialize_mesh(Object &object);
-    virtual void pre_trace_mesh(Object &object);
-	virtual void post_trace_mesh(Object &object);
+
+	// Executed every frame before tracing camera rays.
+	// Loads appropriate data into the mesh for that specific frame.
 	virtual void load_data(Object &object) {}
+
+	// Executed every frame before tracing the camera rays.
+	// Useful for some pre-processing on the mesh (sampling points, etc.)
+    virtual void pre_trace_mesh(Object &object);
+
+	// Executed every frame after tracing the camera rays.
+	// Useful for post processing effects (gather data, etc.)
+	virtual void post_trace_mesh(Object &object);
+
+	// Removes variables when the mesh is destroyed.
 	virtual void tear_down_mesh(Object &object) {remove_hit_programs(object);}
 
     virtual void initialize_shader(optix::Context context);

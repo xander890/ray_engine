@@ -4,6 +4,7 @@
 #include <optix_serialize.h>
 #include "texture.h"
 #include "scattering_material.h"
+#include "shader.h"
 
 struct ObjMaterial;
 
@@ -37,6 +38,13 @@ public:
 	std::shared_ptr<Texture> get_diffuse_texture() {return textures[1]; }
 	std::shared_ptr<Texture> get_specular_texture() {return textures[2]; }
 
+    void reload_shader();
+    void set_shader(int illum);
+    void set_shader(const std::string & source);
+    void load_shader(Object &obj);
+
+    Shader& get_shader() { return *mShader;}
+
 private:
 	MaterialHost(optix::Context& ctx);
 	bool mHasChanged = true;
@@ -45,6 +53,10 @@ private:
     MaterialDataCommon mMaterialData;
     std::unique_ptr<ScatteringMaterial> scattering_material;
 	std::vector<std::shared_ptr<Texture>> textures;
+
+    std::unique_ptr<Shader> mShader;
+	bool mReloadShader = true;
+
 
 	static std::unique_ptr<ObjMaterial> user_defined_material;
 
@@ -57,7 +69,9 @@ private:
 		archive(cereal::make_nvp("scattering_material",scattering_material));
 		archive(cereal::make_nvp("is_emissive", mIsEmissive));
 		archive(cereal::make_nvp("textures", textures));
-	}
+        archive(cereal::make_nvp("shader", mShader));
+
+    }
 
 	static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<MaterialHost> & construct )
 	{
@@ -67,7 +81,9 @@ private:
 		archive(cereal::make_nvp("scattering_material", construct->scattering_material));
 		archive(cereal::make_nvp("is_emissive", construct->mIsEmissive));
 		archive(cereal::make_nvp("textures", construct->textures));
-		construct->mMaterialData.ambient_map = construct->textures[0]->get_id();
+        archive(cereal::make_nvp("shader",construct->mShader));
+        construct->mReloadShader = true;
+        construct->mMaterialData.ambient_map = construct->textures[0]->get_id();
 		construct->mMaterialData.diffuse_map = construct->textures[1]->get_id();
 		construct->mMaterialData.specular_map = construct->textures[2]->get_id();
 	}

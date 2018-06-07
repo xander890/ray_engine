@@ -34,7 +34,7 @@ Object::Object(optix::Context ctx) : mContext(ctx)
 {
     static int id = 0;
     mMeshID = id++;
-    mReloadMaterials = mReloadShader = mReloadGeometry = true;
+    mReloadMaterials = mReloadGeometry = true;
 
     mMaterialSelectionTexture = std::make_unique<Texture>(ctx, Texture::FLOAT, 4);
     mMaterialSelectionTexture->set_size(1);
@@ -54,8 +54,6 @@ void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::sha
     {
         mTransform = std::make_unique<Transform>(mContext);
     }
-
-    set_shader(mMaterialData[0]->get_data().illum);
 }
 
 void Object::load_materials()
@@ -65,6 +63,11 @@ void Object::load_materials()
     bool one_material_changed = std::any_of(mMaterialData.begin(), mMaterialData.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->has_changed();  });
     mReloadMaterials |= one_material_changed;
 
+    for(auto & m : mMaterialData)
+    {
+        m->load_shader(*this);
+    }
+
     if(!mReloadMaterials)
     {
         return;
@@ -73,6 +76,12 @@ void Object::load_materials()
     create_and_bind_optix_data();
     size_t n = mMaterialData.size();
     MaterialDataCommon* data = reinterpret_cast<MaterialDataCommon*>(mMaterialBuffer->map());
+
+    for(auto & m : mMaterialData)
+    {
+        m->reload_shader();
+    }
+
     for (int i = 0; i < n; i++)
     {
         memcpy(&data[i], &mMaterialData[i]->get_data(), sizeof(MaterialDataCommon));
@@ -96,20 +105,7 @@ void Object::load_geometry()
     mReloadGeometry = false;
 }
 
-void Object::load_shader()
-{
-    if(mShader == nullptr)
-    {
-        set_shader(mMaterialData[0]->get_data().illum);
-    }
 
-    if (mReloadShader)
-    {
-        mShader->initialize_mesh(*this);
-        mReloadShader = false;
-    }
-    mShader->load_data(*this);
-}
 
 void Object::load_transform()
 {
@@ -126,36 +122,13 @@ void Object::load_transform()
     }
 }
 
-void Object::reload_shader()
-{
-    mReloadShader = true;
-}
 
 void Object::load()
 {
     load_geometry();
     load_materials();
-    load_shader();
     load_transform();
 }
-
-void Object::set_shader(int illum)
-{
-    mShader = ShaderFactory::get_shader(illum);
-    mReloadShader = true;
-    mReloadMaterials = true;
-}
-
-
-void Object::set_shader(const std::string &source) {
-    if(mShader != nullptr)
-    {
-        mShader->set_source(source);
-        mReloadShader = true;
-        mReloadMaterials = true;
-    }
-}
-
 
 void Object::create_and_bind_optix_data()
 {
@@ -233,47 +206,23 @@ bool Object::on_draw()
             ImmediateGUIDraw::TreePop();
         }
 
-        auto map = ShaderFactory::get_map();
-        std::vector<std::string> vv;
-        std::vector<int> illummap;
-        int initial = mShader->get_illum();
-        int starting = 0;
-        for (auto& p : map)
-        {
-            vv.push_back(p.second->get_name());
-            illummap.push_back(p.first);
-            if (p.first == initial)
-                starting = (int)illummap.size()-1;
-        }
-        std::vector<const char *> v;
-        for (auto& c : vv) v.push_back(c.c_str());
-
-        int selected = starting;
-        if (ImmediateGUIDraw::TreeNode((std::string("Shader##Shader") + mMeshName).c_str()))
-        {
-            if (ImGui::Combo((std::string("Set Shader##RenderingMethod") + mMeshName).c_str(), &selected, v.data(), (int)v.size(), (int)v.size()))
-            {
-                changed = true;
-                set_shader(illummap[selected]);
-            }
-
-            changed |= mShader->on_draw();
-            ImmediateGUIDraw::TreePop();
-        }
-
         if (ImmediateGUIDraw::TreeNode((std::string("Materials##Materials") + mMeshName).c_str()))
         {
-            mMaterialSelectionTextureLabel->on_draw();
-            if(ImmediateGUIDraw::Button("Load material selection texture..."))
+            if (ImmediateGUIDraw::TreeNode((std::string("Material selector##Materialselector") + mMeshName).c_str()))
             {
-                std::string d;
-                if(Dialogs::openFileDialog(d))
+                mMaterialSelectionTextureLabel->on_draw();
+                if (ImmediateGUIDraw::Button("Load material selection texture..."))
                 {
-                    mMaterialSelectionTexture = loadTexture(mContext, d, optix::make_float3(0));
-                    mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture);
-                    mMaterialSelectionTextureLabel->get_sampler()->setFilteringModes(RT_FILTER_NEAREST, RT_FILTER_NEAREST, RT_FILTER_NONE);
-                    load_materials();
+                    std::string d;
+                    if (Dialogs::openFileDialog(d))
+                    {
+                        mMaterialSelectionTexture = loadTexture(mContext, d, optix::make_float3(0));
+                        mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture);
+                        mMaterialSelectionTextureLabel->get_sampler()->setFilteringModes(RT_FILTER_NEAREST, RT_FILTER_NEAREST, RT_FILTER_NONE);
+                        load_materials();
+                    }
                 }
+                ImmediateGUIDraw::TreePop();
             }
 
             if(ImmediateGUIDraw::Button("Add material"))
@@ -297,15 +246,21 @@ bool Object::on_draw()
 
 void Object::pre_trace()
 {
-    mShader->pre_trace_mesh(*this);
+    for(auto & m : mMaterialData)
+    {
+        m->get_shader().pre_trace_mesh(*this);
+    }
 }
 
 void Object::post_trace()
 {
-    mShader->post_trace_mesh(*this);
+    for(auto & m : mMaterialData)
+    {
+        m->get_shader().post_trace_mesh(*this);
+    }
 }
 
-void Object::reload_material()
+void Object::reload_materials()
 {
     mReloadMaterials = true;
 }
@@ -313,12 +268,11 @@ void Object::reload_material()
 Object::~Object()
 {
     mGeometry.reset();
-    mShader->tear_down_mesh(*this);
     mMaterial->destroy();
-    mShader.reset();
     mTransform.reset();
     for(auto & m : mMaterialData)
     {
+        m->get_shader().tear_down_mesh(*this);
         m.reset();
     }
     mGeometryInstance->destroy();

@@ -11,6 +11,7 @@
 #pragma warning (disable : 4305)
 #include <quantized_diffusion_helpers.h>
 #include "logger.h"
+#include "shader_factory.h"
 
 using optix::float3;
 
@@ -33,38 +34,72 @@ bool MaterialHost::on_draw(std::string id = "")
 	std::string newgroup = mMaterialName + " (ID: " + std::to_string(mMaterialID) + ") ##" + myid;
 	if (ImmediateGUIDraw::TreeNode(newgroup.c_str()))
 	{
-		static optix::float4 ka_gui = optix::make_float4(0, 0, 0, 1);
-		static optix::float4 kd_gui = optix::make_float4(0, 0, 0, 1);
-		static optix::float4 ks_gui = optix::make_float4(0, 0, 0, 1);
-		if (first_time_gui)
-		{
-			get_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
-			get_texture_pixel<optix::float4>(mContext, kd_gui, mMaterialData.diffuse_map);
-			get_texture_pixel<optix::float4>(mContext, ks_gui, mMaterialData.specular_map);
-			first_time_gui = false;
-		}
-		
-		if (ImmediateGUIDraw::InputFloat3((std::string("Ambient##Ambient") + myid).c_str(), &ka_gui.x))
-		{
-			set_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
-			if(optix::dot(optix::make_float3(ka_gui), optix::make_float3(1)) > 0)
-				mIsEmissive = true;
-		}
-		if (ImmediateGUIDraw::InputFloat3((std::string("Diffuse##Diffuse") + myid).c_str(), &kd_gui.x))
-		{
-			set_texture_pixel<optix::float4>(mContext, kd_gui, mMaterialData.diffuse_map);
-		}
-		if (ImmediateGUIDraw::InputFloat3((std::string("Specular##Specular") + myid).c_str(), &ks_gui.x))
-		{
-			set_texture_pixel<optix::float4>(mContext, ks_gui, mMaterialData.specular_map);
-		}
-		if (ImmediateGUIDraw::InputFloat((std::string("Relative IOR##IOR") + myid).c_str(), &mMaterialData.relative_ior))
-		{
-			changed = true;
-			mHasChanged = true;
-		}
-		changed |= scattering_material->on_draw(myid);
-		ImmediateGUIDraw::TreePop();
+
+        auto map = ShaderFactory::get_map();
+        std::vector<std::string> vv;
+        std::vector<int> illummap;
+        int initial = mShader->get_illum();
+        int starting = 0;
+        for (auto& p : map)
+        {
+            vv.push_back(p.second->get_name());
+            illummap.push_back(p.first);
+            if (p.first == initial)
+                starting = (int)illummap.size()-1;
+        }
+        std::vector<const char *> v;
+        for (auto& c : vv) v.push_back(c.c_str());
+
+        int selected = starting;
+        if (ImmediateGUIDraw::TreeNode((std::string("Shader##Shader") + mMaterialName).c_str()))
+        {
+            if (ImGui::Combo((std::string("Set Shader##RenderingMethod") + mMaterialName).c_str(), &selected, v.data(), (int)v.size(), (int)v.size()))
+            {
+                changed = true;
+                set_shader(illummap[selected]);
+            }
+
+            changed |= mShader->on_draw();
+            ImmediateGUIDraw::TreePop();
+        }
+
+        if (ImmediateGUIDraw::TreeNode((std::string("Properties##Properties") + mMaterialName).c_str()))
+        {
+            static optix::float4 ka_gui = optix::make_float4(0, 0, 0, 1);
+            static optix::float4 kd_gui = optix::make_float4(0, 0, 0, 1);
+            static optix::float4 ks_gui = optix::make_float4(0, 0, 0, 1);
+            if (first_time_gui)
+            {
+                get_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
+                get_texture_pixel<optix::float4>(mContext, kd_gui, mMaterialData.diffuse_map);
+                get_texture_pixel<optix::float4>(mContext, ks_gui, mMaterialData.specular_map);
+                first_time_gui = false;
+            }
+
+            if (ImmediateGUIDraw::InputFloat3((std::string("Ambient##Ambient") + myid).c_str(), &ka_gui.x))
+            {
+                set_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
+                if (optix::dot(optix::make_float3(ka_gui), optix::make_float3(1)) > 0)
+                    mIsEmissive = true;
+            }
+            if (ImmediateGUIDraw::InputFloat3((std::string("Diffuse##Diffuse") + myid).c_str(), &kd_gui.x))
+            {
+                set_texture_pixel<optix::float4>(mContext, kd_gui, mMaterialData.diffuse_map);
+            }
+            if (ImmediateGUIDraw::InputFloat3((std::string("Specular##Specular") + myid).c_str(), &ks_gui.x))
+            {
+                set_texture_pixel<optix::float4>(mContext, ks_gui, mMaterialData.specular_map);
+            }
+            if (ImmediateGUIDraw::InputFloat((std::string("Relative IOR##IOR") +
+                                              myid).c_str(), &mMaterialData.relative_ior))
+            {
+                changed = true;
+                mHasChanged = true;
+            }
+            changed |= scattering_material->on_draw(myid);
+            ImmediateGUIDraw::TreePop();
+        }
+        ImmediateGUIDraw::TreePop();
 	}
 	return changed;
 }
@@ -170,6 +205,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 	}
 
 	mIsEmissive = mat.is_emissive;
+    set_shader(mMaterialData.illum);
 }
 
 
@@ -205,4 +241,40 @@ bool MaterialHost::is_emissive()
 MaterialHost::MaterialHost(optix::Context &ctx)
 {
 	mContext = ctx;
+}
+
+void MaterialHost::reload_shader()
+{
+	mReloadShader = true;
+}
+
+void MaterialHost::set_shader(int illum)
+{
+	mShader = ShaderFactory::get_shader(illum);
+	mReloadShader = true;
+}
+
+
+void MaterialHost::set_shader(const std::string &source) {
+	if(mShader != nullptr)
+	{
+		mShader->set_source(source);
+		mReloadShader = true;
+	}
+}
+
+void MaterialHost::load_shader(Object &obj)
+{
+    if(mShader == nullptr)
+    {
+        set_shader(mMaterialData.illum);
+    }
+
+    if (mReloadShader)
+    {
+        mShader->initialize_mesh(obj);
+        mReloadShader = false;
+    }
+
+    mShader->load_data(obj);
 }

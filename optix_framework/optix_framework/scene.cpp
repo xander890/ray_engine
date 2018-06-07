@@ -29,7 +29,7 @@ void Scene::reload()
 {
     execute_on_scene_elements([=](Object & m)
     {
-        m.reload_shader();
+        m.reload_materials();
     });
 }
 
@@ -99,8 +99,7 @@ void Scene::set_method(std::unique_ptr<RenderingMethod> m)
     method->init(context);
     execute_on_scene_elements([=](Object & m)
     {
-        m.reload_shader();
-        m.reload_material();
+        m.reload_materials();
     });
 }
 
