@@ -182,7 +182,6 @@ bool ObjScene::draw_gui()
 				export_raw(filePath, rendering_output_buffer, m_frame);
 			}
 		}
-		ImmediateGUIDraw::SameLine();
 
 	}
 
@@ -229,14 +228,6 @@ bool ObjScene::draw_gui()
 			changed = true;
 			context["importance_sample_area_lights"]->setUint(static_cast<unsigned int>(mImportanceSampleAreaLights));
 		}
-	}
-
-    const char * miss_programs[3] = { "Constant Background", "Environment map", "Sky model"  };
-    static int current_miss_program = 0; //FIXME
-	if (ImmediateGUIDraw::Combo("Background", &current_miss_program, miss_programs, 3, 3))
-	{
-		changed = true;
-        set_miss_program(static_cast<BackgroundType::Type>(current_miss_program));
 	}
 
     changed = mScene->on_draw();
@@ -390,8 +381,7 @@ void ObjScene::initialize_scene(GLFWwindow *)
         mScene->set_current_camera(id);
         RenderingMethodType::EnumType t = RenderingMethodType::PATH_TRACING;
         set_rendering_method(t);
-        BackgroundType::Type current_miss_program = BackgroundType::CONSTANT_BACKGROUND;
-        set_miss_program(current_miss_program);
+		mScene->set_miss_program(std::make_unique<ConstantBackground>(optix::make_float3(0.5f)));
 
         // Camera must be automatic in this case
         parameters.use_auto_camera = true;
@@ -421,19 +411,17 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	{
 		// Load OBJ scene
 		Logger::info <<"Loading obj " << filenames[i]  << "..." <<endl;
-		ObjLoader* loader = new ObjLoader((Folders::data_folder + filenames[i]).c_str(), context);
-        std::vector<std::unique_ptr<Object>>& v = loader->load(optix::Matrix4x4::identity());
+		ObjLoader loader((Folders::data_folder + filenames[i]).c_str(), context);
+        std::vector<std::unique_ptr<Object>>& v = loader.load(optix::Matrix4x4::identity());
 		for (int j = 0; j < v.size(); j++)
 		{
              mScene->add_object(std::move(v[j]));
 		}
 
-	    m_scene_bounding_box.include(loader->getSceneBBox());
+	    m_scene_bounding_box.include(loader.getSceneBBox());
 		// Set material shaders
 
-		// Add geometry group to the group of scene objects
-		
-		delete loader;
+
 	}
 	
 	context["importance_sample_area_lights"]->setUint(static_cast<unsigned int>(mImportanceSampleAreaLights));
@@ -701,39 +689,6 @@ bool ObjScene::mouse_pressed(int x, int y, int button, int action, int mods)
 		return true;
 	}
 	return gui->mousePressed(x, y, button, action, mods);
-}
-
-void ObjScene::set_miss_program(BackgroundType::EnumType program)
-{
-    std::unique_ptr<MissProgram> miss_program = nullptr;
-
-	switch (program)
-	{
-	case BackgroundType::ENVIRONMENT_MAP:
-	{
-        std::string path;
-        if(Dialogs::openFileDialog(path))
-        {
-            miss_program = std::make_unique<EnvironmentMap>(path);
-        }
-        else
-        {
-            return;
-        }
-	}
-    break;
-	case BackgroundType::SKY_MODEL:
-    {
-        miss_program = std::make_unique<SkyModel>(make_float3(0, 1, 0), make_float3(0, 0, 1));
-	}
-    break;
-    case BackgroundType::CONSTANT_BACKGROUND:
-	default:
-        float3 color = make_float3(0.5);
-        miss_program = std::make_unique<ConstantBackground>(color);
-        break;
-    }
-    mScene->set_miss_program(std::move(miss_program));
 }
 
 void ObjScene::set_rendering_method(RenderingMethodType::EnumType t)

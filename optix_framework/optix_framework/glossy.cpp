@@ -16,16 +16,15 @@ void BRDFShader::initialize_shader(optix::Context context)
     mBRDF = BRDF::create(context, BRDFType::LAMBERTIAN);
 }
 
-void BRDFShader::initialize_mesh(Object& object)
+void BRDFShader::initialize_material(MaterialHost &object)
 {
-    Shader::initialize_mesh(object);
+    Shader::initialize_material(object);
     mBRDF->load(object);
 }
 
 void BRDFShader::pre_trace_mesh(Object& object)
 {
     Shader::pre_trace_mesh(object);
-    mBRDF->load(object);
 }
 
 bool BRDFShader::on_draw()
@@ -46,7 +45,7 @@ bool BRDFShader::on_draw()
         }
     }
 
-    mBRDF->on_draw();
+    changed |= mBRDF->on_draw();
     return changed;
 
 }

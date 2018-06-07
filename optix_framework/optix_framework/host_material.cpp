@@ -59,7 +59,12 @@ bool MaterialHost::on_draw(std::string id = "")
                 set_shader(illummap[selected]);
             }
 
-            changed |= mShader->on_draw();
+            bool shader_changed = mShader->on_draw();
+			if(shader_changed)
+				mReloadShader = true;
+
+
+			changed |= shader_changed;
             ImmediateGUIDraw::TreePop();
         }
 
@@ -94,7 +99,6 @@ bool MaterialHost::on_draw(std::string id = "")
                                               myid).c_str(), &mMaterialData.relative_ior))
             {
                 changed = true;
-                mHasChanged = true;
             }
             changed |= scattering_material->on_draw(myid);
             ImmediateGUIDraw::TreePop();
@@ -205,7 +209,14 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 	}
 
 	mIsEmissive = mat.is_emissive;
+
+	if (!mMaterial)
+	{
+		mMaterial = mContext->createMaterial();
+	}
+
     set_shader(mMaterialData.illum);
+
 }
 
 
@@ -241,6 +252,7 @@ bool MaterialHost::is_emissive()
 MaterialHost::MaterialHost(optix::Context &ctx)
 {
 	mContext = ctx;
+	mMaterial = mContext->createMaterial();
 }
 
 void MaterialHost::reload_shader()
@@ -263,7 +275,7 @@ void MaterialHost::set_shader(const std::string &source) {
 	}
 }
 
-void MaterialHost::load_shader(Object &obj)
+void MaterialHost::load_shader()
 {
     if(mShader == nullptr)
     {
@@ -272,9 +284,18 @@ void MaterialHost::load_shader(Object &obj)
 
     if (mReloadShader)
     {
-        mShader->initialize_mesh(obj);
+        mShader->initialize_material(*this);
         mReloadShader = false;
     }
 
-    mShader->load_data(obj);
+    mShader->load_data(*this);
+}
+
+MaterialHost::~MaterialHost()
+{
+    if(mShader != nullptr && mMaterial.get() != nullptr)
+    {
+        mShader->tear_down_material(*this);
+        mMaterial->destroy();
+    }
 }

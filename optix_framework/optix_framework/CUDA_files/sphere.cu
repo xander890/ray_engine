@@ -2,6 +2,7 @@
 
 #include <device_common_data.h>
 #include <float.h>
+#include <material_device.h>
 
 using namespace optix;
 
@@ -49,12 +50,14 @@ RT_PROGRAM void sphere_intersect(int primIdx)
 
 	if (rtPotentialIntersection(t0)){
 		shading_normal = geometric_normal = normalize(-l + t0*d);
-		texcoord = make_float2(0.0f);
-		rtReportIntersection(0);
+		float3 pos = o + d*t0;
+		texcoord = cartesian_to_spherical(pos) / make_float2(M_PIf, 2*M_PIf);
+		rtReportIntersection(get_material_index(texcoord));
 	}
 	else if (rtPotentialIntersection(t1)){
 		shading_normal = geometric_normal = normalize(-l + t1*d);
-		texcoord = make_float2(0.0f);
-		rtReportIntersection(0);
+		float3 pos = o + d*t1;
+		texcoord = cartesian_to_spherical(pos) / make_float2(M_PIf, 2*M_PIf);
+		rtReportIntersection(get_material_index(texcoord));
 	}
 }

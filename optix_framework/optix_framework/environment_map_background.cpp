@@ -66,31 +66,13 @@ bool EnvironmentMap::on_draw()
 	if (ImmediateGUIDraw::TreeNode("Environment map"))
 	{
         environment_sampler->on_draw();
-
-		char txt[512];
-		envmap_path.copy(txt, envmap_path.length());
-		ImmediateGUIDraw::InputText("Path", txt, 512, ImGuiInputTextFlags_ReadOnly);
-
-		std::string filePath;
-		if (ImmediateGUIDraw::Button("Load new envmap..."))
-		{
-			std::string filePath;
-			if (Dialogs::openFileDialog(filePath))
-			{
-				environment_sampler.reset();
-				environment_sampler = loadTexture(context->getContext(), filePath, make_float3(1.0f));
-				properties.environment_map_tex_id = environment_sampler->get_id();
-				envmap_path = filePath;
-				resample_envmaps = true;
-				changed = true;
-			}
-		}
+        ImmediateGUIDraw::Text("Path: %s", envmap_path.c_str());
 
 		changed |= ImmediateGUIDraw::InputFloat3("Multiplier##Envmapmultiplier", (float*)&properties.lightmap_multiplier);
 		changed |= ImmediateGUIDraw::Checkbox("Importance Sample##Importancesampleenvmap", (bool*)&properties.importance_sample_envmap);
 
 		static optix::float3 deltas;
-		if (ImmediateGUIDraw::DragFloat3("Deltas##EnvmapDeltas", (float*)&deltas, 1.0f, -180.0f, 180.0f))
+		if (ImmediateGUIDraw::DragFloat3("Rotation##EnvmapDeltas", (float*)&deltas, 1.0f, -180.0f, 180.0f))
 		{
 			changed = true;
 			envmap_deltas = deltas / 180.0f * M_PIf;

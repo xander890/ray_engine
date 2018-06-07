@@ -29,9 +29,9 @@ BRDF::BRDF(optix::Context &ctx, BRDFType::Type type) : mType(type), mContext(ctx
 
 }
 
-void BRDF::load(Object &obj)
+void BRDF::load(MaterialHost &obj)
 {
-    obj.mMaterial["selected_brdf"]->setUserData(sizeof(BRDFType::Type), &mType);
+    obj.get_optix_material()["selected_brdf"]->setUserData(sizeof(BRDFType::Type), &mType);
 }
 
 
@@ -42,16 +42,16 @@ void MERLBRDF::set_merl_file(std::string file)
     reflectance = integrate_brdf(data, 100000);
 }
 
-void MERLBRDF::load(Object &obj)
+void MERLBRDF::load(MaterialHost &obj)
 {
     BRDF::load(obj);
 
     if(!mInit)
         init();
 
-    obj.mMaterial["merl_brdf_multiplier"]->setFloat(merl_correction);
+    obj.get_optix_material()["merl_brdf_multiplier"]->setFloat(merl_correction);
     BufPtr1D<float> ptr = BufPtr1D<float>(mMerlBuffer->getId());
-    obj.mMaterial["merl_brdf_buffer"]->setUserData(sizeof(BufPtr1D<float>), &ptr);
+    obj.get_optix_material()["merl_brdf_buffer"]->setUserData(sizeof(BufPtr1D<float>), &ptr);
 }
 
 void MERLBRDF::init()

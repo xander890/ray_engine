@@ -19,8 +19,8 @@ void DefaultShader::initialize_shader(optix::Context ctx)
     Shader::initialize_shader(ctx);
 }
 
-void DefaultShader::initialize_mesh(Object & object)
+void DefaultShader::initialize_material(MaterialHost &object)
 {
-    Shader::initialize_mesh(object);
+    Shader::initialize_material(object);
 }
 

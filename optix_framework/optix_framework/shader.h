@@ -7,6 +7,7 @@
 #include <enums.h>
 #include <memory>
 
+class MaterialHost;
 class Object;
 
 struct ShaderInfo
@@ -33,11 +34,11 @@ public:
 
 	// Initializes mesh for rendering. Adds optix variables on the specific mesh/etc.
 	// Executed once when the mesh is initialized with this particular shader.
-    virtual void initialize_mesh(Object &object);
+    virtual void initialize_material(MaterialHost &object);
 
 	// Executed every frame before tracing camera rays.
 	// Loads appropriate data into the mesh for that specific frame.
-	virtual void load_data(Object &object) {}
+	virtual void load_data(MaterialHost &object) {}
 
 	// Executed every frame before tracing the camera rays.
 	// Useful for some pre-processing on the mesh (sampling points, etc.)
@@ -48,7 +49,7 @@ public:
 	virtual void post_trace_mesh(Object &object);
 
 	// Removes variables when the mesh is destroyed.
-	virtual void tear_down_mesh(Object &object) {remove_hit_programs(object);}
+	virtual void tear_down_material(MaterialHost &object);
 
     virtual void initialize_shader(optix::Context context);
 
@@ -62,8 +63,8 @@ protected:
 	Shader(const Shader & cp);
     Shader() {}
 
-    void set_hit_programs(Object &object);
-	void remove_hit_programs(Object &object);
+    void set_hit_programs(MaterialHost &mat);
+	void remove_hit_programs(MaterialHost &mat);
 
 	optix::Context context;
 	ShaderInfo info;

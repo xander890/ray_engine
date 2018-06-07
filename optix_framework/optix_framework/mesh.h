@@ -98,3 +98,6 @@ private:
     }
 
 };
+
+CEREAL_REGISTER_TYPE(MeshGeometry)
+CEREAL_REGISTER_POLYMORPHIC_RELATION(Geometry, MeshGeometry)

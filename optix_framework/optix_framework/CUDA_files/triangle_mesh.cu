@@ -25,6 +25,8 @@
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixu_aabb_namespace.h>
 #include <device_mesh_data.h>
+#include "material_device.h"
+
 using namespace optix;
 
 // This is to be plugged into an RTgeometry object to represent
@@ -33,8 +35,8 @@ using namespace optix;
 
 
 rtDeclareVariable(float2, texcoord, attribute texcoord, );
-rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
-rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); 
+rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
+rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float2, barys, attribute barys, );
 
 RT_PROGRAM void mesh_intersect( int primIdx )
@@ -57,33 +59,32 @@ RT_PROGRAM void mesh_intersect( int primIdx )
         shading_normal = normalize( n );
       } else {
         float3 n0 = normal_buffer[ n_idx.x ];
-		float3 n1 = normal_buffer[ n_idx.y ];
-		float3 n2 = normal_buffer[ n_idx.z ];
-		shading_normal = normalize( n1*beta + n2*gamma + n0*(1.0f-beta-gamma) );
+        float3 n1 = normal_buffer[ n_idx.y ];
+        float3 n2 = normal_buffer[ n_idx.z ];
+        shading_normal = normalize( n1*beta + n2*gamma + n0*(1.0f-beta-gamma) );
       }
       geometric_normal = normalize( n );
 
       int3 t_idx = tindex_buffer[ primIdx ];
-	
+
       if ( texcoord_buffer.size() == 0 || t_idx.x < 0 || t_idx.y < 0 || t_idx.z < 0 ) {
         texcoord = make_float2(0.0f);
       } else {
         float2 t0 = texcoord_buffer[ t_idx.x ];
         float2 t1 = texcoord_buffer[ t_idx.y ];
         float2 t2 = texcoord_buffer[ t_idx.z ];
-		
         texcoord = t1*beta + t2*gamma + t0*(1.0f-beta-gamma);
-		
+
       }
 
-	  barys = make_float2(beta, gamma);
-      rtReportIntersection(0);
+      barys = make_float2(beta, gamma);
+      rtReportIntersection(get_material_index(texcoord));
     }
   }
 }
 
 RT_PROGRAM void mesh_bounds (int primIdx, float result[6])
-{  
+{
   const int3 v_idx = vindex_buffer[primIdx];
 
   const float3 v0   = vertex_buffer[ v_idx.x ];
@@ -92,7 +93,7 @@ RT_PROGRAM void mesh_bounds (int primIdx, float result[6])
   const float  area = length(cross(v1-v0, v2-v0));
 
   optix::Aabb* aabb = (optix::Aabb*)result;
-  
+
   if(area > 0.0f && !isinf(area)) {
     aabb->m_min = fminf( fminf( v0, v1), v2 );
     aabb->m_max = fmaxf( fmaxf( v0, v1), v2 );
@@ -100,4 +101,3 @@ RT_PROGRAM void mesh_bounds (int primIdx, float result[6])
     aabb->invalidate();
   }
 }
-

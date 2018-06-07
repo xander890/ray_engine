@@ -7,6 +7,7 @@
 #include "shader.h"
 
 struct ObjMaterial;
+class Scene;
 
 namespace cereal
 {
@@ -21,10 +22,11 @@ namespace cereal
 	}
 }
 
-class MaterialHost : public std::enable_shared_from_this<MaterialHost>
+class MaterialHost
 {
 public:
 	MaterialHost(optix::Context& ctx, ObjMaterial& data);
+    ~MaterialHost();
 
 	bool on_draw(std::string id);
     const MaterialDataCommon& get_data(); 
@@ -41,9 +43,11 @@ public:
     void reload_shader();
     void set_shader(int illum);
     void set_shader(const std::string & source);
-    void load_shader(Object &obj);
+    void load_shader();
 
     Shader& get_shader() { return *mShader;}
+    optix::Material& get_optix_material() { return mMaterial; }
+    Scene * scene;
 
 private:
 	MaterialHost(optix::Context& ctx);
@@ -70,7 +74,6 @@ private:
 		archive(cereal::make_nvp("is_emissive", mIsEmissive));
 		archive(cereal::make_nvp("textures", textures));
         archive(cereal::make_nvp("shader", mShader));
-
     }
 
 	static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<MaterialHost> & construct )
@@ -90,6 +93,8 @@ private:
 
 	optix::Context mContext;
 	bool mIsEmissive = false;
+    optix::Material mMaterial = nullptr;
+
 };
 
 

@@ -14,7 +14,7 @@ public:
 		Shader::initialize_shader(ctx);
 	}
 
-	virtual void load_data(Object &object) override
+	virtual void load_data(MaterialHost &object) override
 	{
 		context["maximum_volume_steps"]->setUint(max_vol_samples);
 		context["volume_pt_mode"]->setUint(mVolumePTMode);

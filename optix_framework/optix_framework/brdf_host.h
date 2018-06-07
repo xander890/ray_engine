@@ -3,6 +3,8 @@
 #include "host_device_common.h"
 #include <memory>
 #include "brdf_properties.h"
+#include "host_material.h"
+
 class Object;
 
 class BRDF
@@ -11,7 +13,7 @@ public:
     BRDF(optix::Context & ctx, BRDFType::Type type);
     BRDF(const BRDF& other);
     virtual bool on_draw();
-    virtual void load(Object& obj);
+    virtual void load(MaterialHost &obj);
     virtual BRDFType::Type get_type() { return mType; };
     static std::unique_ptr<BRDF> create(optix::Context & ctx, BRDFType::Type type);
     static bool selector_gui(BRDFType::Type &type, std::string id);
@@ -55,7 +57,7 @@ public:
     ~MERLBRDF() { mMerlBuffer->destroy(); }
 
     void set_merl_file(std::string file);
-    void load(Object& obj) override;
+    void load(MaterialHost &obj) override;
     bool on_draw() override;
 
     optix::float3 merl_correction = optix::make_float3(1);

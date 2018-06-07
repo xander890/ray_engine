@@ -4,7 +4,7 @@
 #include "shader_factory.h"
 #include "scene.h"
 
-void Shader::initialize_mesh(Object &object)
+void Shader::initialize_material(MaterialHost &object)
 {
     set_hit_programs(object);
 }
@@ -35,28 +35,28 @@ Shader::Shader(const Shader & cp)
 	info = cp.info;
 }
 
-void Shader::set_hit_programs(Object &object)
+void Shader::set_hit_programs(MaterialHost &mat)
 {
 	Logger::info << "Loading closest hit programs..." << std::endl;
 
-	auto mRadianceClosestHit = ShaderFactory::createProgram(info.shader_path, "shade", object.get_scene().get_method().get_suffix());
+	auto mRadianceClosestHit = ShaderFactory::createProgram(info.shader_path, "shade", mat.scene->get_method().get_suffix());
 	auto mAnyHitProgram = ShaderFactory::createProgram(info.shader_path, "any_hit_shadow");
 
     auto mDepthClosestProgram = ShaderFactory::createProgram("util_rays.cu", "depth");
 	auto mAttributeClosestProgram = ShaderFactory::createProgram("util_rays.cu", "attribute_closest_hit");
 	auto mEmptyProgram = ShaderFactory::createProgram("util_rays.cu", "empty");
 
-    object.mMaterial->setClosestHitProgram(RayType::RADIANCE, mRadianceClosestHit);
-	object.mMaterial->setAnyHitProgram( RayType::RADIANCE, mEmptyProgram);
+    mat.get_optix_material()->setClosestHitProgram(RayType::RADIANCE, mRadianceClosestHit);
+	mat.get_optix_material()->setAnyHitProgram( RayType::RADIANCE, mEmptyProgram);
 
-    object.mMaterial->setClosestHitProgram(RayType::SHADOW, mEmptyProgram);
-	object.mMaterial->setAnyHitProgram(RayType::SHADOW, mAnyHitProgram);
+    mat.get_optix_material()->setClosestHitProgram(RayType::SHADOW, mEmptyProgram);
+	mat.get_optix_material()->setAnyHitProgram(RayType::SHADOW, mAnyHitProgram);
 
-	object.mMaterial->setClosestHitProgram(RayType::DEPTH, mDepthClosestProgram);
-	object.mMaterial->setAnyHitProgram(RayType::DEPTH, mEmptyProgram);
+	mat.get_optix_material()->setClosestHitProgram(RayType::DEPTH, mDepthClosestProgram);
+	mat.get_optix_material()->setAnyHitProgram(RayType::DEPTH, mEmptyProgram);
 
-	object.mMaterial->setClosestHitProgram(RayType::ATTRIBUTE, mAttributeClosestProgram);
-	object.mMaterial->setAnyHitProgram(RayType::ATTRIBUTE, mEmptyProgram);
+	mat.get_optix_material()->setClosestHitProgram(RayType::ATTRIBUTE, mAttributeClosestProgram);
+	mat.get_optix_material()->setAnyHitProgram(RayType::ATTRIBUTE, mEmptyProgram);
 
 }
 
@@ -68,11 +68,44 @@ Shader::~Shader()
 {
 }
 
-void Shader::remove_hit_programs(Object &object)
+void Shader::remove_hit_programs(MaterialHost &mat)
 {
-    object.mMaterial->getClosestHitProgram(RayType::RADIANCE)->destroy();
-    object.mMaterial->getAnyHitProgram( RayType::RADIANCE)->destroy();
-    object.mMaterial->getAnyHitProgram(RayType::SHADOW)->destroy();
-    object.mMaterial->getClosestHitProgram(RayType::DEPTH)->destroy();
-    object.mMaterial->getClosestHitProgram(RayType::ATTRIBUTE)->destroy();
+    if(mat.get_optix_material().get() == nullptr)
+        return;
+
+    auto program = mat.get_optix_material()->getClosestHitProgram(RayType::RADIANCE);
+    if(program.get() != nullptr)
+    {
+        program->destroy();
+    }
+
+    program = mat.get_optix_material()->getAnyHitProgram( RayType::RADIANCE);
+    if(program.get() != nullptr)
+    {
+        program->destroy();
+    }
+
+    program = mat.get_optix_material()->getAnyHitProgram(RayType::SHADOW);
+    if(program.get() != nullptr)
+    {
+        program->destroy();
+    }
+
+    program = mat.get_optix_material()->getClosestHitProgram(RayType::DEPTH);
+    if(program.get() != nullptr)
+    {
+        program->destroy();
+    }
+
+    program = mat.get_optix_material()->getClosestHitProgram(RayType::ATTRIBUTE);
+    if(program.get() != nullptr)
+    {
+        program->destroy();
+    }
+}
+
+void Shader::tear_down_material(MaterialHost &object)
+{
+
+    remove_hit_programs(object);
 }

@@ -291,8 +291,7 @@ void ObjLoader::createGeometryInstances(GLMmodel* model)
     std::unique_ptr<MeshGeometry> geom = std::make_unique<MeshGeometry>(m_context);
     geom->init(name.c_str(), meshdata);
     rtMesh->init(name.c_str(), std::move(geom), materialData);
-
-	  m_meshes.push_back( std::move(rtMesh) );
+    m_meshes.push_back(std::move(rtMesh));
   }
 }
 

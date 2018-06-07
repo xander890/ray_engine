@@ -306,7 +306,5 @@ unsigned int Texture::get_gl_format(const Texture::Format &format)
         case Texture::Format::UNSIGNED_INT: return GL_UNSIGNED_INT;
         default:
         case Texture::Format::FLOAT: return GL_FLOAT;
-
-
     }
 }

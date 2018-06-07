@@ -1,5 +1,6 @@
 #pragma once
 #include "shader.h"
+#include "host_material.h"
 
 class DefaultShader : public Shader
 {
@@ -8,7 +9,7 @@ public:
     DefaultShader(const ShaderInfo& shader_info) : Shader(shader_info) {}
     
     void initialize_shader(optix::Context ctx) override;
-    void initialize_mesh(Object & object) override;
+    void initialize_material(MaterialHost &object) override;
     void pre_trace_mesh(Object & object) override {}
 
     static std::vector<ShaderInfo> default_shaders;

@@ -2,6 +2,7 @@
 #include "shader.h"
 #include "optix_serialize.h"
 #include "brdf_host.h"
+#include "host_material.h"
 
 class BRDFShader : public Shader
 {
@@ -12,7 +13,7 @@ public:
 
     void initialize_shader(optix::Context context) override;
     
-    void initialize_mesh(Object & object) override;
+    void initialize_material(MaterialHost &object) override;
     void pre_trace_mesh(Object & object) override;
 	virtual Shader* clone() override { return new BRDFShader(*this); }
     bool on_draw() override;

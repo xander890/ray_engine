@@ -73,25 +73,25 @@ void SampledBSSRDF::initialize_shader(optix::Context ctx)
 	mBSSRDF = BSSRDF::create(context, s);
 }
 
-void SampledBSSRDF::initialize_mesh(Object& object)
+void SampledBSSRDF::initialize_material(MaterialHost &mat)
 {
     mCurrentShaderSource = get_current_shader_source();
     mReloadShader = true;
-	Shader::initialize_mesh(object);
+	Shader::initialize_material(mat);
 	BufPtr<BSSRDFSamplingProperties> bufptr(mPropertyBuffer->getId());
- 	object.mMaterial["bssrdf_sampling_properties"]->setUserData(sizeof(BufPtr<BSSRDFSamplingProperties>), &bufptr);
-    mBSSRDF->load(object.get_main_material()->get_data().relative_ior, object.get_main_material()->get_data().scattering_properties);
+	mat.get_optix_material()["bssrdf_sampling_properties"]->setUserData(sizeof(BufPtr<BSSRDFSamplingProperties>), &bufptr);
+    mBSSRDF->load(mat.get_data().relative_ior, mat.get_data().scattering_properties);
 
 	ScatteringDipole::Type t = mBSSRDF->get_type();
-	object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
+	mat.get_optix_material()["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 }
 
-void SampledBSSRDF::load_data(Object & object)
+void SampledBSSRDF::load_data(MaterialHost &mat)
 {
 	if (mHasChanged)
 	{
-		const ScatteringMaterialProperties& scattering_properties = object.get_main_material()->get_data().scattering_properties;
-		const float relior = object.get_main_material()->get_data().relative_ior;
+		const ScatteringMaterialProperties& scattering_properties = mat.get_data().scattering_properties;
+		const float relior = mat.get_data().relative_ior;
 		Logger::info << "Reloading shader" << std::endl;
 
 		const optix::float3 imfp = mBSSRDF->get_sampling_inverse_mean_free_path(scattering_properties);
@@ -102,7 +102,7 @@ void SampledBSSRDF::load_data(Object & object)
 		context["samples_per_pixel"]->setUint(mSamples);
         mBSSRDF->load(relior, scattering_properties);
 		ScatteringDipole::Type t = mBSSRDF->get_type();
-		object.mMaterial["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
+		mat.get_optix_material()["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 
 		bool isNN = properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING;
         if(isNN)
@@ -112,7 +112,7 @@ void SampledBSSRDF::load_data(Object & object)
 
         if(mReloadShader)
         {
-            object.get_main_material()->set_shader(mCurrentShaderSource);
+            mat.set_shader(mCurrentShaderSource);
             mReloadShader = false;
         }
 	}

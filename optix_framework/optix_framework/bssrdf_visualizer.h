@@ -9,12 +9,12 @@ public:
 	BSSRDFPlaneRenderer(BSSRDFPlaneRenderer & copy);
 
 	void initialize_shader(optix::Context) override;
-	void initialize_mesh(Object& object) override;
+	void initialize_material(MaterialHost &object) override;
 	void pre_trace_mesh(Object& object) override;
 	void post_trace_mesh(Object& object) override;
 	bool on_draw() override;
 	Shader* clone() override { return new BSSRDFPlaneRenderer(*this); }
-	void load_data(Object & object) override;
+	void load_data(MaterialHost &mat) override;
 
 protected:
 	virtual void reset();

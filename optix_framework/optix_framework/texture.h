@@ -4,6 +4,7 @@
 #pragma once
 #include "host_device_common.h"
 #include "optix_serialize.h"
+#include "logger.h"
 
 class Thumbnail;
 
@@ -64,9 +65,17 @@ public:
     {
         T* data = reinterpret_cast<T*>(mData);
         T* to_return = new T[get_number_of_elements()];
+        T mx = std::numeric_limits<T>::min();
+
         for(int i = 0; i < get_number_of_elements(); i++)
         {
-            to_return[i] = data[i] * get_max<T>();
+            to_return[i] = data[i];
+            mx = std::max(mx, data[i]);
+        }
+
+        for(int i = 0; i < get_number_of_elements(); i++)
+        {
+            to_return[i] = to_return[i] * get_max<T>();
         }
         return to_return;
     }

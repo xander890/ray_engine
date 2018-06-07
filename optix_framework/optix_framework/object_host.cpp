@@ -43,12 +43,12 @@ Object::Object(optix::Context ctx) : mContext(ctx)
     mMaterialSelectionTextureLabel = create_label_texture(ctx, mMaterialSelectionTexture);
 }
 
-void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost> material)
+void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost>& material)
 {
     mMeshName = name;
     mGeometry = std::move(geometry);
-    mMaterialData.resize(1);
-    mMaterialData[0] = material;
+    mMaterials.resize(1);
+    mMaterials[0] = material;
 
     if (mTransform == nullptr)
     {
@@ -59,36 +59,40 @@ void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::sha
 void Object::load_materials()
 {
     auto id = mMaterialSelectionTextureLabel->get_id();
-    mMaterial["material_selector"]->setUserData(sizeof(TexPtr), &id);
-    bool one_material_changed = std::any_of(mMaterialData.begin(), mMaterialData.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->has_changed();  });
+    mGeometryInstance["material_selector"]->setUserData(sizeof(TexPtr), &id);
+    bool one_material_changed = std::any_of(mMaterials.begin(), mMaterials.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->has_changed();  });
     mReloadMaterials |= one_material_changed;
 
-    for(auto & m : mMaterialData)
+
+    if(mReloadMaterials)
     {
-        m->load_shader(*this);
+        create_and_bind_optix_data();
+        size_t n = mMaterials.size();
+        MaterialDataCommon* data = reinterpret_cast<MaterialDataCommon*>(mMaterialBuffer->map());
+
+        for(auto & m : mMaterials)
+        {
+            m->scene = scene;
+            m->reload_shader();
+        }
+
+        mGeometryInstance->setMaterialCount(n);
+
+        for (int i = 0; i < n; i++)
+        {
+            mGeometryInstance->setMaterial(i, mMaterials[i]->get_optix_material());
+            memcpy(&data[i], &mMaterials[i]->get_data(), sizeof(MaterialDataCommon));
+        }
+        mMaterialBuffer->unmap();
+        mGeometryInstance["material_buffer"]->setBuffer(mMaterialBuffer);
+        mGeometryInstance["main_material"]->setUserData(sizeof(MaterialDataCommon), &data[0]);
     }
 
-    if(!mReloadMaterials)
+    for(auto & m : mMaterials)
     {
-        return;
+        m->load_shader();
     }
 
-    create_and_bind_optix_data();
-    size_t n = mMaterialData.size();
-    MaterialDataCommon* data = reinterpret_cast<MaterialDataCommon*>(mMaterialBuffer->map());
-
-    for(auto & m : mMaterialData)
-    {
-        m->reload_shader();
-    }
-
-    for (int i = 0; i < n; i++)
-    {
-        memcpy(&data[i], &mMaterialData[i]->get_data(), sizeof(MaterialDataCommon));
-    }
-    mMaterialBuffer->unmap();
-    mMaterial["material_buffer"]->setBuffer(mMaterialBuffer);
-    mMaterial["main_material"]->setUserData(sizeof(MaterialDataCommon), &data[0]);
     mReloadMaterials = false;
 }
 
@@ -140,12 +144,6 @@ void Object::create_and_bind_optix_data()
         bind = true;
     }
 
-    if (!mMaterial)
-    {
-        mMaterial = mContext->createMaterial();
-        bind = true;
-    }
-
     if (!mGeometryGroup)
     {
         mGeometryGroup = mContext->createGeometryGroup();
@@ -162,8 +160,6 @@ void Object::create_and_bind_optix_data()
     {
         mGeometryGroup->setChildCount(1);
         mGeometryInstance->setGeometry(mGeometry->get_geometry());
-        mGeometryInstance->setMaterialCount(1);
-        mGeometryInstance->setMaterial(0, mMaterial);
 
         mAcceleration = mContext->createAcceleration(std::string("Trbvh"));
         mAcceleration->setProperty("refit", "0");
@@ -180,8 +176,10 @@ void Object::create_and_bind_optix_data()
 
 void Object::add_material(std::shared_ptr<MaterialHost> material)
 {
-    mMaterialData.push_back(material);
-    mMaterialBuffer->setSize(mMaterialData.size());
+    material->scene = scene;
+    mMaterials.push_back(material);
+    mMaterialBuffer->setSize(mMaterials.size());
+    mReloadMaterials = true;
     load_materials();
 }
 
@@ -232,7 +230,7 @@ bool Object::on_draw()
             }
 
 
-            for (auto& m : mMaterialData)
+            for (auto& m : mMaterials)
             {
                 changed |= m->on_draw(mMeshName);
             }
@@ -246,7 +244,7 @@ bool Object::on_draw()
 
 void Object::pre_trace()
 {
-    for(auto & m : mMaterialData)
+    for(auto & m : mMaterials)
     {
         m->get_shader().pre_trace_mesh(*this);
     }
@@ -254,7 +252,7 @@ void Object::pre_trace()
 
 void Object::post_trace()
 {
-    for(auto & m : mMaterialData)
+    for(auto & m : mMaterials)
     {
         m->get_shader().post_trace_mesh(*this);
     }
@@ -268,11 +266,9 @@ void Object::reload_materials()
 Object::~Object()
 {
     mGeometry.reset();
-    mMaterial->destroy();
     mTransform.reset();
-    for(auto & m : mMaterialData)
+    for(auto & m : mMaterials)
     {
-        m->get_shader().tear_down_mesh(*this);
         m.reset();
     }
     mGeometryInstance->destroy();

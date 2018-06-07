@@ -11,10 +11,15 @@ rtDeclareVariable(TexPtr, material_selector, , );
 
 rtBuffer<MaterialDataCommon, 1> material_buffer;
 
-__device__ __forceinline__ MaterialDataCommon get_material(const optix::float2 & uv)
+__device__ __forceinline__ unsigned int get_material_index(const optix::float2 & uv)
 {
     auto res = optix::rtTex2D<optix::int4>(material_selector, uv.x, uv.y);
-    return material_buffer[res.x];
+    return res.x;
+}
+
+__device__ __forceinline__ MaterialDataCommon get_material(const optix::float2 & uv)
+{
+    return material_buffer[get_material_index(uv)];
 }
 
 __device__ __forceinline__ MaterialDataCommon get_material(const optix::float3 & pos)

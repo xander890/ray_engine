@@ -45,11 +45,9 @@ int main( int argc, char** argv )
 {
 	std::vector<float> r;
 	std::vector<int> i;
-	get_hemisphere_subdivisions(288, r, i);
 	std::vector<std::string> filenames;
 	std::string filename = "";
 	std::string output_file = "rendering.raw";
-	std::string config_file = "config.xml";
 	bool accel_caching_on = false;
 	bool auto_mode = false;
 	int frames = -1;
@@ -68,13 +66,6 @@ int main( int argc, char** argv )
 	if( arg == "-h" || arg == "--help" )
 	{
 		printUsageAndExit( argv[0] ); 
-	}
-	else if (arg == "-c" || arg == "--config")
-	{
-		if (i == argc - 1)
-			printUsageAndExit(argv[0]);
-		config_file = argv[++i];
-		lower_case_string(config_file);
 	}
 	else if (arg == "-o" || arg == "--output")
 	{

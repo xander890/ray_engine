@@ -64,7 +64,7 @@ RT_PROGRAM void shade()
 		{
 			float3 wi, L; int sh;
 			unsigned int l;
-			evaluate_direct_light(data.hit_point, data.hit_normal, wi, L, sh, prd_radiance.sampler, l);
+			evaluate_direct_light(hit_pos, brdf_normal, wi, L, sh, prd_radiance.sampler, l);
 
 			BRDFGeometry g;
 			g.texcoord = texcoord;

@@ -15,11 +15,11 @@ public:
 	SampledBSSRDF(const SampledBSSRDF & cp);
 
 	void initialize_shader(optix::Context ctx) override;
-	void initialize_mesh(Object & object) override;
+	void initialize_material(MaterialHost &mat) override;
 	void pre_trace_mesh(Object & object) override {}
 	
 	virtual bool on_draw() override;
-	virtual void load_data(Object & object) override;
+	virtual void load_data(MaterialHost &mat) override;
 	virtual Shader* clone() override { return new SampledBSSRDF(*this); }
 
 	std::unique_ptr<BSSRDFSamplingProperties> properties = nullptr;

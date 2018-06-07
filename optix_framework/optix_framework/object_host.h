@@ -19,15 +19,15 @@ public:
     explicit Object(optix::Context ctx);
     ~Object();
 
-    void init(const char* name, std::unique_ptr<Geometry> geom, std::shared_ptr<MaterialHost> material);
+    void init(const char* name, std::unique_ptr<Geometry> geom, std::shared_ptr<MaterialHost>& material);
 
     void reload_materials();
     void load();
 
     void add_material(std::shared_ptr<MaterialHost> material);
 
-    std::shared_ptr<MaterialHost> get_main_material() { return mMaterialData[0]; }
-    const std::vector<std::shared_ptr<MaterialHost>> & get_materials() { return mMaterialData; }
+    std::shared_ptr<MaterialHost> get_main_material() { return mMaterials[0]; }
+    const std::vector<std::shared_ptr<MaterialHost>> & get_materials() { return mMaterials; }
 
     bool on_draw();
     void pre_trace();
@@ -45,7 +45,7 @@ public:
     const Scene& get_scene() const { return *scene; }
     const std::string& get_name() { return mMeshName; }
 
-    optix::Material mMaterial = nullptr;
+    optix::GeometryInstance& get_instance() {return mGeometryInstance; }
 
 private:
 
@@ -62,7 +62,7 @@ private:
         archive(cereal::make_nvp("name", construct->mMeshName));
         archive(cereal::make_nvp("geometry", construct->mGeometry));
         archive(cereal::make_nvp("transform", construct->mTransform));
-        archive(cereal::make_nvp("materials",construct->mMaterialData));
+        archive(cereal::make_nvp("materials",construct->mMaterials));
         construct->create_and_bind_optix_data();
         construct->mReloadMaterials = construct->mReloadGeometry = true;
     }
@@ -73,7 +73,7 @@ private:
         archive(cereal::make_nvp("name", mMeshName));
         archive(cereal::make_nvp("geometry", mGeometry));
         archive(cereal::make_nvp("transform", mTransform));
-        archive(cereal::make_nvp("materials",mMaterialData));
+        archive(cereal::make_nvp("materials",mMaterials));
     }
 
     int mMeshID;
@@ -87,7 +87,7 @@ private:
     std::shared_ptr<Geometry> mGeometry;
     optix::Context  mContext;
     std::unique_ptr<Transform> mTransform;
-    std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
+    std::vector<std::shared_ptr<MaterialHost>> mMaterials;
     optix::Buffer          mMaterialBuffer;
     std::string            mMeshName;
     std::unique_ptr<Texture> mMaterialSelectionTextureLabel;
