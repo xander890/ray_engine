@@ -65,6 +65,8 @@ bool EnvironmentMap::on_draw()
 	bool changed = false;
 	if (ImmediateGUIDraw::TreeNode("Environment map"))
 	{
+        environment_sampler->on_draw();
+
 		char txt[512];
 		envmap_path.copy(txt, envmap_path.length());
 		ImmediateGUIDraw::InputText("Path", txt, 512, ImGuiInputTextFlags_ReadOnly);
@@ -95,6 +97,7 @@ bool EnvironmentMap::on_draw()
 			resample_envmaps = true;
 		}
 		ImGui::TreePop();
+
 	}
 	return changed; 
 }

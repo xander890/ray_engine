@@ -12,14 +12,35 @@
 #include "obj_loader.h"
 #include "scene_gui.h"
 
+
+inline std::unique_ptr<Texture> create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr)
+{
+    std::unique_ptr<Texture> ret = std::make_unique<Texture>(ctx, Texture::INT, 1);
+    ret->set_size(ptr->get_width(), ptr->get_height());
+    for(int i = 0; i < ptr->get_width(); i++)
+    {
+        for(int j = 0; j < ptr->get_height(); j++)
+        {
+            float value = ((optix::float4*)ptr->get_texel_ptr(i,j))->x;
+            int val = value > 0.5? 1 : 0;
+            ret->set_texel_ptr(&val, i, j);
+        }
+    }
+    ret->update();
+    return ret;
+}
+
 Object::Object(optix::Context ctx) : mContext(ctx)
 {
     static int id = 0;
     mMeshID = id++;
     mReloadMaterials = mReloadShader = mReloadGeometry = true;
-    mMaterialSelectionTexture = std::make_unique<Texture>(ctx, Texture::INT, 1);
-    int default_label = 0;
-    mMaterialSelectionTexture->set_data(&default_label, sizeof(int));
+
+    mMaterialSelectionTexture = std::make_unique<Texture>(ctx, Texture::FLOAT, 4);
+    mMaterialSelectionTexture->set_size(1);
+    optix::float4 default_label = optix::make_float4(0.0f);
+    mMaterialSelectionTexture->set_data(&default_label.x, 4*sizeof(float));
+    mMaterialSelectionTextureLabel = create_label_texture(ctx, mMaterialSelectionTexture);
 }
 
 void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost> material)
@@ -39,7 +60,7 @@ void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::sha
 
 void Object::load_materials()
 {
-    auto id = mMaterialSelectionTexture->get_id();
+    auto id = mMaterialSelectionTextureLabel->get_id();
     mMaterial["material_selector"]->setUserData(sizeof(TexPtr), &id);
     bool one_material_changed = std::any_of(mMaterialData.begin(), mMaterialData.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->has_changed();  });
     mReloadMaterials |= one_material_changed;
@@ -191,22 +212,6 @@ void Object::add_material(std::shared_ptr<MaterialHost> material)
     load_materials();
 }
 
-inline std::unique_ptr<Texture> create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr)
-{
-    std::unique_ptr<Texture> ret = std::make_unique<Texture>(ctx, Texture::INT, 1);
-    ret->set_size(ptr->get_width(), ptr->get_height());
-    for(int i = 0; i < ptr->get_width(); i++)
-    {
-        for(int j = 0; j < ptr->get_height(); j++)
-        {
-            float value = ptr->get_texel<optix::float4>(i,j).x;
-            int val = value > 0.5? 1 : 0;
-            ret->set_texel<int>(val, i, j);
-        }
-    }
-    ret->update();
-    return ret;
-}
 
 bool Object::on_draw()
 {
@@ -258,14 +263,15 @@ bool Object::on_draw()
 
         if (ImmediateGUIDraw::TreeNode((std::string("Materials##Materials") + mMeshName).c_str()))
         {
+            mMaterialSelectionTextureLabel->on_draw();
             if(ImmediateGUIDraw::Button("Load material selection texture..."))
             {
                 std::string d;
                 if(Dialogs::openFileDialog(d))
                 {
-                    auto t = loadTexture(mContext, d, optix::make_float3(0));
-                    mMaterialSelectionTexture = create_label_texture(mContext, t);
-                    mMaterialSelectionTexture->get_sampler()->setFilteringModes(RT_FILTER_NEAREST, RT_FILTER_NEAREST, RT_FILTER_NONE);
+                    mMaterialSelectionTexture = loadTexture(mContext, d, optix::make_float3(0));
+                    mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture);
+                    mMaterialSelectionTextureLabel->get_sampler()->setFilteringModes(RT_FILTER_NEAREST, RT_FILTER_NEAREST, RT_FILTER_NONE);
                     load_materials();
                 }
             }

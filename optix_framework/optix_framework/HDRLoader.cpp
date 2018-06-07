@@ -223,25 +223,14 @@ float* HDRLoader::raster()const
 //
 //-----------------------------------------------------------------------------
 
-std::unique_ptr<Texture> loadHDRTexture( optix::Context& context,
-                                      const std::string& filename,
-                                      const optix::float3& default_color )
+bool loadHDRTexture(std::unique_ptr<Texture> &tex, optix::Context &context, const std::string &filename)
 {
   // Create tex sampler and populate with default values
-  std::unique_ptr<Texture> tex = std::make_unique<Texture>(context);
+  tex = std::make_unique<Texture>(context);
   // Read in HDR, set texture buffer to empty buffer if fails
   HDRLoader hdr( filename );
   if ( hdr.failed() ) {
-
-    float* buffer_data = new float[4];
-    buffer_data[0] = default_color.x;
-    buffer_data[1] = default_color.y;
-    buffer_data[2] = default_color.z;
-    buffer_data[3] = 1.0f;
-    tex->set_data(buffer_data, 4 * sizeof(float));
-    delete[] buffer_data;
-
-    return tex;
+    return false;
   }
 
   const unsigned int nx = hdr.width();
@@ -269,6 +258,6 @@ std::unique_ptr<Texture> loadHDRTexture( optix::Context& context,
 
   tex->set_data(buffer_data, nx*ny*4*sizeof(float));
   delete[] buffer_data;
-  return tex;
+  return true;
 }
 

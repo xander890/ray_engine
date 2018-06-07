@@ -165,9 +165,7 @@ void PPMLoader::getLine( std::ifstream& file_in, std::string& s )
 //
 //-----------------------------------------------------------------------------
 
-std::unique_ptr<Texture> PPMLoader::loadTexture( optix::Context context,
-                                              const float3& default_color,
-                                              bool linearize_gamma)
+bool PPMLoader::loadTexture(std::unique_ptr<Texture> &tex, optix::Context context, bool linearize_gamma)
 {
   // lookup table for sRGB gamma linearization
   static unsigned char srgb2linear[256];
@@ -186,19 +184,10 @@ std::unique_ptr<Texture> PPMLoader::loadTexture( optix::Context context,
 
   // Create tex sampler and populate with default values
 
-   std::unique_ptr<Texture> tex = std::make_unique<Texture>(context);
+  tex = std::make_unique<Texture>(context);
 
   if (failed() ) {
-
-    float* buffer_data = new float[4];
-    buffer_data[0] = default_color.x;
-    buffer_data[1] = default_color.y;
-    buffer_data[2] = default_color.z;
-    buffer_data[3] = 1.0f;
-    tex->set_data(buffer_data, 4 * sizeof(float));
-    delete[] buffer_data;
-
-    return tex;
+    return false;
   }
 
   const unsigned int nx = width();
@@ -235,7 +224,7 @@ std::unique_ptr<Texture> PPMLoader::loadTexture( optix::Context context,
   delete[] buffer_data;
 
 
-  return tex;
+  return true;
 }
 
   
@@ -245,10 +234,8 @@ std::unique_ptr<Texture> PPMLoader::loadTexture( optix::Context context,
 //
 //-----------------------------------------------------------------------------
 
-std::unique_ptr<Texture> loadPPMTexture( optix::Context context,
-                                      const std::string& filename,
-                                      const optix::float3& default_color )
+bool loadPPMTexture(std::unique_ptr<Texture> &tex, optix::Context context, const std::string &filename)
 {
   PPMLoader ppm( filename );
-  return ppm.loadTexture(context, default_color );
+  return ppm.loadTexture(tex, context, false);
 }

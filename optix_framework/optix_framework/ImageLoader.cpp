@@ -26,7 +26,7 @@
 #include <fstream>
 #include <algorithm>
 #include <exception>
-
+#include "IL/il.h"
 
 //-----------------------------------------------------------------------------
 //  
@@ -38,43 +38,96 @@ std::unique_ptr<Texture> createOneElementSampler(optix::Context context, const o
 {
     std::unique_ptr<Texture> tex = std::make_unique<Texture>(context);
 	tex->set_size(1);
-    float data[4] = {default_color.x, default_color.y, default_color.z, default_color.w};
-	tex->set_data(data, 4*sizeof(float));
+	tex->set_format(4, Texture::Format::FLOAT);
+	float* buffer_data = new float[4];
+	buffer_data[0] = default_color.x;
+	buffer_data[1] = default_color.y;
+	buffer_data[2] = default_color.z;
+	buffer_data[3] = 1.0f;
+	tex->set_data(buffer_data, 4 * sizeof(float));
+	delete[] buffer_data;
     return tex;
 }
 
-std::unique_ptr<Texture> loadTexture( optix::Context context,
-                                            const std::string& filename,
-                                            const optix::float3& default_color )
+bool loadDevilTexture(std::unique_ptr<Texture> &tex, optix::Context context, const std::string& filename)
+{
+	static bool devil_initialized = false;
+
+	if(!devil_initialized)
+	{
+		ilInit();
+		devil_initialized = true;
+	}
+
+	ILuint	imgId;
+	ilGenImages(1, &imgId);
+	ilBindImage(imgId);
+
+	tex = std::make_unique<Texture>(context);
+
+	if(!ilLoadImage(filename.c_str()))
+	{
+		return false;
+	}
+
+	printf("Width: %d  Height: %d  Depth: %d  Bpp: %d\n",
+			ilGetInteger(IL_IMAGE_WIDTH),
+			ilGetInteger(IL_IMAGE_HEIGHT),
+			ilGetInteger(IL_IMAGE_DEPTH),
+			ilGetInteger(IL_IMAGE_BITS_PER_PIXEL));
+
+	int w = ilGetInteger(IL_IMAGE_WIDTH);
+	int h = ilGetInteger(IL_IMAGE_HEIGHT);
+	tex->set_size(w,h);
+	tex->set_format(4, Texture::Format::FLOAT);
+
+	float* data = new float[4*w*h];
+	ilCopyPixels(0,0,0,w,h,1, IL_RGBA, IL_FLOAT, &data[0]);
+
+	tex->set_data(data, 4*w*h*sizeof(float));
+
+	ilDeleteImages(1, &imgId);
+
+	return true;
+}
+
+
+std::unique_ptr<Texture> loadTexture( optix::Context context, const std::string& filename, const optix::float3& default_color )
 {
 	std::string filename_lc = filename;
 	std::transform(filename.begin(), filename.end(), filename_lc.begin(), ::tolower);
-  size_t len = filename.length();
+	size_t len = filename.length();
+	bool success = false;
+	std::unique_ptr<Texture> tex = nullptr;
 
-  if(len >= 4) {
-	  std::string ext = filename_lc.substr(filename_lc.length() - 4);
-	  if (ext.compare(".raw") == 0)
-	  {
-		  return loadRAWTexture(context, filename, default_color);
-	  }
-	  else if (ext.compare(".hdr") == 0)
-	  {
-		  return loadHDRTexture(context, filename, default_color);
-	  }
-	  else if (ext.compare(".ppm") == 0)
-	  {
-		  return loadPPMTexture(context, filename, default_color);
-	  }
-	  else
-	  {
-		  throw std::runtime_error("Unable to find a compatible format. Please use .ppm, .hdr or .raw.");
-	  }
+	if(len >= 4)
+	{
+		std::string ext = filename_lc.substr(filename_lc.length() - 4);
+		if (ext.compare(".raw") == 0)
+		{
+		    success = loadRAWTexture(tex, context, filename);
+		}
+		else if (ext.compare(".hdr") == 0)
+		{
+			success = loadHDRTexture(tex, context, filename);
+		}
+		else if (ext.compare(".ppm") == 0)
+		{
+			success = loadPPMTexture(tex, context, filename);
+		}
+		else
+		{
+		    success = loadDevilTexture(tex, context, filename);
+		}
 
-  }
-  else
-  {
-      return createOneElementSampler(context, make_float4(default_color,1));
-  }
-    
+	}
+
+	if(!success)
+	{
+		tex = createOneElementSampler(context, make_float4(default_color,1));
+	}
+
+	return tex;
+
 }
 

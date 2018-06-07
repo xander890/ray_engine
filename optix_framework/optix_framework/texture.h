@@ -5,9 +5,13 @@
 #include "host_device_common.h"
 #include "optix_serialize.h"
 
+class Thumbnail;
+
+
 class Texture
 {
 public:
+
     enum Format
     {
         BYTE,
@@ -26,22 +30,78 @@ public:
 
     void set_format(const RTformat& format);
     void set_format(RTsize elements, const Texture::Format & format);
+    RTformat get_format() const;
+    void get_format(RTsize& elements, Texture::Format & format) const;
 
     size_t get_width() const { return mDimensions[0]; }
     size_t get_height() const { return mDimensions[1]; }
     size_t get_depth() const { return mDimensions[2]; }
 
     TexPtr get_id();
-    void set_data(void * data, size_t size);
+
+    const void* get_data() const { return mData; }
+
 
     template<typename T>
-    T get_texel(size_t x, size_t y = 0, size_t z = 0) const;
+    T get_max() const
+    {
+        switch(mFormat)
+        {
+            case BYTE:
+            case UNSIGNED_BYTE:
+            case SHORT:
+            case UNSIGNED_SHORT:
+            case INT:
+            case UNSIGNED_INT:
+                return std::numeric_limits<T>::max();
+            default:
+            case FLOAT: return 1;
+        }
+    }
+
     template<typename T>
-    void set_texel(const T& val, size_t x, size_t y = 0, size_t z = 0);
+    void* get_normalized_data() const
+    {
+        T* data = reinterpret_cast<T*>(mData);
+        T* to_return = new T[get_number_of_elements()];
+        for(int i = 0; i < get_number_of_elements(); i++)
+        {
+            to_return[i] = data[i] * get_max<T>();
+        }
+        return to_return;
+    }
+
+    void* get_normalized_data() const
+    {
+        switch(mFormat)
+        {
+            case BYTE: return get_normalized_data<char>();
+            case UNSIGNED_BYTE: return get_normalized_data<unsigned char>();
+            case SHORT: return get_normalized_data<short>();
+            case UNSIGNED_SHORT: return get_normalized_data<unsigned short>();
+            case INT: return get_normalized_data<int>();
+            case UNSIGNED_INT: return get_normalized_data<unsigned int>();
+            default:
+            case FLOAT: return get_normalized_data<float>();
+        }
+    }
+
+
+    void set_data(void * data, size_t size);
+    bool on_draw();
+
+    void* get_texel_ptr(size_t x, size_t y = 0, size_t z = 0) const;
+    void set_texel_ptr(const void* val, size_t x, size_t y = 0, size_t z = 0);
 
     optix::TextureSampler get_sampler() { return textureSampler; }
 
     void update();
+
+    static RTformat get_optix_format(const RTsize& element_size, const Texture::Format& format);
+    static unsigned int get_gl_element(const RTsize& element_size);
+    static unsigned int get_gl_format(const Format& element_format);
+    static void get_size_and_format(const RTformat & out_format, RTsize & element_size, Texture::Format & format);
+    static size_t get_size(const Texture::Format & format);
 
 private:
     int mID;
@@ -94,9 +154,11 @@ private:
         delete[] vals;
     }
 
-    RTformat get_optix_format(const RTsize& element_size, const Texture::Format& format) const;
-    void get_size_and_format(const RTformat & out_format, RTsize & element_size, Texture::Format & format) const;
-    size_t get_size(const Texture::Format & format) const;
+    optix::Context mContext;
+    std::unique_ptr<Thumbnail> mThumbnail;
+
+    template<typename T>
+    void check_template_access() const { assert(sizeof(T) == get_size(mFormat)); }
 
 };
 
@@ -112,27 +174,5 @@ inline void Texture::save(cereal::XMLOutputArchiveOptix & archive) const
             cereal::make_nvp("element_size", mFormatElements)
     );
     archive.saveBinaryValue(mData, get_number_of_elements()*sizeof(float), "texture");
-}
-
-
-template<typename T>
-T Texture::get_texel(size_t i, size_t j, size_t k) const
-{
-    size_t idx = (k * get_height() + j) * get_width() + i;
-    size_t size = get_size(mFormat);
-    char* data = reinterpret_cast<char*>(mData);
-    T * res = reinterpret_cast<T*>(&data[size*mFormatElements*idx]);
-    return *res;
-}
-
-
-template<typename T>
-void Texture::set_texel(const T &val, size_t i, size_t j, size_t k)
-{
-    size_t idx = (k * get_height() + j) * get_width() + i;
-    size_t size = get_size(mFormat);
-    char* data = reinterpret_cast<char*>(mData);
-    T * d = reinterpret_cast<T*>(&data[size*mFormatElements*idx]);
-    *d = val;
 }
 

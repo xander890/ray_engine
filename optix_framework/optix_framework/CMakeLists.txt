@@ -131,7 +131,7 @@ set(HEADERS
     subsurface_scattering_sampled_common.h
     subsurface_scattering_sampled.h
         hemisphere_partitions.h
-        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h brdf_properties.h geometry.cpp geometry.h)
+        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h brdf_properties.h geometry.cpp geometry.h thumbnail.cpp thumbnail.h)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp
@@ -197,7 +197,7 @@ set(SRCS
     sky_model.cpp
     sphere.cpp
     transform.cpp
-        object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h geometry.cpp geometry.h)
+        object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h geometry.cpp geometry.h thumbnail.cpp thumbnail.h)
 
 set(CUDA_SOURCES
 CUDA_files/absorbing_glass.cu
@@ -245,5 +245,5 @@ add_library( framework STATIC
 
 CUDA_ADD_CUBLAS_TO_TARGET(framework)
 
-target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw cereal ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${XercesC_LIBRARIES} )
+target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw cereal ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${XercesC_LIBRARIES} ${IL_LIBRARIES} ${ILU_LIBRARIES})
 target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

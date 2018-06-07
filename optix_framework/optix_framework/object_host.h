@@ -97,7 +97,9 @@ private:
     std::vector<std::shared_ptr<MaterialHost>> mMaterialData;
     optix::Buffer          mMaterialBuffer;
     std::string            mMeshName;
+    std::unique_ptr<Texture> mMaterialSelectionTextureLabel;
     std::unique_ptr<Texture> mMaterialSelectionTexture;
+
 
     bool mReloadShader = true;
     bool mReloadGeometry = true;

@@ -37,9 +37,7 @@
 // Creates a TextureSampler object for the given HDR file.  If filename is 
 // empty or HDRLoader fails, a 1x1 texture is created with the provided default
 // texture color.
-std::unique_ptr<Texture> loadHDRTexture( optix::Context& context,
-                                               const std::string& hdr_filename,
-                                               const optix::float3& default_color );
+bool loadHDRTexture(std::unique_ptr<Texture> &tex, optix::Context &context, const std::string &hdr_filename);
 
 
 //-----------------------------------------------------------------------------

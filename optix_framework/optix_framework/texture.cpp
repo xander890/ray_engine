@@ -3,10 +3,12 @@
 //
 
 #include <cstring>
+#include <GL/gl.h>
 #include "texture.h"
+#include "immediate_gui.h"
+#include "thumbnail.h"
 
-
-RTformat Texture::get_optix_format(const RTsize& element_size, const Texture::Format& format) const
+RTformat Texture::get_optix_format(const RTsize& element_size, const Texture::Format& format)
 {
     assert(element_size > 0 && element_size <= 4);
     switch(format)
@@ -86,7 +88,7 @@ RTformat Texture::get_optix_format(const RTsize& element_size, const Texture::Fo
     }
 }
 
-void Texture::get_size_and_format(const RTformat & out_format, RTsize & element_size, Texture::Format & format) const
+void Texture::get_size_and_format(const RTformat & out_format, RTsize & element_size, Texture::Format & format)
 {
    switch(out_format)
    {
@@ -121,7 +123,7 @@ void Texture::get_size_and_format(const RTformat & out_format, RTsize & element_
    }
 }
 
-size_t Texture::get_size(const Texture::Format & format) const
+size_t Texture::get_size(const Texture::Format & format)
 {
     switch(format)
     {
@@ -153,6 +155,8 @@ void Texture::set_data(void *data, size_t size)
     assert(size <= get_number_of_elements()*get_size(mFormat));
     memcpy(mData, data, size);
     update();
+
+    mThumbnail.reset();
 }
 
 void Texture::set_size(size_t w, size_t h, size_t d)
@@ -186,6 +190,7 @@ void Texture::set_size(size_t dimensions, size_t *dims)
         delete[] mData;
     }
     mData = new float[get_number_of_elements()];
+
 }
 
 void Texture::set_format(const RTformat &format)
@@ -222,6 +227,7 @@ Texture::Texture(optix::Context context, const Texture::Format &format, const RT
     textureBuffer = context->createBuffer(RT_BUFFER_INPUT);
     textureSampler->setBuffer(0u, 0u, textureBuffer);
     mID = textureSampler->getId();
+    mContext = context;
     set_format(element_size, format);
     set_size(1);
 }
@@ -231,4 +237,76 @@ void Texture::update()
     void * dest = textureBuffer->map();
     memcpy(dest, mData, get_number_of_elements() * get_size(mFormat));
     textureBuffer->unmap();
+}
+
+RTformat Texture::get_format() const
+{
+    return get_optix_format(mFormatElements, mFormat);
+}
+
+void Texture::get_format(RTsize &elements, Texture::Format &format) const
+{
+    elements = mFormatElements;
+    format = mFormat;
+}
+
+bool Texture::on_draw()
+{
+    if(mThumbnail == nullptr)
+    {
+        mThumbnail = std::make_unique<Thumbnail>(mContext, *this, optix::make_int2(150,150));
+    }
+
+    unsigned int id = mThumbnail->get_id();
+    ImmediateGUIDraw::Image((void *)(intptr_t)id, ImVec2(150, 150), ImVec2(0,0), ImVec2(1,1), ImVec4(1,1,1,1), ImVec4(1,1,1,1));
+    ImmediateGUIDraw::SameLine();
+    std::string dims;
+    dims += "width: " + std::to_string(mDimensions[0]) + "\n";
+    dims += (mDimensionality > 1? "height: " + std::to_string(mDimensions[1]) : "") + "\n";
+    dims += (mDimensionality > 2? "depth: " + std::to_string(mDimensions[2]) : "") + "\n";
+    ImmediateGUIDraw::Text(dims.c_str());
+}
+
+void Texture::set_texel_ptr(const void *val, size_t i, size_t j, size_t k)
+{
+    size_t idx = (k * get_height() + j) * get_width() + i;
+    size_t size = get_size(mFormat);
+    char* data = reinterpret_cast<char*>(mData);
+    memcpy(&data[size*mFormatElements*idx], val, size);
+}
+
+void *Texture::get_texel_ptr(size_t i, size_t j, size_t k) const
+{
+    size_t idx = (k * get_height() + j) * get_width() + i;
+    size_t size = get_size(mFormat);
+    char* data = reinterpret_cast<char*>(mData);
+    return &data[size*mFormatElements*idx];
+}
+
+unsigned int Texture::get_gl_element(const RTsize &element_size)
+{
+    switch(element_size)
+    {
+        case 1: return GL_RED;
+        case 2: return GL_RG;
+        case 3: return GL_RGB;
+        case 4: return GL_RGBA;
+    }
+}
+
+unsigned int Texture::get_gl_format(const Texture::Format &format)
+{
+    switch(format)
+    {
+        case Texture::Format::BYTE: return GL_BYTE;
+        case Texture::Format::UNSIGNED_BYTE: return GL_UNSIGNED_BYTE;
+        case Texture::Format::SHORT: return GL_SHORT;
+        case Texture::Format::UNSIGNED_SHORT: return GL_UNSIGNED_SHORT;
+        case Texture::Format::INT: return GL_INT;
+        case Texture::Format::UNSIGNED_INT: return GL_UNSIGNED_INT;
+        default:
+        case Texture::Format::FLOAT: return GL_FLOAT;
+
+
+    }
 }

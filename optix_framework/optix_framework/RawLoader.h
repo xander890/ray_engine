@@ -6,9 +6,7 @@
 #include "texture.h"
 #include <memory>
 
-std::unique_ptr<Texture> loadRAWTexture(optix::Context& context,
-	const std::string& filename,
-	const optix::float3& default_color);
+bool loadRAWTexture(std::unique_ptr<Texture> &return_tex, optix::Context &context, const std::string &filename);
 
 
 class RAWLoader

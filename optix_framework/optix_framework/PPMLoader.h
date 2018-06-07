@@ -37,9 +37,7 @@
 // Creates a TextureSampler object for the given PPM file.  If filename is 
 // empty or PPMLoader fails, a 1x1 texture is created with the provided default
 // texture color.
-std::unique_ptr<Texture> loadPPMTexture( optix::Context context,
-                                             const std::string& ppm_filename,
-                                             const optix::float3& default_color );
+bool loadPPMTexture(std::unique_ptr<Texture> &tex, optix::Context context, const std::string &ppm_filename);
 
 
 //-----------------------------------------------------------------------------
@@ -54,9 +52,7 @@ public:
   PPMLoader( const std::string& filename, const bool vflip = false );
   ~PPMLoader();
 
-    std::unique_ptr<Texture> loadTexture( optix::Context context,
-                                              const optix::float3& default_color,
-                                              bool linearize_gamma = false);
+    bool loadTexture(std::unique_ptr<Texture> &tex, optix::Context context, bool linearize_gamma);
 
   bool           failed() const;
   unsigned int   width() const;

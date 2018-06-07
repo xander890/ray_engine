@@ -34,12 +34,12 @@ include (ConfigCompilerFlags)
 
 # Importing libraries.
 if(UNIX)
-find_package(XercesC)
+find_package(DevIL)
 else()
-add_library(xercesc STATIC IMPORTED)
-set_property(TARGET xercesc PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/xercesc)
-set_property(TARGET xercesc PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/externals/xercesc/lib64/xerces-c_3.lib)
 endif()
+include_directories(
+        ${IL_INCLUDE_DIR}
+)
 
 if(UNIX)
 find_package(GLEW)
