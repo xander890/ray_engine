@@ -42,6 +42,7 @@
 #include <string>
 #include <cstring>
 #include <cmath>
+#include <fstream>
 
 namespace cereal
 {
@@ -133,65 +134,70 @@ namespace cereal
                          its output to the stream upon destruction.
           @param options The XML specific options to use.  See the Options struct
                          for the values of default parameters */
-      XMLOutputArchiveOptix( std::ostream & stream, Options const & options = Options::Default() ) :
+      XMLOutputArchiveOptix(const std::string& output_file, bool use_binary = false, Options const & options = Options::Default() ) :
         OutputArchive<XMLOutputArchiveOptix>(this),
-        itsRegularStream(stream),
         itsOutputType( options.itsOutputType ),
         itsIndent( options.itsIndent )
       {
-        // rapidxml will delete all allocations when xml_document is cleared
-        auto node = itsRegularXML.allocate_node( rapidxml::node_declaration );
-        node->append_attribute( itsRegularXML.allocate_attribute( "version", "1.0" ) );
-        node->append_attribute( itsRegularXML.allocate_attribute( "encoding", "utf-8" ) );
-        itsRegularXML.append_node( node );
+            // rapidxml will delete all allocations when xml_document is cleared
+            auto node = itsRegularXML.allocate_node( rapidxml::node_declaration );
+            node->append_attribute( itsRegularXML.allocate_attribute( "version", "1.0" ) );
+            node->append_attribute( itsRegularXML.allocate_attribute( "encoding", "utf-8" ) );
+            itsRegularXML.append_node( node );
 
-        // allocate root node
-        auto root = itsRegularXML.allocate_node( rapidxml::node_element, xml_detail::CEREAL_XML_STRING );
-        itsRegularXML.append_node( root );
-        itsRegularNodes.emplace( root );
+            // allocate root node
+            auto root = itsRegularXML.allocate_node( rapidxml::node_element, xml_detail::CEREAL_XML_STRING );
+            itsRegularXML.append_node( root );
+            itsRegularNodes.emplace( root );
 
-        // set attributes on the streams
-        itsRegularStream << std::boolalpha;
-        itsRegularStream.precision( options.itsPrecision );
+            itsRegularStream = new std::ofstream(output_file, std::ofstream::out);
 
-       auto bnode = itsBinaryXML.allocate_node( rapidxml::node_declaration );
-       bnode->append_attribute( itsBinaryXML.allocate_attribute( "version", "1.0" ) );
-       bnode->append_attribute( itsBinaryXML.allocate_attribute( "encoding", "utf-8" ) );
-       itsBinaryXML.append_node( bnode );
+            // set attributes on the streams
+            *itsRegularStream << std::boolalpha;
+            itsRegularStream->precision( options.itsPrecision );
 
-          // allocate root node
-        auto broot = itsBinaryXML.allocate_node( rapidxml::node_element, xml_detail::CEREAL_XML_STRING );
-        itsBinaryXML.append_node( broot );
-        itsBinaryNodes.emplace( broot );
+            itsRegularOS << std::boolalpha;
+            itsRegularOS.precision( options.itsPrecision );
 
-          itsBinaryOS << std::boolalpha;
-          itsBinaryOS.precision( options.itsPrecision );
+            if(use_binary)
+            {
+                std::string binary_file = output_file.substr(0, output_file.size() - 4);
+                binary_file += "_binary.xml";
+                itsBinaryStream = new std::ofstream(binary_file, std::ofstream::out);
 
-        itsRegularOS << std::boolalpha;
-        itsRegularOS.precision( options.itsPrecision );
+                auto bnode = itsBinaryXML.allocate_node(rapidxml::node_declaration);
+                bnode->append_attribute(itsBinaryXML.allocate_attribute("version", "1.0"));
+                bnode->append_attribute(itsBinaryXML.allocate_attribute("encoding", "utf-8"));
+                itsBinaryXML.append_node(bnode);
 
-        itsStream = &itsRegularStream;
-        itsXML = &itsRegularXML;
-        itsOS = &itsRegularOS;
-        itsNodes = &itsRegularNodes;
+                // allocate root node
+                auto broot = itsBinaryXML.allocate_node(rapidxml::node_element, xml_detail::CEREAL_XML_STRING);
+                itsBinaryXML.append_node(broot);
+                itsBinaryNodes.emplace(broot);
+
+                itsBinaryOS << std::boolalpha;
+                itsBinaryOS.precision(options.itsPrecision);
+            }
+
+            itsStream = itsRegularStream;
+            itsXML = &itsRegularXML;
+            itsOS = &itsRegularOS;
+            itsNodes = &itsRegularNodes;
       }
 
       //! Destructor, flushes the XML
       ~XMLOutputArchiveOptix() CEREAL_NOEXCEPT
       {
         const int flags = itsIndent ? 0x0 : rapidxml::print_no_indenting;
-        rapidxml::print( itsRegularStream, itsRegularXML, flags );
+        rapidxml::print( *itsRegularStream, itsRegularXML, flags );
         itsRegularXML.clear();
         if(itsBinaryStream != nullptr)
         {
             rapidxml::print(*itsBinaryStream, itsBinaryXML, flags);
             itsBinaryXML.clear();
+            delete itsBinaryStream;
         }
-      }
-
-      void setBinaryStream(std::shared_ptr<std::ostream> stream)
-      {
-         itsBinaryStream = stream;
+          delete itsRegularStream;
       }
 
       void setBinaryMode()
@@ -199,7 +205,7 @@ namespace cereal
           if(itsBinaryStream == nullptr)
               return;
 
-          itsStream = itsBinaryStream.get();
+          itsStream = itsBinaryStream;
           itsXML = &itsBinaryXML;
           itsNodes = &itsBinaryNodes;
           itsOS = &itsBinaryOS;
@@ -209,7 +215,7 @@ namespace cereal
       {
           if(itsBinaryStream == nullptr)
               return;
-          itsStream = &itsRegularStream;
+          itsStream = itsRegularStream;
           itsXML = &itsRegularXML;
           itsNodes = &itsRegularNodes;
           itsOS = &itsRegularOS;
@@ -416,12 +422,12 @@ namespace cereal
       std::stack<NodeInfo>* itsNodes;   //!< A stack of nodes added to the document
       std::ostringstream* itsOS;        //!< Used to format strings internally
 
-      std::shared_ptr<std::ostream> itsBinaryStream;        //!< The output binary stream
+      std::ostream * itsBinaryStream = nullptr;        //!< The output binary stream
       rapidxml::xml_document<> itsBinaryXML; //!< The XML document
       std::stack<NodeInfo> itsBinaryNodes;   //!< A stack of nodes added to the document
       std::ostringstream itsBinaryOS;        //!< Used to format strings internally
 
-      std::ostream & itsRegularStream;        //!< The output stream
+      std::ostream * itsRegularStream;        //!< The output stream
       rapidxml::xml_document<> itsRegularXML; //!< The XML document
       std::stack<NodeInfo> itsRegularNodes;   //!< A stack of nodes added to the document
       std::ostringstream itsRegularOS;        //!< Used to format strings internally
@@ -480,71 +486,67 @@ namespace cereal
           as serialization starts
 
           @param stream The stream to read from.  Can be a stringstream or a file. */
-      XMLInputArchiveOptix(optix::Context & ctx, std::istream & stream ) :
-        InputArchive<XMLInputArchiveOptix>( this ), mContext(ctx),
-        itsRegularData( std::istreambuf_iterator<char>( stream ), std::istreambuf_iterator<char>() )
+      XMLInputArchiveOptix(optix::Context & ctx, const std::string & filename, bool use_binary = false ) :
+        InputArchive<XMLInputArchiveOptix>( this ), mContext(ctx)
       {
           itsData = &itsRegularData;
           itsXML = &itsRegularXML;
           itsNodes = &itsRegularNodes;
 
-        try
-        {
-          itsData->push_back('\0'); // rapidxml will do terrible things without the data being null terminated
-          itsXML->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_no_data_nodes | rapidxml::parse_declaration_node>( reinterpret_cast<char *>( itsData->data() ) );
-        }
-        catch( rapidxml::parse_error const & )
-        {
-          //std::cerr << "-----Original-----" << std::endl;
-          //stream.seekg(0);
-          //std::cout << std::string( std::istreambuf_iterator<char>( stream ), std::istreambuf_iterator<char>() ) << std::endl;
+            auto s = std::ifstream(filename, std::ofstream::in);
+            itsRegularData = std::vector<char>(std::istreambuf_iterator<char>(s), std::istreambuf_iterator<char>() );
+            s.close();
+            try
+            {
+                itsData->push_back('\0'); // rapidxml will do terrible things without the data being null terminated
+                itsXML->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_no_data_nodes | rapidxml::parse_declaration_node>( reinterpret_cast<char *>( itsData->data() ) );
+            }
+            catch( rapidxml::parse_error const & )
+            {
+                throw Exception("XML Parsing failed - likely due to invalid characters or invalid naming");
+            }
 
-          //std::cerr << "-----Error-----" << std::endl;
-          //std::cerr << e.what() << std::endl;
-          //std::cerr << e.where<char>() << std::endl;
-          throw Exception("XML Parsing failed - likely due to invalid characters or invalid naming");
-        }
+            std::string binary_file = filename.substr(0, filename.size() - 4);
+            binary_file += "_binary.xml";
 
-        // Parse the root
-        auto root = itsXML->first_node( xml_detail::CEREAL_XML_STRING );
-        if( root == nullptr )
-          throw Exception("Could not detect cereal root node - likely due to empty or invalid input");
-        else
-          itsNodes->emplace( root );
-      }
+            // Parse the root
+            auto root = itsXML->first_node( xml_detail::CEREAL_XML_STRING );
+            if( root == nullptr )
+                throw Exception("Could not detect cereal root node - likely due to empty or invalid input");
+            else
+                itsNodes->emplace( root );
 
-      void setBinaryStream(std::istream &stream)
-      {
-          itsBinaryData = std::vector<char>( std::istreambuf_iterator<char>( stream ), std::istreambuf_iterator<char>() );
+            if(use_binary)
+            {
+              auto sb = std::ifstream(binary_file, std::ofstream::in);
+              itsBinaryData = std::vector<char>( std::istreambuf_iterator<char>( sb ), std::istreambuf_iterator<char>() );
+              sb.close();
 
-          if(!itsBinaryXML)
-          {
-              itsBinaryXML = new rapidxml::xml_document<>();
-          }
+              if(!itsBinaryXML)
+              {
+                  itsBinaryXML = new rapidxml::xml_document<>();
+              }
+              try
+              {
+                  itsBinaryData.push_back('\0'); // rapidxml will do terrible things without the data being null terminated
+                  itsBinaryXML->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_no_data_nodes | rapidxml::parse_declaration_node>( reinterpret_cast<char *>( itsBinaryData.data() ) );
+              }
+              catch( rapidxml::parse_error const & )
+              {
+                  throw Exception("XML Parsing failed - likely due to invalid characters or invalid naming");
+              }
 
-          try
-          {
-              itsBinaryData.push_back('\0'); // rapidxml will do terrible things without the data being null terminated
-              itsBinaryXML->parse<rapidxml::parse_trim_whitespace | rapidxml::parse_no_data_nodes | rapidxml::parse_declaration_node>( reinterpret_cast<char *>( itsBinaryData.data() ) );
-          }
-          catch( rapidxml::parse_error const & )
-          {
-              //std::cerr << "-----Original-----" << std::endl;
-              //stream.seekg(0);
-              //std::cout << std::string( std::istreambuf_iterator<char>( stream ), std::istreambuf_iterator<char>() ) << std::endl;
-
-              //std::cerr << "-----Error-----" << std::endl;
-              //std::cerr << e.what() << std::endl;
-              //std::cerr << e.where<char>() << std::endl;
-              throw Exception("XML Parsing failed - likely due to invalid characters or invalid naming");
-          }
-
-          // Parse the root
-          auto root = itsBinaryXML->first_node( xml_detail::CEREAL_XML_STRING );
-          if( root == nullptr )
-              throw Exception("Could not detect cereal root node - likely due to empty or invalid input");
-          else
-              itsBinaryNodes.emplace( root );
+              // Parse the root
+              auto root = itsBinaryXML->first_node( xml_detail::CEREAL_XML_STRING );
+              if( root == nullptr )
+                  throw Exception("Could not detect cereal root node - likely due to empty or invalid input");
+              else
+                  itsBinaryNodes.emplace( root );
+            }
+            else
+            {
+              itsBinaryXML = nullptr;
+            }
       }
 
       void setBinaryMode()

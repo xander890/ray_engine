@@ -17,11 +17,11 @@ public:
 	static std::string ptx_path;
 };
 
-static const char* const get_path_ptx(const std::string& base)
+inline std::string get_path_ptx(const std::string& base)
 {
 	static std::string path;
 	path = Folders::ptx_path + "/framework_generated_" + base + ".ptx";
-	return path.c_str();
+	return path;
 }
 
 

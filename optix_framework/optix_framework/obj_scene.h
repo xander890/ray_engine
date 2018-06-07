@@ -135,10 +135,12 @@ private:
 
     RayTracerParameters parameters;
 	TonemapParameters tonemap_parameters;
-    void serialize_scene();
+    void serialize_scene(const std::string &dest);
 
 	void save_parameters(const std::string & config_file);
 	void load_parameters(const std::string & config_file);
+
+    void load_scene(const std::string &basic_string);
 };
 
 #endif // OBJSCENE_H

@@ -84,14 +84,14 @@ private:
     optix::GeometryGroup mGeometryGroup = nullptr;
     optix::Acceleration mAcceleration = nullptr;
 
-    std::shared_ptr<Geometry> mGeometry;
-    optix::Context  mContext;
-    std::unique_ptr<Transform> mTransform;
+    std::shared_ptr<Geometry> mGeometry = nullptr;
+    optix::Context  mContext = nullptr;
+    std::unique_ptr<Transform> mTransform = nullptr;
     std::vector<std::shared_ptr<MaterialHost>> mMaterials;
-    optix::Buffer          mMaterialBuffer;
-    std::string            mMeshName;
-    std::unique_ptr<Texture> mMaterialSelectionTextureLabel;
-    std::unique_ptr<Texture> mMaterialSelectionTexture;
+    optix::Buffer          mMaterialBuffer = nullptr;
+    std::string            mMeshName = "";
+    std::unique_ptr<Texture> mMaterialSelectionTextureLabel = nullptr;
+    std::unique_ptr<Texture> mMaterialSelectionTexture = nullptr;
 
     bool mReloadGeometry = true;
     bool mReloadMaterials = true;

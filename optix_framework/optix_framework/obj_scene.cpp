@@ -132,11 +132,25 @@ bool ObjScene::draw_gui()
 
 	if(ImmediateGUIDraw::Button("Serialize"))
 	{
-		serialize_scene();
+        std::string path;
+        if(Dialogs::saveFileDialog(path))
+        {
+            serialize_scene(path);
+        }
         changed = true;
 	}
 
-	if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
+    if(ImmediateGUIDraw::Button("Load scene..."))
+    {
+        std::string path;
+        if(Dialogs::openFileDialog(path))
+        {
+            load_scene(path);
+        }
+        changed = true;
+    }
+
+    if (ImmediateGUIDraw::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImmediateGUIDraw::Checkbox("Debug mode", &debug))
 		{
@@ -184,7 +198,6 @@ bool ObjScene::draw_gui()
 		}
 
 	}
-
 
 	if (debug && ImmediateGUIDraw::CollapsingHeader("Debug"))
 	{
@@ -265,35 +278,13 @@ bool ObjScene::draw_gui()
 	return changed;
 }
 
-void ObjScene::serialize_scene()
+void ObjScene::serialize_scene(const std::string &dest)
 {
     Logger::info << "Serializing..." << std::endl;
-    std::stringstream ss;
-	std::shared_ptr<std::stringstream> bin = std::make_shared<std::stringstream>();
-
     {
-        cereal::XMLOutputArchiveOptix output_archive(ss);
-		output_archive.setBinaryStream(bin);
+        cereal::XMLOutputArchiveOptix output_archive(dest, true);
         output_archive(mScene);
     }
-    std::ofstream test("text.xml", std::ofstream::out);
-    test << ss.str();
-    test.close();
-
-	std::ofstream test_binary("text_binary.xml", std::ofstream::out);
-    test_binary << bin->str();
-    test_binary.close();
-
-	Logger::info << "Reloading..." << std::endl;
-
-    std::ifstream testopen("text.xml", std::ofstream::in);
-    std::ifstream testopenbinary("text_binary.xml", std::ofstream::in);
-    {
-        cereal::XMLInputArchiveOptix input_archive(context, testopen);
-		input_archive.setBinaryStream(testopenbinary);
-        input_archive(mNewScene);
-    }
-    mScene = std::move(mNewScene);
 }
 
 
@@ -358,11 +349,7 @@ void ObjScene::initialize_scene(GLFWwindow *)
     if(res != filenames.end())
     {
         // Scene found!
-        std::ifstream testopen(*res, std::ofstream::in);
-        {
-            cereal::XMLInputArchiveOptix input_archive(context, testopen);
-            input_archive(mScene);
-        }
+		load_scene(*res);
         filenames.erase(res);
     }
     else
@@ -780,8 +767,7 @@ void ObjScene::load_parameters(const std::string &config_file)
 {
     if(!exists(config_file.c_str()))
         return;
-    std::ifstream input(config_file);
-    cereal::XMLInputArchiveOptix archive(context,input);
+    cereal::XMLInputArchiveOptix archive(context, config_file);
     archive(cereal::make_nvp("data_folder",Folders::data_folder));
     archive(cereal::make_nvp("ptx_folder",Folders::ptx_path));
     archive(cereal::make_nvp("renderer_parameters",parameters));
@@ -790,10 +776,19 @@ void ObjScene::load_parameters(const std::string &config_file)
 
 void ObjScene::save_parameters(const std::string &config_file)
 {
-    std::ofstream output(config_file);
-    cereal::XMLOutputArchiveOptix archive(output);
+    cereal::XMLOutputArchiveOptix archive(config_file);
     archive(cereal::make_nvp("data_folder",Folders::data_folder));
     archive(cereal::make_nvp("ptx_folder",Folders::ptx_path));
     archive(cereal::make_nvp("renderer_parameters",parameters));
     archive(cereal::make_nvp("tonemap_parameters",tonemap_parameters));
+}
+
+void ObjScene::load_scene(const std::string &str)
+{
+    Logger::info << "Loading..." << std::endl;
+    {
+        cereal::XMLInputArchiveOptix input_archive(m_context, str, true);
+        input_archive(mNewScene);
+    }
+    mScene = std::move(mNewScene);
 }

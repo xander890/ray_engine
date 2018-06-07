@@ -41,6 +41,7 @@ Object::Object(optix::Context ctx) : mContext(ctx)
     optix::float4 default_label = optix::make_float4(0.0f);
     mMaterialSelectionTexture->set_data(&default_label.x, 4*sizeof(float));
     mMaterialSelectionTextureLabel = create_label_texture(ctx, mMaterialSelectionTexture);
+
 }
 
 void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost>& material)
@@ -49,11 +50,7 @@ void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::sha
     mGeometry = std::move(geometry);
     mMaterials.resize(1);
     mMaterials[0] = material;
-
-    if (mTransform == nullptr)
-    {
-        mTransform = std::make_unique<Transform>(mContext);
-    }
+    create_and_bind_optix_data();
 }
 
 void Object::load_materials()
@@ -62,7 +59,6 @@ void Object::load_materials()
     mGeometryInstance["material_selector"]->setUserData(sizeof(TexPtr), &id);
     bool one_material_changed = std::any_of(mMaterials.begin(), mMaterials.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->has_changed();  });
     mReloadMaterials |= one_material_changed;
-
 
     if(mReloadMaterials)
     {
@@ -136,42 +132,45 @@ void Object::load()
 
 void Object::create_and_bind_optix_data()
 {
-    bool bind = false;
-
     if (!mGeometryInstance)
     {
         mGeometryInstance = mContext->createGeometryInstance();
-        bind = true;
+    }
+
+    if (mTransform == nullptr)
+    {
+        mTransform = std::make_unique<Transform>(mContext);
     }
 
     if (!mGeometryGroup)
     {
         mGeometryGroup = mContext->createGeometryGroup();
-        bind = true;
+        mGeometryGroup->setChildCount(1);
+        mGeometryGroup->setChild(0, mGeometryInstance);
+        mTransform->get_transform()->setChild(mGeometryGroup);
     }
 
     if (!mMaterialBuffer.get())
     {
         mMaterialBuffer = create_buffer<MaterialDataCommon>(mContext);
-        bind = true;
     }
 
-    if (bind)
-    {
-        mGeometryGroup->setChildCount(1);
-        mGeometryInstance->setGeometry(mGeometry->get_geometry());
 
+    if(!mAcceleration.get())
+    {
         mAcceleration = mContext->createAcceleration(std::string("Trbvh"));
         mAcceleration->setProperty("refit", "0");
         mAcceleration->setProperty("vertex_buffer_name", "vertex_buffer");
         mAcceleration->setProperty("index_buffer_name", "vindex_buffer");
-
         mGeometryGroup->setAcceleration(mAcceleration);
-        mAcceleration->markDirty();
-        mGeometryGroup->setChild(0, mGeometryInstance);
-
-        mTransform->get_transform()->setChild(mGeometryGroup);
     }
+
+    if (mGeometryInstance->getGeometry().get() == nullptr && mGeometry != nullptr)
+    {
+        mGeometryInstance->setGeometry(mGeometry->get_geometry());
+        mAcceleration->markDirty();
+    }
+
 }
 
 void Object::add_material(std::shared_ptr<MaterialHost> material)

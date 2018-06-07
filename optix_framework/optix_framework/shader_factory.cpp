@@ -66,7 +66,9 @@ optix::Program ShaderFactory::createProgram(std::string file, std::string progra
     optix::Program result;
     try
     {
-        result = context->createProgramFromPTXFile(get_path_ptx(file), get_full_program_name(program_name, method));
+        std::string ptx_path = get_path_ptx(file);
+        std::string full_name = get_full_program_name(program_name, method);
+        result = context->createProgramFromPTXFile(ptx_path, full_name);
     }
     catch (optix::Exception&)
     {

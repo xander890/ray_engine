@@ -125,7 +125,7 @@ bool is_valid_material(ObjMaterial& mat)
 	return mat.scale > 0.0f && dot(mat.absorption, optix::make_float3(1)) >= 0.0f && dot(mat.asymmetry, optix::make_float3(1)) >= 0.0f && dot(mat.scattering, optix::make_float3(1)) >= 0.0f;
 }
 
-MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContext(context), mMaterialName(), mMaterialData()
+MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : MaterialHost(context)
 {
 	ObjMaterial * data = &mat;
 	if (mat.illum == -1)
@@ -142,8 +142,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : mContex
 
 	mMaterialName = data->name;
 	std::transform(mMaterialName.begin(), mMaterialName.end(), mMaterialName.begin(), ::tolower);	
-    static int id = 0;
-    mMaterialID = id++;
+
 
 	mMaterialData.ambient_map = data->ambient_tex->get_id();
 	mMaterialData.diffuse_map = data->diffuse_tex->get_id();
@@ -249,9 +248,10 @@ bool MaterialHost::is_emissive()
     return mIsEmissive;
 }
 
-MaterialHost::MaterialHost(optix::Context &ctx)
+MaterialHost::MaterialHost(optix::Context &ctx) : mContext(ctx), mMaterialName(), mMaterialData()
 {
-	mContext = ctx;
+	static int id = 0;
+	mMaterialID = id++;
 	mMaterial = mContext->createMaterial();
 }
 
