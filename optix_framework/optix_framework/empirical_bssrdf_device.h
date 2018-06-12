@@ -21,7 +21,7 @@ rtDeclareVariable(EmpiricalBSSRDFNonPlanarity::Type, non_planar_geometry_handle,
 
 
 template<int N>
-__host__ __device__ __forceinline__ int ravel(int idx[N], BufPtr<int>& size)
+_fn int ravel(int idx[N], BufPtr<int>& size)
 {
 	size_t id = idx[0];
 	for (int i = 1; i < N; i++)
@@ -32,7 +32,7 @@ __host__ __device__ __forceinline__ int ravel(int idx[N], BufPtr<int>& size)
 }
 
 template<int N>
-__host__ __device__ __forceinline__ void unravel(const size_t& idx, BufPtr<int>& size, int * res)
+_fn void unravel(const size_t& idx, BufPtr<int>& size, int * res)
 {
 	size_t index = idx;
     for (int i = N - 1; i >= 0; i--)
@@ -42,7 +42,7 @@ __host__ __device__ __forceinline__ void unravel(const size_t& idx, BufPtr<int>&
 	}
 }
 
-__device__ __forceinline__ int get_index_closest(int parameter_index, const float value)
+_fn int get_index_closest(int parameter_index, const float value)
 {
     auto values = empirical_bssrdf_parameters.buffers[parameter_index];
     float candidate_value = -1e9f;
@@ -58,7 +58,7 @@ __device__ __forceinline__ int get_index_closest(int parameter_index, const floa
     return candidate_index;
 }
 
-__device__ __forceinline__ int get_index_lower(int parameter_index, const float value)
+_fn int get_index_lower(int parameter_index, const float value)
 {
     auto values = empirical_bssrdf_parameters.buffers[parameter_index];
     float candidate_value = values[0];
@@ -74,7 +74,7 @@ __device__ __forceinline__ int get_index_lower(int parameter_index, const float 
     return candidate_index;
 }
 
-__device__ __forceinline__ int get_index_upper(int parameter_index, const float value)
+_fn int get_index_upper(int parameter_index, const float value)
 {
     auto values = empirical_bssrdf_parameters.buffers[parameter_index];
     float candidate_value = values[0];
@@ -92,7 +92,7 @@ __device__ __forceinline__ int get_index_upper(int parameter_index, const float 
 
 
 template<int N>
-__device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int slice)
+_fn float interpolate_bssrdf_nearest(float values[N], int slice)
 {
 
     int index_function[N];
@@ -126,7 +126,7 @@ __device__ __forceinline__ float interpolate_bssrdf_nearest(float values[N], int
 
 
 template<int N>
-__device__ __forceinline__ float interpolate_bssrdf_linear(float values[N], int slice)
+_fn float interpolate_bssrdf_linear(float values[N], int slice)
 {
     float interpolated = 0.0f;
     for(int i = 0; i < (1 << N); i++)
@@ -168,7 +168,7 @@ __device__ __forceinline__ float interpolate_bssrdf_linear(float values[N], int 
 
 
 
-__forceinline__ __device__ optix::float3 eval_empbssrdf(const BSSRDFGeometry geom, const float n1_over_n2,
+_fn optix::float3 eval_empbssrdf(const BSSRDFGeometry geom, const float n1_over_n2,
                                                         const MaterialDataCommon material, unsigned int flags, TEASampler & sampler)
 {
     optix_print("EMPIRICAL\n");

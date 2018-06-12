@@ -130,6 +130,29 @@ bool ObjScene::draw_gui()
 	ImmediateGUIDraw::Text("%s",ss.str().c_str());
 	static bool debug = parameters.debug_enabled;
 
+	if(ImmediateGUIDraw::Button("Dump buffers"))
+	{
+		for(int i = 0; i < 250; i++)
+		{
+			RTbuffer buffer;
+			auto res = rtContextGetBufferFromId( m_context->get(), i, &buffer );
+			if(res == RT_SUCCESS)
+			{
+
+				optix::Buffer b = Buffer::take(buffer);
+				RTsize d = b->getDimensionality();
+				RTsize * dims = new RTsize[d];
+				b->getSize(d, &dims[0]);
+				void** device_pointer;
+				auto r = rtBufferGetDevicePointer (buffer, 0, device_pointer);
+				if(r == RT_SUCCESS)
+					printf("Buffer %d, size %d (w %d). ptr %p\n", i, b->getElementSize(), dims[0], *device_pointer);
+				else
+					printf("Buffer %d, size %d (w %d).\n", i, b->getElementSize(), dims[0]);
+			}
+		}
+	}
+
 	if(ImmediateGUIDraw::Button("Serialize"))
 	{
         std::string path;
@@ -529,6 +552,8 @@ void ObjScene::trace()
 		current_render_task->update(to_milliseconds(l) / 1000.0f);
 	}
 
+
+
 	collect_image(m_frame);
 }
 
@@ -725,10 +750,6 @@ void ObjScene::load_default_camera()
     if (parameters.use_auto_camera)
 	{
         mScene->get_current_camera()->setEyeLookatUp(eye, m_scene_bounding_box.center(), make_float3(0.0f, 1.0f, 0.0f));
-	}
-	else
-	{
-        mScene->set_current_camera(0);
 	}
     reset_renderer();
 }

@@ -107,7 +107,7 @@ __forceinline__ __host__ __device__ optix::float2 get_normalized_hemisphere_buff
 	return optix::make_float2(phi_o, theta_o);
 }
 
-__forceinline__ __device__ void print_v3(const optix::float3 & v)
+_fn void print_v3(const optix::float3 & v)
 {
     optix_print("%f %f %f\n", v.x, v.y,v.z);
 }
@@ -151,7 +151,7 @@ __forceinline__ __host__ __device__ float get_cos_theta_of_bin_center(OutputShap
         return cosf(c.y);
     }
 }
-__forceinline__ __device__ bool compare_geometries(const BSSRDFGeometry & g1, const BSSRDFGeometry & g2) {
+_fn bool compare_geometries(const BSSRDFGeometry & g1, const BSSRDFGeometry & g2) {
     bool e0 = fabsf(optix::length(g1.xi - g2.xi)) < 1e-4;
     bool e1 = fabsf(optix::length(g1.xo - g2.xo)) < 1e-4;
     bool e2 = fabsf(optix::length(g1.ni - g2.ni)) < 1e-4;
@@ -163,7 +163,7 @@ __forceinline__ __device__ bool compare_geometries(const BSSRDFGeometry & g1, co
 }
 
 /*
-__forceinline__ __device__ void empirical_bssrdf_build_geometry_from_exit(const optix::float3& xo, const optix::float3& wo, const optix::float3& no, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
+_fn void empirical_bssrdf_build_geometry_from_exit(const optix::float3& xo, const optix::float3& wo, const optix::float3& no, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
 {
     geometry.xo = xo;
     geometry.no = geometry.ni = no;
@@ -192,7 +192,7 @@ __forceinline__ __device__ void empirical_bssrdf_build_geometry_from_exit(const 
 */
 
 
-__forceinline__ __device__ void empirical_bssrdf_build_geometry(const optix::float3& xi, const optix::float3& wi, const optix::float3& n, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
+_fn void empirical_bssrdf_build_geometry(const optix::float3& xi, const optix::float3& wi, const optix::float3& n, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
 {
     optix::float3 tangent = -(wi - dot(wi,n) * n);
     optix::float3 bitangent;
@@ -219,7 +219,7 @@ __forceinline__ __device__ void empirical_bssrdf_build_geometry(const optix::flo
 	geometry.wo = tangent * wo_s.x + sign * bitangent * wo_s.y + geometry.no * wo_s.z;
 }
 
-__device__ __forceinline__ optix::float3 get_modified_normal_frisvad(const optix::float3 & ni, const optix::float3 & xixo)
+_fn optix::float3 get_modified_normal_frisvad(const optix::float3 & ni, const optix::float3 & xixo)
 {
     if(length(xixo) < 1e-7f)
         return ni;
@@ -228,7 +228,7 @@ __device__ __forceinline__ optix::float3 get_modified_normal_frisvad(const optix
 }
 
 
-__forceinline__ __device__ void empirical_bssrdf_get_geometry(const BSSRDFGeometry & geometry, float& theta_i, float &r, float& theta_s, float& theta_o, float& phi_o)
+_fn void empirical_bssrdf_get_geometry(const BSSRDFGeometry & geometry, float& theta_i, float &r, float& theta_s, float& theta_o, float& phi_o)
 {
     optix::float3 x = geometry.xo - geometry.xi;
     optix::float3 n = geometry.ni;

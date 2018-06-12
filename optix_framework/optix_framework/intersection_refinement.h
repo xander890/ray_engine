@@ -26,7 +26,7 @@
 // Plane intersection -- used for refining triangle hit points.  Note
 // that this skips zero denom check (for rays perpindicular to plane normal)
 // since we know that the ray intersects the plane.
-__device__ __inline__ float intersectPlane( const optix::float3& origin,
+_fn float intersectPlane( const optix::float3& origin,
                                             const optix::float3& direction,
                                             const optix::float3& normal,
                                             const optix::float3& point )
@@ -37,7 +37,7 @@ __device__ __inline__ float intersectPlane( const optix::float3& origin,
 }
 
 // Offset the hit point using integer arithmetic
-__device__ __inline__ optix::float3 offset( const optix::float3& hit_point, const optix::float3& normal )
+_fn optix::float3 offset( const optix::float3& hit_point, const optix::float3& normal )
 {
   
   const float epsilon = 1.0e-4f;
@@ -67,7 +67,7 @@ __device__ __inline__ optix::float3 offset( const optix::float3& hit_point, cons
 
 // Refine the hit point to be more accurate and offset it for reflection and
 // refraction ray starting points.
-__device__ __inline__ void refine_and_offset_hitpoint( const optix::float3& original_hit_point, const optix::float3& direction,
+_fn void refine_and_offset_hitpoint( const optix::float3& original_hit_point, const optix::float3& direction,
                                                        const optix::float3& normal, const optix::float3& p,
                                                        optix::float3& back_hit_point,
                                                        optix::float3& front_hit_point )

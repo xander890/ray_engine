@@ -37,7 +37,8 @@ template<typename T> optix::Buffer create_buffer(optix::Context & ctx, unsigned 
 	buf->setFormat(RT_FORMAT_USER);
 	buf->setElementSize(sizeof(T));
 	buf->setSize(size);
-	return buf;
+
+    return buf;
 }
 
 template<typename T> optix::Buffer create_buffer(optix::Context & ctx)

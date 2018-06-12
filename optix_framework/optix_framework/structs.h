@@ -30,7 +30,6 @@ flags &  FLAG        -		check
 */
 namespace RayFlags
 {
-	const int HIT_DIFFUSE_SURFACE		= 1 << 0;
 	const int USE_EMISSION				= 1 << 1;
 	const int DEBUG_PIXEL				= 1 << 2;
 	const int NO_DIRECT_ON_FIRST_HIT	= 1 << 3;
@@ -73,4 +72,6 @@ struct PositionSample
   optix::float3 normal;
   optix::float3 L;
 };
+
+
 #endif // structs_h__

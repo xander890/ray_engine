@@ -36,7 +36,7 @@ RT_PROGRAM void any_hit_shadow() {
 	shadow_hit(prd_shadow, emission);
 }
 
-__forceinline__ __device__ unsigned int cdf_bsearch(float xi)
+_fn unsigned int cdf_bsearch(float xi)
 {
 	uint table_size = normalized_cie_rgb_cdf.size();
 	uint middle = table_size = table_size >> 1;
@@ -69,7 +69,7 @@ RT_PROGRAM void shade()
 
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+		get_glass_rays(ray.direction, material.relative_ior, hit_pos, normal, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		rtTrace(top_object, reflected_ray, prd_refl);
 		color += R * prd_refl.result;
@@ -81,7 +81,7 @@ RT_PROGRAM void shade()
 	prd_radiance.result = color;
 }
 
-__device__ __forceinline__ float& get_band(optix::float3 & v, int band)
+_fn float& get_band(optix::float3 & v, int band)
 {
 	return *(&v.x + band);
 }
@@ -148,7 +148,7 @@ RT_PROGRAM void shade_path_tracing(void)
 		// Setting up payload and glass rays.
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray, index_of_refraction, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+		get_glass_rays(ray.direction, index_of_refraction, hit_pos, normal, normal, reflected_ray, refracted_ray, R, cos_theta);
 		prd_new_ray.depth = prd_radiance.depth + 1;
 		prd_new_ray.flags = prd_radiance.flags | RayFlags::USE_EMISSION;
 		prd_new_ray.colorband = band;

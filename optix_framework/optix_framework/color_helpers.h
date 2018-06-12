@@ -3,14 +3,14 @@
 #include <optix_world.h>
 #include <optix.h>
 // Color space conversions
-static __host__ __device__ __inline__ optix::float3 Yxy2XYZ( const optix::float3& Yxy )
+_fn optix::float3 Yxy2XYZ( const optix::float3& Yxy )
 {
 	return optix::make_float3(  Yxy.y * ( Yxy.x / Yxy.z ),
 		Yxy.x,
 		( 1.0f - Yxy.y - Yxy.z ) * ( Yxy.x / Yxy.z ) );
 }
 
-static __host__ __device__ __inline__ optix::float3 XYZ2rgb( const optix::float3& xyz)
+_fn optix::float3 XYZ2rgb( const optix::float3& xyz)
 {
 	const float R = optix::dot( xyz, optix::make_float3(  3.2410f, -1.5374f, -0.4986f ) );
 	const float G = optix::dot( xyz, optix::make_float3( -0.9692f,  1.8760f,  0.0416f ) );
@@ -18,7 +18,7 @@ static __host__ __device__ __inline__ optix::float3 XYZ2rgb( const optix::float3
 	return optix::make_float3( R, G, B );
 }
 
-static __host__ __device__ __inline__ optix::float3 Yxy2rgb( optix::float3 Yxy )
+_fn optix::float3 Yxy2rgb( optix::float3 Yxy )
 {
 		// First convert to xyz
 	optix::float3 xyz = optix::make_float3( Yxy.y * ( Yxy.x / Yxy.z ),
@@ -31,7 +31,7 @@ static __host__ __device__ __inline__ optix::float3 Yxy2rgb( optix::float3 Yxy )
 	return optix::make_float3( R, G, B );
 }
 
-static __host__ __device__ __inline__ optix::float3 rgb2Yxy( optix::float3 rgb)
+_fn optix::float3 rgb2Yxy( optix::float3 rgb)
 {
 	
 	// convert to xyz
@@ -45,12 +45,12 @@ static __host__ __device__ __inline__ optix::float3 rgb2Yxy( optix::float3 rgb)
 		Y / ( X + Y + Z ) );
 }
 
-static __host__ __device__ __inline__ float luminance_NTSC(optix::float3 & color)
+_fn float luminance_NTSC(optix::float3 & color)
 {
     return optix::dot(color, optix::make_float3(0.2989f, 0.5866f, 0.1145f));
 }
 
-static __host__ __device__ __inline__ optix::float3 tonemap( const optix::float3 &hdr_value, float Y_log_av, float Y_max)
+_fn optix::float3 tonemap( const optix::float3 &hdr_value, float Y_log_av, float Y_max)
 {
 	optix::float3 val_Yxy = rgb2Yxy( hdr_value );
 

@@ -21,17 +21,17 @@ namespace optix
 		return make_double2(a.x * b, a.y * b);
 	}
 
-	__host__ __device__ __forceinline__ double fmaxf(double a, double b)
+	_fn double fmaxf(double a, double b)
 	{
 		return a > b ? a : b;
 	}
 
-	__host__ __device__ __forceinline__ double fminf(double a, double b)
+	_fn double fminf(double a, double b)
 	{
 		return a < b ? a : b;
 	}
 
-	__device__ __host__ __forceinline__ double clamp(const double f, const double a, const double b)
+	_fn double clamp(const double f, const double a, const double b)
 	{
 		return fmaxf(a, fminf(f, b));
 	}

@@ -272,7 +272,7 @@ void Texture::set_texel_ptr(const void *val, size_t i, size_t j, size_t k)
     size_t idx = (k * get_height() + j) * get_width() + i;
     size_t size = get_size(mFormat);
     char* data = reinterpret_cast<char*>(mData);
-    memcpy(&data[size*mFormatElements*idx], val, size);
+    memcpy(&data[size*mFormatElements*idx], val, size*mFormatElements);
 }
 
 void *Texture::get_texel_ptr(size_t i, size_t j, size_t k) const

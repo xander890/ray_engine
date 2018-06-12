@@ -8,7 +8,7 @@
 using namespace optix;
 
 #ifdef ENABLE_NEURAL_NETWORK
-__forceinline__ __device__ float3 get_beam_transmittance(const float depth, const ScatteringMaterialProperties& properties)
+_fn float3 get_beam_transmittance(const float depth, const ScatteringMaterialProperties& properties)
 {
     return exp(-depth*properties.extinction);
 }
@@ -35,7 +35,7 @@ RT_PROGRAM void any_hit_shadow()
 
 
 // Closest hit program for Lambertian shading using the basic light as a directional source
-__device__ __forceinline__ void _shade()
+_fn void _shade()
 {
 	if (prd_radiance.depth > max_depth)
 	{

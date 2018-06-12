@@ -25,16 +25,19 @@ bool findAndReturnMaterial(const std::string name, ScatteringMaterial & s)
     return ss != ScatteringMaterial::defaultMaterials.end();
 }
 
-bool MaterialHost::on_draw(std::string id = "")
+std::string create_id_str(std::string name, std::string id)
 {
-	static bool first_time_gui = true;
+	return name + "##" + name + id;
+}
 
+bool MaterialHost::on_draw(std::string myid = "")
+{
 	bool changed = false;
-	std::string myid = id + "Material" + std::to_string(mMaterialID);
-	std::string newgroup = mMaterialName + " (ID: " + std::to_string(mMaterialID) + ") ##" + myid;
-	if (ImmediateGUIDraw::TreeNode(newgroup.c_str()))
-	{
+	std::string id = myid + "Material" + std::to_string(mMaterialID);
+	std::string newgroup = mMaterialName + " (ID: " + std::to_string(mMaterialID) + ") ##" + id;
 
+	if (ImmediateGUIDraw::TreeNode(create_id_str(newgroup, id).c_str()))
+	{
         auto map = ShaderFactory::get_map();
         std::vector<std::string> vv;
         std::vector<int> illummap;
@@ -51,9 +54,9 @@ bool MaterialHost::on_draw(std::string id = "")
         for (auto& c : vv) v.push_back(c.c_str());
 
         int selected = starting;
-        if (ImmediateGUIDraw::TreeNode((std::string("Shader##Shader") + mMaterialName).c_str()))
+        if (ImmediateGUIDraw::TreeNode(create_id_str("Shader", id).c_str()))
         {
-            if (ImGui::Combo((std::string("Set Shader##RenderingMethod") + mMaterialName).c_str(), &selected, v.data(), (int)v.size(), (int)v.size()))
+            if (ImGui::Combo(create_id_str("Set Shader", id).c_str(), &selected, v.data(), (int)v.size(), (int)v.size()))
             {
                 changed = true;
                 set_shader(illummap[selected]);
@@ -68,35 +71,34 @@ bool MaterialHost::on_draw(std::string id = "")
             ImmediateGUIDraw::TreePop();
         }
 
-        if (ImmediateGUIDraw::TreeNode((std::string("Properties##Properties") + mMaterialName).c_str()))
+        if (ImmediateGUIDraw::TreeNode(create_id_str("Properties", id).c_str()))
         {
-            static optix::float4 ka_gui = optix::make_float4(0, 0, 0, 1);
-            static optix::float4 kd_gui = optix::make_float4(0, 0, 0, 1);
-            static optix::float4 ks_gui = optix::make_float4(0, 0, 0, 1);
-            if (first_time_gui)
-            {
-                get_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
-                get_texture_pixel<optix::float4>(mContext, kd_gui, mMaterialData.diffuse_map);
-                get_texture_pixel<optix::float4>(mContext, ks_gui, mMaterialData.specular_map);
-                first_time_gui = false;
-            }
+            ka_gui = *(optix::float4*)textures[0]->get_texel_ptr(0,0);
+            kd_gui = *(optix::float4*)textures[1]->get_texel_ptr(0,0);
+            ks_gui = *(optix::float4*)textures[2]->get_texel_ptr(0,0);
 
-            if (ImmediateGUIDraw::InputFloat3((std::string("Ambient##Ambient") + myid).c_str(), &ka_gui.x))
+            if (ImmediateGUIDraw::InputFloat3(create_id_str("Ambient", id).c_str(), &ka_gui.x))
             {
-                set_texture_pixel<optix::float4>(mContext, ka_gui, mMaterialData.ambient_map);
+                textures[0]->set_texel_ptr(&ka_gui, 0, 0);
+                textures[0]->update();
                 if (optix::dot(optix::make_float3(ka_gui), optix::make_float3(1)) > 0)
                     mIsEmissive = true;
             }
-            if (ImmediateGUIDraw::InputFloat3((std::string("Diffuse##Diffuse") + myid).c_str(), &kd_gui.x))
+            if (ImmediateGUIDraw::InputFloat3(create_id_str("Diffuse", id).c_str(), &kd_gui.x))
             {
-                set_texture_pixel<optix::float4>(mContext, kd_gui, mMaterialData.diffuse_map);
+                textures[1]->set_texel_ptr(&kd_gui, 0, 0);
+                textures[1]->update();
             }
-            if (ImmediateGUIDraw::InputFloat3((std::string("Specular##Specular") + myid).c_str(), &ks_gui.x))
+            if (ImmediateGUIDraw::InputFloat3(create_id_str("Specular", id).c_str(), &ks_gui.x))
             {
-                set_texture_pixel<optix::float4>(mContext, ks_gui, mMaterialData.specular_map);
+               textures[2]->set_texel_ptr(&ks_gui, 0, 0);
+                textures[2]->update();
             }
-            if (ImmediateGUIDraw::InputFloat((std::string("Relative IOR##IOR") +
-                                              myid).c_str(), &mMaterialData.relative_ior))
+            if (ImmediateGUIDraw::InputFloat(create_id_str("Roughness", id).c_str(), &mMaterialData.roughness))
+            {
+                changed = true;
+            }
+            if (ImmediateGUIDraw::InputFloat(create_id_str("Index of refraction", id).c_str(), &mMaterialData.relative_ior))
             {
                 changed = true;
             }
@@ -147,7 +149,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : Materia
 	mMaterialData.ambient_map = data->ambient_tex->get_id();
 	mMaterialData.diffuse_map = data->diffuse_tex->get_id();
 	mMaterialData.illum = data->illum;
-	mMaterialData.shininess = data->shininess;
+	mMaterialData.roughness = sqrtf(2.0f/(data->shininess + 2.0f)); // Karis conversion technique
 	mMaterialData.specular_map = data->specular_tex->get_id();
 
 	textures.push_back(std::move(mat.ambient_tex));

@@ -3,14 +3,14 @@
 #include "random.h"
 #include "sampler.h"
 
-__device__ __host__ __forceinline__ Float2 squareToStdNormal(const Float2 &sample) {
+_fn Float2 squareToStdNormal(const Float2 &sample) {
 	Float r = sqrt(-2 * log(1 - sample.x)),
 		phi = 2 * M_PI * sample.y;
 	Float2 result = MakeFloat2(cos(phi), sin(phi));
 	return result * r;
 }
 
-__device__ __host__ __forceinline__   Float stdnorm(TEASampler * sampler) {
+_fn   Float stdnorm(TEASampler * sampler) {
 	float xx = sampler->next1D();
 	float yy = sampler->next1D();
 	return squareToStdNormal(MakeFloat2(xx, yy)).x;
@@ -18,7 +18,7 @@ __device__ __host__ __forceinline__   Float stdnorm(TEASampler * sampler) {
 
 
 /// Check if simpler subalgorithm is appropriate.
-__device__ __host__ __forceinline__   bool CheckSimple(const Float low, ///< lower bound of distribution
+_fn   bool CheckSimple(const Float low, ///< lower bound of distribution
 	const Float high ///< upper bound of distribution
 ) {
 	// Init Values Used in Inequality of Interest
@@ -39,7 +39,7 @@ __device__ __host__ __forceinline__   bool CheckSimple(const Float low, ///< low
 /// XXX This check was missing from:
 /// https://github.com/olmjo/RcppTN
 /// http://olmjo.com/computing/RcppTN/
-__device__ __host__ __forceinline__   bool CheckRejectFromUniformInsteadOfNormal(
+_fn   bool CheckRejectFromUniformInsteadOfNormal(
 	const Float low, const Float high) {
 	if (low * high > 0)
 		return false;
@@ -53,7 +53,7 @@ __device__ __host__ __forceinline__   bool CheckRejectFromUniformInsteadOfNormal
 /// 
 /// Samples z from gaussian and rejects when out of bounds
 
-__device__ __host__ __forceinline__   Float UseAlg1(const Float low, ///< lower bound of distribution
+_fn   Float UseAlg1(const Float low, ///< lower bound of distribution
 	const Float high, ///< upper bound of distribution
 	TEASampler * sampler
 ) {
@@ -88,7 +88,7 @@ __device__ __host__ __forceinline__   Float UseAlg1(const Float low, ///< lower 
 /// Samples from exponential distribution and rejects to transform to 
 /// 'one-sided' bounded Gaussian.
 
-__device__ __host__ __forceinline__   Float UseAlg2(const Float low, ///< lower bound of distribution
+_fn   Float UseAlg2(const Float low, ///< lower bound of distribution
 	TEASampler * sampler
 ) {
 	// Init Values
@@ -131,7 +131,7 @@ __device__ __host__ __forceinline__   Float UseAlg2(const Float low, ///< lower 
 /// 
 /// Samples z uniformly within lo..hi and rejects based on gaussian weight
 
-__device__ __host__ __forceinline__   Float UseAlg3(const Float low, ///< lower bound of distribution
+_fn   Float UseAlg3(const Float low, ///< lower bound of distribution
 	const Float high, ///< upper bound of distribution
 	TEASampler * sampler
 ) {
@@ -171,7 +171,7 @@ __device__ __host__ __forceinline__   Float UseAlg3(const Float low, ///< lower 
 	//
 }
 
-__device__ __host__ __forceinline__   Float truncnorm(const Float mean,
+_fn   Float truncnorm(const Float mean,
 	const Float sd,
 	const Float low,
 	const Float high,
@@ -312,7 +312,7 @@ __device__ __host__ __forceinline__   Float truncnorm(const Float mean,
 	return clamp(c_mean + c_sd * draw, low, high); // to protect against round-off
 }
 
-__device__ __host__ __forceinline__   Float truncnormPdf(const Float _mean,
+_fn   Float truncnormPdf(const Float _mean,
 	const Float _sd,
 	const Float _lo,
 	const Float _hi,

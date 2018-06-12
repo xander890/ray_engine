@@ -54,7 +54,7 @@ set(HEADERS
     forward_dipole_utils.h
     GLFWDisplay.h
     glm.h
-    glossy.h
+        brdf_shader.h
     HDRLoader.h
     Header.h
     host_device_common.h
@@ -118,8 +118,7 @@ set(HEADERS
     stringhelpers.h
     string_utils.h
     structs.h
-    structs_device.h
-    transform.h
+        transform.h
     volume_path_tracer.h
     bssrdf_loader.h
     bssrdf_parameter_manager.h
@@ -131,7 +130,7 @@ set(HEADERS
     subsurface_scattering_sampled_common.h
     subsurface_scattering_sampled.h
         hemisphere_partitions.h
-        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h brdf_properties.h geometry.cpp geometry.h thumbnail.cpp thumbnail.h)
+        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h brdf_properties.h geometry.cpp geometry.h thumbnail.cpp thumbnail.h microfacets.h default_shader_common.h)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp
@@ -164,7 +163,7 @@ set(SRCS
     forward_dipole_test.cpp
     GLFWDisplay.cpp
     glm.cpp
-    glossy.cpp
+        brdf_shader.cpp
     HDRLoader.cpp
     host_material.cpp
     ImageLoader.cpp
@@ -212,7 +211,7 @@ CUDA_files/debug_camera.cu
 CUDA_files/environment_map_background.cu
 CUDA_files/env_cameras.cu
 CUDA_files/glass_shader.cu
-CUDA_files/glossy_shader.cu
+        CUDA_files/brdf_shader.cu
 CUDA_files/lambertian_shader.cu
 CUDA_files/metal_shader.cu
 CUDA_files/mirror_shader.cu

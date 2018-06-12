@@ -25,7 +25,7 @@
 
 rtDeclareVariable(CameraData, camera_data, , );
 
-__device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, const optix::float3& direction, optix::float3 & xi, optix::float3 & normal, const float t_min = scene_epsilon, const float t_max = RT_DEFAULT_MAX)
+_fn bool trace_depth_ray(const optix::float3& origin, const optix::float3& direction, optix::float3 & xi, optix::float3 & normal, const float t_min = scene_epsilon, const float t_max = RT_DEFAULT_MAX)
 {
     PerRayData_normal_depth attribute_fetch_ray_payload = { make_float3(0.0f), RT_DEFAULT_MAX };
     optix::Ray attribute_fetch_ray;
@@ -47,7 +47,7 @@ __device__ __forceinline__ bool trace_depth_ray(const optix::float3& origin, con
     return true;
 }
 
-__device__ __forceinline__ void sample_r_phi_plane(TEASampler * sampler, const BSSRDFSamplingProperties & bssrdf_sampling_properties, float & r, float & phi, float & pdf)
+_fn void sample_r_phi_plane(TEASampler * sampler, const BSSRDFSamplingProperties & bssrdf_sampling_properties, float & r, float & phi, float & pdf)
 {
     optix::float2 sample = optix::make_float2(sampler->next1D(), sampler->next1D());
     if(bssrdf_sampling_properties.sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::EXPONENTIAL_DISK) {
@@ -60,7 +60,7 @@ __device__ __forceinline__ void sample_r_phi_plane(TEASampler * sampler, const B
 }
 
 
-__device__ __forceinline__ void sample_point_on_normal_tangent_plane(
+_fn void sample_point_on_normal_tangent_plane(
         const float3 & xo,          // The points hit by the camera ray.
         const float3 & no,          // The normal at the point.
         const float3 & wo,          // The incoming ray direction.
@@ -99,7 +99,7 @@ __device__ __forceinline__ void sample_point_on_normal_tangent_plane(
 }
 
 
-__device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float3 & disc_point, const float3 & disc_normal, float3 & xi, float3 & ni, const float normal_bias = 0.0f, const float t_min = scene_epsilon)
+_fn bool sample_xi_ni_from_tangent_hemisphere(const float3 & disc_point, const float3 & disc_normal, float3 & xi, float3 & ni, const float normal_bias = 0.0f, const float t_min = scene_epsilon)
 {
     float3 sample_ray_origin = disc_point;
     float3 sample_ray_dir = disc_normal;
@@ -112,7 +112,7 @@ __device__ __forceinline__ bool sample_xi_ni_from_tangent_hemisphere(const float
 }
 
 #ifndef ENABLE_NEURAL_NETWORK
-__device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, const BSSRDFSamplingProperties & bssrdf_sampling_properties, TEASampler * sampler,
+_fn bool camera_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, const BSSRDFSamplingProperties & bssrdf_sampling_properties, TEASampler * sampler,
                                                       float3 & xi, float3 & ni, float3 & integration_factor)
 {
     float r, phi, pdf_disk;
@@ -148,7 +148,7 @@ __device__ __forceinline__ bool camera_based_sampling(const float3 & xo, const f
 }
 #endif
 
-__device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, const BSSRDFSamplingProperties & bssrdf_sampling_properties, TEASampler * sampler,
+_fn bool tangent_based_sampling(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, const BSSRDFSamplingProperties & bssrdf_sampling_properties, TEASampler * sampler,
                                                        float3 & xi, float3 & ni, float3 & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
 {
 
@@ -166,7 +166,7 @@ __device__ __forceinline__ bool tangent_based_sampling(const float3 & xo, const 
 }
 
 #ifndef ENABLE_NEURAL_NETWORK
-__device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, const BSSRDFSamplingProperties & bssrdf_sampling_properties, TEASampler * sampler, float3 & xi, float3 & ni, float3 & integration_factor)
+_fn bool axis_mis_probes(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, const BSSRDFSamplingProperties & bssrdf_sampling_properties, TEASampler * sampler, float3 & xi, float3 & ni, float3 & integration_factor)
 {
     float chosen_sampling_mfp =  bssrdf_sampling_properties.sampling_inverse_mean_free_path;
     float r, phi, pdf_disk;
@@ -223,7 +223,7 @@ __device__ __forceinline__ bool axis_mis_probes(const float3 & xo, const float3 
 }
 #endif
 
-__device__ __forceinline__ bool importance_sample_position(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, const BSSRDFSamplingProperties & bssrdf_sampling_properties, TEASampler * sampler,
+_fn bool importance_sample_position(const float3 & xo, const float3 & no, const float3 & wo, const MaterialDataCommon & material, const BSSRDFSamplingProperties & bssrdf_sampling_properties, TEASampler * sampler,
                                                            float3 & xi, float3 & ni, float3 & integration_factor, bool & has_candidate_wi, float3 & proposed_wi)
 {
     has_candidate_wi = false;

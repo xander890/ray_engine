@@ -3,7 +3,7 @@
 #include <optix_world.h>
 #include "math_helpers.h"
 
-static __host__ __device__ __inline__ optix::float3 fresnel_complex_R(float cos_theta, const optix::float3& eta_sq, const optix::float3& kappa_sq)
+_fn optix::float3 fresnel_complex_R(float cos_theta, const optix::float3& eta_sq, const optix::float3& kappa_sq)
 {
 	if (cos_theta < 1e-6)
 		return optix::make_float3(1.0f);
@@ -27,13 +27,13 @@ static __host__ __device__ __inline__ optix::float3 fresnel_complex_R(float cos_
   return (R_s + R_p)*0.5f;
 }
 
-static __host__ __device__ __inline__ optix::float3 fresnel_complex_R(const optix::float3& in, const optix::float3& n, const optix::float3& eta_sq, const optix::float3& kappa_sq)
+_fn optix::float3 fresnel_complex_R(const optix::float3& in, const optix::float3& n, const optix::float3& eta_sq, const optix::float3& kappa_sq)
 {
 	float d = optix::dot(in, n);
     return fresnel_complex_R(d, eta_sq, kappa_sq);
 }
 
-__host__ __device__ __inline__ float fresnel_R(float cos_theta_i, float cos_theta_t, float eta)
+_fn float fresnel_R(float cos_theta_i, float cos_theta_t, float eta)
 {
   float a = eta*cos_theta_i;
   float b = eta*cos_theta_t;
@@ -42,7 +42,7 @@ __host__ __device__ __inline__ float fresnel_R(float cos_theta_i, float cos_thet
   return (r_s*r_s + r_p*r_p)*0.5f;
 }
 
-__host__ __device__ __inline__ float fresnel_R(float cos_theta, float eta)
+_fn float fresnel_R(float cos_theta, float eta)
 {  
   float sin_theta_t_sqr = 1.0f/(eta*eta)*(1.0f - cos_theta*cos_theta);
   if(sin_theta_t_sqr >= 1.0f) return 1.0f;
@@ -52,7 +52,7 @@ __host__ __device__ __inline__ float fresnel_R(float cos_theta, float eta)
 }
 
 // Note: n2 is the ior of the medium into which we refract to.
-__host__ __device__ __inline__ bool _refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & cos_theta_i, float & cos_theta_t)
+_fn bool _refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & cos_theta_i, float & cos_theta_t)
 {
 	cos_theta_i = optix::fmaxf(0.0f,optix::dot(i, n));
 	float cos_theta_i_sqr = cos_theta_i*cos_theta_i;
@@ -72,21 +72,21 @@ __host__ __device__ __inline__ bool _refract(const optix::float3 & i, const opti
 // i always points away from the medium.
 // refracted always points inside the medium
 // IOR has to be refracted medium index over source medium index
-__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & F_r, float & cos_theta_i, float & cos_theta_t)
+_fn bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & F_r, float & cos_theta_i, float & cos_theta_t)
 {
 	bool pass = _refract(i, n, n1_over_n2, refracted, cos_theta_i, cos_theta_t);
 	F_r = !pass ? 1.0f : fresnel_R(cos_theta_i, cos_theta_t, 1.0f/n1_over_n2);
 	return pass;
 }
 
-__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & F_r)
+_fn bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted, float & F_r)
 {
 	float cos_theta_i, cos_theta_t;
 	return refract(i, n, n1_over_n2, refracted, F_r, cos_theta_i, cos_theta_t);
 }
 
 
-__host__ __device__ __inline__ bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted)
+_fn bool refract(const optix::float3 & i, const optix::float3 & n, const float n1_over_n2, optix::float3 & refracted)
 {
 	float cos_theta_i, cos_theta_t;
 	return _refract(i, n, n1_over_n2, refracted, cos_theta_i, cos_theta_t);

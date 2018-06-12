@@ -1,11 +1,10 @@
-#ifndef  RAY_TRACE_HELPERS
-#define RAY_TRACE_HELPERS
+#pragma once
 #include "random.h"
 #include "sampling_helpers.h"
 #include "optical_helper.h"
 #include "structs.h"
 
-__inline__ __device__ PerRayData_radiance get_empty()
+_fn PerRayData_radiance get_empty()
 {
 	PerRayData_radiance r;
 	r.colorband = -1;
@@ -16,7 +15,7 @@ __inline__ __device__ PerRayData_radiance get_empty()
 	return r;
 }
 
-__inline__ __device__ PerRayData_radiance init_copy(PerRayData_radiance & to_copy)
+_fn PerRayData_radiance init_copy(PerRayData_radiance & to_copy)
 {
 	PerRayData_radiance r;
 	r.colorband = to_copy.colorband;
@@ -27,7 +26,7 @@ __inline__ __device__ PerRayData_radiance init_copy(PerRayData_radiance & to_cop
 	return r;
 }
 
-__inline__ __device__ PerRayData_radiance prepare_new_pt_payload(PerRayData_radiance & to_copy)
+_fn PerRayData_radiance prepare_new_pt_payload(PerRayData_radiance & to_copy)
 {
 	PerRayData_radiance r;
 	r.colorband = to_copy.colorband;
@@ -39,7 +38,7 @@ __inline__ __device__ PerRayData_radiance prepare_new_pt_payload(PerRayData_radi
 }
 
 
-__inline__ __device__ float trace_shadow_ray(const optix::float3 & hit_pos, const optix::float3 & direction, float tmin, float tmax, optix::float3 & emission)
+_fn float trace_shadow_ray(const optix::float3 & hit_pos, const optix::float3 & direction, float tmin, float tmax, optix::float3 & emission)
 {
 	PerRayData_shadow shadow_prd;
 	shadow_prd.attenuation = 1.0f;
@@ -54,13 +53,13 @@ __inline__ __device__ float trace_shadow_ray(const optix::float3 & hit_pos, cons
 
 namespace optix
 {
-	__forceinline__ __device__ optix::float3 fpowf(const optix::float3 & p, const float ex)
+	_fn optix::float3 fpowf(const optix::float3 & p, const float ex)
 	{
 		return optix::make_float3(powf(p.x, ex), powf(p.y, ex), powf(p.z, ex));
 	}
 
 }
-__inline__ __device__ float trace_shadow_ray(const optix::float3 & hit_pos, const optix::float3 & direction, float tmin, float tmax)
+_fn float trace_shadow_ray(const optix::float3 & hit_pos, const optix::float3 & direction, float tmin, float tmax)
 {
 	float3 emission;
 	return trace_shadow_ray(hit_pos, direction, tmin, tmax, emission);
@@ -68,25 +67,27 @@ __inline__ __device__ float trace_shadow_ray(const optix::float3 & hit_pos, cons
 
 
 
-__device__ __inline__ void get_glass_rays(const optix::float3& wo, const float ior, const float3& hit_pos, float3& normal, optix::Ray& reflected_ray, optix::Ray& refracted_ray, float& R, float& cos_theta_signed)
+_fn void get_glass_rays(const optix::float3& wo, const float ior, const optix::float3& hit_pos, const optix::float3& old_normal, optix::float3& normal, optix::Ray& reflected_ray, optix::Ray& refracted_ray, float& R, float& cos_theta_signed)
 {
-	cos_theta_signed = dot(normal, -wo);
-	float eta = cos_theta_signed < 0.0f ? 1.0f / ior : ior;
-	normal = normal*copysignf(1.0f, cos_theta_signed);
+	normal = old_normal;
+	cos_theta_signed = dot(normal, wo);
+    float eta;
+
+    if(cos_theta_signed > 0.0f)
+    {
+        eta = 1.0f / ior;
+    }
+    else
+    {
+        normal = -normal;
+        eta = ior;
+    }
 
 	optix::float3 refr_dir;
-	refract(-wo, normal, eta, refr_dir, R);
+	refract(wo, normal, eta, refr_dir, R);
 
 	refracted_ray = optix::make_Ray(hit_pos, refr_dir,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
-	float3 reflected_dir = reflect(wo, normal);
+	optix::float3 reflected_dir = reflect(-wo, normal);
 	reflected_ray = optix::make_Ray(hit_pos, reflected_dir,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 }
 
-
-__device__ __inline__ void get_glass_rays(const optix::Ray& ray, const float ior, const float3& hit_pos, float3& normal, optix::Ray& reflected_ray, optix::Ray& refracted_ray, float& R, float& cos_theta_signed)
-{
-	get_glass_rays(ray.direction, ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta_signed);
-}
-
-
-#endif

@@ -13,7 +13,7 @@
 * This is the safest bet 'at infinity' (the tail is certainly more heavy
 * than the target distribution), but extremely high variance is possible
 * for high albedo materials. */
-__device__ __host__ __forceinline__   Float sampleLengthAbsorption(const float sigma_a,
+_fn   Float sampleLengthAbsorption(const float sigma_a,
 	Float &s, TEASampler * sampler) {
 	if (sigma_a == 0)
 		return 0.0;
@@ -25,7 +25,7 @@ __device__ __host__ __forceinline__   Float sampleLengthAbsorption(const float s
 	return pdf;
 }
 
-__device__ __host__ __forceinline__   Float pdfLengthAbsorption(const float sigma_a,
+_fn   Float pdfLengthAbsorption(const float sigma_a,
 	Float s) {
 	if (sigma_a == 0)
 		return 0.0;
@@ -34,7 +34,7 @@ __device__ __host__ __forceinline__   Float pdfLengthAbsorption(const float sigm
 	return pdf;
 }
 
-__device__ __host__ __forceinline__   void implLengthShortLimitKnownU0(
+_fn   void implLengthShortLimitKnownU0(
 	const Float sigma_s,
 	const Float mu,
 	Float3 R, Float3 u0, Float3 uL, Float &s, TEASampler * sampler, Float *pdf, bool use_sampler) {
@@ -153,7 +153,7 @@ __device__ __host__ __forceinline__   void implLengthShortLimitKnownU0(
 	}
 }
 
-__device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
+_fn   void implLengthShortLimitMargOverU0(
 	const Float sigma_s,
 	const Float mu,
 	Float3 R, Float3 uL, Float &s, TEASampler * sampler, Float *pdf, bool use_sampler) {
@@ -271,7 +271,7 @@ __device__ __host__ __forceinline__   void implLengthShortLimitMargOverU0(
 	}
 }
 
-__device__ __host__ __forceinline__   void implLengthShortLimit(
+_fn   void implLengthShortLimit(
 	const Float sigma_s,
 	const Float mu,
 	Float3 R, const Float3 *u0, Float3 uL, Float &s, TEASampler * sampler, Float *pdf, bool use_sampler) {
@@ -282,7 +282,7 @@ __device__ __host__ __forceinline__   void implLengthShortLimit(
 		implLengthShortLimitKnownU0(sigma_s, mu, R, *u0, uL, s, sampler, pdf, use_sampler);
 	}
 }
-__device__ __host__ __forceinline__ Float sampleLengthShortLimit(
+_fn Float sampleLengthShortLimit(
 	const Float sigma_s,
 	const Float mu,
 	Float3 R, const Float3 *u0, Float3 uL, Float &s, TEASampler * sampler) {
@@ -293,7 +293,7 @@ __device__ __host__ __forceinline__ Float sampleLengthShortLimit(
 
 
 
-__device__ __host__ __forceinline__   Float pdfLengthShortLimit(
+_fn   Float pdfLengthShortLimit(
 	const Float sigma_s,
 	const Float mu,
 	Float3 R, const Float3 *u0, Float3 uL, Float s) {
@@ -302,7 +302,7 @@ __device__ __host__ __forceinline__   Float pdfLengthShortLimit(
 	return pdf;
 }
 
-__device__ __host__ __forceinline__   Float pdfLengthLongLimit(
+_fn   Float pdfLengthLongLimit(
 	const Float sigma_s,
 	const Float sigma_a,
 	const Float mu,
@@ -329,7 +329,7 @@ __device__ __host__ __forceinline__   Float pdfLengthLongLimit(
 
 
 // TODO: approximation that does not require a numerical cdf inversion?
-__device__ __host__ __forceinline__   Float sampleLengthLongLimit(
+_fn   Float sampleLengthLongLimit(
 	const Float sigma_s,
 	const Float sigma_a,
 	const Float mu,
@@ -425,7 +425,7 @@ __device__ __host__ __forceinline__   Float sampleLengthLongLimit(
 #define lengthSample_w3 0.0 /* absorption */
 
 // If d_in is unknown, it is set to NULL
-__device__ __host__ __forceinline__  Float sampleLengthDipole(
+_fn  Float sampleLengthDipole(
 	const ForwardDipoleMaterial material,
 	const ForwardDipoleProperties props,
 	Float3 uL, Float3 nL, Float3 R,
@@ -486,7 +486,7 @@ __device__ __host__ __forceinline__  Float sampleLengthDipole(
 		+ lengthSample_w3 * p3);
 }
 
-__device__ __host__ __forceinline__  Float pdfLengthDipole(
+_fn  Float pdfLengthDipole(
 	const float sigma_s,
 	const float sigma_a,
 	const float mu,

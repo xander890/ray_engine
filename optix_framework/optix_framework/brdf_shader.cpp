@@ -1,4 +1,4 @@
-#include "glossy.h"
+#include "brdf_shader.h"
 #include "folders.h"
 #include "object_host.h"
 #include "brdf_utils.h"

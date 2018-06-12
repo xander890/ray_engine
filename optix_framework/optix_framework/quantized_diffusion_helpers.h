@@ -3,7 +3,7 @@
 #include "optix_helpers.h"
 
 template<typename T>
-__host__ __device__ __forceinline__ T erf_approx(T x) {
+_fn T erf_approx(T x) {
 	const T a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
 	T t = 1.0 / (1.0 + p*abs(x));
 	T y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x);
@@ -11,22 +11,22 @@ __host__ __device__ __forceinline__ T erf_approx(T x) {
 }
 
 template<typename T>
-__host__ __device__ __forceinline__ T v0(T alpha, T sigma_s) { // Fit by Toshiya
+_fn T v0(T alpha, T sigma_s) { // Fit by Toshiya
 	return 5.0*pow(0.1, -6.11*alpha*alpha + 1.168*alpha + 7.94) / (sigma_s*sigma_s);  // quantization step
 }
 
 template<typename T>
-__host__ __device__ __forceinline__ T weight(T tau_i, T tau_ip1, T absorption) {
+_fn T weight(T tau_i, T tau_ip1, T absorption) {
 	return (exp(-tau_i*absorption) - exp(-tau_ip1*absorption)) / absorption;
 }
 
 template<typename T>
-__host__ __device__ __forceinline__ T gauss2D(T v, T r_sqr) {
+_fn T gauss2D(T v, T r_sqr) {
 	return exp(-r_sqr / (2.0*v)) / (M_2PIf * v);
 }
 
 template<typename T>
-__host__ __device__ __forceinline__ T weight_phi_approx(T v, T d, T alpha_p, T sigma_t) {
+_fn T weight_phi_approx(T v, T d, T alpha_p, T sigma_t) {
 	// numerically more stable approximation by Eugene
 	T c1 = sigma_t*(d + sigma_t*v*0.5);
 	T c2 = d + sigma_t*v;
@@ -39,22 +39,22 @@ __host__ __device__ __forceinline__ T weight_phi_approx(T v, T d, T alpha_p, T s
 }
 
 template<typename T>
-__host__ __device__ __forceinline__ T weight_phi_R(T v, T alpha_p, T sigma_t, T d_e) {
+_fn T weight_phi_R(T v, T alpha_p, T sigma_t, T d_e) {
 	return weight_phi_approx<T>(v, 0.0, alpha_p, sigma_t) - weight_phi_approx<T>(v, d_e, alpha_p, sigma_t);
 }
 
 template<typename T>
-__host__ __device__ __forceinline__ T weight_E_div_D(T v, T d, T alpha_p, T sigma_t) {
+_fn T weight_E_div_D(T v, T d, T alpha_p, T sigma_t) {
 	return sigma_t*(-weight_phi_approx(v, d, alpha_p, sigma_t) + alpha_p / sqrt(M_2PIf*v)*exp(-d*d / (2.0*v)));
 }
 
 template<typename T>
-__host__ __device__ __forceinline__ T weight_E_R_div_D(T v, T alpha_p, T sigma_t, T d_e) {
+_fn T weight_E_R_div_D(T v, T alpha_p, T sigma_t, T d_e) {
 	return weight_E_div_D<T>(v, 0.0, alpha_p, sigma_t) + weight_E_div_D<T>(v, d_e, alpha_p, sigma_t);
 }
 
 template<typename T>
-__host__ __device__ __forceinline__ T quantized_diffusion(T dist, optix::float4 props, optix::float4 C) {
+_fn T quantized_diffusion(T dist, optix::float4 props, optix::float4 C) {
 	const int no_of_gaussians = 45;
 	T sigma_s = props.x, sigma_a = props.y, g = props.z, A = C.w;
 	T sigma_t = sigma_s + sigma_a;

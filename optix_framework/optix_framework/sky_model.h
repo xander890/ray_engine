@@ -17,13 +17,13 @@ struct PerezData
 
 __constant__ const float SKY_SCALE = 0.03f;
 
-static __inline__ __device__ __host__ optix::float3 perez_model(float cos_theta, float gamma, float cos_gamma, PerezData & data)
+static _fn __host__ optix::float3 perez_model(float cos_theta, float gamma, float cos_gamma, PerezData & data)
 {
 	const optix::float3 one = optix::make_float3(1.0f);
 	return (one + data.A * exp(data.B / cos_theta)) * (one + data.C * exp(data.D * gamma) + data.E * cos_gamma * cos_gamma);
 }
 
-static __inline__ __device__ __host__ optix::float3 sky_color(int ray_depth, optix::float3 & v, optix::float3& sun_position, optix::float3 & up, optix::float3 & sky_factor, optix::float3 & sun_color, PerezData & data)
+static _fn __host__ optix::float3 sky_color(int ray_depth, optix::float3 & v, optix::float3& sun_position, optix::float3 & up, optix::float3 & sky_factor, optix::float3 & sun_color, PerezData & data)
 {
 	float cos_gamma = dot(v, sun_position);
 	float cos_theta = dot(v,up);

@@ -32,7 +32,7 @@ struct ScatteringMaterialProperties
 	optix::float3 deltaEddExtinction;
 };
 
-__host__ __device__ __forceinline__ void fill_scattering_parameters(ScatteringMaterialProperties & properties, const float scale, const float ior, const optix::float3 & absorption, const optix::float3 & scattering, const optix::float3 & asymmetry)
+_fn void fill_scattering_parameters(ScatteringMaterialProperties & properties, const float scale, const float ior, const optix::float3 & absorption, const optix::float3 & scattering, const optix::float3 & asymmetry)
 {
 	const float inverse_relative_ior = 1.0f / ior;
 	properties.absorption = max(absorption, optix::make_float3(1.0e-8f)) * scale;
@@ -60,7 +60,7 @@ __host__ __device__ __forceinline__ void fill_scattering_parameters(ScatteringMa
 	properties.albedo = properties.scattering / properties.extinction;
 }
 
-__host__ __device__ __forceinline__ void fill_scattering_parameters_alternative(ScatteringMaterialProperties & properties, const float scale, const float ior, const optix::float3 & albedo, const optix::float3 & extinction, const optix::float3 & asymmetry)
+_fn void fill_scattering_parameters_alternative(ScatteringMaterialProperties & properties, const float scale, const float ior, const optix::float3 & albedo, const optix::float3 & extinction, const optix::float3 & asymmetry)
 {
 	optix::float3 scattering = albedo*extinction;
 	optix::float3 absorption = extinction - scattering;

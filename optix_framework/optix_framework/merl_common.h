@@ -34,11 +34,11 @@
 #include "sampling_helpers.h"
 #include "random.h"
 #include "math_helpers.h"
-
+#include "host_device_common.h"
 
 
 // rotate vector around an axis
-static __host__  __device__ __inline__ optix::float3 rotate_vector(const optix::float3& vector, const optix::float3& axis, float angle)
+_fn optix::float3 rotate_vector(const optix::float3& vector, const optix::float3& axis, float angle)
 {
   float sin_ang, cos_ang;
   sincosf(angle, sin_ang, cos_ang);
@@ -55,7 +55,7 @@ static __host__  __device__ __inline__ optix::float3 rotate_vector(const optix::
 }
 
 // convert vectors in tangent space to half vector/difference vector coordinates
-static __host__ __device__ __inline__ void vectors_to_half_diff_coords(
+_fn void vectors_to_half_diff_coords(
   const optix::float3& in, const optix::float3& out,
   float& theta_half, float& phi_half, float& theta_diff, float& phi_diff)
 {
@@ -82,7 +82,7 @@ static __host__ __device__ __inline__ void vectors_to_half_diff_coords(
 // This is a non-linear mapping!
 // In:  [0 .. pi/2]
 // Out: [0 .. 89]
-static __host__ __device__ __inline__ int theta_half_index(float theta_half)
+_fn int theta_half_index(float theta_half)
 {
   theta_half = fmaxf(theta_half, 0.0f);
   float theta_half_deg = theta_half*M_1_PIf*2.0f*BRDF_SAMPLING_RES_THETA_H;
@@ -95,7 +95,7 @@ static __host__ __device__ __inline__ int theta_half_index(float theta_half)
 // Lookup theta_diff index
 // In:  [0 .. pi/2]
 // Out: [0 .. 89]
-static __host__ __device__ __inline__  unsigned int theta_diff_index(float theta_diff)
+_fn  unsigned int theta_diff_index(float theta_diff)
 {
   theta_diff = optix::fmaxf(theta_diff, 0.0f);
   int idx = static_cast<int>(theta_diff*M_1_PIf*2.0f*BRDF_SAMPLING_RES_THETA_D);
@@ -104,7 +104,7 @@ static __host__ __device__ __inline__  unsigned int theta_diff_index(float theta
 
 
 // Lookup phi_diff index
-static __host__ __device__ __inline__  unsigned int phi_diff_index(float phi_diff)
+_fn  unsigned int phi_diff_index(float phi_diff)
 {
   // Because of reciprocity, the BRDF is unchanged under
   // phi_diff -> phi_diff + M_PIf
@@ -121,9 +121,9 @@ static __host__ __device__ __inline__  unsigned int phi_diff_index(float phi_dif
 
 // Given a pair of incoming/outgoing angles, look up the BRDF.
 #ifdef __CUDA_ARCH__
-static __device__ __inline__ optix::float3 lookup_brdf_val(BufPtr1D<float> & brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
+_fn optix::float3 lookup_brdf_val(BufPtr1D<float> & brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
 #else
-static __host__ __device__ __inline__ optix::float3 lookup_brdf_val(float* brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
+_fn optix::float3 lookup_brdf_val(float* brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
 #endif
 {
   // Find index.
@@ -140,10 +140,10 @@ static __host__ __device__ __inline__ optix::float3 lookup_brdf_val(float* brdf,
 }
 
 #ifdef __CUDA_ARCH__
-static __device__ __inline__ optix::float3 lookup_brdf_val(
+_fn optix::float3 lookup_brdf_val(
   BufPtr1D<float> & brdf, const optix::float3& n, const optix::float3& normalized_wi, const optix::float3& normalized_wo)
 #else
-static __host__ __device__ __inline__ optix::float3 lookup_brdf_val(
+_fn optix::float3 lookup_brdf_val(
   float* brdf, const optix::float3& n, const optix::float3& normalized_wi, const optix::float3& normalized_wo)
 #endif
 {

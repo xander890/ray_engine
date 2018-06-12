@@ -3,7 +3,7 @@
 #include "optix_common.h"
 #include "host_device_common.h"
 #include "structs.h"
-#include "structs_device.h"
+
 
 rtDeclareVariable(float, scene_epsilon, , );
 rtDeclareVariable(rtObject, top_shadower, , );
@@ -25,7 +25,8 @@ rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 
 rtDeclareVariable(int, max_depth, , );
 
-static __device__ __inline__ void shadow_hit(PerRayData_shadow & shadow_payload, optix::float3 & emission)
+
+_fn void shadow_hit(PerRayData_shadow & shadow_payload, optix::float3 & emission)
 {
 	if (!(emission.x + emission.y + emission.z > 0.0f))
 	{

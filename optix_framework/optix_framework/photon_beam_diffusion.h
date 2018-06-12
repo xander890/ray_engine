@@ -9,7 +9,7 @@
 
 using namespace optix;
 
-__device__ __forceinline__ float bdp_bssrdf(float d_r, float z_r, optix::float4 props, optix::float4 C) { // Better dipole if z_r = 1/sigma_t_p and d_r = sqrt(z_r^2 + r^2)
+_fn float bdp_bssrdf(float d_r, float z_r, optix::float4 props, optix::float4 C) { // Better dipole if z_r = 1/sigma_t_p and d_r = sqrt(z_r^2 + r^2)
 	float sigma_s = props.x, sigma_a = props.y, g = props.z, A = C.w;
 	float sigma_s_p = sigma_s*(1.0 - g);
 	float sigma_t_p = sigma_s_p + sigma_a;
@@ -34,13 +34,13 @@ __device__ __forceinline__ float bdp_bssrdf(float d_r, float z_r, optix::float4 
 	return alpha_p*M_1_4PIPIf*C.x*S_d;
 }
 
-__device__ __forceinline__ float single_diffuse(float t, float d_r, optix::float3 w_i, optix::float3 w_o, optix::float3 n_o, optix::float4 props) {
+_fn float single_diffuse(float t, float d_r, optix::float3 w_i, optix::float3 w_o, optix::float3 n_o, optix::float4 props) {
 	float sigma_s = props.x, sigma_a = props.y, g = props.z;
 	float sigma_t = sigma_s + sigma_a;
 	float cos_theta_o = abs(dot(w_o, n_o));
 	return sigma_s*phase_HG(dot(w_i, w_o), g)*expf(-sigma_t*(t + d_r))*cos_theta_o / (d_r*d_r);
 }
-__device__ __forceinline__ float pbd_bssrdf(optix::float3 xi, optix::float3 ni, optix::float3 wt, optix::float3 xo, optix::float3 no, optix::float4 props, optix::float4 C) {
+_fn float pbd_bssrdf(optix::float3 xi, optix::float3 ni, optix::float3 wt, optix::float3 xo, optix::float3 no, optix::float4 props, optix::float4 C) {
 	const float N = 5.0f;
 	float sigma_s = props.x, sigma_a = props.y, g = props.z;
 	float sigma_t = sigma_s + sigma_a;
@@ -89,7 +89,7 @@ __device__ __forceinline__ float pbd_bssrdf(optix::float3 xi, optix::float3 ni, 
 	return max(S_d, 0.0) / N;
 }
 
-__device__ __forceinline__ float3 photon_beam_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
+_fn float3 photon_beam_diffusion_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
 	optix::float4 C = make_float4(properties.C_phi_norm, properties.C_phi, properties.C_E, properties.A);

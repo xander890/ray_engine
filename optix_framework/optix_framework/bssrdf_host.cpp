@@ -22,7 +22,7 @@ void BSSRDF::load(const float, const ScatteringMaterialProperties &)
 }
 
 std::unique_ptr<BSSRDF> BSSRDF::create(optix::Context & ctx, ScatteringDipole::Type type)
-{	
+{
 	switch (type)
 	{
 	case ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF:

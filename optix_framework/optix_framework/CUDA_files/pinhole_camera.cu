@@ -15,13 +15,13 @@ rtDeclareVariable(CameraData,   camera_data, , );
 // Window variables
 rtBuffer<float4, 2> output_buffer;
 
-__forceinline__ __device__ bool check_bounds()
+_fn bool check_bounds()
 {
 	return	launch_index.x >= camera_data.render_bounds.x && launch_index.x < camera_data.render_bounds.x + camera_data.render_bounds.z &&
 		launch_index.y >= camera_data.render_bounds.y && launch_index.y < camera_data.render_bounds.y + camera_data.render_bounds.w;
 }
 
-__forceinline__ __device__ void trace(const Ray& ray, PerRayData_radiance & prd)
+_fn void trace(const Ray& ray, PerRayData_radiance & prd)
 {
 	rtTrace(top_object, ray, prd);
 
@@ -33,13 +33,12 @@ __forceinline__ __device__ void trace(const Ray& ray, PerRayData_radiance & prd)
 	}
 }
 
-__forceinline__ __device__ PerRayData_radiance get_starting_payload(TEASampler * sampler)
+_fn PerRayData_radiance get_starting_payload(TEASampler * sampler)
 {
 	PerRayData_radiance prd;
 	prd.depth = 0;
 	prd.sampler = sampler;
 	prd.flags = 0;
-	prd.flags &= ~(RayFlags::HIT_DIFFUSE_SURFACE); //Just for clarity
 	prd.flags |= RayFlags::USE_EMISSION;
 	prd.colorband = -1;
 	prd.result = make_float3(0);
@@ -103,6 +102,7 @@ RT_PROGRAM void exception()
   rtPrintf( "Caught exception 0x%X at launch index (%d,%d)\n", code, launch_index.x, launch_index.y );
   output_buffer[launch_index] = make_float4(0.0, 0.0, 100000.0, 1.0f);
   rtPrintExceptionDetails();
+
 }
 
 RT_PROGRAM void empty() {}

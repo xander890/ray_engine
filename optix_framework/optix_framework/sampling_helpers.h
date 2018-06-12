@@ -5,7 +5,7 @@
 
 // Sample hemisphere
 static
-	__host__ __device__ __inline__ optix::float3 sample_hemisphere_cosine( const optix::float2 & sample, const optix::float3 & normal )
+	_fn optix::float3 sample_hemisphere_cosine( const optix::float2 & sample, const optix::float3 & normal )
 {
 	float cos_theta = sqrt(fmaxf(0.0f, sample.x));
 	float phi = 2.0f * M_PIf * sample.y;
@@ -19,7 +19,7 @@ static
 
 // Sample Phong lobe relative to U, V, W frame
 static
-	__host__ __device__ __inline__ optix::float3 sample_phong_lobe( optix::float2 sample, float exponent, 
+	_fn optix::float3 sample_phong_lobe( optix::float2 sample, float exponent,
 	optix::float3 U, optix::float3 V, optix::float3 W )
 {
 	const float power = expf( logf(sample.y)/(exponent+1.0f) );
@@ -35,7 +35,7 @@ static
 
 // Sample Phong lobe relative to U, V, W frame
 static
-	__host__ __device__ __inline__ optix::float3 sample_phong_lobe( const optix::float2 &sample, float exponent, 
+	_fn optix::float3 sample_phong_lobe( const optix::float2 &sample, float exponent,
 	const optix::float3 &U, const optix::float3 &V, const optix::float3 &W, 
 	float &pdf, float &bdf_val )
 {
@@ -57,7 +57,7 @@ static
 
 // Get Phong lobe PDF for local frame
 static
-	__host__ __device__ __inline__ float get_phong_lobe_pdf( float exponent, const optix::float3 &normal, const optix::float3 &dir_out, 
+	_fn float get_phong_lobe_pdf( float exponent, const optix::float3 &normal, const optix::float3 &dir_out,
 	const optix::float3 &dir_in, float &bdf_val)
 {  
 	optix::float3 r = -reflect(dir_out, normal);
@@ -72,7 +72,7 @@ static
 
 // Compute the origin ray differential for transfer
 static
-	__host__ __device__ __inline__ optix::float3 differential_transfer_origin(optix::float3 dPdx, optix::float3 dDdx, float t, optix::float3 direction, optix::float3 normal)
+	_fn optix::float3 differential_transfer_origin(optix::float3 dPdx, optix::float3 dDdx, float t, optix::float3 direction, optix::float3 normal)
 {
 	float dtdx = -optix::dot((dPdx + t*dDdx), normal)/optix::dot(direction, normal);
 	return (dPdx + t*dDdx)+dtdx*direction;
@@ -80,7 +80,7 @@ static
 
 // Compute the direction ray differential for a pinhole camera
 static
-	__host__ __device__ __inline__ optix::float3 differential_generation_direction(optix::float3 d, optix::float3 basis)
+	_fn optix::float3 differential_generation_direction(optix::float3 d, optix::float3 basis)
 {
 	float dd = optix::dot(d,d);
 	return (dd*basis-optix::dot(d,basis)*d)/(dd*sqrtf(dd));
@@ -88,7 +88,7 @@ static
 
 // Compute the direction ray differential for reflection
 static
-	__host__ __device__ __inline__
+	_fn
 	optix::float3 differential_reflect_direction(optix::float3 dPdx, optix::float3 dDdx, optix::float3 dNdP, 
 	optix::float3 D, optix::float3 N)
 {
@@ -98,7 +98,7 @@ static
 }
 
 // Compute the direction ray differential for refraction
-static __host__ __device__ __inline__ 
+_fn
 	optix::float3 differential_refract_direction(optix::float3 dPdx, optix::float3 dDdx, optix::float3 dNdP, 
 	optix::float3 D, optix::float3 N, float ior, optix::float3 T)
 {
@@ -119,14 +119,14 @@ static __host__ __device__ __inline__
 }
 
 // zeta1, zeta2 are two random uniform iid in [0,1], the function gives a uniform distributed point inside a triangle defined by v0,v1,v2
-static __host__ __device__ __inline__ optix::float3 sample_point_triangle(float zeta1, float zeta2, optix::float3 v0, optix::float3 v1, optix::float3 v2)
+_fn optix::float3 sample_point_triangle(float zeta1, float zeta2, optix::float3 v0, optix::float3 v1, optix::float3 v2)
 {
 	// As in Osada, Robert: Shape Distributions
 	zeta1 = sqrt(zeta1);
 	return (1-zeta1) * v0 + zeta1 * (1-zeta2) * v1 + zeta1 * zeta2 * v2;
 }
 
-static __inline__ __device__ optix::float3 sample_hemisphere_uniform(const optix::float2 & sample, const optix::float3 & normal)
+static _fn optix::float3 sample_hemisphere_uniform(const optix::float2 & sample, const optix::float3 & normal)
 {
 	optix::float3 p;
 	p.z = sample.x;
@@ -137,7 +137,7 @@ static __inline__ __device__ optix::float3 sample_hemisphere_uniform(const optix
 	return p;
 }
 
-static __inline__ __device__ optix::float2 sample_disk(const optix::float2 & sample, float minR = 0.0f)
+static _fn optix::float2 sample_disk(const optix::float2 & sample, float minR = 0.0f)
 {
 	optix::float2 p;
 	const float r = fmaxf(sqrtf(sample.x), minR);
@@ -147,7 +147,7 @@ static __inline__ __device__ optix::float2 sample_disk(const optix::float2 & sam
 	return p;
 }
 
-static __inline__ __device__ optix::float2 sample_disk_uniform(const optix::float2 & sample, float & pdf, float & r, float & phi, float minR = 0.0f, float maxR = 1.0f)
+static _fn optix::float2 sample_disk_uniform(const optix::float2 & sample, float & pdf, float & r, float & phi, float minR = 0.0f, float maxR = 1.0f)
 {
 	optix::float2 p;
 	r = minR + (sample.x) * (maxR - minR);
@@ -158,7 +158,7 @@ static __inline__ __device__ optix::float2 sample_disk_uniform(const optix::floa
 	return p;
 }
 
-static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::float2 & sample, float sigma, float & pdf, float & r, float & phi)
+static _fn optix::float2 sample_disk_exponential(const optix::float2 & sample, float sigma, float & pdf, float & r, float & phi)
 {
 	optix::float2 p;
 	r = -log(sample.x) / sigma;
@@ -169,30 +169,30 @@ static __inline__ __device__ optix::float2 sample_disk_exponential(const optix::
 	return p;
 }
 
-static __inline__ __device__ optix::float2 sample_disk_exponential(optix::uint & seed, float sigma, float & pdf, float & r, float & phi)
+static _fn optix::float2 sample_disk_exponential(optix::uint & seed, float sigma, float & pdf, float & r, float & phi)
 {
 	optix::float2 sample = optix::make_float2(rnd(seed), rnd(seed));
 	return sample_disk_exponential(sample, sigma, pdf, r, phi);
 }
 
-static __inline__ __device__ float exponential_pdf_disk(float r, float sigma)
+static _fn float exponential_pdf_disk(float r, float sigma)
 {
 	return M_1_PIf * 0.5f * sigma * expf(-sigma * r);
 }
 
-static __inline__ __device__ optix::float2 sample_disk_exponential(optix::uint & seed, float sigma, float & pdf)
+static _fn optix::float2 sample_disk_exponential(optix::uint & seed, float sigma, float & pdf)
 {
 	float r, phi;
 	return sample_disk_exponential(seed, sigma, pdf, r, phi);
 }
 
-__host__ __device__ __inline__ optix::float3 burley_scaling_factor_mfp_searchlight(const optix::float3 & albedo)
+_fn optix::float3 burley_scaling_factor_mfp_searchlight(const optix::float3 & albedo)
 {
 	optix::float3 temp = abs(albedo - optix::make_float3(0.8f));
 	return optix::make_float3(1.85f) - albedo + 7.0f * temp * temp * temp;
 }
 
-__host__ __device__ __inline__ optix::float3 burley_scaling_factor_diffuse_mfp_searchlight(const optix::float3 & albedo)
+_fn optix::float3 burley_scaling_factor_diffuse_mfp_searchlight(const optix::float3 & albedo)
 {
 	optix::float3 temp = albedo - optix::make_float3(0.33f);
 	temp *= temp; // pow 2
@@ -201,7 +201,7 @@ __host__ __device__ __inline__ optix::float3 burley_scaling_factor_diffuse_mfp_s
 }
 
 
-__host__ __device__ __inline__ optix::float3 burley_scaling_factor_mfp_diffuse(const optix::float3 & albedo)
+_fn optix::float3 burley_scaling_factor_mfp_diffuse(const optix::float3 & albedo)
 {
 	optix::float3 temp = abs(albedo - optix::make_float3(0.8f));
 	return optix::make_float3(1.9f) - albedo + 3.5f * temp * temp;

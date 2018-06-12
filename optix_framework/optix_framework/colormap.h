@@ -7,8 +7,9 @@ The colour is clipped at the end of the scales if v is outside
 the range [vmin,vmax]
 */
 #include <optix_world.h>
+#include "host_device_common.h"
 
-__host__ __device__ __inline__ optix::float3 jet(float v, float vmin = 0.0f, float vmax = 1.0f)
+_fn optix::float3 jet(float v, float vmin = 0.0f, float vmax = 1.0f)
 {
 	optix::float3 c = optix::make_float3(1.0,1.0,1.0); // white
 	float dv;
@@ -39,7 +40,7 @@ __host__ __device__ __inline__ optix::float3 jet(float v, float vmin = 0.0f, flo
 	return(c);
 }
 
-__host__ __device__ __inline__ optix::float3 hsv2rgb(float h, float s, float v) {
+_fn optix::float3 hsv2rgb(float h, float s, float v) {
   float h6 = h*6.0;
   float frac = h6 - floor(h6);
   optix::float4 ell = v * optix::make_float4(1.0 - s, 1.0 - s*frac, 1.0 - s*(1.0 - frac), 1.0);

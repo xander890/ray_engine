@@ -60,11 +60,12 @@ void Object::load_materials()
     bool one_material_changed = std::any_of(mMaterials.begin(), mMaterials.end(), [](const std::shared_ptr<MaterialHost>& mat) { return mat->has_changed();  });
     mReloadMaterials |= one_material_changed;
 
+    size_t n = mMaterials.size();
+    mMaterialBuffer->setSize(n);
+
     if(mReloadMaterials)
     {
         create_and_bind_optix_data();
-        size_t n = mMaterials.size();
-        MaterialDataCommon* data = reinterpret_cast<MaterialDataCommon*>(mMaterialBuffer->map());
 
         for(auto & m : mMaterials)
         {
@@ -74,15 +75,16 @@ void Object::load_materials()
 
         mGeometryInstance->setMaterialCount(n);
 
+        MaterialDataCommon* data = reinterpret_cast<MaterialDataCommon*>(mMaterialBuffer->map());
         for (int i = 0; i < n; i++)
         {
             mGeometryInstance->setMaterial(i, mMaterials[i]->get_optix_material());
             memcpy(&data[i], &mMaterials[i]->get_data(), sizeof(MaterialDataCommon));
         }
         mMaterialBuffer->unmap();
-        mGeometryInstance["material_buffer"]->setBuffer(mMaterialBuffer);
         mGeometryInstance["main_material"]->setUserData(sizeof(MaterialDataCommon), &data[0]);
     }
+    mGeometryInstance["material_buffer"]->setBuffer(mMaterialBuffer);
 
     for(auto & m : mMaterials)
     {
@@ -229,9 +231,14 @@ bool Object::on_draw()
             }
 
 
-            for (auto& m : mMaterials)
+            for (int i = 0; i < mMaterials.size(); i++)
             {
-                changed |= m->on_draw(mMeshName);
+                auto m = mMaterials[i];
+                if(m->on_draw(mMeshName))
+                {
+                    changed = true;
+                    mReloadMaterials = true;
+                }
             }
             ImmediateGUIDraw::TreePop();
         }

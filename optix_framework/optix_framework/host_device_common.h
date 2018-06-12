@@ -92,13 +92,15 @@ using BufPtr2D = BufPtr<T, 2>;
 template <typename T>
 using BufPtr3D = BufPtr<T, 3>;
 
+#define _fn __device__ __host__ __forceinline__
+
 #ifdef __CUDACC__
 #ifdef NDEBUG
 #define optix_print 
 #define optix_assert(x) 
 #else
 #define optix_print rtPrintf
-#define optix_assert(x) if(!(x)) rtPrintf("Assertion " #x " failed. File: %s, Line %d\n", __FILE__, __LINE__);
+#define optix_assert(x) if(!(x)) printf("Assertion " #x " failed. File: %s, Line %d\n", __FILE__, __LINE__);
 #endif
 #else
 #define optix_print printf

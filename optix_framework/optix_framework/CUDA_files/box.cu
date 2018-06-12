@@ -38,7 +38,7 @@ rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 
 // This function calculates the normal vector to the box's plane intersected by the ray with parameter t
 // Notice that it is not a RT_PROGRAM
-static __device__ float3 boxnormal(float t)
+_fn float3 boxnormal(float t)
 {
 	float3 t0 = (boxmin - ray.origin)/ray.direction;
 	float3 t1 = (boxmax - ray.origin)/ray.direction;

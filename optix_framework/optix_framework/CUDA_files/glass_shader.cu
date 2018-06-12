@@ -7,6 +7,8 @@
 #include <environment_map.h>
 #include <material_device.h>
 #include <ray_trace_helpers.h>
+#include <default_shader_common.h>
+#include <microfacets.h>
 
 using namespace optix;
 
@@ -17,6 +19,7 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow,   rtPayload, );
 // Variables for shading
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float2, texcoord, attribute texcoord, );
+//rtDeclareVariable(InterfaceVisualizationFlags::Type, options, ,);
 
 // Any hit program for shadows
 RT_PROGRAM void any_hit_shadow() { 
@@ -25,79 +28,59 @@ RT_PROGRAM void any_hit_shadow() {
  shadow_hit(prd_shadow, emission);
 }
 
-//
-//// Closest hit program for Lambertian shading using the basic light as a directional source + specular term (blinn phong)
-//RT_PROGRAM void shade() 
-//{ 
-//	float3 color = make_float3(0.0f);
-//    const MaterialDataCommon & material = get_material(texcoord);
-//	
-//  if(prd_radiance.depth < max_depth)
-//  {
-//		float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
-//		float3 ffnormal = faceforward(normal, -ray.direction, normal);
-//		float3 hit_pos = ray.origin + t_hit * ray.direction;
-//
-//
-//		PerRayData_radiance prd_refract = prepare_new_pt_payload(prd_radiance);
-//
-//		PerRayData_radiance prd_refl = prepare_new_pt_payload(prd_radiance);
-//
-//		Ray reflected_ray, refracted_ray;
-//		float R, cos_theta;
-//		get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
-//
-//		rtTrace(top_object, reflected_ray, prd_refl);
-//		prd_refract.seed = prd_refl.seed;
-//
-//		color += R * prd_refl.result;
-//		rtTrace(top_object, refracted_ray, prd_refract);
-//		color += (1-R) * prd_refract.result;
-//		prd_radiance.seed = prd_refract.seed;
-//		
-//	}
-//	prd_radiance.result = color; 
-//}
-
-__device__ __forceinline__ void _shade()
+_fn void _shade()
 {
-  float3 color = make_float3(0.0f);
-  const MaterialDataCommon & material = get_material(texcoord);
 
-  if(prd_radiance.depth < max_depth)
-  {
+    const MaterialDataCommon & material = get_material(texcoord);
     float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
-    float3 hit_pos = ray.origin + t_hit*ray.direction;
-    hit_pos = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_pos);
+    float3 wo = -ray.direction;
+    float3 hit_pos = ray.origin + t_hit * ray.direction;
+    TEASampler& sampler = *prd_radiance.sampler;
 
-	PerRayData_radiance prd_new_ray = prepare_new_pt_payload(prd_radiance);
-    Ray reflected_ray, refracted_ray;
-    float R, cos_theta;
-    get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+    if (prd_radiance.depth < max_depth)
+    {
 
-	// Russian roulette with absorption if inside
-	float3 beam_T = make_float3(1.0f);
-	if (cos_theta < 0.0f)
-	{
-		beam_T = expf(-t_hit*material.scattering_properties.absorption);
-		float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
-		if (prd_new_ray.sampler->next1D() >= prob)
-		{
-			prd_radiance.result = make_float3(0);
-			return;
-		}
-		beam_T /= max(10e-6,prob);
-	}
+        float3 beam_T = make_float3(1.0f);
+        if (dot(wo, normal) < 0.0f)
+        {
+            beam_T = expf(-t_hit*material.scattering_properties.absorption);
+            float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
+            if (sampler.next1D() >= prob)
+            {
+                prd_radiance.result = make_float3(0);
+                return;
+            }
+            beam_T /= fmaxf(10e-6f,prob);
+        }
 
-    float xi = prd_new_ray.sampler->next1D();
-	optix::Ray & ray = (xi < R) ? reflected_ray : refracted_ray;
-	rtTrace(top_object, ray, prd_new_ray);
-	color = prd_new_ray.result;    
-	color *= beam_T;
+        PerRayData_radiance prd = prd_radiance;
+        prd.depth = prd_radiance.depth + 1;
+        prd.flags |= RayFlags::USE_EMISSION;
+        float3 n = normal;
 
-	optix_print("Glass - (Bounce: %d) Color: %f %f %f (R: %f) Costheta: %f\n", prd_radiance.depth, color.x, color.y, color.z, R, cos_theta);
-  }
-  prd_radiance.result = color;
+        optix::float3 m = importance_sample_ggx(sampler.next2D(), n, material.roughness);
+        optix::Ray reflected, refracted;
+        float R, cos_theta_signed;
+        optix::float3 ff_m;
+        get_glass_rays(wo, material.relative_ior, make_float3(0), m, ff_m, reflected, refracted, R, cos_theta_signed);
+
+        float xi = sampler.next1D();
+        float3 wi = (xi < R)? reflected.direction : refracted.direction;
+
+        optix::Ray ray_t = optix::make_Ray(hit_pos, wi, RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
+        rtTrace(top_object, ray_t, prd);
+
+        optix::float3 ff_normal = faceforward(n, wo, n);
+        float G = ggx_G1(wi, ff_m, ff_normal, material.roughness) * ggx_G1(wo, ff_m, ff_normal, material.roughness);
+        float weight = dot(wo, ff_m) / (dot(wo, n) * dot(n, ff_m)) * G;
+        float importance_sampled_brdf = abs(weight);
+        prd_radiance.result = prd.result * importance_sampled_brdf * beam_T;
+    }
+    else
+    {
+        prd_radiance.result = make_float3(0.0f);
+    }
+
 }
 
 RT_PROGRAM void shade() { _shade(); }

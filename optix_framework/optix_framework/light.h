@@ -14,16 +14,16 @@ rtBuffer<TriangleLight, 1> area_lights;
 
 rtDeclareVariable(unsigned int, importance_sample_area_lights, , ) = 0;
 
-__forceinline__ __device__
+_fn
 int no_light_size() { return 1; }
 
-__forceinline__ __device__
+_fn
 void evaluate_no_light(const float3& test, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index) { radiance = make_float3(1, 0, 0); }
 
-__forceinline__ __device__
+_fn
 int singular_light_size() { return singular_lights.size(); }
 
-__forceinline__ __device__
+_fn
 void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index)
 {
     if(singular_light_size() == 0)
@@ -53,10 +53,10 @@ void evaluate_singular_light(const float3 & hit_point, const float3 & hit_normal
     casts_shadows = l.casts_shadow;
 }
 
-__forceinline__ __device__
+_fn
 int area_light_size() { return area_lights.size() > 0? 1 : 0; } // This means that we will randomly sample from triangle lights instead of going though all of them.
 
-__device__ __forceinline__ void evaluate_area_light(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index, float tmin = scene_epsilon)
+_fn void evaluate_area_light(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index, float tmin = scene_epsilon)
 {
     //	assert(data != NULL);
     float zeta1 = sampler->next1D();
@@ -74,7 +74,7 @@ __device__ __forceinline__ void evaluate_area_light(const float3& hit_point, con
     radiance = V * triangle.emission * max(dot(wi, normal), 0.0f) * max(dot(-wi, triangle.normal), 0.0f) / dist_sq * triangle.area * area_lights.size();
 }
 
-__device__ __inline__ void evaluate_direct_light(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index, float tmin = scene_epsilon)
+_fn void evaluate_direct_light(const float3& hit_point, const float3& normal, float3& wi, float3 & radiance, int & casts_shadows, TEASampler * sampler, unsigned int& light_index, float tmin = scene_epsilon)
 {
     float area_probability = 1.0f;
     float singular_probability = 1.0f;
@@ -110,7 +110,7 @@ __device__ __inline__ void evaluate_direct_light(const float3& hit_point, const 
 }
 
 
-__device__ __inline__ void sample_light(const float3& position, const float3 & normal, const uint& ray_depth, TEASampler* sampler, float3 & wi, float3 & Li)
+_fn void sample_light(const float3& position, const float3 & normal, const uint& ray_depth, TEASampler* sampler, float3 & wi, float3 & Li)
 {
 	if (importance_sample_area_lights == 0)
 	{

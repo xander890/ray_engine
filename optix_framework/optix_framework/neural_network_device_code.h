@@ -30,7 +30,7 @@ rtBuffer<float> hypernetwork_layer3_biases;
 
 rtDeclareVariable(int, integral_texture, ,);
 
-__device__ __forceinline__ float get_interpolated_integral(const float albedo, const float g, const float theta_i)
+_fn float get_interpolated_integral(const float albedo, const float g, const float theta_i)
 {
     const float albedo_normalized = albedo;
     const float g_normalized = g; // FIXME if using negative gs with (g + 1) / 2
@@ -39,7 +39,7 @@ __device__ __forceinline__ float get_interpolated_integral(const float albedo, c
     return value.x;
 }
 
-__device__ __forceinline__ void mat_mul(int rows, int cols, int inner, float *a, float *b, float *c)
+_fn void mat_mul(int rows, int cols, int inner, float *a, float *b, float *c)
 {
     for (int i = 0; i < rows; ++i)
     {
@@ -54,7 +54,7 @@ __device__ __forceinline__ void mat_mul(int rows, int cols, int inner, float *a,
     }
 }
 
-__device__ __forceinline__ void set_cdfnetwork_parameters(
+_fn void set_cdfnetwork_parameters(
         int layer_index,     // CDF network layer index
         int num_layers,      // CDF network number of layers
         float *params,       // Hypernetwork output parameters 
@@ -86,7 +86,7 @@ __device__ __forceinline__ void set_cdfnetwork_parameters(
     }
 }
 
-__device__ __forceinline__ void get_cdfnetwork_output(float *input, float *params, float *output)
+_fn void get_cdfnetwork_output(float *input, float *params, float *output)
 {
     // CDF network dimensions
     int D_in = 4;
@@ -178,7 +178,7 @@ __device__ __forceinline__ void get_cdfnetwork_output(float *input, float *param
     }
 }
 
-__device__ __forceinline__ void get_icdfnetwork_output(float *input, float *params, float *output)
+_fn void get_icdfnetwork_output(float *input, float *params, float *output)
 {
     // CDF network dimensions
     int D_in = 4;
@@ -282,7 +282,7 @@ __device__ __forceinline__ void get_icdfnetwork_output(float *input, float *para
     }
 }
 
-__device__ __forceinline__ void get_hypernetwork_output(float *input, float *output)
+_fn void get_hypernetwork_output(float *input, float *output)
 {
     // Layer 1: DenseLayer
     //    input: 1 x 4 (dimensions)
@@ -333,13 +333,13 @@ __device__ __forceinline__ void get_hypernetwork_output(float *input, float *out
     }
 }
 
-__device__ __forceinline__ float map_interval(float point, optix::float2 interval_from, optix::float2 interval_to)
+_fn float map_interval(float point, optix::float2 interval_from, optix::float2 interval_to)
 {
     float map_01 = (point - interval_from.x)/(interval_from.y - interval_from.x);
     return interval_to.x + map_01 * (interval_to.y - interval_to.x);
 }
 
-__device__ __forceinline__ void sample_neural_network(
+_fn void sample_neural_network(
         const optix::float3 & xo,          // The points hit by the camera ray.
         const optix::float3 & no,          // The normal at the point.
         const optix::float3 & wo,          // The incoming ray direction.

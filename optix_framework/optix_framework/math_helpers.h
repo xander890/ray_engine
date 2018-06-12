@@ -23,6 +23,7 @@
 
 #include <optix_world.h>
 #include <optix.h>
+#include "host_device_common.h"
 
 // Constants
 #ifndef M_4PIf
@@ -39,32 +40,32 @@
 #endif
 
 
-__host__ __device__ __inline__ float normalize_angle(float deg)
+_fn float normalize_angle(float deg)
 {
 	return deg - 2 * M_PIf * floor(deg / (2 * M_PIf));
 }
 
-__host__ __device__ __inline__ float deg2rad(float deg)
+_fn float deg2rad(float deg)
 {
 	return deg * M_PIf / 180.0f;
 }
 
-__host__ __device__ __inline__ float rad2deg(float rad)
+_fn float rad2deg(float rad)
 {
 	return rad * 180.0f / M_PIf;
 }
 
-static __host__ __device__ __inline__ float signf(float v)
+_fn float signf(float v)
 {
 	return copysignf(1.0f, v);
 }
 
-static __host__ __device__ __inline__ float fracf(float x)
+_fn float fracf(float x)
 {
 	return x - truncf(x);
 }
 
-__host__ __device__ __inline__ void rotate_to_normal(const optix::float3& normal, optix::float3& v)
+_fn void rotate_to_normal(const optix::float3& normal, optix::float3& v)
 {
 	if(normal.z < -0.999999f)
 	{
@@ -78,23 +79,23 @@ __host__ __device__ __inline__ void rotate_to_normal(const optix::float3& normal
 	+ normal*v.z;
 }
 
-__host__ __device__ __inline__ optix::float3 spherical_to_cartesian(const float theta_o, const float phi_o)
+_fn optix::float3 spherical_to_cartesian(const float theta_o, const float phi_o)
 {
 	return optix::make_float3(cosf(phi_o)*sinf(theta_o), sinf(phi_o)*sinf(theta_o), cosf(theta_o));
 }
  
-__host__ __device__ __inline__ optix::float2 cartesian_to_spherical(const optix::float3& v)
+_fn optix::float2 cartesian_to_spherical(const optix::float3& v)
 {
     return optix::make_float2(acosf(v.z), atan2f(v.y, v.x));
 }
 
-__host__ __device__ __inline__ optix::float2 direction_to_uv_coord_cubemap(const optix::float3& direction, const optix::Matrix3x3& rotation = optix::Matrix3x3::identity())
+_fn optix::float2 direction_to_uv_coord_cubemap(const optix::float3& direction, const optix::Matrix3x3& rotation = optix::Matrix3x3::identity())
 {
 	optix::float3 dir = rotation * direction;
 	return optix::make_float2(0.5f + 0.5f * (atan2f(dir.x, -dir.z) * M_1_PIf), acosf(-dir.y) * M_1_PIf);
 }
 
-static __host__ __device__ __inline__ void create_onb(const optix::float3& n, optix::float3& b1, optix::float3& b2)
+_fn void create_onb(const optix::float3& n, optix::float3& b1, optix::float3& b2)
 {
   if(n.z < -0.999999f) // Handle the singularity
   {
@@ -108,7 +109,7 @@ static __host__ __device__ __inline__ void create_onb(const optix::float3& n, op
   b2 = optix::make_float3(b, 1.0f - n.y*n.y*a, -n.y);
 }
 
-static __host__ __device__ __inline__ void create_onb(const optix::float3& n, optix::float3& U, optix::float3& V, optix::float3& W)
+_fn void create_onb(const optix::float3& n, optix::float3& U, optix::float3& V, optix::float3& W)
 {
   W = optix::normalize(n);
   create_onb(W, U, V);
@@ -117,7 +118,7 @@ static __host__ __device__ __inline__ void create_onb(const optix::float3& n, op
 /*
 // Create ONB from normal.  Resulting W is parallel to normal
 static
-__host__ __device__ __inline__ void create_onb( const optix::float3& n, optix::float3& U, optix::float3& V, optix::float3& W )
+_fn void create_onb( const optix::float3& n, optix::float3& U, optix::float3& V, optix::float3& W )
 {
     W = normalize( n );
   U = cross( W, optix::make_float3( 0.0f, 1.0f, 0.0f ) );
@@ -131,7 +132,7 @@ __host__ __device__ __inline__ void create_onb( const optix::float3& n, optix::f
 
 // Create ONB from normalized vector
 static
-__device__ __inline__ void create_onb( const optix::float3& n, optix::float3& U, optix::float3& V)
+_fn void create_onb( const optix::float3& n, optix::float3& U, optix::float3& V)
 {
   
   U = cross( n, make_float3( 0.0f, 1.0f, 0.0f ) );
@@ -145,15 +146,15 @@ __device__ __inline__ void create_onb( const optix::float3& n, optix::float3& U,
 */
 // Projects and normalizes vector on plane defined by normal
 static
-__device__ __inline__ optix::float3 project_on_plane(const optix::float3& n, const optix::float3& v)
+_fn optix::float3 project_on_plane(const optix::float3& n, const optix::float3& v)
 {
 	return optix::normalize(v - n * optix::dot(n, v));
 }
 
 #define GENERATE_VECTORIZED(fun) \
-static __host__ __device__ __inline__ optix::float2 fun(const optix::float2 & v) { return optix::make_float2(fun(v.x), fun(v.y)); } \
-static __host__ __device__ __inline__ optix::float3 fun(const optix::float3 & v) { return optix::make_float3(fun(v.x), fun(v.y), fun(v.z)); } \
-static __host__ __device__ __inline__ optix::float4 fun(const optix::float4 & v) { return optix::make_float4(fun(v.x), fun(v.y), fun(v.z), fun(v.w)); }
+_fn optix::float2 fun(const optix::float2 & v) { return optix::make_float2(fun(v.x), fun(v.y)); } \
+_fn optix::float3 fun(const optix::float3 & v) { return optix::make_float3(fun(v.x), fun(v.y), fun(v.z)); } \
+_fn optix::float4 fun(const optix::float4 & v) { return optix::make_float4(fun(v.x), fun(v.y), fun(v.z), fun(v.w)); }
 
 GENERATE_VECTORIZED(exp)
 GENERATE_VECTORIZED(sqrt)
@@ -163,43 +164,43 @@ GENERATE_VECTORIZED(rad2deg)
 GENERATE_VECTORIZED(signf)
 GENERATE_VECTORIZED(fracf)
 
-static __host__ __device__ __inline__ optix::float4 max(const optix::float4 &value1, const optix::float4 &value2)
+_fn optix::float4 max(const optix::float4 &value1, const optix::float4 &value2)
 {
 	return optix::make_float4(optix::fmaxf(value1.x, value2.x), optix::fmaxf(value1.y, value2.y), optix::fmaxf(value1.z, value2.z), optix::fmaxf(value1.w, value2.w));
 }
 
-static __host__ __device__ __inline__ optix::float3 max(const optix::float3 &value1, const optix::float3 &value2)
+_fn optix::float3 max(const optix::float3 &value1, const optix::float3 &value2)
 {
 	  return optix::make_float3(optix::fmaxf(value1.x,value2.x),optix::fmaxf(value1.y,value2.y),optix::fmaxf(value1.z,value2.z));
 }
 
-static __host__ __device__ __inline__ optix::float4 min(const optix::float4 &value1, const optix::float4 &value2)
+_fn optix::float4 min(const optix::float4 &value1, const optix::float4 &value2)
 {
 	return optix::make_float4(optix::fminf(value1.x, value2.x), optix::fminf(value1.y, value2.y), optix::fminf(value1.z, value2.z), optix::fminf(value1.w, value2.w));
 }
 
-static __host__ __device__ __inline__ optix::float3 min(const optix::float3 &value1, const optix::float3 &value2)
+_fn optix::float3 min(const optix::float3 &value1, const optix::float3 &value2)
 {
 	  return optix::make_float3(optix::fminf(value1.x,value2.x),optix::fminf(value1.y,value2.y),optix::fminf(value1.z,value2.z));
 }
 
 
-static __host__ __device__ __inline__ optix::float3 pow(const optix::float3 &value1, const optix::float3 &exp)
+_fn optix::float3 pow(const optix::float3 &value1, const optix::float3 &exp)
 {
 	return optix::make_float3(powf(value1.x, exp.x), powf(value1.y, exp.y), powf(value1.z, exp.z));
 }
-static __host__ __device__ __inline__ optix::float3 pow(const optix::float3 &value1, const float exp)
+_fn optix::float3 pow(const optix::float3 &value1, const float exp)
 {
 	return optix::make_float3(powf(value1.x, exp), powf(value1.y, exp), powf(value1.z, exp));
 }
 
 
-static __host__ __device__ __inline__ float step(const float &edge, const float &x)
+_fn float step(const float &edge, const float &x)
 {
 	  return (x < edge)? 0.0f : 1.0f;
 }
 
-static __host__ __device__ __inline__ void sincosf(float x, float& sin_x, float& cos_x)
+_fn void sincosf(float x, float& sin_x, float& cos_x)
 {
 	sin_x = sinf(x);
 	cos_x = cosf(x);

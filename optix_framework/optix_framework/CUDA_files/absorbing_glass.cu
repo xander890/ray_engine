@@ -27,7 +27,7 @@ RT_PROGRAM void any_hit_shadow() {
     shadow_hit(prd_shadow, emission);
 }
 
-__forceinline__ __device__ void absorbing_glass()
+_fn void absorbing_glass()
 {
   float3 hit_pos = ray.origin + t_hit * ray.direction;
   float3 normal = rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal);
@@ -38,7 +38,8 @@ __forceinline__ __device__ void absorbing_glass()
   {
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray, material.relative_ior, hit_pos, normal, reflected_ray, refracted_ray, R, cos_theta);
+        float3 new_normal;
+		get_glass_rays(ray.direction, material.relative_ior, hit_pos, normal, new_normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		float xi = prd_radiance.sampler->next1D();
 		

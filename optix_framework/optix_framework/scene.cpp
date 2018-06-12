@@ -55,8 +55,8 @@ Scene::Scene(optix::Context context)
 
     mGUI = std::make_unique<SceneGUI>();
 
-    CameraParameters def;
-    mCurrentCamera = std::make_shared<Camera>(context, def);
+
+    mCurrentCamera = 0;
 }
 
 bool Scene::on_draw()
@@ -90,7 +90,7 @@ void Scene::post_trace()
 
 void Scene::trace()
 {
-    context->launch(mCurrentCamera->get_entry_point(), mCurrentCamera->get_width(), mCurrentCamera->get_height());
+    context->launch(get_current_camera()->get_entry_point(), get_current_camera()->get_width(), get_current_camera()->get_height());
 }
 
 void Scene::set_method(std::unique_ptr<RenderingMethod> m)
@@ -111,13 +111,13 @@ int Scene::add_object(std::shared_ptr<Object> object)
     scene->addChild(mMeshes.back()->get_dynamic_handle());
     mMeshes.back()->load();
     update_area_lights();
-    return mMeshes.size();
+    return mMeshes.size() - 1;
 }
 
 int Scene::add_camera(std::shared_ptr<Camera> camera)
 {
     mCameras.push_back(camera);
-    return mCameras.back()->get_id();
+    return mCameras.size() - 1;
 }
 
 int Scene::add_light(std::shared_ptr<SingularLight> light)
@@ -153,25 +153,23 @@ void Scene::transform_changed()
 
 void Scene::set_current_camera(int camera_id)
 {
-    auto val = std::find_if(mCameras.begin(), mCameras.end(), [=](std::shared_ptr<Camera>&camera){ return camera->get_id() == camera_id; });
-    if(val != mCameras.end())
+    if(camera_id >= 0 && camera_id < mCameras.size())
     {
-        mCurrentCamera->setAsOtherCamera(*val);
+        mCameras[mCurrentCamera]->setAsOtherCamera(mCameras[camera_id]);
     }
 }
 
 
 std::shared_ptr<Camera> Scene::get_current_camera()
 {
-    return mCurrentCamera;
+    return mCameras[mCurrentCamera];
 }
 
 std::shared_ptr<Camera> Scene::get_camera(int camera_id)
 {
-    auto val = std::find_if(mCameras.begin(), mCameras.end(), [=](std::shared_ptr<Camera>&camera){ return camera->get_id() == camera_id; });
-    if(val != mCameras.end())
+    if(camera_id >= 0 && camera_id < mCameras.size())
     {
-        return *val;
+        return mCameras[camera_id];
     }
 	return nullptr;
 }
@@ -220,7 +218,7 @@ void Scene::update_area_lights()
         mAreaLightBuffer->setFormat(RT_FORMAT_USER);
         mAreaLightBuffer->setElementSize(sizeof(TriangleLight));
     }
-    mAreaLightBuffer->setSize(lights.size());
+    mAreaLightBuffer->setSize(max(1, lights.size()));
     void * buf = mAreaLightBuffer->map();
     memcpy(buf, &lights[0], lights.size() * sizeof(TriangleLight));
     mAreaLightBuffer->unmap();

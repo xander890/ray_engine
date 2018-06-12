@@ -31,32 +31,32 @@ rtDeclareVariable(unsigned int, volume_pt_mode, , );
 //#define USE_SIMILARITY
 #define SIMILARITY_STEPS 10
 
-__device__ __inline__ float get_extinction(const optix::float3 & pos, int colorband)
+_fn float get_extinction(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
     return *(&props.extinction.x + colorband);
 }
 
-__device__ __inline__ float get_reduced_extinction(const optix::float3 & pos, int colorband)
+_fn float get_reduced_extinction(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
     return *(&props.reducedExtinction.x + colorband);
 }
 
 
-__device__ __inline__ float get_albedo(const optix::float3 & pos, int colorband)
+_fn float get_albedo(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
     return *(&props.albedo.x + colorband);
 }
 
-__device__ __inline__ float get_asymmetry(const optix::float3 & pos, int colorband)
+_fn float get_asymmetry(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
     return *(&props.meancosine.x + colorband);
 }
 
-__device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASampler * sampler, int & scattering_events)
+_fn bool scatter_inside(optix::Ray& ray, int colorband, TEASampler * sampler, int & scattering_events)
 {
     float albedo = get_albedo(ray.origin, colorband);
     float g = get_asymmetry(ray.origin, colorband);

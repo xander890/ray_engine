@@ -20,32 +20,32 @@ rtDeclareVariable(unsigned int , maximum_volume_steps, , );
 rtDeclareVariable(float2, texcoord, attribute texcoord, );
 
 
-__device__ __forceinline__ float get_volume_step()
+_fn float get_volume_step()
 {   
     float m = local_bounding_box->maxExtent();
     float step = m / 1000;
     return step;
 }
 
-__device__ __inline__ float get_extinction(const optix::float3 & pos, int colorband)
+_fn float get_extinction(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
     return *(&props.extinction.x + colorband);
 }
 
-__device__ __inline__ float get_albedo(const optix::float3 & pos, int colorband)
+_fn float get_albedo(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
     return *(&props.albedo.x + colorband);
 }
 
-__device__ __inline__ float get_asymmetry(const optix::float3 & pos, int colorband)
+_fn float get_asymmetry(const optix::float3 & pos, int colorband)
 {
     const ScatteringMaterialProperties& props = get_material(pos).scattering_properties;
     return *(&props.meancosine.x + colorband);
 }
 
-__device__ __inline__ bool scatter_inside(optix::Ray& ray, int colorband, TEASampler * sampler)
+_fn bool scatter_inside(optix::Ray& ray, int colorband, TEASampler * sampler)
 {
     // Input: 
     // ray: initial position and direction

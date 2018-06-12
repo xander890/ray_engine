@@ -1,9 +1,7 @@
-#ifndef ENVMAP_H
-#define ENVMAP_H
+#pragma once
 #include "device_common_data.h"
 #include <optix_device.h>
 #include <optix_math.h>
-#include "structs_device.h"
 #include "random.h"
 #include "merl_common.h"
 #include "ray_trace_helpers.h"
@@ -16,7 +14,7 @@ rtDeclareVariable(int, envmap_enabled, , ) = 0;
 rtDeclareVariable(BufPtr<EnvmapProperties>, envmap_properties, , );
 rtDeclareVariable(BufPtr<EnvmapImportanceSamplingData>, envmap_importance_sampling, , );
 
-__forceinline__ __device__ unsigned int cdf_bsearch_marginal(float xi)
+_fn unsigned int cdf_bsearch_marginal(float xi)
 {
     uint table_size = envmap_importance_sampling->marginal_cdf.size();
     uint middle = table_size = table_size >> 1;
@@ -33,7 +31,7 @@ __forceinline__ __device__ unsigned int cdf_bsearch_marginal(float xi)
     return middle;
 }
 
-__forceinline__ __device__ unsigned int cdf_bsearch_conditional(float xi, uint offset)
+_fn unsigned int cdf_bsearch_conditional(float xi, uint offset)
 {
     optix::size_t2 table_size = envmap_importance_sampling->conditional_cdf.size();
     uint middle = table_size.x = table_size.x >> 1;
@@ -50,11 +48,8 @@ __forceinline__ __device__ unsigned int cdf_bsearch_conditional(float xi, uint o
     return middle;
 }
 
-__forceinline__ __device__ void sample_environment(optix::float3& wi, optix::float3& radiance, const HitInfo& data, TEASampler * sampler)
+_fn void sample_environment(optix::float3& wi, optix::float3& radiance, const optix::float3& hit_point, const optix::float3& normal, TEASampler * sampler)
 {
-    const optix::float3& hit_point = data.hit_point;
-    const optix::float3& normal = data.hit_normal;
-
     if (envmap_enabled == 1)
     {
         optix::size_t2 count = envmap_importance_sampling->conditional_cdf.size();
@@ -112,4 +107,3 @@ __forceinline__ __device__ void sample_environment(optix::float3& wi, optix::flo
     radiance = emission * V * M_PIf;
 
 }
-#endif

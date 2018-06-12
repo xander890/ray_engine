@@ -58,7 +58,7 @@ private:
     optix::Context context;
     std::unique_ptr<RenderingMethod> method;
     std::unique_ptr<MissProgram> miss_program;
-    std::shared_ptr<Camera> mCurrentCamera;
+    int mCurrentCamera;
 
     void transform_changed();
     void update_area_lights();
@@ -74,6 +74,7 @@ private:
         archive(cereal::make_nvp("method", method));
         archive(cereal::make_nvp("lights", mLights));
         archive(cereal::make_nvp("cameras", mCameras));
+        archive(cereal::make_nvp("current_camera", mCurrentCamera));
         archive(cereal::make_nvp("meshes", mMeshes));
     }
 
@@ -102,6 +103,9 @@ private:
             construct->add_camera(c);
         }
 
+        int c;
+        ar(cereal::make_nvp("current_camera", c));
+
         std::vector<std::shared_ptr<Object>> mMeshes;
         ar(cereal::make_nvp("meshes", mMeshes));
         for(auto & m : mMeshes)
@@ -109,7 +113,7 @@ private:
             construct->add_object(m);
         }
 
-        construct->mCurrentCamera = construct->mCameras[0];
+        construct->set_current_camera(c);
 
 
         construct->update_singular_lights();

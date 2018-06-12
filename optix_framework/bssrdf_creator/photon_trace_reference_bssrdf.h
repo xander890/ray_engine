@@ -15,7 +15,7 @@
 // FIXME, we need to remove this or find a better way to express it without overhauling all the parameters.
 rtDeclareVariable(optix::float2, plane_size, ,);
 
-__forceinline__ __device__ void get_reference_scene_geometry(const float theta_i, const float r, const float theta_s, optix::float3 &xi,
+_fn void get_reference_scene_geometry(const float theta_i, const float r, const float theta_s, optix::float3 &xi,
         optix::float3 &wi, optix::float3 &ni, optix::float3 &xo, optix::float3 &no)
 {
     wi = normalize(optix::make_float3(-sinf(theta_i), 0, cosf(theta_i)));
@@ -27,7 +27,7 @@ __forceinline__ __device__ void get_reference_scene_geometry(const float theta_i
 }
 
 // Simple util to do plane ray intersection.
-__forceinline__ __device__ bool intersect_plane(const optix::float3 &plane_origin, const optix::float3 &plane_normal, const optix::Ray &ray,
+_fn bool intersect_plane(const optix::float3 &plane_origin, const optix::float3 &plane_normal, const optix::Ray &ray,
         float &intersection_distance)
 {
     float denom = optix::dot(plane_normal, ray.direction);
@@ -40,7 +40,7 @@ __forceinline__ __device__ bool intersect_plane(const optix::float3 &plane_origi
 }
 
 
-__forceinline__ __device__ optix::uint2 store_values_in_buffer(const optix::uint2& idxs, const float flux_E, BufPtr2D<float> &resulting_flux)
+_fn optix::uint2 store_values_in_buffer(const optix::uint2& idxs, const float flux_E, BufPtr2D<float> &resulting_flux)
 {
     optix_assert(flux_E >= 0.0f);
     optix_assert(!isnan(flux_E));
@@ -55,7 +55,7 @@ __forceinline__ __device__ optix::uint2 store_values_in_buffer(const optix::uint
 
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_hemisphere_mcml(OutputShape::Type shape, const BSSRDFSimulatedOptions &options, const BSSRDFRendererData &geometry_data,
+_fn bool scatter_photon_hemisphere_mcml(OutputShape::Type shape, const BSSRDFSimulatedOptions &options, const BSSRDFRendererData &geometry_data,
         optix::float3 &xp, optix::float3 &wp, float &flux_t, BufPtr2D<float> &resulting_flux,
         const float n2_over_n1, const float albedo, const float extinction, const float g,
         SEED_TYPE &t, int starting_it, int executions)
@@ -190,7 +190,7 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_mcml(OutputShape::Type
 }
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_hemisphere_connections_correct(OutputShape::Type shape, const BSSRDFSimulatedOptions &options,
+_fn bool scatter_photon_hemisphere_connections_correct(OutputShape::Type shape, const BSSRDFSimulatedOptions &options,
         const BSSRDFRendererData &geometry_data,
         optix::float3 &xp, optix::float3 &wp,
         float &flux_t,
@@ -427,7 +427,7 @@ if(i > 0 && xoxp < mfp_bias)
 
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon_hemisphere_connections(OutputShape::Type shape, const BSSRDFRendererData &geometry_data, optix::float3 &xp, optix::float3 &wp,
+_fn bool scatter_photon_hemisphere_connections(OutputShape::Type shape, const BSSRDFRendererData &geometry_data, optix::float3 &xp, optix::float3 &wp,
         float &flux_t, BufPtr2D<float> &resulting_flux, const float3 &xo,
         const float n2_over_n1, const float albedo, const float extinction, const float g,
         SEED_TYPE &t, int starting_it, int executions)
@@ -552,18 +552,18 @@ __forceinline__ __device__ bool scatter_photon_hemisphere_connections(OutputShap
     return false;
 }
 
-__forceinline__ __device__ optix::float2 get_normalized_planar_buffer_coordinates(const optix::float2 &coord)
+_fn optix::float2 get_normalized_planar_buffer_coordinates(const optix::float2 &coord)
 {
     return (coord + plane_size / 2) / plane_size;
 }
 
-__forceinline__ __device__ optix::float2 get_planar_buffer_coordinates(const optix::float2 &normalized_coord)
+_fn optix::float2 get_planar_buffer_coordinates(const optix::float2 &normalized_coord)
 {
     return (normalized_coord * plane_size) - plane_size / 2;
 }
 
 // Returns true if the photon has been absorbed, false otherwise
-__forceinline__ __device__ bool scatter_photon(OutputShape::Type shape, const BSSRDFSimulatedOptions &options, const BSSRDFRendererData &geometry_data,
+_fn bool scatter_photon(OutputShape::Type shape, const BSSRDFSimulatedOptions &options, const BSSRDFRendererData &geometry_data,
         optix::float3 &xp, optix::float3 &wp, float &flux_t, BufPtr2D<float> &resulting_flux,
         const float3 &xo, const float n2_over_n1, const float albedo, const float extinction,
         const float g, SEED_TYPE &t, int starting_it, int executions)

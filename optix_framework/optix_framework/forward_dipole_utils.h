@@ -1,6 +1,6 @@
 #pragma once
 #include "forward_dipole_defines.h"
-__host__ __device__ __forceinline__ double erf_approx_toshiya(double x) {
+_fn double erf_approx_toshiya(double x) {
 	const double a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
 	double t = 1.0 / (1.0 + p*abs(x));
 	double y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x);
@@ -10,10 +10,10 @@ __host__ __device__ __forceinline__ double erf_approx_toshiya(double x) {
 #define USE_ERF erf
 
 #ifdef MTS_WITH_CANCELLATION_CHECKS
-__host__ __device__ __forceinline__ bool catastrophicCancellation(float a, float b) {
+_fn bool catastrophicCancellation(float a, float b) {
 	return abs(a + b) / abs(a - b) < 1e-4;
 }
-__host__ __device__ __forceinline__ bool catastrophicCancellation(double a, double b) {
+_fn bool catastrophicCancellation(double a, double b) {
 	return abs(a + b) / abs(a - b) < 1e-7;
 }
 
@@ -26,34 +26,34 @@ __host__ __device__ __forceinline__ bool catastrophicCancellation(double a, doub
 # define CancellationCheck(a, b) ((void) 0)
 #endif
 
-__device__ __host__ __forceinline__ bool isfinited(Float3 & v)
+_fn bool isfinited(Float3 & v)
 {
     Float3 vv = v;
 	return isfinite(vv.x) && isfinite(vv.y) && isfinite(vv.z);
 }
 
 template<typename T>
-__host__ __device__ __forceinline__  T get_min();
+_fn  T get_min();
 template<>
-__host__ __device__ __forceinline__ float get_min() { return FLT_MIN; }
+_fn float get_min() { return FLT_MIN; }
 template<>
-__host__ __device__ __forceinline__ double get_min() { return DBL_MIN; }
+_fn double get_min() { return DBL_MIN; }
 
 template<typename T>
-__host__ __device__ __forceinline__  T get_max();
+_fn  T get_max();
 template<>
-__host__ __device__ __forceinline__ float get_max() { return FLT_MAX; }
+_fn float get_max() { return FLT_MAX; }
 template<>
-__host__ __device__ __forceinline__ double get_max() { return DBL_MAX; }
+_fn double get_max() { return DBL_MAX; }
 
 template<typename T>
-__host__ __device__ __forceinline__  T get_epsilon();
+_fn  T get_epsilon();
 template<>
-__host__ __device__ __forceinline__ float get_epsilon() { return FLT_EPSILON; }
+_fn float get_epsilon() { return FLT_EPSILON; }
 template<>
-__host__ __device__ __forceinline__ double get_epsilon() { return DBL_EPSILON; }
+_fn double get_epsilon() { return DBL_EPSILON; }
 
-__device__ __host__ __forceinline__  Float dEon_C1(const Float n) {
+_fn  Float dEon_C1(const Float n) {
 	Float r;
 	if (n > 1.0) {
 		r = -9.23372 + n * (22.2272 + n * (-20.9292 + n * (10.2291 + n * (-2.54396 + 0.254913 * n))));
@@ -64,17 +64,17 @@ __device__ __host__ __forceinline__  Float dEon_C1(const Float n) {
 	return r / 2.0;
 }
 
-__device__ __host__ __forceinline__  Float dEon_C2(const Float n) {
+_fn  Float dEon_C2(const Float n) {
 	Float r = -1641.1 + n * (1213.67 + n * (-568.556 + n * (164.798 + n * (-27.0181 + 1.91826 * n))));
 	r += (((135.926 / n) - 656.175) / n + 1376.53) / n;
 	return r / 3.0;
 }
 
-__device__ __host__ __forceinline__  Float dEon_A(const Float eta) {
+_fn  Float dEon_A(const Float eta) {
 	return (1 + 3 * dEon_C2(eta)) / (1 - 2 * dEon_C1(eta));
 }
 
-__device__ __host__ __forceinline__ void calcValues(const double length, const Float sigma_s, const Float sigma_a, const Float mu, double &C, double &D, double &E, double &F) {
+_fn void calcValues(const double length, const Float sigma_s, const Float sigma_a, const Float mu, double &C, double &D, double &E, double &F) {
 	FSAssert(length >= 0);
 	FSAssert(mu > 0 && mu <= 1);
 	FSAssert(sigma_s > 0);
@@ -133,7 +133,7 @@ __device__ __host__ __forceinline__ void calcValues(const double length, const F
 	FSAssert(F >= 0);
 }
 
-__device__ __host__ __forceinline__ Float fresnelDiffuseReflectance(Float eta) {
+_fn Float fresnelDiffuseReflectance(Float eta) {
 	/* Fast mode: the following code approximates the
 	* diffuse Frensel reflectance for the eta<1 and
 	* eta>1 cases. An evalution of the accuracy led
@@ -176,7 +176,7 @@ __device__ __host__ __forceinline__ Float fresnelDiffuseReflectance(Float eta) {
 	}
 }
 
-__device__ __host__ __forceinline__ Float fresnelDielectricExt(Float cosThetaI_, Float &cosThetaT_, Float eta) {
+_fn Float fresnelDielectricExt(Float cosThetaI_, Float &cosThetaT_, Float eta) {
 	if (eta == 1) {
 		cosThetaT_ = -cosThetaI_;
 		return 0.0f;
@@ -208,7 +208,7 @@ __device__ __host__ __forceinline__ Float fresnelDielectricExt(Float cosThetaI_,
 	return 0.5f * (Rs * Rs + Rp * Rp);
 }
 
-__device__ __host__ __forceinline__ Float _reducePrecisionForCosTheta(Float x) {
+_fn Float _reducePrecisionForCosTheta(Float x) {
 	/* Turns out not to help too much -- or even make things worse! So
 	* don't round. TODO: Test some more at some point... */
 	return x;
@@ -216,7 +216,7 @@ __device__ __host__ __forceinline__ Float _reducePrecisionForCosTheta(Float x) {
 	//return roundToSignificantDigits(x, 3);
 }
 
-__device__ __host__ __forceinline__ double absorptionAndFloat3izationConstant(Float theLength, const Float sigma_s, const Float sigma_a, const Float mu) {
+_fn double absorptionAndFloat3izationConstant(Float theLength, const Float sigma_s, const Float sigma_a, const Float mu) {
 	double p = 0.5 * sigma_s * mu;
 	double ps = p * theLength;
 
@@ -279,7 +279,7 @@ __device__ __host__ __forceinline__ double absorptionAndFloat3izationConstant(Fl
 
 
 /// if rejectInternalIncoming is requested: returns false if we should stop
-__device__ __host__ __forceinline__ bool getVirtualDipoleSource(
+_fn bool getVirtualDipoleSource(
 	const Float sigma_s, const Float sigma_a, const Float mu, const Float m_eta,
 	Float3 n0, Float3 u0,
 	Float3 nL, Float3 uL,
@@ -384,7 +384,7 @@ __device__ __host__ __forceinline__ bool getVirtualDipoleSource(
 	return true;
 }
 
-__device__ __host__ __forceinline__ bool getTentativeIndexMatchedVirtualSourceDisp(
+_fn bool getTentativeIndexMatchedVirtualSourceDisp(
 	const Float sigma_s,
 	const Float sigma_a,
 	const Float mu,

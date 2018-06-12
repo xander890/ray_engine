@@ -8,7 +8,7 @@
 #include <sampling_helpers.h>
 #include <color_helpers.h>
 #include <ray_trace_helpers.h>
-#include <structs_device.h>
+
 #include <optical_helper.h>
 #include <environment_map.h>
 #include <camera.h>
@@ -41,7 +41,7 @@ RT_PROGRAM void any_hit_shadow() {
 	shadow_hit(prd_shadow, emission);
 }
 
-__inline__ __device__ float3 sample_procedural_tex(float3 & position_local) 
+_fn float3 sample_procedural_tex(float3 & position_local)
 {
 	const float3 dims = make_float3(19.0f, 1.3f, 24.7f) * 0.5;
 	const float3 black = make_float3(0.1f);
@@ -69,14 +69,14 @@ __inline__ __device__ float3 sample_procedural_tex(float3 & position_local)
 }
 
 
-__inline__ __device__ float3 get_k_d()
+_fn float3 get_k_d()
 {
     MaterialDataCommon material = get_material(texcoord);
 	float3 k_d = make_float3(rtTex2D<float4>(material.diffuse_map, texcoord.x, texcoord.y));
 	return k_d;
 }
 
-__inline__ __device__ float3 shade_specular(const float3& hit_pos, const float3 & normal, const float3 & light_vector, const float3& light_radiance, const float3 & view)
+_fn float3 shade_specular(const float3& hit_pos, const float3 & normal, const float3 & light_vector, const float3& light_radiance, const float3 & view)
 {
 	const float3 k_d = get_k_d();
 	float3 color = light_radiance * k_d * M_1_PIf * max(dot(normal, light_vector), 0.0f);
@@ -100,7 +100,6 @@ RT_PROGRAM void shade()
 
 	if (prd_radiance.depth < max_depth)
 	{
-		const HitInfo data(hit_pos, normal);
 		// Direct illumination
 		float3 direct = make_float3(0.0f); 
 		for (int j = 0; j < N; j++)
@@ -117,7 +116,7 @@ RT_PROGRAM void shade()
 		for (int j = 0; j < N; j++)
 		{
 			float3 wi, L;
-			sample_environment(wi, L, data, prd_radiance.sampler);
+			sample_environment(wi, L, hit_pos, normal, prd_radiance.sampler);
 			float cos_theta = dot(wi, normal);
 			if (cos_theta <= 0.0) continue;
 			env += L * cos_theta;
@@ -136,7 +135,6 @@ RT_PROGRAM void shade()
 
 		// Indirect illumination
 		float prob = dot(k_d, make_float3(0.33333f));
-		prd_radiance.flags |= RayFlags::HIT_DIFFUSE_SURFACE;
 		float3 indirect = make_float3(0.0f);
 		float random = prd_radiance.sampler->next1D();
 	    if(random < prob)

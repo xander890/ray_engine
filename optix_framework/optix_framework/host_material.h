@@ -16,7 +16,7 @@ namespace cereal
 	{
 		archive(cereal::make_nvp("illum", m.illum));
 		archive(cereal::make_nvp("relative_ior", m.relative_ior));
-		archive(cereal::make_nvp("shininess", m.shininess));
+		archive(cereal::make_nvp("roughness", m.roughness));
 		archive(cereal::make_nvp("ior_complex_real_sq", m.ior_complex_real_sq));
 		archive(cereal::make_nvp("ior_complex_imag_sq", m.ior_complex_imag_sq));
 	}
@@ -26,7 +26,9 @@ class MaterialHost
 {
 public:
 	MaterialHost(optix::Context& ctx, ObjMaterial& data);
-    ~MaterialHost();
+	MaterialHost(optix::Context& ctx);
+
+	~MaterialHost();
 
 	bool on_draw(std::string id);
     const MaterialDataCommon& get_data(); 
@@ -50,7 +52,6 @@ public:
     Scene * scene;
 
 private:
-	MaterialHost(optix::Context& ctx);
 	bool mHasChanged = true;
     int mMaterialID;
     std::string mMaterialName;
@@ -94,6 +95,11 @@ private:
 	optix::Context mContext;
 	bool mIsEmissive = false;
     optix::Material mMaterial = nullptr;
+
+	bool first_time_gui = true;
+	optix::float4 ka_gui = optix::make_float4(0, 0, 0, 1);
+	optix::float4 kd_gui = optix::make_float4(0, 0, 0, 1);
+	optix::float4 ks_gui = optix::make_float4(0, 0, 0, 1);
 
 };
 

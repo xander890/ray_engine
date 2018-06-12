@@ -42,7 +42,7 @@ struct PhotonSample
     PAD_STRUCT
 };
 
-__host__ __device__ __forceinline__ PhotonSample get_empty_photon()
+_fn PhotonSample get_empty_photon()
 {
 	PhotonSample p;
 	p.xp = optix::make_float3(0);

@@ -12,12 +12,12 @@ rtBuffer<uchar4, 2> debug_output_buffer;
 rtDeclareVariable(optix::uint4, zoom_window, , );
 rtDeclareVariable(optix::uint4, image_part_to_zoom, , );
 
-__device__ __inline__ bool box(const uint2& px, const uint4& bx)
+_fn bool box(const uint2& px, const uint4& bx)
 {
 	return px.x >= bx.x && px.x < bx.x + bx.z && px.y >= bx.y && px.y < bx.y + bx.w;
 }
 
-__device__ __inline__ bool box_border(const uint2& px, const uint4& bx)
+_fn bool box_border(const uint2& px, const uint4& bx)
 {
 	return box(px, make_uint4(bx.x - 1, bx.y - 1, bx.z + 2, bx.w + 2)) && !box(px, bx);
 }

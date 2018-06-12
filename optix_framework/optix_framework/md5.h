@@ -55,7 +55,7 @@
     (a) += (b); \
   }
 
-__device__ __forceinline__ void __md5Hash(unsigned char* data, uint32_t length, uint32_t *a1, uint32_t *b1, uint32_t *c1, uint32_t *d1) {
+_fn void __md5Hash(unsigned char* data, uint32_t length, uint32_t *a1, uint32_t *b1, uint32_t *c1, uint32_t *d1) {
 	const uint32_t a0 = 0x67452301;
 	const uint32_t b0 = 0xEFCDAB89;
 	const uint32_t c0 = 0x98BADCFE;
@@ -199,14 +199,14 @@ __device__ __forceinline__ void __md5Hash(unsigned char* data, uint32_t length, 
 	*d1 = d;
 }
 
-__device__ __forceinline__ float int_to_float01(uint32_t t)
+_fn float int_to_float01(uint32_t t)
 {
 	uint32_t res = t;
 	res &= 0x7FFFFFFF; // leave everything the same, but flip the sign bit to zero (so it is positive)
 	return ((float)res) / ((float)0x80000000);
 }
 
-__device__ __forceinline__ optix::uint4 rand_md5(const uint32_t base, const uint32_t scrambler)
+_fn optix::uint4 rand_md5(const uint32_t base, const uint32_t scrambler)
 {
 	uint32_t fed = base ^ scrambler;
 	unsigned char * data = reinterpret_cast<unsigned char*>(&fed);
@@ -215,7 +215,7 @@ __device__ __forceinline__ optix::uint4 rand_md5(const uint32_t base, const uint
 	return res;
 }
 
-__device__ __forceinline__ optix::uint4 rand_md5(const optix::uint2& base, const uint32_t scrambler)
+_fn optix::uint4 rand_md5(const optix::uint2& base, const uint32_t scrambler)
 {
 	optix::uint2 fed = optix::make_uint2(base.x ^ scrambler, base.y ^ scrambler);
 	unsigned char * data = reinterpret_cast<unsigned char*>(&fed);
@@ -224,7 +224,7 @@ __device__ __forceinline__ optix::uint4 rand_md5(const optix::uint2& base, const
 	return res;
 }
 
-__device__ __forceinline__ optix::uint4 rand_md5(const optix::uint3& base, const uint32_t scrambler)
+_fn optix::uint4 rand_md5(const optix::uint3& base, const uint32_t scrambler)
 {
 	optix::uint3 fed = optix::make_uint3(base.x ^ scrambler, base.y ^ scrambler, base.z ^ scrambler);
 	unsigned char * data = reinterpret_cast<unsigned char*>(&fed);
@@ -233,7 +233,7 @@ __device__ __forceinline__ optix::uint4 rand_md5(const optix::uint3& base, const
 	return res;
 }
 
-__device__ __forceinline__ optix::uint4 rand_md5(const optix::uint4& base, const uint32_t scrambler)
+_fn optix::uint4 rand_md5(const optix::uint4& base, const uint32_t scrambler)
 {
 	optix::uint4 fed = optix::make_uint4(base.x ^ scrambler, base.y ^ scrambler, base.z ^ scrambler, base.w ^ scrambler);
 	unsigned char * data = reinterpret_cast<unsigned char*>(&fed);
@@ -242,22 +242,22 @@ __device__ __forceinline__ optix::uint4 rand_md5(const optix::uint4& base, const
 	return res;
 }
 
-__device__ __forceinline__ optix::float4 rand_md5_f(const uint32_t base, const uint32_t scrambler)
+_fn optix::float4 rand_md5_f(const uint32_t base, const uint32_t scrambler)
 {
 	optix::uint4 res = rand_md5(base, scrambler);
 	return optix::make_float4(int_to_float01(res.x), int_to_float01(res.y), int_to_float01(res.z), int_to_float01(res.w));
 }
-__device__ __forceinline__ optix::float4 rand_md5_f(const optix::uint2& base, const uint32_t scrambler)
+_fn optix::float4 rand_md5_f(const optix::uint2& base, const uint32_t scrambler)
 {
 	optix::uint4 res = rand_md5(base, scrambler);
 	return optix::make_float4(int_to_float01(res.x), int_to_float01(res.y), int_to_float01(res.z), int_to_float01(res.w));
 }
-__device__ __forceinline__ optix::float4 rand_md5_f(const optix::uint3& base, const uint32_t scrambler)
+_fn optix::float4 rand_md5_f(const optix::uint3& base, const uint32_t scrambler)
 {
 	optix::uint4 res = rand_md5(base, scrambler);
 	return optix::make_float4(int_to_float01(res.x), int_to_float01(res.y), int_to_float01(res.z), int_to_float01(res.w));
 }
-__device__ __forceinline__ optix::float4 rand_md5_f(const optix::uint4& base, const uint32_t scrambler)
+_fn optix::float4 rand_md5_f(const optix::uint4& base, const uint32_t scrambler)
 {
 	optix::uint4 res = rand_md5(base, scrambler);
 	return optix::make_float4(int_to_float01(res.x), int_to_float01(res.y), int_to_float01(res.z), int_to_float01(res.w));

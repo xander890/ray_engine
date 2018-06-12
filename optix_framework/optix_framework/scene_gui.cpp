@@ -112,7 +112,7 @@ bool SceneGUI::on_draw(Scene * scene)
 
     if (ImmediateGUIDraw::CollapsingHeader("Camera"))
     {
-        changed |= scene->mCurrentCamera->on_draw();
+        changed |= scene->get_current_camera()->on_draw();
     }
 
     if (ImmediateGUIDraw::CollapsingHeader("Background"))

@@ -19,7 +19,7 @@ rtDeclareVariable(rtCallableProgramId<Float(const ForwardDipoleMaterial, const F
 #include "optix_helpers.h"
 #include "sampler.h"
 
-__device__ __host__ __forceinline__ Float evalMonopole(
+_fn Float evalMonopole(
 	const ForwardDipoleMaterial material,
 	Float3 u0, Float3 uL, Float3 R, Float length) {
 	FSAssert(abs(optix::length(u0) - 1) < 1e-6);
@@ -65,7 +65,7 @@ __device__ __host__ __forceinline__ Float evalMonopole(
 	return G;
 }
 
-__device__ __host__ __forceinline__ Float evalPlaneSource(
+_fn Float evalPlaneSource(
 	const Float sigma_s,
 	const Float sigma_a,
 	const Float mu,
@@ -183,7 +183,7 @@ __device__ __host__ Float evalDipole(
 }
 #endif
 
-__host__ __device__ __inline__ void test_forward_dipole_cuda()
+_fn void test_forward_dipole_cuda()
 {
 	const Float3 xi = MakeFloat3(0., 0., 0.);
 	const Float3 xo = MakeFloat3(0.03, 0., 0.);
@@ -233,10 +233,10 @@ __host__ __device__ __inline__ void test_forward_dipole_cuda()
 
 namespace optix
 {
-    __device__ __forceinline__ optix::float3 make_float3(const optix::float3 & c) { return c; }
+    _fn optix::float3 make_float3(const optix::float3 & c) { return c; }
 
 }
-__device__ __forceinline__ float3 forward_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
+_fn float3 forward_dipole_bssrdf(const BSSRDFGeometry & geometry, const float recip_ior, const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {
     const ScatteringMaterialProperties& properties = material.scattering_properties;
     float3 w12, w21;

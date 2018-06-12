@@ -12,7 +12,7 @@ rtBuffer<uchar4, 2> tonemap_output_buffer;
 rtDeclareVariable(float, tonemap_multiplier,,) = 1.0f;
 rtDeclareVariable(float, tonemap_exponent,,) = 1.8f;
 
-__device__ __forceinline__ unsigned char to_char(float f)
+_fn unsigned char to_char(float f)
 {
 	return (unsigned char)(f * 255.0f);
 }

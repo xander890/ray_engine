@@ -21,7 +21,7 @@
 using optix::float3;
 rtDeclareVariable(ScatteringDipole::Type, selected_bssrdf, , );
 
-__forceinline__ __device__ float3 bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
+_fn float3 bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
 	const MaterialDataCommon& material, unsigned int flags, TEASampler & sampler)
 {   
 #ifdef FORWARD_DIPOLE_ONLY
@@ -61,7 +61,7 @@ __forceinline__ __device__ float3 bssrdf(const BSSRDFGeometry & geometry, const 
 #endif
 }
 
-__forceinline__ __device__ float3 get_beam_transmittance(const float depth, const ScatteringMaterialProperties& properties)
+_fn float3 get_beam_transmittance(const float depth, const ScatteringMaterialProperties& properties)
 {
 	switch (selected_bssrdf)
 	{

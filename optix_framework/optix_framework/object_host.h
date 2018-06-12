@@ -63,6 +63,9 @@ private:
         archive(cereal::make_nvp("geometry", construct->mGeometry));
         archive(cereal::make_nvp("transform", construct->mTransform));
         archive(cereal::make_nvp("materials",construct->mMaterials));
+        archive(cereal::make_nvp("material_selector", construct->mMaterialSelectionTexture));
+        archive(cereal::make_nvp("material_selector_labels", construct->mMaterialSelectionTextureLabel));
+
         construct->create_and_bind_optix_data();
         construct->mReloadMaterials = construct->mReloadGeometry = true;
     }
@@ -73,7 +76,9 @@ private:
         archive(cereal::make_nvp("name", mMeshName));
         archive(cereal::make_nvp("geometry", mGeometry));
         archive(cereal::make_nvp("transform", mTransform));
-        archive(cereal::make_nvp("materials",mMaterials));
+        archive(cereal::make_nvp("materials", mMaterials));
+        archive(cereal::make_nvp("material_selector", mMaterialSelectionTexture));
+        archive(cereal::make_nvp("material_selector_labels", mMaterialSelectionTextureLabel));
     }
 
     int mMeshID;

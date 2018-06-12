@@ -25,7 +25,7 @@
 #include "md5.h"
  // TEA algorithm https://www.csee.umbc.edu/~olano/class/635-11-2/lsebald1.pdf
 template<unsigned int N>
-static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsigned int val1 )
+_fn unsigned int tea( unsigned int val0, unsigned int val1 )
 {
   unsigned int v0 = val0;
   unsigned int v1 = val1;
@@ -42,7 +42,7 @@ static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsig
 }
 
 // Generate random unsigned int in [0, 2^24)
-static __host__ __device__ __inline__ unsigned int lcg(unsigned int &prev)
+_fn unsigned int lcg(unsigned int &prev)
 {
   const unsigned int LCG_A = 1664525u;
   const unsigned int LCG_C = 1013904223u;
@@ -51,13 +51,13 @@ static __host__ __device__ __inline__ unsigned int lcg(unsigned int &prev)
 }
 
 // Generate random float in [0, 1)
-static __host__ __device__ __inline__ float rnd(unsigned int &prev)
+_fn float rnd(unsigned int &prev)
 {
   return ((float) lcg(prev) / (float) 0x01000000);
 }
 
 // Hash hack http://www.ci.i.u-tokyo.ac.jp/~hachisuka/tdf2015.pdf
-static __host__ __device__ __inline__ float hash_tdf(const optix::float3 idx, float grid_scale, int hash_num)
+_fn float hash_tdf(const optix::float3 idx, float grid_scale, int hash_num)
 {
 	// use the same procedure as GPURnd
 	optix::float4 n = optix::make_float4(idx, grid_scale * 0.5f) * 4194304.0f / grid_scale;
@@ -82,7 +82,7 @@ union Seed64
 };
 
 
-static __host__ __device__ __inline__ float rnd_accurate(Seed64 &prev)
+_fn float rnd_accurate(Seed64 &prev)
 {
 	optix::uint4 md5 = rand_md5(prev.seed, 0);
 	prev.seed.x = md5.x;
@@ -92,13 +92,13 @@ static __host__ __device__ __inline__ float rnd_accurate(Seed64 &prev)
     return (float)val;
 }
 
-static __host__ __device__ __inline__ unsigned int tea_hash(unsigned int &prev)
+_fn unsigned int tea_hash(unsigned int &prev)
 {
 	prev = tea<16>(prev, 100);
 	return prev & 0x7FFFFFFF;
 }
 
-static __host__ __device__ __inline__ float rnd_tea(unsigned int &prev)
+_fn float rnd_tea(unsigned int &prev)
 {
 	return ((float)tea_hash(prev) / (float)0x80000000);
 }

@@ -25,7 +25,7 @@ rtDeclareVariable(float, total_area, , );
 rtDeclareVariable(BufPtr<PositionSample>, sampling_output_buffer, , );
 
 
-__forceinline__ __device__ unsigned int cdf_bsearch(float xi)
+_fn unsigned int cdf_bsearch(float xi)
 {
   uint table_size = area_cdf.size();
   uint middle = table_size = table_size>>1;
