@@ -152,7 +152,7 @@ TexPtr Texture::get_id()
 
 void Texture::set_data(void *data, size_t size)
 {
-    assert(size <= get_number_of_elements()*get_size(mFormat));
+    assert(size <= get_memory_footprint());
     memcpy(mData, data, size);
     update();
 
@@ -172,8 +172,10 @@ void Texture::set_size(size_t w, size_t h, size_t d)
 
 Texture::~Texture()
 {
-    textureSampler->destroy();
-    textureBuffer->destroy();
+    if(textureSampler.get() != nullptr)
+        textureSampler->destroy();
+    if(textureBuffer.get() != nullptr)
+        textureBuffer->destroy();
 }
 
 void Texture::set_size(size_t dimensions, size_t *dims)
@@ -307,4 +309,20 @@ unsigned int Texture::get_gl_format(const Texture::Format &format)
         default:
         case Texture::Format::FLOAT: return GL_FLOAT;
     }
+}
+
+Texture::Texture(Texture && tex)
+{
+    mID = tex.mID;
+    textureBuffer = tex.textureBuffer;
+    textureSampler = tex.textureSampler;
+    tex.textureBuffer =  nullptr;
+    tex.textureSampler = nullptr;
+
+    mContext = tex.mContext;
+    mThumbnail = std::move(tex.mThumbnail);
+    set_size(tex.mDimensionality, tex.mDimensions);
+    set_format(tex.mFormatElements, tex.mFormat);
+    set_data(tex.mData, tex.get_memory_footprint());
+    delete[] tex.mData;
 }

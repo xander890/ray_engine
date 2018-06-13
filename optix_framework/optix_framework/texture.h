@@ -5,6 +5,7 @@
 #include "host_device_common.h"
 #include "optix_serialize.h"
 #include "logger.h"
+#include "ImageLoader.h"
 
 class Thumbnail;
 
@@ -25,6 +26,7 @@ public:
     };
 
     Texture(optix::Context context, const Texture::Format & format = FLOAT, const RTsize & element_size = 4);
+    Texture(Texture && tex);
     ~Texture();
     void set_size(size_t width, size_t height = 0, size_t depth = 0);
     void set_size(size_t dimensions, size_t * dims);
@@ -113,15 +115,7 @@ public:
     static size_t get_size(const Texture::Format & format);
 
 private:
-    int mID;
-    optix::Buffer textureBuffer;
-    optix::TextureSampler textureSampler;
-    RTsize mDimensions[3] = {1,1,1};
-    RTsize mDimensionality = 1;
-    Format mFormat = FLOAT;
-    RTsize mFormatElements = 4;
-
-    float * mData = nullptr;
+    size_t get_memory_footprint() { return get_number_of_elements()*get_size(mFormat);}
     size_t get_number_of_elements() const { return mDimensions[0]*mDimensions[1]*mDimensions[2]*mFormatElements; }
 
     friend class cereal::access;
@@ -140,12 +134,32 @@ private:
 
     static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<Texture> & construct )
     {
-        construct(archive.get_context());
+        std::string mode;
+        archive(cereal::make_nvp("mode", mode));
+        if(mode == "file")
+        {
+            std::string filename;
+            archive(cereal::make_nvp("file", filename));
+            auto ptr = loadTexture(archive.get_context(), filename, optix::make_float4(0));
+            construct(std::move(*ptr));
+            return;
+        }
+
+        if(mode == "color")
+        {
+            std::string filename;
+            optix::float4 color;
+            archive(cereal::make_nvp("color", color));
+            auto ptr = loadTexture(archive.get_context(), "", color);
+            construct(std::move(*ptr));
+            return;
+        }
+
         size_t dimensions;
         size_t dims[3];
         size_t element_size;
         Texture::Format format;
-
+        construct(archive.get_context());
         archive(
                 cereal::make_nvp("width", dims[0]),
                 cereal::make_nvp("height", dims[1]),
@@ -163,11 +177,16 @@ private:
         delete[] vals;
     }
 
+    int mID;
+    optix::Buffer textureBuffer;
+    optix::TextureSampler textureSampler;
+    RTsize mDimensions[3] = {1,1,1};
+    RTsize mDimensionality = 1;
+    Format mFormat = FLOAT;
+    RTsize mFormatElements = 4;
+    float * mData = nullptr;
     optix::Context mContext;
     std::unique_ptr<Thumbnail> mThumbnail;
-
-    template<typename T>
-    void check_template_access() const { assert(sizeof(T) == get_size(mFormat)); }
 
 };
 
@@ -175,6 +194,7 @@ template<>
 inline void Texture::save(cereal::XMLOutputArchiveOptix & archive) const
 {
     archive(
+            cereal::make_nvp("mode", std::string("raw")),
             cereal::make_nvp("width", mDimensions[0]),
             cereal::make_nvp("height", mDimensions[1]),
             cereal::make_nvp("depth", mDimensions[2]),
