@@ -80,7 +80,7 @@ void SampledBSSRDF::initialize_material(MaterialHost &mat)
 	Shader::initialize_material(mat);
 	BufPtr<BSSRDFSamplingProperties> bufptr(mPropertyBuffer->getId());
 	mat.get_optix_material()["bssrdf_sampling_properties"]->setUserData(sizeof(BufPtr<BSSRDFSamplingProperties>), &bufptr);
-    mBSSRDF->load(mat.get_data().relative_ior, mat.get_data().scattering_properties);
+    mBSSRDF->load(mat.get_data().index_of_refraction, mat.get_data().scattering_properties);
 
 	ScatteringDipole::Type t = mBSSRDF->get_type();
 	mat.get_optix_material()["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
@@ -91,7 +91,6 @@ void SampledBSSRDF::load_data(MaterialHost &mat)
 	if (mHasChanged)
 	{
 		const ScatteringMaterialProperties& scattering_properties = mat.get_data().scattering_properties;
-		const float relior = mat.get_data().relative_ior;
 		Logger::info << "Reloading shader" << std::endl;
 
 		const optix::float3 imfp = mBSSRDF->get_sampling_inverse_mean_free_path(scattering_properties);
@@ -100,14 +99,14 @@ void SampledBSSRDF::load_data(MaterialHost &mat)
 		initialize_buffer<BSSRDFSamplingProperties>(mPropertyBuffer, *properties);
 
 		context["samples_per_pixel"]->setUint(mSamples);
-        mBSSRDF->load(relior, scattering_properties);
+        mBSSRDF->load(mat.get_data().index_of_refraction, scattering_properties);
 		ScatteringDipole::Type t = mBSSRDF->get_type();
 		mat.get_optix_material()["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 
 		bool isNN = properties->sampling_tangent_plane_technique == BssrdfSamplePointOnTangentTechnique::NEURAL_NETWORK_IMPORTANCE_SAMPLING;
         if(isNN)
         {
-            mNNSampler->load(relior, scattering_properties);
+            mNNSampler->load(mat.get_data().index_of_refraction, scattering_properties);
         }
 
         if(mReloadShader)

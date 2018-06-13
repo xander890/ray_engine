@@ -27,4 +27,5 @@ private:
 
 };
 
+CEREAL_CLASS_VERSION(DefaultShader, 0)
 CEREAL_REGISTER_TYPE(DefaultShader)

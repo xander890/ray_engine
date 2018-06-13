@@ -64,10 +64,10 @@ private:
         archive(cereal::make_nvp("transform", construct->mTransform));
         archive(cereal::make_nvp("materials",construct->mMaterials));
         archive(cereal::make_nvp("material_selector", construct->mMaterialSelectionTexture));
-        archive(cereal::make_nvp("material_selector_labels", construct->mMaterialSelectionTextureLabel));
 
         construct->create_and_bind_optix_data();
         construct->mReloadMaterials = construct->mReloadGeometry = true;
+        construct->mMaterialSelectionTextureLabel = create_label_texture(archive.get_context(), construct->mMaterialSelectionTexture);
     }
 
     template<class Archive>
@@ -78,7 +78,6 @@ private:
         archive(cereal::make_nvp("transform", mTransform));
         archive(cereal::make_nvp("materials", mMaterials));
         archive(cereal::make_nvp("material_selector", mMaterialSelectionTexture));
-        archive(cereal::make_nvp("material_selector_labels", mMaterialSelectionTextureLabel));
     }
 
     int mMeshID;
@@ -100,5 +99,5 @@ private:
 
     bool mReloadGeometry = true;
     bool mReloadMaterials = true;
-
+    static std::unique_ptr<Texture> create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr);
 };

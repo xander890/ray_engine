@@ -21,4 +21,5 @@ private:
 };
 
 CEREAL_REGISTER_TYPE(AmbientOcclusion)
+CEREAL_CLASS_VERSION(AmbientOcclusion, 0)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(RenderingMethod, AmbientOcclusion)

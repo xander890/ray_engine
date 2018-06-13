@@ -5,13 +5,11 @@
 struct MaterialDataCommon
 {
     int    illum;
-	float  relative_ior;
+	optix::float3  index_of_refraction;
 	float  roughness;
     TexPtr ambient_map;
     TexPtr diffuse_map;
     TexPtr specular_map;
     ScatteringMaterialProperties scattering_properties;
-    optix::float3 ior_complex_real_sq;
-    optix::float3 ior_complex_imag_sq;
 	int test;
 };

@@ -9,7 +9,7 @@ class NeuralNetworkSampler
 public:
 	NeuralNetworkSampler(optix::Context & ctx);
 	bool on_draw();
-	void load(float relative_ior, const ScatteringMaterialProperties & props);
+	void load(const optix::float3& relative_ior, const ScatteringMaterialProperties & props);
 protected:
 	optix::Context mContext;
 

@@ -39,7 +39,8 @@ _fn void absorbing_glass()
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
         float3 new_normal;
-		get_glass_rays(ray.direction, material.relative_ior, hit_pos, normal, new_normal, reflected_ray, refracted_ray, R, cos_theta);
+	  float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+	  get_glass_rays(ray.direction, relative_ior, hit_pos, normal, new_normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		float xi = prd_radiance.sampler->next1D();
 		

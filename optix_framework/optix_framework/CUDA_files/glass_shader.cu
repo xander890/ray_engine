@@ -62,7 +62,8 @@ _fn void _shade()
         optix::Ray reflected, refracted;
         float R, cos_theta_signed;
         optix::float3 ff_m;
-        get_glass_rays(wo, material.relative_ior, make_float3(0), m, ff_m, reflected, refracted, R, cos_theta_signed);
+        float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+        get_glass_rays(wo, relative_ior, make_float3(0), m, ff_m, reflected, refracted, R, cos_theta_signed);
 
         float xi = sampler.next1D();
         float3 wi = (xi < R)? reflected.direction : refracted.direction;

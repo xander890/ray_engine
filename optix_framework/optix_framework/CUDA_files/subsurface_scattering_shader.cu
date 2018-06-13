@@ -51,7 +51,8 @@ RT_PROGRAM void shade()
     float3 wo = -ray.direction;
     const MaterialDataCommon material = get_material(xo);
     const ScatteringMaterialProperties& props = material.scattering_properties;
-    float recip_ior = 1.0f / material.relative_ior;
+    float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+    float recip_ior = 1.0f / relative_ior;
     float reflect_xi = sampler->next1D();
     prd_radiance.result = make_float3(0.0f);
 
@@ -64,7 +65,7 @@ RT_PROGRAM void shade()
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;
         if (sampler->next1D() >= prob) return;
         beam_T /= prob;
-        recip_ior = material.relative_ior;
+        recip_ior = relative_ior;
         cos_theta_o = -cos_theta_o;
         no = -no;
     }

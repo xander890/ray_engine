@@ -129,14 +129,15 @@ RT_PROGRAM void shade()
     float3 normal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
     float3 w_i = -ray.direction;
     const MaterialDataCommon & material = get_material(texcoord);
-    float n1_over_n2 = 1.0f / material.relative_ior;
+    float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+    float n1_over_n2 = 1.0f / relative_ior;
     float cos_theta_in = dot(normal, w_i);
 
     // Russian roulette with absorption if arrived from dense medium
     bool inside = cos_theta_in < 0.0f;
     if (inside)
     {
-        n1_over_n2 = material.relative_ior;
+        n1_over_n2 = relative_ior;
         normal = -normal;
     }
 

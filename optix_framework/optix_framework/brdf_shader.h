@@ -26,13 +26,14 @@ private:
     std::unique_ptr<BRDF> mBRDF;
 
 	friend class cereal::access;
-	template<class Archive>
-	void serialize(Archive & archive)
-	{
-		archive(cereal::base_class<Shader>(this), mBRDF);
-	}
 
+	template<class Archive>
+	void serialize(Archive & archive, const std::uint32_t version)
+	{
+        archive(cereal::make_nvp("class", cereal::base_class<Shader>(this)), cereal::make_nvp("brdf",mBRDF));
+	}
 };
 
+CEREAL_CLASS_VERSION(BRDFShader,0)
 CEREAL_REGISTER_TYPE(BRDFShader)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Shader, BRDFShader)

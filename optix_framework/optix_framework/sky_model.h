@@ -97,6 +97,7 @@ private:
     }
 };
 
+CEREAL_CLASS_VERSION(SkyModel, 0)
 CEREAL_REGISTER_TYPE(SkyModel)
 #endif // !__CUDA_ARCH__
 

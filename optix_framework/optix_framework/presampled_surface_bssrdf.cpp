@@ -122,7 +122,7 @@ void PresampledSurfaceBssrdf::pre_trace_mesh(Object& obj)
 
 void PresampledSurfaceBssrdf::load_data(MaterialHost &obj)
 {
-    mBSSRDF->load(obj.get_data().relative_ior, obj.get_data().scattering_properties);
+    mBSSRDF->load(obj.get_data().index_of_refraction, obj.get_data().scattering_properties);
     ScatteringDipole::Type t = mBSSRDF->get_type();
     obj.get_optix_material()["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 }

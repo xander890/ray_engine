@@ -92,8 +92,8 @@ void BSSRDFPlaneRenderer::load_data(MaterialHost &mat)
 	*cc = mat.get_data().scattering_properties;
 	mParameters->unmap();
 	context["reference_bssrdf_theta_i"]->setFloat(deg2rad(static_cast<float>(mAngle)));
-	context["reference_bssrdf_rel_ior"]->setFloat(mat.get_data().relative_ior);
-    mBSSRDF->load(mat.get_data().relative_ior, mat.get_data().scattering_properties);
+	context["reference_bssrdf_rel_ior"]->setFloat(dot(mat.get_data().index_of_refraction, optix::make_float3(1)) / 3);
+    mBSSRDF->load(mat.get_data().index_of_refraction, mat.get_data().scattering_properties);
 	ScatteringDipole::Type t = mBSSRDF->get_type();
 	mat.get_optix_material()["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &t);
 	context["channel_to_show"]->setUint(mChannel);

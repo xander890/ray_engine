@@ -9,7 +9,7 @@ class BSSRDF : std::enable_shared_from_this<BSSRDF>
 public:
 	BSSRDF(optix::Context & ctx, ScatteringDipole::Type);
 	virtual bool on_draw();
-	virtual void load(const float relative_ior, const ScatteringMaterialProperties &props);
+	virtual void load(const optix::float3 &relative_ior, const ScatteringMaterialProperties &props);
 	virtual ScatteringDipole::Type get_type() { return mType; };
 
     virtual optix::float3 get_sampling_inverse_mean_free_path(const ScatteringMaterialProperties &props) { return props.transport; }

@@ -23,5 +23,6 @@ private:
     unsigned int N;
 };
 
+CEREAL_CLASS_VERSION(PathTracing, 0)
 CEREAL_REGISTER_TYPE(PathTracing)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(RenderingMethod, PathTracing)

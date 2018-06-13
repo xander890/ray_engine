@@ -66,6 +66,7 @@ private:
 
 };
 
+CEREAL_CLASS_VERSION(ConvexHull, 0)
 CEREAL_REGISTER_TYPE(ConvexHull)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Geometry, ConvexHull)
 

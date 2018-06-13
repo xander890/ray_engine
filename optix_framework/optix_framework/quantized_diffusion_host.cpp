@@ -16,7 +16,7 @@ QuantizedDiffusion::QuantizedDiffusion(optix::Context & ctx) : BSSRDF(ctx, Scatt
 	mContext["qd_properties"]->setUserData(sizeof(BufPtr1D<QuantizedDiffusionProperties>), &ptr);
 }
 
-void QuantizedDiffusion::load(const float relative_ior, const ScatteringMaterialProperties &props)
+void QuantizedDiffusion::load(const optix::float3 &relative_ior, const ScatteringMaterialProperties &props)
 {
 	if (mHasChanged)
 	{

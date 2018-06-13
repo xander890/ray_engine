@@ -79,7 +79,7 @@ void GLFWDisplay::init( int& argc, char** argv )
   }
 }
 
-void GLFWDisplay::run( const std::string& title, SampleScene* scene, contDraw_E continuous_mode )
+void GLFWDisplay::run( const std::string& title, SampleScene* scene)
 {
   if ( !m_initialized ) {
     std::cerr << "ERROR - GLFWDisplay::run() called before GLFWDisplay::init()" << std::endl;

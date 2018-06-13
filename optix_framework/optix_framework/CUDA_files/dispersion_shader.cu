@@ -69,7 +69,9 @@ RT_PROGRAM void shade()
 
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		get_glass_rays(ray.direction, material.relative_ior, hit_pos, normal, normal, reflected_ray, refracted_ray, R, cos_theta);
+		float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+
+		get_glass_rays(ray.direction, relative_ior, hit_pos, normal, normal, reflected_ray, refracted_ray, R, cos_theta);
 
 		rtTrace(top_object, reflected_ray, prd_refl);
 		color += R * prd_refl.result;
@@ -142,8 +144,8 @@ RT_PROGRAM void shade_path_tracing(void)
 			//w = 1.0f;
 		}
 
-        float3 ior = get_material(texcoord).ior_complex_real_sq;
-		float index_of_refraction = sqrt(get_band(ior, band));
+        float3 ior = get_material(texcoord).index_of_refraction;
+		float index_of_refraction = get_band(ior, band);
 #endif
 		// Setting up payload and glass rays.
 		Ray reflected_ray, refracted_ray;

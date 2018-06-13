@@ -41,7 +41,7 @@ private:
 		archive(
 			 cereal::virtual_base_class<MissProgram>(this),
 	    	 cereal::make_nvp("texture", environment_sampler),
-			 cereal::make_nvp("delta_rotation", environment_sampler),
+			 cereal::make_nvp("delta_rotation", envmap_deltas),
              cereal::make_nvp("light_multiplier", properties.lightmap_multiplier),
              cereal::make_nvp("importance_sample", properties.importance_sample_envmap)
 		);
@@ -49,4 +49,5 @@ private:
 
 };
 
+CEREAL_CLASS_VERSION(EnvironmentMap, 0)
 CEREAL_REGISTER_TYPE(EnvironmentMap)

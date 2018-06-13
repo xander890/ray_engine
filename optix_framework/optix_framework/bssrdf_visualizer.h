@@ -45,4 +45,5 @@ private:
 
 };
 
+CEREAL_CLASS_VERSION(BSSRDFPlaneRenderer, 0)
 CEREAL_REGISTER_TYPE(BSSRDFPlaneRenderer)

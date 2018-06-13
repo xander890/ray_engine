@@ -19,6 +19,8 @@ _fn optix::float3 brdf(const BRDFGeometry & geometry,
         const MaterialDataCommon& material, TEASampler & sampler)
 {
     optix::float3 f = optix::make_float3(0);
+    float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+
     switch (selected_brdf)
     {
         case BRDFType::LAMBERTIAN:
@@ -32,14 +34,14 @@ _fn optix::float3 brdf(const BRDFGeometry & geometry,
             optix::float3 k_d = make_float3(optix::rtTex2D<optix::float4>(material.diffuse_map, geometry.texcoord.x, geometry.texcoord.y));
             optix::float3 k_s = make_float3(optix::rtTex2D<optix::float4>(material.specular_map, geometry.texcoord.x, geometry.texcoord.y));
             optix::float3 f_d = k_d * M_1_PIf;
-            f = f_d + torrance_sparrow_brdf(geometry.n, normalize(geometry.wi), normalize(geometry.wo), material.relative_ior, material.roughness) * k_s;
+            f = f_d + torrance_sparrow_brdf(geometry.n, normalize(geometry.wi), normalize(geometry.wo), relative_ior, material.roughness) * k_s;
         }
             break;
         case BRDFType::GGX:
         {
             optix::float3 k_d = make_float3(optix::rtTex2D<optix::float4>(material.diffuse_map, geometry.texcoord.x, geometry.texcoord.y));
             optix::float3 f_d = k_d * M_1_PIf;
-            f = f_d * walter_brdf(geometry.n, normalize(geometry.wi), normalize(geometry.wo), NormalDistribution::GGX, material.relative_ior, material.roughness);
+            f = f_d * walter_brdf(geometry.n, normalize(geometry.wi), normalize(geometry.wo), NormalDistribution::GGX, relative_ior, material.roughness);
         }
             break;
         case BRDFType::MERL:
@@ -79,7 +81,8 @@ _fn void importance_sample_new_direction_brdf(BRDFGeometry & geometry,
             optix::Ray reflected, refracted;
             float R, cos_theta_signed;
             optix::float3 ff_m;
-            get_glass_rays(geometry.wo, material.relative_ior, make_float3(0), m, ff_m, reflected, refracted, R, cos_theta_signed);
+            float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+            get_glass_rays(geometry.wo, relative_ior, make_float3(0), m, ff_m, reflected, refracted, R, cos_theta_signed);
 
             new_direction = reflected.direction;
             geometry.wi = new_direction;

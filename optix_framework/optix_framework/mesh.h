@@ -99,5 +99,6 @@ private:
 
 };
 
+CEREAL_CLASS_VERSION(MeshGeometry, 0)
 CEREAL_REGISTER_TYPE(MeshGeometry)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(Geometry, MeshGeometry)

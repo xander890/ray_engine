@@ -148,7 +148,8 @@ RT_PROGRAM void shade()
     float3 w_i = -ray.direction;
     const MaterialDataCommon & material = get_material(texcoord);
     const ScatteringMaterialProperties& props = material.scattering_properties;
-    float n1_over_n2 = 1.0f / material.relative_ior;
+    float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+    float n1_over_n2 = 1.0f / relative_ior;
     float cos_theta_in = dot(normal, w_i);
     float3 beam_T = make_float3(1.0f);
 	
@@ -156,11 +157,11 @@ RT_PROGRAM void shade()
     bool inside = cos_theta_in < 0.0f;
     if (inside)
     {
-        n1_over_n2 = material.relative_ior;
+        n1_over_n2 = relative_ior;
         normal = -normal;
         cos_theta_in = -cos_theta_in;
     }
-    else if (material.relative_ior < 1.0f)
+    else if (relative_ior < 1.0f)
     {
         beam_T = expf(-t_hit*props.absorption);
         float prob = (beam_T.x + beam_T.y + beam_T.z) / 3.0f;

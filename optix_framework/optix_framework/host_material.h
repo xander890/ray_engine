@@ -15,10 +15,8 @@ namespace cereal
 	void serialize(Archive &archive, MaterialDataCommon &m)
 	{
 		archive(cereal::make_nvp("illum", m.illum));
-		archive(cereal::make_nvp("relative_ior", m.relative_ior));
+		archive(cereal::make_nvp("index_of_refraction", m.index_of_refraction));
 		archive(cereal::make_nvp("roughness", m.roughness));
-		archive(cereal::make_nvp("ior_complex_real_sq", m.ior_complex_real_sq));
-		archive(cereal::make_nvp("ior_complex_imag_sq", m.ior_complex_imag_sq));
 	}
 }
 

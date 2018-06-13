@@ -13,7 +13,7 @@
 #include "scene_gui.h"
 
 
-inline std::unique_ptr<Texture> create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr)
+std::unique_ptr<Texture> Object::create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr)
 {
     std::unique_ptr<Texture> ret = std::make_unique<Texture>(ctx, Texture::INT, 1);
     ret->set_size(ptr->get_width(), ptr->get_height());
@@ -215,7 +215,7 @@ bool Object::on_draw()
                     std::string d;
                     if (Dialogs::openFileDialog(d))
                     {
-                        mMaterialSelectionTexture = loadTexture(mContext, d, optix::make_float3(0));
+                        mMaterialSelectionTexture = loadTexture(mContext, d, optix::make_float4(0));
                         mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture);
                         mMaterialSelectionTextureLabel->get_sampler()->setFilteringModes(RT_FILTER_NEAREST, RT_FILTER_NEAREST, RT_FILTER_NONE);
                         load_materials();

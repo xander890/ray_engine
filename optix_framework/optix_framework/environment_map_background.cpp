@@ -15,7 +15,7 @@ void EnvironmentMap::init(optix::Context & ctx)
     ctx["envmap_enabled"]->setInt(1);
 
     if(envmap_path != "")
-        environment_sampler = loadTexture(context->getContext(), envmap_path, make_float3(1.0f));
+        environment_sampler = loadTexture(context->getContext(), envmap_path, make_float4(1.0f));
 
     properties.environment_map_tex_id = environment_sampler->get_id();
     std::string ptx_path = get_path_ptx("env_cameras.cu");

@@ -40,10 +40,9 @@ struct GLFWwindow;
 class GLFWDisplay
 {
 public:
-  enum contDraw_E { CDNone=0, CDProgressive=1, CDAnimated=2, CDBenchmark=3, CDBenchmarkTimed=4 };
 
   static void init( int& argc, char** argv );
-  static void run( const std::string& title, SampleScene* scene, contDraw_E continuous_mode = CDNone );
+  static void run( const std::string& title, SampleScene* scene);
   static void printUsage();
 
   static void setRequiresDisplay( const bool requires_display )

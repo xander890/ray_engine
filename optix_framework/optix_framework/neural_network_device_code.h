@@ -353,7 +353,7 @@ _fn void sample_neural_network(
     // For now only red channel.
     float albedo = optix::get_channel(colorband, material.scattering_properties.albedo);
     float extinction = optix::get_channel(colorband, material.scattering_properties.extinction);
-    float eta = material.relative_ior;
+    float eta = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
     float g = optix::get_channel(colorband, material.scattering_properties.meancosine);
 
     float cos_theta_i = dot(wo, no);

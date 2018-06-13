@@ -17,5 +17,6 @@ private:
     }
 };
 
+CEREAL_CLASS_VERSION(SimpleTracing, 0)
 CEREAL_REGISTER_TYPE(SimpleTracing)
 CEREAL_REGISTER_POLYMORPHIC_RELATION(RenderingMethod, SimpleTracing)

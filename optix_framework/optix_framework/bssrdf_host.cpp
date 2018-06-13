@@ -17,7 +17,7 @@ bool BSSRDF::on_draw()
 	return false;
 }
 
-void BSSRDF::load(const float, const ScatteringMaterialProperties &)
+void BSSRDF::load(const optix::float3 &, const ScatteringMaterialProperties &)
 {
 }
 

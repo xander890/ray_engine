@@ -92,7 +92,7 @@ bool loadDevilTexture(std::unique_ptr<Texture> &tex, optix::Context context, con
 }
 
 
-std::unique_ptr<Texture> loadTexture( optix::Context context, const std::string& filename, const optix::float3& default_color )
+std::unique_ptr<Texture> loadTexture( optix::Context context, const std::string& filename, const optix::float4& default_color )
 {
 	std::string filename_lc = filename;
 	std::transform(filename.begin(), filename.end(), filename_lc.begin(), ::tolower);
@@ -124,7 +124,7 @@ std::unique_ptr<Texture> loadTexture( optix::Context context, const std::string&
 
 	if(!success)
 	{
-		tex = createOneElementSampler(context, make_float4(default_color,1));
+		tex = createOneElementSampler(context, default_color);
 	}
 
 	return tex;

@@ -48,11 +48,9 @@ int main( int argc, char** argv )
 	std::vector<std::string> filenames;
 	std::string filename = "";
 	std::string output_file = "rendering.raw";
-	bool accel_caching_on = false;
 	bool auto_mode = false;
 	int frames = -1;
 	float time = -1.0f;
-	std::vector<std::string> additional_parameters;
 	bool nodisplay = false;
     bool scene_found = false;
 
@@ -71,18 +69,8 @@ int main( int argc, char** argv )
 	{
 		if (i == argc - 1)
 			printUsageAndExit(argv[0]);
-		auto_mode = true;
 		output_file = argv[++i];
 		lower_case_string(output_file);
-	}
-	else if (arg == "--parameter_override")
-	{
-		do
-		{
-			i++;
-			additional_parameters.push_back(std::string(argv[i]));
-		}
-		while (i+1 < argc && std::string(argv[i+1])[0] != '-');
 	}
 	else if (arg == "-t" || arg == "--time")
 	{
@@ -154,7 +142,6 @@ int main( int argc, char** argv )
 	try 
 	{
 		ObjScene * scene_o = new ObjScene(filenames);
-		SampleScene * scene = scene_o;
 
 		if (auto_mode)
 		{
@@ -162,7 +149,7 @@ int main( int argc, char** argv )
 			scene_o->start_render_task_on_scene_ready();
 		}	
 
-		GLFWDisplay::run( "Optix Renderer", scene );
+		GLFWDisplay::run( "Optix Renderer", scene_o );
 	}
 	catch(optix::Exception & e )
 	{

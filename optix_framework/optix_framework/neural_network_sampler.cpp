@@ -165,7 +165,7 @@ bool NeuralNetworkSampler::on_draw()
     return false; // Nothing has changed.
 }
 
-void NeuralNetworkSampler::load(float relative_ior, const ScatteringMaterialProperties & props)
+void NeuralNetworkSampler::load(const optix::float3& relative_ior, const ScatteringMaterialProperties & props)
 {
     //Logger::info << "Log something..." << std::endl;
     // It will be called the next frame, if something changes.

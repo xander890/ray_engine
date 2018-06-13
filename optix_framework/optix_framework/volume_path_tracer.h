@@ -52,4 +52,5 @@ private:
 
 };
 
+CEREAL_CLASS_VERSION(VolumePathTracer, 0)
 CEREAL_REGISTER_TYPE(VolumePathTracer)

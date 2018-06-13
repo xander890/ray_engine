@@ -35,4 +35,5 @@ private:
 
 };
 
+CEREAL_CLASS_VERSION(PresampledSurfaceBssrdf, 0)
 CEREAL_REGISTER_TYPE(PresampledSurfaceBssrdf)

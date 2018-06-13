@@ -328,15 +328,15 @@ ObjMaterial ObjLoader::convert_mat(std::string folder, GLMmaterial& mat, optix::
 	params.scattering = make_float3(mat.scattering[0], mat.scattering[1], mat.scattering[2]);
 	params.scale = mat.scale;
 
-	float3 Kd = make_float3(mat.diffuse[0],
+	float4 Kd = optix::make_float4(mat.diffuse[0],
 		mat.diffuse[1],
-		mat.diffuse[2]);
-	float3 Ka = make_float3(mat.ambient[0],
+		mat.diffuse[2], 1);
+	float4 Ka = optix::make_float4(mat.ambient[0],
 		mat.ambient[1],
-		mat.ambient[2]);
-	float3 Ks = make_float3(mat.specular[0],
+		mat.ambient[2], 1);
+	float4 Ks = optix::make_float4(mat.specular[0],
 		mat.specular[1],
-		mat.specular[2]);
+		mat.specular[2], 1);
 
 	// load textures relatively to OBJ main file
 	std::string ambient_map = strlen(mat.ambient_map) ? folder + mat.ambient_map : "";

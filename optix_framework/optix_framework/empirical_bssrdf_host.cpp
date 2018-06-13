@@ -4,7 +4,7 @@
 #include "optix_utils.h"
 #include "scattering_properties.h"
 #include "empirical_bssrdf_common.h"
-
+#include "optix_math.h"
 
 void EmpiricalBSSRDF::prepare_buffers()
 {
@@ -51,16 +51,19 @@ EmpiricalBSSRDF::EmpiricalBSSRDF(optix::Context & context): BSSRDF(context, Scat
     mBSSRDFFile = Folders::data_folder + "/bssrdf/test.bssrdf";
 }
 
-void EmpiricalBSSRDF::load(const float relative_ior, const ScatteringMaterialProperties &props)
+
+void EmpiricalBSSRDF::load(const optix::float3 &relative_ior, const ScatteringMaterialProperties &props)
 {
     if(!mInitialized)
     {
+        float ior = dot(relative_ior, optix::make_float3(1)) / 3.0f;
+
         Logger::info << "Ab    : " << props.absorption.x << " " << props.absorption.y << " "<< props.absorption.z << std::endl;
         Logger::info << "Scatt : " << props.scattering.x << " " << props.scattering.y << " "<< props.scattering.z << std::endl;
         Logger::info << "Albedo: " << props.albedo.x << " " << props.albedo.y << " "<< props.albedo.z << std::endl;
         Logger::info << "Ext   : " << props.extinction.x << " " << props.extinction.y << " "<< props.extinction.z << std::endl;
         Logger::info << "G   : " << props.meancosine.x << " " << props.meancosine.y << " "<< props.meancosine.z << std::endl;
-        Logger::info << "Eta   : " << relative_ior << std::endl;
+        Logger::info << "Eta   : " << ior << std::endl;
         Logger::info << "Loading new material for empirical bssrdf..." << std::endl;
         prepare_buffers();
 
@@ -71,11 +74,12 @@ void EmpiricalBSSRDF::load(const float relative_ior, const ScatteringMaterialPro
 
         std::vector<size_t> state;
         bool found = true;
+        float rel_ior = dot(relative_ior, optix::make_float3(1)) / 3.0f;
 
         for(int i = 0; i < 3; i++)
         {
             // We find the corresponding index for the material properties.
-            mManager->get_material_index(optix::getByIndex(props.albedo,i), optix::getByIndex(props.meancosine,i), relative_ior, state);
+            mManager->get_material_index(optix::getByIndex(props.albedo,i), optix::getByIndex(props.meancosine,i), rel_ior, state);
             optix::Buffer buf = mContext->getBufferFromId(mDataBuffers.buffers[i].getId());
             RTsize w;
             buf->getSize(w);

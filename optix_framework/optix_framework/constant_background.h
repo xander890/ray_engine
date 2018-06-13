@@ -24,4 +24,5 @@ private:
 };
 
 
+CEREAL_CLASS_VERSION(ConstantBackground, 0)
 CEREAL_REGISTER_TYPE(ConstantBackground)

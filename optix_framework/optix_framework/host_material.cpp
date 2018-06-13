@@ -98,8 +98,11 @@ bool MaterialHost::on_draw(std::string myid = "")
             {
                 changed = true;
             }
-            if (ImmediateGUIDraw::InputFloat(create_id_str("Index of refraction", id).c_str(), &mMaterialData.relative_ior))
+
+			float f = dot(mMaterialData.index_of_refraction, optix::make_float3(1)) / 3.0f;
+            if (ImmediateGUIDraw::InputFloat(create_id_str("Index of refraction", id).c_str(), &f))
             {
+				mMaterialData.index_of_refraction = optix::make_float3(f);
                 changed = true;
             }
             changed |= scattering_material->on_draw(myid);
@@ -159,7 +162,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : Materia
 	if (is_valid_material(*data))
 	{
 		Logger::info << mMaterialName << " is a valid obj material. Using obj parameters. " << std::endl;
-		mMaterialData.relative_ior = mat.ior;
+		mMaterialData.index_of_refraction = optix::make_float3(mat.ior);
 		scattering_material = std::make_unique<ScatteringMaterial>(mat.absorption, mat.scattering, mat.asymmetry, mat.scale, mMaterialName.c_str());
 	}
 	else
@@ -171,9 +174,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : Materia
 		{
 			Logger::info << "Material found in default materials. " << std::endl;
 			scattering_material = std::make_unique<ScatteringMaterial>(def);
-			mMaterialData.relative_ior = data->ior == 0.0f ? 1.3f : data->ior;
-			mMaterialData.ior_complex_imag_sq = optix::make_float3(mMaterialData.relative_ior*mMaterialData.relative_ior);
-			mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
+			mMaterialData.index_of_refraction = optix::make_float3(data->ior == 0.0f ? 1.3f : data->ior);
 			Logger::debug << std::to_string(scattering_material->get_scale()) << std::endl;
 		}
 		else if (MaterialLibrary::media.count(mMaterialName) != 0)
@@ -183,9 +184,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : Materia
 			MPMLMedium air = MaterialLibrary::media["air"];
 			float3 eta, kappa;
 			get_relative_ior(air, mat, eta, kappa);
-			mMaterialData.relative_ior = dot(eta, optix::make_float3(0.3333f));
-			mMaterialData.ior_complex_real_sq = eta*eta;
-			mMaterialData.ior_complex_imag_sq = kappa*kappa;
+			mMaterialData.index_of_refraction = eta;
 			scattering_material = std::make_unique<ScatteringMaterial>(mat.absorption, mat.scattering, mat.asymmetry);
 		}
 		else if (MaterialLibrary::interfaces.count(mMaterialName) != 0)
@@ -194,18 +193,14 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : Materia
 			MPMLInterface interface = MaterialLibrary::interfaces[mMaterialName];
 			float3 eta, kappa;
 			get_relative_ior(*interface.med_out, *interface.med_in, eta, kappa);
-			mMaterialData.relative_ior = dot(eta, optix::make_float3(0.3333f));
-			mMaterialData.ior_complex_real_sq = eta*eta;
-			mMaterialData.ior_complex_imag_sq = kappa*kappa;
+			mMaterialData.index_of_refraction = eta;
 			scattering_material = std::make_unique<ScatteringMaterial>(interface.med_in->absorption, interface.med_in->scattering, interface.med_in->asymmetry);
 		}
 		else
 		{
 			Logger::warning << "Scattering properties for material " << mMaterialName << "  not found. " << std::endl;
-			mMaterialData.relative_ior = 1.0f;
-			mMaterialData.ior_complex_imag_sq = optix::make_float3(mMaterialData.relative_ior*mMaterialData.relative_ior);
+			mMaterialData.index_of_refraction = optix::make_float3(1.0f);
 			scattering_material = std::make_unique<ScatteringMaterial>(optix::make_float3(1), optix::make_float3(0), optix::make_float3(1));
-			mMaterialData.ior_complex_imag_sq = optix::make_float3(0);
 		}
 	}
 
@@ -225,7 +220,8 @@ const MaterialDataCommon& MaterialHost::get_data()
 {
 	if (mHasChanged || scattering_material->hasChanged())
 	{
-		scattering_material->computeCoefficients(mMaterialData.relative_ior);
+		float relative_ior = dot(mMaterialData.index_of_refraction, optix::make_float3(1)) / 3.0f;
+		scattering_material->computeCoefficients(relative_ior);
 		mHasChanged = false;
 		mMaterialData.scattering_properties = scattering_material->get_data();		
 	}
