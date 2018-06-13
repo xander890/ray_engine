@@ -8,8 +8,8 @@ public:
 	RenderTask(std::string destination_file, bool close_program_on_exit);
 	virtual ~RenderTask() = default;
 	virtual void start() = 0;
-	virtual void update(float deltaTime) = 0;
-	virtual void update_absolute(float deltaTime) = 0;
+	virtual void update(double deltaTime) = 0;
+	virtual void update_absolute(double deltaTime) = 0;
 	virtual bool is_active() = 0;
 	virtual bool is_finished() = 0;
 	virtual std::string get_progress_string() = 0;
@@ -29,8 +29,8 @@ class RenderTaskFrames : public RenderTask
 public:
 	RenderTaskFrames(int destination_samples, const std::string& destination_file, bool close_program_on_exit);
 	void start() override;
-	void update(float deltaTime) override;
-	void update_absolute(float time) override;
+	void update(double deltaTime) override;
+	void update_absolute(double time) override;
 	bool is_active() override;
 	bool is_finished() override;
 	std::string get_progress_string() override;
@@ -46,10 +46,10 @@ private:
 class RenderTaskTime : public RenderTask
 {
 public:
-	RenderTaskTime(float destination_time, const std::string& destination_file, bool close_program_on_exit);
+	RenderTaskTime(float destination_time, const std::string &destination_file, bool close_program_on_exit);
 	void start() override;
-	void update(float deltaTime) override;
-	void update_absolute(float time) override;
+	void update(double deltaTime) override;
+	void update_absolute(double time) override;
 
 	bool is_active() override;
 	bool is_finished() override;
@@ -60,7 +60,7 @@ public:
 	std::string to_string() override;
 private:
 	float destination_time = 10.0f;
-	float current_time;
+	double current_time;
 };
 
 class RenderTaskTimeorFrames : public RenderTask
@@ -68,8 +68,8 @@ class RenderTaskTimeorFrames : public RenderTask
 public:
 	RenderTaskTimeorFrames(int max_frames, float destination_time, const std::string& destination_file, bool close_program_on_exit);
 	void start() override;
-	void update(float deltaTime) override;
-	void update_absolute(float time) override;
+	void update(double deltaTime) override;
+	void update_absolute(double time) override;
 	bool is_active() override;
 	bool is_finished() override;
 	std::string get_progress_string() override;
@@ -78,7 +78,7 @@ public:
 	std::string to_string() override;
 private:
 	float destination_time = 10.0f;
-	float current_time;
+	double current_time;
 	int destination_samples;
 	int current_frame;
 };
