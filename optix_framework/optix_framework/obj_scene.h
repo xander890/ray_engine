@@ -124,6 +124,8 @@ private:
     std::chrono::high_resolution_clock::duration render_time_post = std::chrono::high_resolution_clock::duration::zero();
     std::chrono::high_resolution_clock::duration render_time_tonemap = std::chrono::high_resolution_clock::duration::zero();
 
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_task_render_time;
+
 	bool mbPaused = false;
 
 	bool mImportanceSampleAreaLights = false;

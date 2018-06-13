@@ -119,6 +119,7 @@ float to_milliseconds(std::chrono::high_resolution_clock::duration & dur)
 
 bool ObjScene::draw_gui()
 {
+
 	bool changed = false;
 	ImmediateGUIDraw::TextColored({ 255,0,0,1 }, "Rendering info ");
 	std::stringstream ss;
@@ -289,6 +290,7 @@ bool ObjScene::draw_gui()
 		if (!current_render_task->is_active() && ImmediateGUIDraw::Button("Start task"))
 		{
 			changed = true;
+			start_task_render_time = currentTime();
 			current_render_task->start();
 		}
 
@@ -465,7 +467,8 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	context["scene_epsilon"]->setFloat(parameters.scene_epsilon_fraction * max_dim);
 	// Prepare to run 
 
-	gui = std::make_unique<ImmediateGUI>();
+	if(GLFWDisplay::isDisplayAvailable())
+		gui = std::make_unique<ImmediateGUI>();
 
 	context["show_difference_image"]->setInt(show_difference_image);
 
@@ -478,7 +481,9 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	context["max_depth"]->setInt(parameters.max_depth);
 	reset_renderer();
     Logger::info<<"Scene initialized."<<endl;
-    save_parameters("ray_tracing_parameters.xml");
+
+	if(!exists("ray_tracing_parameters.xml"))
+	    save_parameters("ray_tracing_parameters.xml");
 
 
 }
@@ -537,7 +542,7 @@ void ObjScene::trace()
 	t1 = currentTime();
     render_time_tonemap = t1-t0;
 
-	auto total1 = currentTime();
+    std::chrono::time_point<std::chrono::high_resolution_clock> total1 = currentTime();
 
 	if (current_render_task->is_active())
 	{
@@ -547,9 +552,8 @@ void ObjScene::trace()
 			
 			current_render_task->end();
 		}
-        auto l = total1 - total0;
-
-		current_render_task->update(to_milliseconds(l) / 1000.0f);
+        std::chrono::duration<double> l = total1 - start_task_render_time;
+		current_render_task->update_absolute(l.count());
 	}
 
 
@@ -578,7 +582,10 @@ void ObjScene::start_render_task_on_scene_ready()
 void ObjScene::scene_initialized()
 {
 	if (start_render_task_when_ready)
+	{
 		current_render_task->start();
+		start_task_render_time = currentTime();
+	}
 }
 
 optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height)
@@ -674,7 +681,7 @@ bool ObjScene::mouse_moving(int x, int y)
 
 void ObjScene::post_draw_callback()
 {
-	if (!gui->isVisible())
+	if (gui == nullptr || !gui->isVisible())
 		return;
 	gui->start_window("Ray tracing demo", 20, 20, 500, 600);
 	if (draw_gui())
