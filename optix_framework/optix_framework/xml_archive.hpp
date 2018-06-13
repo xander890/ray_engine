@@ -590,11 +590,25 @@ namespace cereal
               finishNode();
 
               setBinaryMode();
-              setNextName(name);
-              startNode();
 
-              std::string encoded;
-              loadValue(encoded);
+              std::string encoded = "";
+              const rapidxml::xml_node<> *catalog_node = itsXML->first_node(CEREAL_XML_STRING_VALUE);
+
+              for (const rapidxml::xml_node<> *book_node = catalog_node->first_node();
+                   book_node != NULL;
+                   book_node = book_node->next_sibling())
+              {
+                  if(std::string(book_node->name()) == name)
+                  {
+                      const rapidxml::xml_attribute<> *id_attribute = book_node->first_attribute("id");
+                      if (id_attribute != NULL && std::string(id_attribute->value()) == hash)
+                      {
+                          encoded = book_node->value();
+                          break;
+                      }
+                  }
+
+              }
 
               auto decoded = base64::decode(encoded);
 
@@ -603,7 +617,6 @@ namespace cereal
 
               std::memcpy(data, decoded.data(), decoded.size());
 
-              finishNode();
               endBinaryMode();
           }
           else
