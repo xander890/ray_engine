@@ -19,7 +19,7 @@ namespace
 	void lower_case(char& x)
   { 
     x = tolower(x); 
-  }
+  } 
 
 	inline void lower_case_string(std::string& s)
 	{

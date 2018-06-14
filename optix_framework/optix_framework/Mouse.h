@@ -20,8 +20,6 @@
  */
 
 #pragma once
-#define _USE_MATH_DEFINES
-
 
 #include <optixu/optixu_math_namespace.h>
 #include <optixu/optixu_matrix_namespace.h>

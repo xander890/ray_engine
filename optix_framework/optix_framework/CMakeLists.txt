@@ -244,5 +244,5 @@ add_library( framework STATIC
 
 CUDA_ADD_CUBLAS_TO_TARGET(framework)
 
-target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw cereal ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${XercesC_LIBRARIES} ${IL_LIBRARIES} ${ILU_LIBRARIES})
+target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw cereal ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${IL_LIBRARIES})
 target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

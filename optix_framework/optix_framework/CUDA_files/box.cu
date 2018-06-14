@@ -54,11 +54,11 @@ RT_PROGRAM void box_intersect(int)
 	float3 t0 = (boxmin - ray.origin)/ray.direction;
 	float3 t1 = (boxmax - ray.origin)/ray.direction;
 	// Get a vector of 3 floats with the minimum values and the maximum ones
-	float3 near = fminf(t0, t1);
-	float3 far = fmaxf(t0, t1);
+	optix::float3 nearf = optix::fminf(t0, t1);
+	optix::float3 farf = optix::fmaxf(t0, t1);
 	// Choose absolute max and min
-	float tmin = fmaxf( near );
-	float tmax = fminf( far );
+	float tmin = optix::fmaxf( nearf );
+	float tmax = optix::fminf( farf );
 
 	if(tmin <= tmax) 
 	{

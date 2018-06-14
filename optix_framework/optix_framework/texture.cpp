@@ -3,7 +3,7 @@
 //
 
 #include <cstring>
-#include <GL/gl.h>
+#include "GL/glew.h"
 #include "texture.h"
 #include "immediate_gui.h"
 #include "thumbnail.h"
@@ -267,6 +267,7 @@ bool Texture::on_draw()
     dims += (mDimensionality > 1? "height: " + std::to_string(mDimensions[1]) : "") + "\n";
     dims += (mDimensionality > 2? "depth: " + std::to_string(mDimensions[2]) : "") + "\n";
     ImmediateGUIDraw::Text(dims.c_str());
+    return false;
 }
 
 void Texture::set_texel_ptr(const void *val, size_t i, size_t j, size_t k)

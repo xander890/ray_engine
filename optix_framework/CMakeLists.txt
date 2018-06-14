@@ -1,6 +1,6 @@
 # At LEAST 2.8 but newer is better
-project(ray_engine)
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
+project(ray_engine)
 
 # Must use GNUInstallDirs to install libraries into correct
 # locations on all platforms.
@@ -13,16 +13,18 @@ set(CMAKE_MODULE_PATH
 
 if(WIN32)
   set (CMAKE_CXX_STANDARD 11)
+  add_definitions(/bigobj)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+  message(STATUS "Flags ${CMAKE_CXX_FLAGS}")
 else()
-set (CMAKE_CXX_STANDARD 17)
-add_compile_options(-fpermissive)
-FIND_PACKAGE(PkgConfig REQUIRED)
-PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
-INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
-LINK_DIRECTORIES(${GTK3_LIBRARY_DIRS})
-add_definitions (${GTK3_CFLAGS_OTHER})
-list(APPEND CUDA_NVCC_FLAGS "-std=c++11")
-
+    set (CMAKE_CXX_STANDARD 17)
+    add_compile_options(-fpermissive)
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
+    INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
+    LINK_DIRECTORIES(${GTK3_LIBRARY_DIRS})
+    add_definitions (${GTK3_CFLAGS_OTHER})
+    list(APPEND CUDA_NVCC_FLAGS "-std=c++11")
 endif()
 
 # Include all CMake Macros.
@@ -36,7 +38,10 @@ include (ConfigCompilerFlags)
 if(UNIX)
 find_package(DevIL)
 else()
+set(IL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals/devil/include)
+set(IL_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/devil/lib/x64/Release/DevIL.lib)
 endif()
+
 include_directories(
         ${IL_INCLUDE_DIR}
 )
@@ -44,10 +49,13 @@ include_directories(
 if(UNIX)
 find_package(GLEW)
 else()
-add_library(glew STATIC IMPORTED)
-set_property(TARGET glew PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew)
-set_property(TARGET glew PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew/lib64/glew32.lib)
+set(GLEW_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew)
+set(GLEW_LIBRARIES  ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew/lib64/glew32.lib)
 endif()
+
+include_directories(
+        ${GLEW_INCLUDE_DIRS}
+)
 
 option(CUDA_GENERATE_DEPENDENCIES_DURING_CONFIGURE "Generate dependencies during configure time instead of only during build time." OFF)
 find_package(CUDA 5.0 REQUIRED)
@@ -57,7 +65,6 @@ OPTION(CUDA_REMOVE_GLOBAL_MEMORY_SPACE_WARNING "Suppress the \"Advisory: Cannot 
 # This passes a preprocessor definition to cl.exe when processing CUDA code.
 if(USING_WINDOWS_CL)
   list(APPEND CUDA_NVCC_FLAGS --compiler-options /D_USE_MATH_DEFINES)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 endif()
 
 find_package(OptiX REQUIRED)

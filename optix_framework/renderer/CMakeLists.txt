@@ -22,6 +22,7 @@ if(WIN32)
 copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/OptiX/bin64" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/xercesc/dll" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/glew/dll" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
+copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/devil/lib/x64/Release" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 endif()
 
 copy_dir(renderer "${SAMPLES_PTX_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/PTX_files")

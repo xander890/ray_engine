@@ -6,6 +6,7 @@
 #include "optix_serialize.h"
 #include "logger.h"
 #include "ImageLoader.h"
+#include <algorithm>
 
 class Thumbnail;
 

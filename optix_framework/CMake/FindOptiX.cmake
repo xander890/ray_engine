@@ -29,7 +29,7 @@
 # Locate the OptiX distribution.  Search relative to the SDK first, then look in the system.
 
 # Our initial guess will be within the SDK.
-set(OptiX_INSTALL_DIR "/home/alcor/optix" CACHE PATH "Path to OptiX installed location.")
+set(OptiX_INSTALL_DIR "C:\\ProgramData\\NVIDIA Corporation\\OptiX SDK 4.1.1" CACHE PATH "Path to OptiX installed location.")
 
 # The distribution contains both 32 and 64 bit libraries.  Adjust the library
 # search path based on the bit-ness of the build.  (i.e. 64: bin64, lib64; 32:
@@ -65,7 +65,7 @@ endmacro()
 OPTIX_find_api_library(optix 1)
 OPTIX_find_api_library(optixu 1)
 OPTIX_find_api_library(optix_prime 1)
-
+MESSAGE(STATUS ${OptiX_INSTALL_DIR})
 # Include
 find_path(OptiX_INCLUDE
   NAMES optix.h
