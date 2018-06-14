@@ -39,7 +39,7 @@ if(UNIX)
 find_package(DevIL)
 else()
 set(IL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals/devil/include)
-set(IL_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/devil/lib/x64/Release/DevIL.lib)
+set(IL_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/devil/lib/DevIL.lib)
 endif()
 
 include_directories(
