@@ -104,6 +104,7 @@ void Object::load_geometry()
     mGeometryInstance["local_bounding_box"]->setUserData(sizeof(BufPtr<optix::Aabb>), &bptr);
     mGeometryInstance["current_geometry_node"]->set(mTransform->get_transform());
     mGeometry->load();
+	mGeometry->load(mGeometryInstance);
     mReloadGeometry = false;
 }
 
@@ -156,7 +157,6 @@ void Object::create_and_bind_optix_data()
     {
         mMaterialBuffer = create_buffer<MaterialDataCommon>(mContext);
     }
-
 
     if(!mAcceleration.get())
     {

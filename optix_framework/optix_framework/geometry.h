@@ -10,11 +10,15 @@ public:
     optix::Geometry get_geometry();
     optix::Buffer get_bounding_box_buffer() {return mBBoxBuffer; }
     virtual void load() = 0;
+	virtual void load(optix::GeometryInstance & instance);
+
     virtual bool on_draw() = 0;
 
     virtual void get_flattened_vertices(std::vector<optix::float3> & triangles) { triangles.clear(); }
 
 protected:
+	virtual void load_data(optix::ScopedObj * obj) = 0;
+
     optix::Geometry mGeometry = nullptr;
     optix::Context  mContext;
     optix::Program         mIntersectProgram;

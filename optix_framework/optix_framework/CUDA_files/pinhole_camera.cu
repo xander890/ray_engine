@@ -74,28 +74,6 @@ RT_PROGRAM void pinhole_camera()
 }
 
 
-RT_PROGRAM void pinhole_camera_w_matrix()
-{
-	if (check_bounds())
-	{
-		TEASampler sampler(launch_dim.x*launch_index.y + launch_index.x, frame);
-		PerRayData_radiance prd = get_starting_payload(&sampler);
-		float2 jitter = sampler.next2D() * camera_data.downsampling;
-		uint2 real_pixel = launch_index * camera_data.downsampling + make_uint2(camera_data.rendering_rectangle.x, camera_data.rendering_rectangle.y);
-		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(camera_data.camera_size) * 2.0f - 1.0f;
-		float3 a_coords = make_float3(ip_coords, 1.0f);
-		float3 vec = camera_data.inv_calibration_matrix * a_coords;
-		float3 origin = camera_data.eye;
-		float3 direction = normalize(vec);
-		Ray ray(origin, direction,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
-		trace(ray, prd);
-	}
-	else
-	{
-		output_buffer[launch_index] = make_float4(0);
-	}	
-}
-
 RT_PROGRAM void exception()
 {
   const unsigned int code = rtGetExceptionCode();

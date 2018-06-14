@@ -33,7 +33,7 @@ bool SceneGUI::on_draw(Scene * scene)
         if(ImmediateGUIDraw::Button("Load from file..."))
         {
             std::string path;
-            if(Dialogs::openFileDialog(path, "Obj Files|*.obj"))
+            if(Dialogs::openFileDialog(path))
             {
                 ObjLoader* loader = new ObjLoader(path.c_str(), scene->context);
                 std::vector<std::unique_ptr<Object>>& v = loader->load();

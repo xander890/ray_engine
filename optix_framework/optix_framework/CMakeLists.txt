@@ -229,6 +229,7 @@ CUDA_files/triangle_mesh.cu
 CUDA_files/uv_shader.cu
 CUDA_files/volume_shader.cu
 CUDA_files/volume_shader_heterogenous.cu
+CUDA_files/wireframe_shader.cu
  )
     
 source_group("Headers" FILES ${HEADERS})

@@ -31,13 +31,7 @@ void MeshGeometry::load()
     mGeometry->setPrimitiveCount(mMeshData.mNumTriangles);
     mGeometry->setIntersectionProgram(mIntersectProgram);
     mGeometry->setBoundingBoxProgram(mBoundingboxProgram);
-    mGeometry["vertex_buffer"]->setBuffer(mMeshData.mVbuffer);
-    mGeometry["vindex_buffer"]->setBuffer(mMeshData.mVIbuffer);
-    mGeometry["normal_buffer"]->setBuffer(mMeshData.mNbuffer);
-    mGeometry["nindex_buffer"]->setBuffer(mMeshData.mNIbuffer);
-    mGeometry["texcoord_buffer"]->setBuffer(mMeshData.mTBuffer);
-    mGeometry["tindex_buffer"]->setBuffer(mMeshData.mTIbuffer);
-    mGeometry["num_triangles"]->setUint(mMeshData.mNumTriangles);
+	load_data(mGeometry.get());
     mGeometry->markDirty();
     initialize_buffer<optix::Aabb>(mBBoxBuffer, mMeshData.mBoundingBox);
 	mReloadGeometry = false;
@@ -48,6 +42,17 @@ bool MeshGeometry::on_draw()
 	bool changed = false;
     ImmediateGUIDraw::TextWrapped("Triangles: %d\n", mMeshData.mNumTriangles);
 	return changed;
+}
+
+void MeshGeometry::load_data(optix::ScopedObj * obj)
+{
+	get_var(obj, "vertex_buffer")->setBuffer(mMeshData.mVbuffer);
+	get_var(obj, "vindex_buffer")->setBuffer(mMeshData.mVIbuffer);
+	get_var(obj, "normal_buffer")->setBuffer(mMeshData.mNbuffer);
+	get_var(obj, "nindex_buffer")->setBuffer(mMeshData.mNIbuffer);
+	get_var(obj, "texcoord_buffer")->setBuffer(mMeshData.mTBuffer);
+	get_var(obj, "tindex_buffer")->setBuffer(mMeshData.mTIbuffer);
+	get_var(obj, "num_triangles")->setUint(mMeshData.mNumTriangles);
 }
 
 void MeshGeometry::get_flattened_vertices(std::vector<optix::float3> &triangles)

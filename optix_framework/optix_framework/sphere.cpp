@@ -3,6 +3,12 @@
 #include "optix_utils.h"
 #include "immediate_gui.h"
 
+void Sphere::load_data(optix::ScopedObj * obj)
+{
+	get_var(obj, "center")->setFloat(center);
+	get_var(obj, "radius")->setFloat(radius);
+}
+
 void Sphere::create_and_bind_optix_data()
 {
 	if (!mIntersectProgram.get()) {
@@ -56,7 +62,6 @@ void Sphere::load()
 	initialize_buffer<optix::Aabb>(mBBoxBuffer, mBoundingBox);
 	mReloadGeometry = false;
 
-	mGeometry["center"]->setFloat(center);
-	mGeometry["radius"]->setFloat(radius);
+	load_data(mGeometry.get());
 }
 

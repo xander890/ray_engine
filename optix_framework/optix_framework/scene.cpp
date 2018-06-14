@@ -219,9 +219,12 @@ void Scene::update_area_lights()
         mAreaLightBuffer->setElementSize(sizeof(TriangleLight));
     }
     mAreaLightBuffer->setSize(max(1, lights.size()));
-    void * buf = mAreaLightBuffer->map();
-    memcpy(buf, &lights[0], lights.size() * sizeof(TriangleLight));
-    mAreaLightBuffer->unmap();
+	if (lights.size() > 0)
+	{
+		void * buf = mAreaLightBuffer->map();
+		memcpy(buf, &lights[0], lights.size() * sizeof(TriangleLight));
+		mAreaLightBuffer->unmap();
+	}
 }
 
 void Scene::update_singular_lights()

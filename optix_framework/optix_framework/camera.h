@@ -11,5 +11,6 @@ struct CameraData
 	optix::uint4 rendering_rectangle;
 	optix::uint2 camera_size;
 	optix::uint downsampling;
-	optix::Matrix3x3 inv_calibration_matrix;
+	optix::Matrix3x3 view_matrix;
+	optix::Matrix3x3 inv_view_matrix;
 };

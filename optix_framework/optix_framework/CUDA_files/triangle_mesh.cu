@@ -38,10 +38,10 @@ rtDeclareVariable(float2, texcoord, attribute texcoord, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float2, barys, attribute barys, );
+rtDeclareVariable(int, primitive, attribute primitive, );
 
 RT_PROGRAM void mesh_intersect( int primIdx )
-{
-
+{ 
   int3 v_idx = vindex_buffer[primIdx];
 
   float3 p0 = vertex_buffer[ v_idx.x ];
@@ -64,6 +64,7 @@ RT_PROGRAM void mesh_intersect( int primIdx )
         shading_normal = normalize( n1*beta + n2*gamma + n0*(1.0f-beta-gamma) );
       }
       geometric_normal = normalize( n );
+	  primitive = primIdx;
 
       int3 t_idx = tindex_buffer[ primIdx ];
 

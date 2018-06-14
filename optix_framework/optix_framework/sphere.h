@@ -16,6 +16,7 @@ public:
 	bool on_draw() override;
 
 protected:
+	void load_data(optix::ScopedObj * obj) override;
 	void create_and_bind_optix_data() override;
 
 	float3 center;

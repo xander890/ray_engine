@@ -79,6 +79,7 @@ public:
     virtual bool on_draw() override;
 
 private:
+	void load_data(optix::ScopedObj * obj) override;
     MeshGeometry() {}
 
 	friend class cereal::access;

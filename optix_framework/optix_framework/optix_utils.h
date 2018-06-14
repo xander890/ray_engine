@@ -182,3 +182,11 @@ inline optix::Buffer clone_buffer(optix::Buffer & buf, unsigned int type)
 	ret->unmap();
 	return ret;
 }
+
+inline optix::Variable get_var(optix::ScopedObj * ptr, const char * varname)
+{
+	optix::Variable v = ptr->queryVariable(varname);
+	if (v.operator->() == 0)
+		v = ptr->declareVariable(varname);
+	return v;
+}

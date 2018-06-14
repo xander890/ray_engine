@@ -5,6 +5,8 @@
 using namespace optix;
 using namespace std;
 
+
+
 void ConvexHull::create_and_bind_optix_data()
 {
 	if (!mIntersectProgram.get()) {
@@ -44,8 +46,8 @@ void ConvexHull::load()
 
 	create_and_bind_optix_data();
 
-    mPlanes.clear();
-    mBoundingBox.invalidate();
+	mPlanes.clear();
+	mBoundingBox.invalidate();
 	make_planes(mPlanes, mBoundingBox);
 	size_t nsides = mPlanes.size();
 
@@ -54,16 +56,14 @@ void ConvexHull::load()
 
 	float4* chplane = (float4*)mPlaneBuffer->map();
 
-	for (int i = 0; i < nsides; i++){
+	for (int i = 0; i < nsides; i++) {
 		float3 p = mPlanes[i].point;
 		float3 n = normalize(mPlanes[i].normal);
 		chplane[i] = make_float4(n, -dot(n, p));
 	}
 
 	mPlaneBuffer->unmap();
-	mGeometry["planes"]->setBuffer(mPlaneBuffer);
-	mGeometry["chull_bbmin"]->setFloat(mBoundingBox.m_min);
-	mGeometry["chull_bbmax"]->setFloat(mBoundingBox.m_max);
+	load_data(mGeometry.get());
 
 	mGeometry->setPrimitiveCount(1);
 	mGeometry->setIntersectionProgram(mIntersectProgram);
@@ -71,5 +71,16 @@ void ConvexHull::load()
 	mGeometry->markDirty();
 	initialize_buffer<optix::Aabb>(mBBoxBuffer, mBoundingBox);
 	mReloadGeometry = false;
+}
+
+void ConvexHull::load_data(optix::ScopedObj * obj)
+{
+	get_var(obj, "planes")->setBuffer(mPlaneBuffer);
+	get_var(obj, "chull_bbmin")->setFloat(mBoundingBox.m_min);
+	get_var(obj, "chull_bbmax")->setFloat(mBoundingBox.m_max);
+}
+
+void ConvexHull::load(optix::GeometryInstance & instance)
+{
 }
 

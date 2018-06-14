@@ -11,13 +11,13 @@
 #include "render_task.h"
 #include "scattering_material.h"
 #include "sky_model.h"
-#include "immediate_gui.h"
-
+#include "immediate_gui.h" 
+ 
 #include "hemisphere_partitions.h"
 namespace
 {
 	void lower_case(char& x)
-  { 
+  {   
     x = tolower(x); 
   } 
 

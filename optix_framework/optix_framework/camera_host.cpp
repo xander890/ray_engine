@@ -8,6 +8,7 @@
 #include "optix_utils.h"
 #include "math_helpers.h"
 #include <memory>
+#include <Eigen/Dense>
 
 using namespace optix;
 using namespace std;
@@ -74,8 +75,41 @@ Matrix4x4 initWithBasis( const float3& u,
 	return Matrix4x4( m );
 }
 
+Matrix3x3 initWithBasis(const float3& u,
+	const float3& v,
+	const float3& w)
+{
+	float m[9];
+	m[0] = u.x;
+	m[1] = v.x;
+	m[2] = w.x;
 
+	m[3] = u.y;
+	m[4] = v.y;
+	m[5] = w.y;
 
+	m[6] = u.z;
+	m[7] = v.z;
+	m[8] = w.z;
+
+	return Matrix3x3(m);
+}
+
+namespace Eigen
+{
+	Matrix3f optix_to_eigen(optix::Matrix3x3 & mat)
+	{
+		Matrix3f ret = Eigen::Map<Eigen::Matrix<float, 3, 3, Eigen::RowMajor>>(mat.getData());
+		return ret;
+	}
+
+	optix::Matrix3x3 eigen_to_optix(Matrix3f & mat)
+	{
+		Matrix3x3 ret;
+		Eigen::Map<Eigen::Matrix<float, 3, 3, Eigen::RowMajor>>(ret.getData(), mat.rows(), mat.cols()) = mat;
+		return ret;
+	}
+}
 bool Camera::on_draw()
 {
 	bool changed = false;
@@ -258,9 +292,13 @@ void Camera::setParameters(CameraParameters param)
 	data->downsampling = parameters->downsampling;
 	data->rendering_rectangle.z /= parameters->downsampling;
 	data->rendering_rectangle.w /= parameters->downsampling;
-	data->inv_calibration_matrix = optix::Matrix3x3::identity();
 	data->render_bounds = make_uint4(0, 0, parameters->width, parameters->height);
 	data->camera_size = make_uint2(parameters->width, parameters->height);
+	float3 cen = lookat;
+    data->view_matrix = initWithBasis( normalize(data->U), normalize(data->V), normalize(-data->W));
+	Eigen::Matrix3f e = Eigen::optix_to_eigen(data->view_matrix);
+	e = e.inverse().eval();
+	data->inv_view_matrix = Eigen::eigen_to_optix(e);
 }
 
 void Camera::setEyeLookatUp(float3 eye_in, float3 lookat_in, float3 up_in)

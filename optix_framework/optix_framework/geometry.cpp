@@ -50,3 +50,8 @@ optix::Geometry Geometry::get_geometry()
         create_and_bind_optix_data();
     return mGeometry;
 }
+
+void Geometry::load(optix::GeometryInstance & instance)
+{
+	load_data(instance.get());
+}

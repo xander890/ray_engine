@@ -51,11 +51,11 @@ namespace cereal
 inline void save_buffer(cereal::XMLOutputArchiveOptix & archive, optix::Buffer buffer, std::string name)
 {
 	void * data = buffer->map();
-	RTsize dim = buffer->getDimensionality();
+	unsigned int dim = buffer->getDimensionality();
 	std::vector<RTsize> dims = std::vector<RTsize>(dim);
 	buffer->getSize(dim, &dims[0]);
 	RTsize total_size = 1;
-	for(int i = 0; i < dim; i++)
+	for(unsigned int i = 0; i < dim; i++)
 		total_size *= dims[i];
 
 	RTsize element = buffer->getElementSize();
@@ -77,7 +77,7 @@ inline void load_buffer(cereal::XMLInputArchiveOptix & archive, optix::Buffer & 
 
 	buffer = archive.get_context()->createBuffer(RT_BUFFER_INPUT);
 	buffer->setFormat(RT_FORMAT_USER);
-	buffer->setSize(dim, &dims[0]);
+	buffer->setSize((unsigned int)dim, &dims[0]);
 	buffer->setElementSize(element);
 
 	RTsize total_size = 1;

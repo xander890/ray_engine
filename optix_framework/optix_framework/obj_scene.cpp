@@ -147,9 +147,9 @@ bool ObjScene::draw_gui()
 				void** device_pointer;
 				auto r = rtBufferGetDevicePointer (buffer, 0, device_pointer);
 				if(r == RT_SUCCESS)
-					printf("Buffer %d, size %d (w %d). ptr %p\n", i, b->getElementSize(), dims[0], *device_pointer);
+					printf("Buffer %d, size %d (w %d). ptr %p\n", (int)i, (int)b->getElementSize(), dims[0], *device_pointer);
 				else
-					printf("Buffer %d, size %d (w %d).\n", i, b->getElementSize(), dims[0]);
+					printf("Buffer %d, size %d (w %d).\n", (int)i, (int)b->getElementSize(), (int)dims[0]);
 			}
 		}
 	}
