@@ -22,7 +22,7 @@
 #include <obj_loader.h>
 
 #include <fstream>
-#include <ImageLoader.h>
+#include <image_loader.h>
 #include "logger.h"
 
 //------------------------------------------------------------------------------

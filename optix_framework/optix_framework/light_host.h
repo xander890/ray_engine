@@ -1,5 +1,5 @@
 #pragma once
-#include "SampleScene.h"
+#include "sample_scene.h"
 #include <memory>
 #include <optix_world.h>
 #include "optix_serialize.h"

@@ -19,7 +19,7 @@
  * SUCH DAMAGES
  */
 
-#include <PPMLoader.h>
+#include <ppm_loader.h>
 #include <optixu/optixu_math_namespace.h>
 #include <fstream>
 #include <iostream>

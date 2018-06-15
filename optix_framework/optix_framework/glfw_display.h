@@ -23,7 +23,7 @@
 
 #include <string>
 #include <optixu/optixpp_namespace.h>
-#include <SampleScene.h>
+#include <sample_scene.h>
 
 class Mouse;
 class Camera;

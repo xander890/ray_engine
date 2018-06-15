@@ -14,7 +14,7 @@
 #include "dialogs.h"
 #include "obj_loader.h"
 #include "sphere.h"
-#include "ImageLoader.h"
+#include "image_loader.h"
 #include "plint.h"
 #include "box.h"
 #include "environment_map_background.h"

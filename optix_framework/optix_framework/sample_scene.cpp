@@ -29,7 +29,7 @@
 #  include <GL/gl.h>
 #endif
 
-#include <SampleScene.h>
+#include <sample_scene.h>
 
 #include <optixu/optixu_math_stream_namespace.h>
 #include <optixu/optixu.h>

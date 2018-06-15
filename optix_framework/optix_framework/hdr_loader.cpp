@@ -19,7 +19,7 @@
  * SUCH DAMAGES
  */
 
-#include "HDRLoader.h"
+#include "hdr_loader.h"
 
 #include <math.h>
 #include <fstream>

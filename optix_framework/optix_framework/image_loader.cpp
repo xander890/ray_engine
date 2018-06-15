@@ -19,10 +19,10 @@
  * SUCH DAMAGES
  */
 
-#include <ImageLoader.h>
-#include <PPMLoader.h>
-#include <HDRLoader.h>
-#include <RawLoader.h>
+#include <image_loader.h>
+#include <ppm_loader.h>
+#include <hdr_loader.h>
+#include <raw_loader.h>
 #include <fstream>
 #include <algorithm>
 #include <exception>

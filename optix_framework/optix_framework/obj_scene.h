@@ -10,7 +10,7 @@
 #include <vector>
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixpp_namespace.h>
-#include <SampleScene.h>
+#include <sample_scene.h>
 #include "enums.h"
 #include <functional>
 #include <camera_host.h>

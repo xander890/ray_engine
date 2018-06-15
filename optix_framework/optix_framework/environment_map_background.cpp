@@ -2,7 +2,7 @@
 #include "optix_helpers.h"
 #include "folders.h"
 #include "logger.h"
-#include "ImageLoader.h"
+#include "image_loader.h"
 #include "optix_utils.h"
 #include "dialogs.h"
 

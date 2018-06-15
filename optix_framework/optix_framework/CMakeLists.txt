@@ -52,14 +52,13 @@ set(HEADERS
     forward_dipole_tom748.h
     forward_dipole_truncnorm.h
     forward_dipole_utils.h
-    GLFWDisplay.h
+    glfw_display.h
     glm.h
     brdf_shader.h
-    HDRLoader.h
-    Header.h
+    hdr_loader.h
     host_device_common.h
     host_material.h
-    ImageLoader.h
+    image_loader.h
     immediate_gui.h
     indexofrefractionmatcher.h
     intersection_refinement.h
@@ -74,7 +73,7 @@ set(HEADERS
     merl_common.h
     mesh.h
     miss_program.h
-    Mouse.h
+    mouse.h
     neural_network_sampler.h
     neural_network_device_code.h
     obj_loader.h
@@ -86,24 +85,24 @@ set(HEADERS
     optix_utils.h
     parserstringhelpers.h
     path_tracing.h
-    PerlinNoise.h
+    perlin_noise.h
     phase_function.h
     phong.h
     photon_beam_diffusion.h
     plint.h
-    PPMLoader.h
+    ppm_loader.h
     presampled_surface_bssrdf.h
     quantized_diffusion.h
     quantized_diffusion_helpers.h
     quantized_diffusion_host.h
     random.h
-    RawLoader.h
+    raw_loader.h
     ray_trace_helpers.h
     rendering_method.h
     render_task.h
     sampled_bssrdf.h
     sampler.h
-    SampleScene.h
+    sample_scene.h
     sampling_helpers.h
     scattering_material.h
     scattering_properties.h
@@ -172,32 +171,32 @@ set(SRCS
     folders.cpp
     forward_dipole_host.cpp
     forward_dipole_test.cpp
-    GLFWDisplay.cpp
+    glfw_display.cpp
     glm.cpp
     brdf_shader.cpp
-    HDRLoader.cpp
+    hdr_loader.cpp
     host_material.cpp
-    ImageLoader.cpp
+    image_loader.cpp
     immediate_gui.cpp
     light_host.cpp
     logger.cpp
     material_library.cpp
     mesh.cpp
     miss_program.cpp
-    Mouse.cpp
+    mouse.cpp
     neural_network_sampler.cpp
     obj_loader.cpp
     obj_scene.cpp
     path_tracing.cpp
-    PerlinNoise.cpp
+    perlin_noise.cpp
     plint.cpp
-    PPMLoader.cpp
+    ppm_loader.cpp
     presampled_surface_bssrdf.cpp
     quantized_diffusion_host.cpp
-    RawLoader.cpp
+    raw_loader.cpp
     render_task.cpp
     sampled_bssrdf.cpp
-    SampleScene.cpp
+    sample_scene.cpp
     scattering_material.cpp
     shader.cpp
     shader_factory.cpp

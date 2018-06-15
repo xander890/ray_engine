@@ -18,11 +18,11 @@
  * SUCH DAMAGES
  */
 
-#include <GLFWDisplay.h>
+#include <glfw_display.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <SampleScene.h>
-#include <Mouse.h>
+#include <sample_scene.h>
+#include <mouse.h>
 #include <optixu/optixu_math_stream_namespace.h>
 
 #include <iostream>

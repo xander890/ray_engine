@@ -5,7 +5,7 @@
 #include "host_device_common.h"
 #include "optix_serialize.h"
 #include "logger.h"
-#include "ImageLoader.h"
+#include "image_loader.h"
 #include <algorithm>
 
 class Thumbnail;

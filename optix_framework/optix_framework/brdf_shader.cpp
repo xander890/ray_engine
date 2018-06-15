@@ -3,7 +3,7 @@
 #include "object_host.h"
 #include "brdf_utils.h"
 #include "merl_common.h"
-#include <ImageLoader.h>
+#include <image_loader.h>
 #include "host_material.h"
 #include "scattering_material.h"
 #include "dialogs.h"

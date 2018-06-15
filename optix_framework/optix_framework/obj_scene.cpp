@@ -12,14 +12,14 @@
 #include "path_tracing.h"
 #include "sphere.h"
 #include "dialogs.h"
-#include <ImageLoader.h>
+#include <image_loader.h>
 #include "presampled_surface_bssrdf.h"
-#include "GLFWDisplay.h"
+#include "glfw_display.h"
 #include "shader_factory.h"
 #include "optprops/Medium.h"
 #include "environment_map_background.h"
 #include "constant_background.h"
-#include "PerlinNoise.h"
+#include "perlin_noise.h"
 #include <sampled_bssrdf.h>
 #include "render_task.h"
 #include "volume_path_tracer.h"

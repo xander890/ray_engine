@@ -2,7 +2,7 @@
 
 #include "host_material.h"
 #include "obj_loader.h"
-#include "ImageLoader.h"
+#include "image_loader.h"
 
 class Scene;
 

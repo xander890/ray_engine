@@ -6,7 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
-#include <GLFWDisplay.h>
+#include <glfw_display.h>
 #include "obj_scene.h"
 #include "render_task.h"
 #include "scattering_material.h"
