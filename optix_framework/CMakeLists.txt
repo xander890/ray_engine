@@ -34,6 +34,10 @@ include (CompilerInfo)
 # Check for specific machine/compiler options.
 include (ConfigCompilerFlags)
 
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/externals/cereal-1.2.2/include
+)
+
 # Importing libraries.
 if(UNIX)
 find_package(DevIL)
@@ -58,7 +62,7 @@ include_directories(
 )
 
 option(CUDA_GENERATE_DEPENDENCIES_DURING_CONFIGURE "Generate dependencies during configure time instead of only during build time." OFF)
-find_package(CUDA 5.0 REQUIRED)
+find_package(CUDA 9.0 REQUIRED)
 mark_as_advanced(CLEAR CUDA_64_BIT_DEVICE_CODE)
 OPTION(CUDA_REMOVE_GLOBAL_MEMORY_SPACE_WARNING "Suppress the \"Advisory: Cannot tell what pointer points to, assuming global memory space\" warning nvcc makes." ON)
 
@@ -67,7 +71,7 @@ if(USING_WINDOWS_CL)
   list(APPEND CUDA_NVCC_FLAGS --compiler-options /D_USE_MATH_DEFINES)
 endif()
 
-find_package(OptiX REQUIRED)
+find_package(OptiX 5.0 REQUIRED)
 include_directories(
   ${OptiX_INCLUDE}
   ${OptiX_INCLUDE}/optixu
@@ -95,10 +99,11 @@ function(generate_ptx target_name)
   source_group("CUDA Files" REGULAR_EXPRESSION ".+\\.cu$")
 
   CUDA_GET_SOURCES_AND_OPTIONS(source_files cmake_options options ${ARGN})
+  MESSAGE(STATUS ${source_files})
 
   # Create the rules to build the PTX from the CUDA files.
   CUDA_WRAP_SRCS( ${target_name} PTX generated_files ${source_files} ${cmake_options}
-    OPTIONS ${options} )
+    OPTIONS ${options})
     
   set(generated ${generated_files} PARENT_SCOPE)
 endfunction()  

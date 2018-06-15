@@ -544,14 +544,19 @@ endfunction()
 # 
 # output[output] is a list-variable to fill with options for CUDA_COMPILE
 # ARGN[input] is a list of targets, i.e. sm_11 sm_20 sm_30
+#             NO_PTX in the input list will not add PTX to the highest SM version
 
 function( cuda_generate_runtime_target_options output )
-  # remove anything that is not sm_XX
+  # remove anything that is not sm_XX, and look for NO_PTX option
+  set( no_ptx FALSE )
   foreach(target ${ARGN})
     string( REGEX MATCH "^(sm_[0-9][0-9])$" match ${target} )
     if( NOT CMAKE_MATCH_1 )
       list( REMOVE_ITEM ARGN ${target} )
     endif( NOT CMAKE_MATCH_1 )
+    if( target STREQUAL "NO_PTX" )
+      set( no_ptx TRUE )
+    endif()
   endforeach(target)
 
   list( LENGTH ARGN valid_target_count )
@@ -569,6 +574,10 @@ function( cuda_generate_runtime_target_options output )
       endif( CMAKE_MATCH_1 )
       unset( sm_ver_match )
     endforeach(target)
+
+    if( no_ptx )
+      set( smver_max "You can't match me, I'm the ginger bread man!" )
+    endif()
     
     # copy the input list to a new one and sort it
     set( sm_versions ${ARGN} )
@@ -602,6 +611,68 @@ function( cuda_generate_runtime_target_options output )
 
 endfunction(cuda_generate_runtime_target_options)
 
+
+# Compile the list of SASS assembler files to cubins. 
+# Then take the resulting file and store it in a cpp file using bin2c. 
+#
+# Usage: compile_sass_to_cpp( _generated_files files [files...] [OPTIONS ...] )
+#
+# _generated_files[output] is a list-variable to fill with the names of the generated files
+# ARGN[input] is a list of files and nvasm_internal options.  
+
+function(compile_sass_to_cpp _generated_files )
+  # CUDA_GET_SOURCES_AND_OPTIONS is a FindCUDA internal command that we are going to
+  # borrow.  There's no garantees on backward compatibility using this macro.
+  CUDA_GET_SOURCES_AND_OPTIONS(_sources _cmake_options _options ${ARGN})
+
+  set(generated_files)
+  foreach(source ${_sources})
+
+    get_filename_component(source_basename ${source} NAME_WE)
+    set(cubinfile ${CMAKE_CURRENT_BINARY_DIR}/${source_basename}.cubin)
+
+    set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+ 
+    set(cuda_build_comment_string "Assembling to cubin file ${source}" )
+    set_source_files_properties(${source} PROPERTIES HEADER_FILE_ONLY TRUE)
+ 
+    add_custom_command(OUTPUT ${cubinfile} 
+      COMMAND ${CUDA_NVASM_EXECUTABLE} ${_options} ${source} -o ${cubinfile}
+      DEPENDS ${source}
+      COMMENT "${cuda_build_comment_string}"
+      )
+
+    set(cpp_wrap "${CMAKE_CURRENT_BINARY_DIR}/${source_basename}_cuda.cpp")
+    set(h_wrap   "${CMAKE_CURRENT_BINARY_DIR}/${source_basename}_cuda.h")
+
+    get_filename_component(generated_file_path "${cubinfile}" DIRECTORY)
+    get_filename_component(relative_cuda_generated_file "${cubinfile}" NAME)
+ 
+    # Now generate a target that will generate the wrapped version of the cuda
+    # files at build time
+    set(symbol "${source_basename}_source")
+    add_custom_command( OUTPUT ${cpp_wrap}
+       COMMAND ${CMAKE_COMMAND} -DCUDA_BIN2C_EXECUTABLE:STRING="${CUDA_BIN2C_EXECUTABLE}"
+       -DCPP_FILE:STRING="${cpp_wrap}"
+       -DCPP_SYMBOL:STRING="${symbol}"
+       -DSOURCE_BASE:STRING="${generated_file_path}"
+       -DSOURCES:STRING="${relative_cuda_generated_file}"
+       ARGS -P "${CMAKE_SOURCE_DIR}/CMake/bin2cpp.cmake"
+       DEPENDS ${CMAKE_SOURCE_DIR}/CMake/bin2cpp.cmake ${cubinfile}
+       )
+     # We know the list of files at configure time, so generate the files here
+     include(bin2cpp)
+     bin2h("${h_wrap}" ${symbol} ${relative_cuda_generated_files})
+  
+     list(APPEND generated_files ${cubinfile} ${cpp_wrap} ${h_wrap})
+
+  endforeach()
+  
+  set_source_files_properties(${generated_files} PROPERTIES GENERATED TRUE)
+  set(${_generated_files} ${generated_files} PARENT_SCOPE)
+endfunction()
+
+
 # Compile the list of cuda files using the specified format.  Then take the resulting file
 # and store it in a cpp file using bin2c.  This is not appropriate for PTX formats.  Use
 # compile_ptx for that.
@@ -630,7 +701,7 @@ function(compile_cuda_to_cpp target_name format _generated_files)
 
   set(${_generated_files})
   foreach(source ${_sources})
-    CUDA_WRAP_SRCS(${target_name} ${format} objfile ${source} OPTIONS ${cuda_options} )
+    CUDA_WRAP_SRCS(${target_name} ${format} objfile ${source} OPTIONS ${_options} )
 
     get_filename_component(source_basename "${source}" NAME_WE)
     set(cpp_wrap "${CMAKE_CURRENT_BINARY_DIR}/${source_basename}_cuda.cpp")
@@ -660,7 +731,75 @@ function(compile_cuda_to_cpp target_name format _generated_files)
   set(${_generated_files} ${${_generated_files}} PARENT_SCOPE)
 endfunction()
 
+# Compile the list of ptx files.  Then take the resulting file
+# and store it in a cpp file using bin2c.
+#
 
+function(compile_ptx_to_cpp input_ptx _generated_files extra_dependencies )
+  get_filename_component(source_ptx "${input_ptx}" REALPATH )
+  get_filename_component(source_basename "${source_ptx}" NAME_WE)
+  message("source_ptx ${source_ptx}")
+  message("source_basename ${source_basename}")
+  set(fatbin ${CMAKE_CURRENT_BINARY_DIR}/${source_basename}.fatbin)
+  set(build_directory "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles")
+  
+  # the source is passed in as the first parameter
+  # use this function to easily extract options
+  CUDA_GET_SOURCES_AND_OPTIONS( _ptx_wrap_sources _ptx_wrap_cmake_options _ptx_wrap_options ${ARGN})
+
+  set(fatbin_command)
+  set(cubin_commands)
+
+  if (MSVC)
+    set(preprocess_command CL /nologo /E /EP)
+  elseif(CMAKE_COMPILER_IS_GNUCC)
+    set(preprocess_command gcc -P -E -x assembler-with-cpp )
+  else()
+    message(FATAL_ERROR "Unknown preprocessor command")
+  endif()
+
+  foreach(cuda_sm_target ${cuda_sm_targets})
+    string(REGEX REPLACE "sm_" "" cuda_sm "${cuda_sm_target}")
+
+    # Take input PTX and generate cubin
+    set(preprocessed_ptx ${build_directory}/${source_basename}.${cuda_sm}.ptx)
+    set(cubin            ${build_directory}/${source_basename}.${cuda_sm}.cubin)
+
+    list(APPEND cubin_commands
+      COMMAND ${preprocess_command} -DPTXAS ${PTXAS_INCLUDES} -D__CUDA_TARGET__=${cuda_sm} -D__CUDA_ARCH__=${cuda_sm}0 ${source_ptx} > ${preprocessed_ptx}
+      COMMAND ${CUDA_NVCC_EXECUTABLE} ${_ptx_wrap_options} -arch=sm_${cuda_sm} --cubin ${preprocessed_ptx} -dc -o ${cubin}
+      )
+    list(APPEND fatbin_command "--image=profile=sm_${cuda_sm},file=${cubin}")
+  endforeach()
+
+  add_custom_command(
+    OUTPUT ${fatbin}
+    ${cubin_commands}
+    COMMAND ${CUDA_FATBINARY_EXECUTABLE} --create="${fatbin}" -64 -c --cmdline="" ${fatbin_command}
+    MAIN_DEPENDENCY ${source_ptx}
+    DEPENDS ${extra_dependencies}
+    )
+
+  set(cpp_wrap "${CMAKE_CURRENT_BINARY_DIR}/${source_basename}.cpp")
+  set(h_wrap   "${CMAKE_CURRENT_BINARY_DIR}/${source_basename}.h")
+  get_filename_component(generated_file_path "${fatbin}" DIRECTORY)
+  get_filename_component(relative_generated_file "${fatbin}" NAME)
+  
+  set(symbol "${source_basename}")
+  add_custom_command( OUTPUT ${cpp_wrap}
+    COMMAND ${CMAKE_COMMAND} -DCUDA_BIN2C_EXECUTABLE:STRING="${CUDA_BIN2C_EXECUTABLE}"
+    -DCPP_FILE:STRING="${cpp_wrap}"
+    -DCPP_SYMBOL:STRING="${symbol}"
+    -DSOURCE_BASE:STRING="${generated_file_path}"
+    -DSOURCES:STRING="${relative_generated_file}"
+    ARGS -P "${bin2cpp_cmake}"
+    DEPENDS ${CMAKE_SOURCE_DIR}/CMake/bin2cpp.cmake ${fatbin}
+    )
+
+  bin2h("${h_wrap}" "${symbol}" "${relative_generated_file}")
+
+  set(${_generated_files} ${cpp_wrap} ${h_wrap} PARENT_SCOPE)
+endfunction()
 
 # Create multiple bitness targets for mac universal builds
 #

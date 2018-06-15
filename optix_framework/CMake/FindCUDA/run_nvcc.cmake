@@ -319,12 +319,23 @@ cuda_execute_process(
 
 if(get_error)
   if(stderr)
-    # Filter out the annoying Advisory about point stuff.
+    # Filter out the annoying Advisory about pointer stuff.
     # Advisory: Cannot tell what pointer points to, assuming global memory space
-    string(REGEX REPLACE "(^|\n)[^\n]*\(Advisory|Warning\): Cannot tell what pointer points to, assuming global memory space\n" "" stderr_clean ${stderr})
-  endif()
-  if(stderr_clean)
-    message("${stderr_clean}")
+    string(REGEX REPLACE "(^|\n)[^\n]*\(Advisory|Warning\): Cannot tell what pointer points to, assuming global memory space\n\n" "\\1" stderr "${stderr}")
+
+    # Filter out warning we do not care about
+    string(REGEX REPLACE "(^|\n)[^\n]*: Warning: Function [^\n]* has a large return size, so overriding noinline attribute. The function may be inlined when called.\n\n" "\\1" stderr "${stderr}")
+
+    # To be investigated (OP-1999)
+    string(REGEX REPLACE "(^|\n)[^\n]*: warning: function [^\n]*\n[^\n]*: here was declared deprecated \(.[^\n]* is not valid on compute_70 and above, and should be replaced with [^\n]*.To continue using [^\n]*, specify virtual architecture compute_60 when targeting sm_70 and above, for example, using the pair of compiler options.[^\n]*..\)\n( *detected during instantiation of [^\n]*\n[^\n]*: here\n)?( *detected during:\n( *instantiation of [^\n]*\n[^\n]*: here\n([^\n]*instantiation contexts not shown[^\n]*\n)?)+)?\n" "\\1" stderr "${stderr}")
+    string(REGEX REPLACE "(^|\n)[^\n]*: warning: function [^\n]*\n[^\n]*: here was declared deprecated \(.[^\n]* is deprecated in favor of [^\n]* and may be removed in a future release [^\n]*\)\n( *detected during instantiation of [^\n]*\n[^\n]*: here\n)?( *detected during:\n( *instantiation of [^\n]*\n[^\n]*: here\n([^\n]*instantiation contexts not shown[^\n]*\n)?)+)?\n" "\\1" stderr "${stderr}")
+
+    # If there is error output, there is usually a stray newline at the end. Eliminate it if it is the only content of ${stderr}.
+    string(REGEX REPLACE "^\n$" "" stderr "${stderr}")
+
+    if(stderr)
+      message("${stderr}")
+    endif()
   endif()
 endif()
 

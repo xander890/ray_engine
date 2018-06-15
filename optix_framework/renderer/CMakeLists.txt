@@ -9,7 +9,7 @@ ADD_EXECUTABLE( ${APP_EXE}
                 ${SRCS} ) 
 
 find_package(OpenGL REQUIRED)               
-target_link_libraries(${APP_EXE} framework optprops gel nfd optix ${CUDA_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} cereal )
+target_link_libraries(${APP_EXE} framework optprops gel nfd optix ${CUDA_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 
 macro(copy_dir target folder dest)
 add_custom_command(TARGET ${target} POST_BUILD
@@ -19,7 +19,7 @@ add_custom_command(TARGET ${target} POST_BUILD
 endmacro(copy_dir)
 
 if(WIN32)
-copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/OptiX/bin64" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
+copy_dir(renderer "${OptiX_INSTALL_DIR}/bin64" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/xercesc/dll" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/glew/dll" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/devil/lib/" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
