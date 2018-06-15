@@ -58,7 +58,6 @@ void Sphere::load()
 	mGeometry->setPrimitiveCount(1);
 	mGeometry->setIntersectionProgram(mIntersectProgram);
 	mGeometry->setBoundingBoxProgram(mBoundingboxProgram);
-	mGeometry->markDirty();
 	initialize_buffer<optix::Aabb>(mBBoxBuffer, mBoundingBox);
 	mReloadGeometry = false;
 

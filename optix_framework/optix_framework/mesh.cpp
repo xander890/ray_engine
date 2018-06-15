@@ -32,7 +32,6 @@ void MeshGeometry::load()
     mGeometry->setIntersectionProgram(mIntersectProgram);
     mGeometry->setBoundingBoxProgram(mBoundingboxProgram);
 	load_data(mGeometry.get());
-    mGeometry->markDirty();
     initialize_buffer<optix::Aabb>(mBBoxBuffer, mMeshData.mBoundingBox);
 	mReloadGeometry = false;
 }

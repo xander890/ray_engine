@@ -38,6 +38,8 @@ bool MaterialHost::on_draw(std::string myid = "")
 
 	if (ImmediateGUIDraw::TreeNode(create_id_str(newgroup, id).c_str()))
 	{
+		ImmediateGUIDraw::InputString((std::string("Name##Name") + mMaterialName).c_str(), mMaterialName, ImGuiInputTextFlags_EnterReturnsTrue);
+
         auto map = ShaderFactory::get_map();
         std::vector<std::string> vv;
         std::vector<int> illummap;

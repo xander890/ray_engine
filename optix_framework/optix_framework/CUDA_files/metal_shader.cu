@@ -35,7 +35,7 @@ RT_PROGRAM void shade()
     if(prd_radiance.depth < max_depth)
     {
         float3 ior = get_material(texcoord).index_of_refraction;
-        float3 imag = get_material(texcoord).scattering_properties.extinction;
+		float3 imag = get_material(texcoord).scattering_properties.absorption * optix::make_float3(700e-9, 550e-9, 425e-9) / (4 * M_PIf);
 
         float3 R = fresnel_complex_R(-ray.direction, ffnormal, ior*ior, imag*imag);
         PerRayData_radiance prd_new = prepare_new_pt_payload(prd_radiance);

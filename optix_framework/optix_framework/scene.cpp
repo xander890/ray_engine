@@ -111,13 +111,13 @@ int Scene::add_object(std::shared_ptr<Object> object)
     scene->addChild(mMeshes.back()->get_dynamic_handle());
     mMeshes.back()->load();
     update_area_lights();
-    return mMeshes.size() - 1;
+    return (int)mMeshes.size() - 1;
 }
 
 int Scene::add_camera(std::shared_ptr<Camera> camera)
 {
     mCameras.push_back(camera);
-    return mCameras.size() - 1;
+    return (int)mCameras.size() - 1;
 }
 
 int Scene::add_light(std::shared_ptr<SingularLight> light)
@@ -126,7 +126,7 @@ int Scene::add_light(std::shared_ptr<SingularLight> light)
     mLights.push_back(light);
     mSingularLightBuffer->setSize(mLights.size());
     update_singular_lights();
-	return mLights.size() - 1;
+	return (int)mLights.size() - 1;
 }
 
 int Scene::add_object(std::unique_ptr<Object> object)
@@ -247,7 +247,6 @@ void Scene::remove_object(int object_id)
         for(auto & m : mMeshes)
         {
             m->mAcceleration->markDirty();
-            m->mGeometry->get_geometry()->markDirty();
         }
         update_area_lights();
     }

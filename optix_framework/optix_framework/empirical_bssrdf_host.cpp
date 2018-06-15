@@ -24,11 +24,11 @@ void EmpiricalBSSRDF::prepare_buffers()
     mBSSRDFLoader->get_dimensions(full_dimensions);
     mParameterSizeBuffer = create_buffer<int>(mContext, RT_BUFFER_INPUT, 5);
     int* buf = reinterpret_cast<int*>(mParameterSizeBuffer->map());
-    buf[0] = full_dimensions[theta_s_index];
-    buf[1] = full_dimensions[r_index];
-    buf[2] = full_dimensions[theta_i_index];
-    buf[4] = full_dimensions[dim_1_index];
-    buf[3] = full_dimensions[dim_2_index];
+    buf[0] = (int)full_dimensions[theta_s_index];
+    buf[1] = (int)full_dimensions[r_index];
+    buf[2] = (int)full_dimensions[theta_i_index];
+    buf[4] = (int)full_dimensions[dim_1_index];
+    buf[3] = (int)full_dimensions[dim_2_index];
     mParameterSizeBuffer->unmap();
 
     auto parameters = mBSSRDFLoader->get_parameters();

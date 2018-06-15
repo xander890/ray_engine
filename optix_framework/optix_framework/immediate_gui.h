@@ -1,7 +1,24 @@
 #pragma once
 #include "imgui/imgui.h"
 #include <string>
+#include <vector>
+#include <algorithm>
 namespace ImmediateGUIDraw = ImGui;
+
+namespace ImGui
+{
+	inline bool InputString(const char * name, std::string & str, ImGuiInputTextFlags flags = 0, ImGuiTextEditCallback callback = NULL, void* user_data = NULL)
+	{
+		std::vector<char> data(str.begin(), str.end());
+		data.resize(256, '\0');
+		if (ImmediateGUIDraw::InputText(name, &data[0], 256, flags, callback, user_data))
+		{
+			str = std::string(data.data());			
+			return true;
+		}
+		return false;
+	}
+}
 
 struct GLFWwindow;
 

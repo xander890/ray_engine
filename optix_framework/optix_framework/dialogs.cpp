@@ -13,7 +13,7 @@ bool Dialogs::openFileDialog(std::string& selectedFilePath, const std::string& f
 	}
 
 	if (result == NFD_OKAY)
-	{
+	{ 
 		selectedFilePath = std::string(outPath);
 		return true;
 	}

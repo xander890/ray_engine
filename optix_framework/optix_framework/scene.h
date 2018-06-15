@@ -49,6 +49,8 @@ public:
     std::shared_ptr<Camera> get_current_camera();
     std::shared_ptr<Camera> get_camera(int camera_id);
 
+	optix::Acceleration get_acceleration() { return acceleration; }
+
 private:
     std::vector<std::shared_ptr<Object>> mMeshes;
     std::vector<std::shared_ptr<Camera>> mCameras;

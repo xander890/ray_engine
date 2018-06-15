@@ -11,7 +11,7 @@
 #include "ImageLoader.h"
 #include "obj_loader.h"
 #include "scene_gui.h"
-
+#include "scene.h"
 
 std::unique_ptr<Texture> Object::create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr)
 {
@@ -73,7 +73,7 @@ void Object::load_materials()
             m->reload_shader();
         }
 
-        mGeometryInstance->setMaterialCount(n);
+        mGeometryInstance->setMaterialCount((unsigned int)n);
 
         MaterialDataCommon* data = reinterpret_cast<MaterialDataCommon*>(mMaterialBuffer->map());
         for (int i = 0; i < n; i++)
@@ -98,6 +98,9 @@ void Object::load_geometry()
 {
     if (!mReloadGeometry)
         return;
+
+	mAcceleration->markDirty();
+	scene->get_acceleration()->markDirty();
     create_and_bind_optix_data();
 
     BufPtr<optix::Aabb> bptr = BufPtr<optix::Aabb>(mGeometry->get_bounding_box_buffer()->getId());
@@ -119,7 +122,7 @@ void Object::load_transform()
     if (mTransform->has_changed())
     {
         mTransform->load();
-        mGeometryGroup->getAcceleration()->markDirty();
+        mAcceleration->markDirty();
         if(transform_changed_event != nullptr)
             transform_changed_event();
     }
@@ -189,8 +192,14 @@ bool Object::on_draw()
 {
     ImmediateGUIDraw::PushItemWidth(200);
     bool changed = false;
-    if (ImmediateGUIDraw::TreeNode((mMeshName + " ID: " + std::to_string(mMeshID)).c_str()))
+	std::string tree = mMeshName;
+	std::string a = " ID: " + std::to_string(mMeshID) + "##meshid" + std::to_string(mMeshID);
+	tree += a;
+
+	if (ImmediateGUIDraw::TreeNode(tree.c_str()))
     {
+		ImmediateGUIDraw::InputString((std::string("Name##Name") + mMeshName).c_str(), mMeshName, ImGuiInputTextFlags_EnterReturnsTrue);
+
         if (ImmediateGUIDraw::TreeNode((std::string("Transform##Transform") + mMeshName).c_str()))
         {
             changed |= mTransform->on_draw();
