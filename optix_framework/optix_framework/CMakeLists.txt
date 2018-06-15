@@ -25,7 +25,7 @@ set(HEADERS
     bssrdf_host.h
     bssrdf_properties.h
     bssrdf_visualizer.h
-        camera.h
+    camera.h
     camera_host.h
     chull.h
     colormap.h
@@ -54,7 +54,7 @@ set(HEADERS
     forward_dipole_utils.h
     GLFWDisplay.h
     glm.h
-        brdf_shader.h
+    brdf_shader.h
     HDRLoader.h
     Header.h
     host_device_common.h
@@ -80,11 +80,11 @@ set(HEADERS
     obj_loader.h
     obj_scene.h
     optical_helper.h
-        optix_common.h
+    optix_common.h
     optix_helpers.h
     optix_serialize.h
     optix_utils.h
-        parserstringhelpers.h
+    parserstringhelpers.h
     path_tracing.h
     PerlinNoise.h
     phase_function.h
@@ -93,7 +93,7 @@ set(HEADERS
     plint.h
     PPMLoader.h
     presampled_surface_bssrdf.h
-        quantized_diffusion.h
+    quantized_diffusion.h
     quantized_diffusion_helpers.h
     quantized_diffusion_host.h
     random.h
@@ -118,19 +118,30 @@ set(HEADERS
     stringhelpers.h
     string_utils.h
     structs.h
-        transform.h
+    transform.h
     volume_path_tracer.h
     bssrdf_loader.h
     bssrdf_parameter_manager.h
     empirical_bssrdf_device.h
     empirical_bssrdf_host.h
-        empirical_bssrdf_common.h
+    empirical_bssrdf_common.h
     improved_enum.def
     volume_path_tracing_common.h 
     subsurface_scattering_sampled_common.h
     subsurface_scattering_sampled.h
-        hemisphere_partitions.h
-        xml_archive.hpp object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h brdf_properties.h geometry.cpp geometry.h thumbnail.cpp thumbnail.h microfacets.h default_shader_common.h)
+    hemisphere_partitions.h
+    xml_archive.hpp  
+    object_host.h  
+    scene.h  
+    texture.h  
+    scene_gui.h  
+    brdf_host.h 
+    brdf_properties.h  
+    geometry.h  
+    thumbnail.h 
+    microfacets.h 
+    default_shader_common.h
+)
 
 set(SRCS_IMGUI
 imgui/imgui.cpp
@@ -163,7 +174,7 @@ set(SRCS
     forward_dipole_test.cpp
     GLFWDisplay.cpp
     glm.cpp
-        brdf_shader.cpp
+    brdf_shader.cpp
     HDRLoader.cpp
     host_material.cpp
     ImageLoader.cpp
@@ -177,14 +188,13 @@ set(SRCS
     neural_network_sampler.cpp
     obj_loader.cpp
     obj_scene.cpp
-        path_tracing.cpp
+    path_tracing.cpp
     PerlinNoise.cpp
     plint.cpp
     PPMLoader.cpp
     presampled_surface_bssrdf.cpp
-        quantized_diffusion_host.cpp
+    quantized_diffusion_host.cpp
     RawLoader.cpp
-    rendering_method.cpp
     render_task.cpp
     sampled_bssrdf.cpp
     SampleScene.cpp
@@ -196,7 +206,14 @@ set(SRCS
     sky_model.cpp
     sphere.cpp
     transform.cpp
-        object_host.cpp object_host.h scene.cpp scene.h texture.cpp texture.h scene_gui.cpp scene_gui.h brdf_host.cpp brdf_host.h geometry.cpp geometry.h thumbnail.cpp thumbnail.h)
+    object_host.cpp 
+    scene.cpp
+    scene_gui.cpp
+    texture.cpp
+    brdf_host.cpp
+    geometry.cpp
+    thumbnail.cpp
+)
 
 set(CUDA_SOURCES
 CUDA_files/absorbing_glass.cu
