@@ -37,7 +37,7 @@ struct RayTracerParameters
     optix::float3 exception_color = optix::make_float3(0,0,1);
     int max_depth = 10;
     float scene_epsilon_fraction = 1e-4f;
-    bool use_auto_camera = true;
+    bool use_auto_camera = false;
 };
 
 struct TonemapParameters
