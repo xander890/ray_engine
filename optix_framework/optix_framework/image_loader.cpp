@@ -20,13 +20,12 @@
  */
 
 #include <image_loader.h>
-#include <ppm_loader.h>
-#include <hdr_loader.h>
 #include <raw_loader.h>
 #include <fstream>
 #include <algorithm>
 #include <exception>
 #include "IL/il.h"
+#include "IL/ilu.h"
 
 //-----------------------------------------------------------------------------
 //  
@@ -70,6 +69,13 @@ bool loadDevilTexture(std::unique_ptr<Texture> &tex, optix::Context context, con
 		return false;
 	}
 
+	ILinfo ImageInfo;
+	iluGetImageInfo(&ImageInfo);
+	if (ImageInfo.Origin == IL_ORIGIN_UPPER_LEFT)
+	{
+		iluFlipImage();
+	}
+
 	printf("Width: %d  Height: %d  Depth: %d  Bpp: %d\n",
 			ilGetInteger(IL_IMAGE_WIDTH),
 			ilGetInteger(IL_IMAGE_HEIGHT),
@@ -107,19 +113,10 @@ std::unique_ptr<Texture> loadTexture( optix::Context context, const std::string&
 		{
 		    success = loadRAWTexture(tex, context, filename);
 		}
-		else if (ext.compare(".hdr") == 0)
-		{
-			success = loadHDRTexture(tex, context, filename);
-		}
-		else if (ext.compare(".ppm") == 0)
-		{
-			success = loadPPMTexture(tex, context, filename);
-		}
 		else
 		{
 		    success = loadDevilTexture(tex, context, filename);
 		}
-
 	}
 
 	if(!success)

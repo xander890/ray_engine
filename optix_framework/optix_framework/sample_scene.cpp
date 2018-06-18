@@ -40,8 +40,6 @@
 #include <algorithm>
 #include "logger.h"
 
-using namespace optix;
-
 //-----------------------------------------------------------------------------
 // 
 // SampleScene class implementation 
@@ -51,7 +49,7 @@ using namespace optix;
 SampleScene::SampleScene()
   : m_camera_changed( true ), m_use_vbo_buffer( true )
 {
-  m_context = Context::create();
+  m_context = optix::Context::create();
 }
 
 SampleScene::InitialCameraData::InitialCameraData( const std::string &camstr)
@@ -70,8 +68,8 @@ void SampleScene::clean_up()
 void SampleScene::resize(unsigned int width, unsigned int height)
 {
   try {
-    Buffer buffer = get_output_buffer();
-    buffer->setSize( width, height );
+	optix::Buffer buffer = get_output_buffer();
+	buffer->setSize( width, height );
 
     if(m_use_vbo_buffer)
     {
@@ -82,7 +80,7 @@ void SampleScene::resize(unsigned int width, unsigned int height)
       buffer->registerGLBuffer();
     }
 
-  } catch( Exception& e ){
+  } catch(optix::Exception& e ){
 	  // FIXME LOGGER
 	Logger::error <<  e.getErrorString();
     exit(2);

@@ -55,7 +55,6 @@ set(HEADERS
     glfw_display.h
     glm.h
     brdf_shader.h
-    hdr_loader.h
     host_device_common.h
     host_material.h
     image_loader.h
@@ -90,7 +89,6 @@ set(HEADERS
     phong.h
     photon_beam_diffusion.h
     plint.h
-    ppm_loader.h
     presampled_surface_bssrdf.h
     quantized_diffusion.h
     quantized_diffusion_helpers.h
@@ -174,7 +172,6 @@ set(SRCS
     glfw_display.cpp
     glm.cpp
     brdf_shader.cpp
-    hdr_loader.cpp
     host_material.cpp
     image_loader.cpp
     immediate_gui.cpp
@@ -190,7 +187,6 @@ set(SRCS
     path_tracing.cpp
     perlin_noise.cpp
     plint.cpp
-    ppm_loader.cpp
     presampled_surface_bssrdf.cpp
     quantized_diffusion_host.cpp
     raw_loader.cpp
@@ -261,5 +257,5 @@ add_library( framework STATIC
 
 CUDA_ADD_CUBLAS_TO_TARGET(framework)
 
-target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${IL_LIBRARIES})
+target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${IL_LIBRARIES} ${ILU_LIBRARIES})
 target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

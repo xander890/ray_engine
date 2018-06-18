@@ -7,8 +7,6 @@
 #include "enums.h"
 #include "string_utils.h"
 
-using namespace optix;
-
 
 ScatteringMaterial::ScatteringMaterial(optix::float3 absorption, optix::float3 scattering, optix::float3 meancosine, float scale, const char * name)
 	: scale(scale), name(name)
@@ -65,115 +63,115 @@ std::vector<ScatteringMaterial> ScatteringMaterial::defaultMaterials;
 
 void ScatteringMaterial::getDefaultMaterial(DefaultScatteringMaterial material)
 {
-  absorption = make_float3(0.0f);
-  scattering = make_float3(0.0f);
-  asymmetry = make_float3(0.0f);
+  absorption = optix::make_float3(0.0f);
+  scattering = optix::make_float3(0.0f);
+  asymmetry = optix::make_float3(0.0f);
   scale = 100.0f;
 
   switch(material)
   {
   case Chicken:
-    absorption = make_float3(0.015f, 0.077f, 0.19f);
-    scattering = make_float3(0.15f, 0.21f, 0.38f);
-    asymmetry = make_float3(0.0f, 0.0f, 0.0f);
+    absorption = optix::make_float3(0.015f, 0.077f, 0.19f);
+    scattering = optix::make_float3(0.15f, 0.21f, 0.38f);
+    asymmetry = optix::make_float3(0.0f, 0.0f, 0.0f);
     name = "chicken";
   break;
   case Skin:
-    absorption = make_float3(0.032f, 0.17f, 0.48f);
-    scattering = make_float3(0.74f, 0.88f, 1.01f);
-    asymmetry = make_float3(0.0f, 0.0f, 0.0f);
+    absorption = optix::make_float3(0.032f, 0.17f, 0.48f);
+    scattering = optix::make_float3(0.74f, 0.88f, 1.01f);
+    asymmetry = optix::make_float3(0.0f, 0.0f, 0.0f);
     name = "skin";
     break;
   case Wholemilk:
-    absorption = make_float3(0.0011f,0.0024f,0.014f);
-    scattering = make_float3(2.55f,3.21f,3.77f);
-    asymmetry = make_float3(0.0f, 0.0f, 0.0f);
+    absorption = optix::make_float3(0.0011f,0.0024f,0.014f);
+    scattering = optix::make_float3(2.55f,3.21f,3.77f);
+    asymmetry = optix::make_float3(0.0f, 0.0f, 0.0f);
     name = "whole_milk";
     break;
   case Whitegrapefruit:
-    absorption = make_float3(0.096f, 0.131f, 0.395f);
-    scattering = make_float3(3.513f, 3.669f, 5.237f);
-    asymmetry = make_float3(0.548f, 0.545f, 0.565f);
+    absorption = optix::make_float3(0.096f, 0.131f, 0.395f);
+    scattering = optix::make_float3(3.513f, 3.669f, 5.237f);
+    asymmetry = optix::make_float3(0.548f, 0.545f, 0.565f);
     name = "white_grapefruit";
   break;
   case Beer:
-    absorption = make_float3(0.1449f,0.3141f,0.7286f);
-    scattering = make_float3(0.0037f,0.0069f,0.0074f);
-    asymmetry = make_float3(0.917f, 0.956f, 0.982f);
+    absorption = optix::make_float3(0.1449f,0.3141f,0.7286f);
+    scattering = optix::make_float3(0.0037f,0.0069f,0.0074f);
+    asymmetry = optix::make_float3(0.917f, 0.956f, 0.982f);
     name = "beer";
   break;
   case Soymilk:
-    absorption = make_float3(0.0001f,0.0005f,0.0034f);
-    scattering = make_float3(2.433f,2.714f,4.563f);
-    asymmetry = make_float3(0.873f, 0.858f, 0.832f);
+    absorption = optix::make_float3(0.0001f,0.0005f,0.0034f);
+    scattering = optix::make_float3(2.433f,2.714f,4.563f);
+    asymmetry = optix::make_float3(0.873f, 0.858f, 0.832f);
     name = "soy_milk";
   break;
   case Coffee:
-    absorption = make_float3(0.1669f,0.2287f,0.3078f);
-    scattering = make_float3(0.2707f,0.2828f,0.297f);
-    asymmetry = make_float3(0.907f, 0.896f, 0.88f);
+    absorption = optix::make_float3(0.1669f,0.2287f,0.3078f);
+    scattering = optix::make_float3(0.2707f,0.2828f,0.297f);
+    asymmetry = optix::make_float3(0.907f, 0.896f, 0.88f);
     name = "coffee";
   break;
   case Marble:
-    absorption = make_float3(0.0021f,0.0041f,0.0071f);
-    scattering = make_float3(2.19f,2.62f,3.00f);
-    asymmetry = make_float3(0.0f, 0.0f, 0.0f);
+    absorption = optix::make_float3(0.0021f,0.0041f,0.0071f);
+    scattering = optix::make_float3(2.19f,2.62f,3.00f);
+    asymmetry = optix::make_float3(0.0f, 0.0f, 0.0f);
     name = "marble";
   break;
   case Potato:
-    absorption = make_float3(0.0024f,0.0090f,0.12f);
-    scattering = make_float3( 0.68f,0.70f,0.55f);
-    asymmetry = make_float3(0.0f, 0.0f, 0.0f);
+    absorption = optix::make_float3(0.0024f,0.0090f,0.12f);
+    scattering = optix::make_float3( 0.68f,0.70f,0.55f);
+    asymmetry = optix::make_float3(0.0f, 0.0f, 0.0f);
     name = "potato";
   break;
   case Ketchup:
-    absorption = make_float3(0.061f,0.97f,1.45f);
-    scattering = make_float3(0.18f,0.07f,0.03f);
-    asymmetry = make_float3(0.0f, 0.0f, 0.0f);
+    absorption = optix::make_float3(0.061f,0.97f,1.45f);
+    scattering = optix::make_float3(0.18f,0.07f,0.03f);
+    asymmetry = optix::make_float3(0.0f, 0.0f, 0.0f);
     name = "ketchup";
   break;
   case Apple:
-    absorption = make_float3(0.0030f,0.0034f,0.0046f);
-    scattering = make_float3(2.29f,2.39f,1.97f);
-    asymmetry = make_float3(0.0f, 0.0f, 0.0f);
+    absorption = optix::make_float3(0.0030f,0.0034f,0.0046f);
+    scattering = optix::make_float3(2.29f,2.39f,1.97f);
+    asymmetry = optix::make_float3(0.0f, 0.0f, 0.0f);
     name = "apple";
   break;
     case ChocolateMilk:
-    absorption = make_float3(0.007f, 0.03f, 0.1f);
-    scattering = make_float3(7.352f, 9.142f, 10.588f);
-    asymmetry = make_float3(0.862f, 0.838f, 0.806f);
+    absorption = optix::make_float3(0.007f, 0.03f, 0.1f);
+    scattering = optix::make_float3(7.352f, 9.142f, 10.588f);
+    asymmetry = optix::make_float3(0.862f, 0.838f, 0.806f);
 	scale = 10.f;
     name = "chocolate_milk";
   break;
     case ReducedMilk:
-    absorption = make_float3(0.0001f, 0.0002f, 0.0005f);
-    scattering = make_float3(10.748f, 12.209f, 13.931f);
-    asymmetry = make_float3(0.819f, 0.797f, 0.746f);
+    absorption = optix::make_float3(0.0001f, 0.0002f, 0.0005f);
+    scattering = optix::make_float3(10.748f, 12.209f, 13.931f);
+    asymmetry = optix::make_float3(0.819f, 0.797f, 0.746f);
     name = "reduced_milk";
   break;
     case Mustard:
-    scattering = make_float3(16.447f,18.536f,6.457f);
-    absorption = make_float3(0.057f,0.061f,0.451f);
-    asymmetry = make_float3(0.155f, 0.173f, 0.351f);
+    scattering = optix::make_float3(16.447f,18.536f,6.457f);
+    absorption = optix::make_float3(0.057f,0.061f,0.451f);
+    asymmetry = optix::make_float3(0.155f, 0.173f, 0.351f);
 	scale = 1;
     name = "mustard";
     break;
     case Shampoo:
-    scattering = make_float3(8.111f,9.919f,10.575f);
-    absorption = make_float3(0.178f,0.328f,0.439f);
-    asymmetry = make_float3(0.907f, 0.882f, 0.874f);
+    scattering = optix::make_float3(8.111f,9.919f,10.575f);
+    absorption = optix::make_float3(0.178f,0.328f,0.439f);
+    asymmetry = optix::make_float3(0.907f, 0.882f, 0.874f);
     name = "shampoo";
     break;
     case MixedSoap:
-    scattering = make_float3(3.923f, 4.018f, 4.351f);
-    absorption = make_float3(0.003f, 0.005f, 0.013f);
-    asymmetry = make_float3(0.330f, 0.322f, 0.316f);
+    scattering = optix::make_float3(3.923f, 4.018f, 4.351f);
+    absorption = optix::make_float3(0.003f, 0.005f, 0.013f);
+    asymmetry = optix::make_float3(0.330f, 0.322f, 0.316f);
     name = "mixed_soap";
     break;
     case GlycerineSoap:
-    scattering = make_float3(0.201f, 0.202f, 0.221f);
-    absorption = make_float3(0.001f, 0.001f, 0.002f);
-    asymmetry = make_float3(0.955f, 0.949f, 0.943f);
+    scattering = optix::make_float3(0.201f, 0.202f, 0.221f);
+    absorption = optix::make_float3(0.001f, 0.001f, 0.002f);
+    asymmetry = optix::make_float3(0.955f, 0.949f, 0.943f);
     name = "glycerine_soap";
     break;
   case Count: break;
@@ -196,7 +194,7 @@ void ScatteringMaterial::set_scattering(optix::float3 sc)
 
 void ScatteringMaterial::set_asymmetry(float asymm)
 {
-	asymmetry = make_float3(asymm);
+	asymmetry = optix::make_float3(asymm);
 	dirty = true;
 }
 

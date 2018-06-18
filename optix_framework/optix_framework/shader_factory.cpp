@@ -10,50 +10,51 @@
 #include "presampled_surface_bssrdf.h"
 #include "optix_helpers.h"
 #include "scattering_material.h"
-using namespace optix;
 
-Context ShaderFactory::context = nullptr;
+optix::Context ShaderFactory::context = nullptr;
 
-void load_normalized_CIE_functions(optix::Context & ctx)
+namespace optix
 {
-    Color<double> spectrum_cdf(spectrum_rgb_samples);
-    Color<float3> normalized_CIE_rgb(spectrum_rgb_samples);
-    float3 cie_rgb = make_float3(0.0f);
-    double cie = 0.0;
-    for (unsigned int i = 0; i < spectrum_rgb_samples; ++i)
-    {
-        float3 rgb = make_float3(static_cast<float>(spectrum_rgb[i][1]), static_cast<float>(spectrum_rgb[i][2]), static_cast<float>(spectrum_rgb[i][3]));
-        float rgb_sum = dot(rgb, make_float3(1.0f));
-        cie += rgb_sum;
-        normalized_CIE_rgb[i] = rgb;
-        cie_rgb += rgb;
-        spectrum_cdf[i] = cie;
-    }
-    double wavelength = spectrum_rgb[0][0];
-    double step_size = spectrum_rgb[1][0] - spectrum_rgb[0][0];
-    spectrum_cdf /= cie;
-    spectrum_cdf.wavelength = wavelength;
-    spectrum_cdf.step_size = step_size;
-    normalized_CIE_rgb /= cie_rgb;
-    normalized_CIE_rgb.wavelength = wavelength;
-    normalized_CIE_rgb.step_size = step_size;
+	void load_normalized_CIE_functions(optix::Context & ctx)
+	{
+		Color<double> spectrum_cdf(spectrum_rgb_samples);
+		Color<float3> normalized_CIE_rgb(spectrum_rgb_samples);
+		float3 cie_rgb = make_float3(0.0f);
+		double cie = 0.0;
+		for (unsigned int i = 0; i < spectrum_rgb_samples; ++i)
+		{
+			float3 rgb = make_float3(static_cast<float>(spectrum_rgb[i][1]), static_cast<float>(spectrum_rgb[i][2]), static_cast<float>(spectrum_rgb[i][3]));
+			float rgb_sum = dot(rgb, make_float3(1.0f));
+			cie += rgb_sum;
+			normalized_CIE_rgb[i] = rgb;
+			cie_rgb += rgb;
+			spectrum_cdf[i] = cie;
+		}
+		double wavelength = spectrum_rgb[0][0];
+		double step_size = spectrum_rgb[1][0] - spectrum_rgb[0][0];
+		spectrum_cdf /= cie;
+		spectrum_cdf.wavelength = wavelength;
+		spectrum_cdf.step_size = step_size;
+		normalized_CIE_rgb /= cie_rgb;
+		normalized_CIE_rgb.wavelength = wavelength;
+		normalized_CIE_rgb.step_size = step_size;
 
-    Buffer ciergb = ctx->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT3, spectrum_rgb_samples);
-    float3 * buff = (float3*)ciergb->map();
-    for (unsigned int i = 0; i < spectrum_rgb_samples; ++i) buff[i] = normalized_CIE_rgb[i];
-    ciergb->unmap();
+		Buffer ciergb = ctx->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT3, spectrum_rgb_samples);
+		float3 * buff = (float3*)ciergb->map();
+		for (unsigned int i = 0; i < spectrum_rgb_samples; ++i) buff[i] = normalized_CIE_rgb[i];
+		ciergb->unmap();
 
-    Buffer ciergbcdf = ctx->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, spectrum_rgb_samples);
-    float * buff2 = (float*)ciergbcdf->map();
-    for (unsigned int i = 0; i < spectrum_rgb_samples; ++i) buff2[i] = static_cast<float>(spectrum_cdf[i]);
-    ciergbcdf->unmap();
+		Buffer ciergbcdf = ctx->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, spectrum_rgb_samples);
+		float * buff2 = (float*)ciergbcdf->map();
+		for (unsigned int i = 0; i < spectrum_rgb_samples; ++i) buff2[i] = static_cast<float>(spectrum_cdf[i]);
+		ciergbcdf->unmap();
 
-    ctx["normalized_cie_rgb"]->setBuffer(ciergb);
-    ctx["normalized_cie_rgb_cdf"]->setBuffer(ciergbcdf);
-    ctx["normalized_cie_rgb_wavelength"]->setFloat(static_cast<float>(wavelength));
-    ctx["normalized_cie_rgb_step"]->setFloat(static_cast<float>(step_size));
+		ctx["normalized_cie_rgb"]->setBuffer(ciergb);
+		ctx["normalized_cie_rgb_cdf"]->setBuffer(ciergbcdf);
+		ctx["normalized_cie_rgb_wavelength"]->setFloat(static_cast<float>(wavelength));
+		ctx["normalized_cie_rgb_step"]->setFloat(static_cast<float>(step_size));
+	}
 }
-
 
 std::string get_full_program_name(std::string shader, std::string suffix)
 {

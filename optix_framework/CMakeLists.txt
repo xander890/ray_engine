@@ -44,6 +44,8 @@ find_package(DevIL)
 else()
 set(IL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals/devil/include)
 set(IL_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/devil/lib/DevIL.lib)
+set(ILU_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/devil/lib/ILU.lib)
+set(ILUT_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/externals/devil/lib/ILUT.lib)
 endif()
 
 include_directories(
@@ -99,7 +101,6 @@ function(generate_ptx target_name)
   source_group("CUDA Files" REGULAR_EXPRESSION ".+\\.cu$")
 
   CUDA_GET_SOURCES_AND_OPTIONS(source_files cmake_options options ${ARGN})
-  MESSAGE(STATUS ${source_files})
 
   # Create the rules to build the PTX from the CUDA files.
   CUDA_WRAP_SRCS( ${target_name} PTX generated_files ${source_files} ${cmake_options}
