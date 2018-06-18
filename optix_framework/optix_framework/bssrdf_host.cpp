@@ -21,6 +21,16 @@ void BSSRDF::load(const optix::float3 &, const ScatteringMaterialProperties &)
 {
 }
 
+optix::float3 BSSRDF::get_sampling_inverse_mean_free_path(const ScatteringMaterialProperties &props)
+{ 
+	return props.transport; 
+}
+
+ScatteringDipole::Type BSSRDF::get_type() 
+{ 
+	return mType; 
+}
+
 std::unique_ptr<BSSRDF> BSSRDF::create(optix::Context & ctx, ScatteringDipole::Type type)
 {
 	switch (type)
@@ -45,7 +55,7 @@ std::unique_ptr<BSSRDF> BSSRDF::create(optix::Context & ctx, ScatteringDipole::T
 	}
 }
 
-bool BSSRDF::dipole_selector_gui(ScatteringDipole::Type & type, std::string id)
+bool BSSRDF::bssrdf_selection_gui(ScatteringDipole::Type & type, std::string id)
 {
 	std::string dipoles = "";
 	ScatteringDipole::Type t = ScatteringDipole::first();

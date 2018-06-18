@@ -1,19 +1,21 @@
 #pragma once
 #include "rendering_method.h"
 
+/*
+   Specific class implementation to render ambient occlusion only. Excludes color, any particular implementation particular element, showing only the scene with ambient occlusion. 
+
+   Useful for debugging ray performance.
+
+   WARNING: This method is mostly unimplemented in the current implementation.
+*/
 class AmbientOcclusion : public RenderingMethod
 {
 public:
-	AmbientOcclusion() : RenderingMethod() {}
-
-	virtual void init(optix::Context& context) override;
-
-	virtual void pre_trace();
-	std::string get_suffix() const { return "_ao"; }
+	void init(optix::Context& context) override;
+	std::string get_suffix() const override { return "_ao"; }
 
 private:
 	friend class cereal::access;
-
 	template<class Archive>
 	void serialize(Archive & archive)
 	{

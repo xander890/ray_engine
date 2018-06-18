@@ -2,6 +2,16 @@
 #include "bssrdf_host.h"
 #include "optix_serialize.h"
 
+/*
+Approximate BSSRDF model from 
+
+Approximate Reflectance Profiles for Efficient Subsurface Scattering
+Per H. Christensen, Brent Burley
+July 2015
+
+This models only exposes A and s (the parameters for the model) without calculations.
+
+*/
 class ApproximateDipole : public BSSRDF
 {
 public:

@@ -145,6 +145,13 @@ size_t Texture::get_size(const Texture::Format & format)
     }
 }
 
+size_t Texture::get_number_of_elements(const RTformat & out_format)
+{
+	size_t size; Format format;
+	get_size_and_format(out_format, size, format);
+	return size;
+}
+
 TexPtr Texture::get_id()
 {
     return mID;

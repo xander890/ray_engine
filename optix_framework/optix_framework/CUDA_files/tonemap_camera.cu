@@ -25,5 +25,5 @@ RT_PROGRAM void tonemap_camera()
 	output_color = max(min(output_color, make_float4(1)),make_float4(0));
 
 	// GL_BGRA
-	tonemap_output_buffer[launch_index] = make_uchar4(to_char(output_color.z), to_char(output_color.y), to_char(output_color.x), to_char(output_color.w));
+	tonemap_output_buffer[launch_index] = make_uchar4(to_char(output_color.x), to_char(output_color.y), to_char(output_color.z), to_char(output_color.w));
 }

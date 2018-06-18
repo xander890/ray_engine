@@ -5,6 +5,7 @@
 #include "scattering_properties.h"
 #include "empirical_bssrdf_common.h"
 #include "optix_math.h"
+#include "folders.h"
 
 void EmpiricalBSSRDF::prepare_buffers()
 {

@@ -132,7 +132,7 @@ bool PresampledSurfaceBssrdf::on_draw()
 	bool changed = false;
 
 	static ScatteringDipole::Type dipole = mBSSRDF->get_type();
-	if (BSSRDF::dipole_selector_gui(dipole))
+	if (BSSRDF::bssrdf_selection_gui(dipole))
 	{
 		changed = true;
 		mBSSRDF.reset();

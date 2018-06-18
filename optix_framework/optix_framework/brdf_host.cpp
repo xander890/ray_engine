@@ -1,7 +1,3 @@
-//
-// Created by alcor on 5/2/18.
-//
-
 #include "brdf_host.h"
 #include "merl_common.h"
 #include "brdf_utils.h"
@@ -13,10 +9,10 @@ std::unique_ptr<BRDF> BRDF::create(optix::Context &ctx, BRDFType::Type type)
 {
     switch (type)
     {
-        case BRDFType::LAMBERTIAN:return std::unique_ptr<BRDF>(new BRDF(ctx, BRDFType::LAMBERTIAN));
-        case BRDFType::TORRANCE_SPARROW :return std::unique_ptr<BRDF>(new BRDF(ctx, BRDFType::TORRANCE_SPARROW));
-        case BRDFType::MERL :return std::unique_ptr<BRDF>(new MERLBRDF(ctx, BRDFType::MERL));
-        case BRDFType::GGX :return std::unique_ptr<BRDF>(new BRDF(ctx, BRDFType::GGX));
+        case BRDFType::LAMBERTIAN:return std::make_unique<BRDF>(ctx, BRDFType::LAMBERTIAN);
+        case BRDFType::TORRANCE_SPARROW :return std::make_unique<BRDF>(ctx, BRDFType::TORRANCE_SPARROW);
+        case BRDFType::MERL :return std::make_unique<MERLBRDF>(ctx, BRDFType::MERL);
+        case BRDFType::GGX :return std::make_unique<BRDF>(ctx, BRDFType::GGX);
     }
 	return nullptr; 
 }
@@ -37,11 +33,11 @@ void BRDF::load(MaterialHost &obj)
 }
 
 
-void MERLBRDF::set_merl_file(std::string file)
+void MERLBRDF::load_brdf_file(std::string file)
 {
-    read_brdf_f("", file, data);
+    read_brdf_f("", file, mData);
     mName = file.substr(file.find_last_of("/\\") + 1);
-    reflectance = integrate_brdf(data, 100000);
+    mReflectance = integrate_brdf(mData, 100000);
 }
 
 void MERLBRDF::load(MaterialHost &obj)
@@ -51,7 +47,7 @@ void MERLBRDF::load(MaterialHost &obj)
     if(!mInit)
         init();
 
-    obj.get_optix_material()["merl_brdf_multiplier"]->setFloat(merl_correction);
+    obj.get_optix_material()["merl_brdf_multiplier"]->setFloat(mCorrection);
     BufPtr1D<float> ptr = BufPtr1D<float>(mMerlBuffer->getId());
     obj.get_optix_material()["merl_brdf_buffer"]->setUserData(sizeof(BufPtr1D<float>), &ptr);
 }
@@ -62,20 +58,20 @@ void MERLBRDF::init()
     {
         mMerlBuffer = mContext->createBuffer(RT_BUFFER_INPUT);
         mMerlBuffer->setFormat(RT_FORMAT_FLOAT);
-        mMerlBuffer->setSize(data.size());
+        mMerlBuffer->setSize(mData.size());
     }
-    reflectance = integrate_brdf(data, 100000);
+    mReflectance = integrate_brdf(mData, 100000);
     void* b = mMerlBuffer->map();
-    memcpy(b, data.data(), data.size() * sizeof(float));
+    memcpy(b, mData.data(), mData.size() * sizeof(float));
     mMerlBuffer->unmap();
     mInit = true;
 }
 
 MERLBRDF::MERLBRDF(const MERLBRDF &other) : BRDF(other)
 {
-    merl_correction = optix::make_float3(1);
-    data = other.data;
-    reflectance = other.reflectance;
+    mCorrection = optix::make_float3(1);
+    mData = other.mData;
+    mReflectance = other.mReflectance;
     mName = other.mName;
 }
 
@@ -83,16 +79,21 @@ MERLBRDF &MERLBRDF::operator=(const MERLBRDF &other)
 {
     mContext = other.mContext;
     mType = other.mType;
-    merl_correction = optix::make_float3(1);
-    data = other.data;
-    reflectance = other.reflectance;
+    mCorrection = optix::make_float3(1);
+    mData = other.mData;
+    mReflectance = other.mReflectance;
     mName = other.mName;
 	return *this;
 }
 
+MERLBRDF::~MERLBRDF()
+{
+	mMerlBuffer->destroy();
+}
+
 bool MERLBRDF::on_draw()
 {
-    ImmediateGUIDraw::TextWrapped("%f %f %f \n", reflectance.x, reflectance.y, reflectance.z);
+    ImmediateGUIDraw::TextWrapped("%f %f %f \n", mReflectance.x, mReflectance.y, mReflectance.z);
     return false;
 }
 
@@ -120,4 +121,8 @@ BRDF::BRDF(const BRDF &other)
 {
     mContext = other.mContext;
     mType = other.mType;
+}
+
+BRDF::~BRDF()
+{
 }

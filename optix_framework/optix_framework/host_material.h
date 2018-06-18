@@ -13,7 +13,7 @@ namespace cereal
 {
 	template<class Archive>
 	void serialize(Archive &archive, MaterialDataCommon &m)
-	{
+	{ 
 		archive(cereal::make_nvp("illum", m.illum));
 		archive(cereal::make_nvp("index_of_refraction", m.index_of_refraction));
 		archive(cereal::make_nvp("roughness", m.roughness));

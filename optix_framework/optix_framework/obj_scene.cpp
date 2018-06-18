@@ -406,9 +406,15 @@ void ObjScene::initialize_scene(GLFWwindow *)
     unsigned int camera_height = camera->get_height();
 
 	// Tone mapping pass
-	rendering_output_buffer = createPBOOutputBuffer("output_buffer", RT_FORMAT_FLOAT4, RT_BUFFER_INPUT_OUTPUT, camera->get_width(), camera->get_height());
-	tonemap_output_buffer = createPBOOutputBuffer("tonemap_output_buffer", RT_FORMAT_UNSIGNED_BYTE4, RT_BUFFER_INPUT_OUTPUT, camera->get_width(), camera->get_height());
-	debug_output_buffer = createPBOOutputBuffer("debug_output_buffer", RT_FORMAT_UNSIGNED_BYTE4, RT_BUFFER_OUTPUT, camera->get_width(), camera->get_height());
+	rendering_output_buffer = create_glbo_buffer<optix::float4>(context, RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT4, camera->get_width(), camera->get_height());
+	context["output_buffer"]->setBuffer(rendering_output_buffer);
+
+	tonemap_output_buffer = create_glbo_buffer<optix::uchar4>(context, RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, camera->get_width(), camera->get_height());
+	context["tonemap_output_buffer"]->setBuffer(tonemap_output_buffer);
+
+	debug_output_buffer = create_glbo_buffer<optix::uchar4>(context, RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, camera->get_width(), camera->get_height());
+	context["debug_output_buffer"]->setBuffer(debug_output_buffer);
+
 	returned_buffer = tonemap_output_buffer;
 
 	// Create group for scene objects and float acceleration structure
@@ -587,15 +593,6 @@ void ObjScene::scene_initialized()
 		current_render_task->start();
 		start_task_render_time = currentTime();
 	}
-}
-
-optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height)
-{
-    Buffer buffer = context->createBuffer(type);
-	buffer->setFormat(format);
-    buffer->setSize(width, height);
-    context[name]->setBuffer(buffer);
-	return buffer;
 }
 
 void ObjScene::do_resize(unsigned int , unsigned int )

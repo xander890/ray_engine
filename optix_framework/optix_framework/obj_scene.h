@@ -92,7 +92,6 @@ private:
 	bool collect_images = false;
 	bool show_difference_image = false;
 	optix::Aabb m_scene_bounding_box;
-	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height);
 
 	void set_rendering_method(RenderingMethodType::EnumType t);
 	std::vector<std::string> filenames;

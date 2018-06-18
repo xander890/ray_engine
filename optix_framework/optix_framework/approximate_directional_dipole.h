@@ -1,9 +1,9 @@
 #pragma once
-#include <device_common_data.h>
-#include <scattering_properties.h>
-#include <math_helpers.h>
-#include <sampling_helpers.h>
 #include <approximate_standard_dipole.h>
+#include <sampling_helpers.h>
+#include <scattering_properties.h>
+#include <device_common_data.h>
+#include <math_helpers.h>
 
 using optix::float3;
 

@@ -41,7 +41,7 @@ bool BRDFShader::on_draw()
         if(type == BRDFType::MERL && Dialogs::openFileDialog(path))
         {
             MERLBRDF* other = dynamic_cast<MERLBRDF*>(mBRDF.get());
-            other->set_merl_file(path);
+            other->load_brdf_file(path);
         }
     }
 

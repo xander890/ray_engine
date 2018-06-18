@@ -34,6 +34,15 @@ bool ConvexHull::on_draw()
 	return false;
 }
 
+ConvexHull::ConvexHull(optix::Context ctx): Geometry(ctx)
+{
+}
+
+ConvexHull::~ConvexHull()
+{
+	mPlaneBuffer->destroy();
+}
+
 void ConvexHull::load()
 {
 	if (!mReloadGeometry)

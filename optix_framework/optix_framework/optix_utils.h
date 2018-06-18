@@ -3,11 +3,10 @@
 #include "GL/glew.h"
 #include <cstring>
 
-template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsigned int type, unsigned int size)
+template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsigned int type, RTformat format, unsigned int size)
 {
 	GLuint buf;
 	glCreateBuffers(1, &buf);
-
 	GLint bind;
 	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &bind);
 	glBindBuffer(GL_ARRAY_BUFFER, buf);
@@ -15,7 +14,15 @@ template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsi
 	glBindBuffer(GL_ARRAY_BUFFER, bind);
 	optix::Buffer r = ctx->createBufferFromGLBO(type, buf);
 	r->setSize(size);
+	r->setFormat(format);
 	return r;
+}
+
+template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsigned int type, RTformat format, unsigned int width, unsigned int height)
+{
+	optix::Buffer buf = create_glbo_buffer<T>(ctx, type, format, width*height);
+	buf->setSize(width, height);
+	return buf;
 }
 
 template<typename T> void resize_glbo_buffer(optix::Buffer & buffer, unsigned int size)

@@ -115,6 +115,7 @@ public:
     static unsigned int get_gl_format(const Format& element_format);
     static void get_size_and_format(const RTformat & out_format, RTsize & element_size, Texture::Format & format);
     static size_t get_size(const Texture::Format & format);
+	static size_t get_number_of_elements(const RTformat & out_format);
 
 private:
     size_t get_memory_footprint() { return get_number_of_elements()*get_size(mFormat);}
