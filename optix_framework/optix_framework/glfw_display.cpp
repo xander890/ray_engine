@@ -44,7 +44,6 @@ SampleScene*   GLFWDisplay::m_scene = nullptr;
 GLFWwindow*    GLFWDisplay::m_window = nullptr;
 bool           GLFWDisplay::m_display_frames = true;
 
-unsigned int   GLFWDisplay::m_texId = 0;
 bool           GLFWDisplay::m_sRGB_supported = false;
 bool           GLFWDisplay::m_use_sRGB = false;
 
@@ -214,35 +213,13 @@ void GLFWDisplay::displayFrame()
   int buffer_width  = static_cast<int>(buffer_width_rts);
   int buffer_height = static_cast<int>(buffer_height_rts);
   RTformat buffer_format = buffer->getFormat();
-
-
-  unsigned int vboId = 0;
-  if( m_scene->usesVBOBuffer() )
-    vboId = buffer->getGLBOId();
+  unsigned int vboId = buffer->getGLBOId();
 
   if (vboId)
   {
-
-    if (!m_texId)
-    {
-      glGenTextures( 1, &m_texId );
-      glBindTexture( GL_TEXTURE_2D, m_texId);
-
-      // Change these to GL_LINEAR for super- or sub-sampling
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-      // GL_CLAMP_TO_EDGE for linear filtering, not relevant for nearest.
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-      glBindTexture( GL_TEXTURE_2D, 0);
-    }
-
-    glBindTexture( GL_TEXTURE_2D, m_texId );
-
     // send pbo to texture
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vboId);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     RTsize elementSize = buffer->getElementSize();
     if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
@@ -252,38 +229,19 @@ void GLFWDisplay::displayFrame()
 
     {
       if(buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+		  glDrawPixels(buffer_width, buffer_height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
       } else if(buffer_format == RT_FORMAT_FLOAT4) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, buffer_width, buffer_height, 0, GL_RGBA, GL_FLOAT, 0);
-      } else if(buffer_format == RT_FORMAT_FLOAT3) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F_ARB, buffer_width, buffer_height, 0, GL_RGB, GL_FLOAT, 0);
-      } else if(buffer_format == RT_FORMAT_FLOAT) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE32F_ARB, buffer_width, buffer_height, 0, GL_LUMINANCE, GL_FLOAT, 0);
-      } else {
+		  glDrawPixels(buffer_width, buffer_height, GL_RGBA, GL_FLOAT, 0);
+	  } else if(buffer_format == RT_FORMAT_FLOAT3) {
+		  glDrawPixels(buffer_width, buffer_height, GL_RGB, GL_FLOAT, 0);
+	  } else if(buffer_format == RT_FORMAT_FLOAT) {
+		  glDrawPixels(buffer_width, buffer_height, GL_RED, GL_FLOAT, 0);
+	  } else {
         assert(0 && "Unknown buffer format");
       }
     }
     glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
 
-    glEnable(GL_TEXTURE_2D);
-
-    // Initialize offsets to pixel center sampling.
-
-    float u = 0.5f/buffer_width;
-    float v = 0.5f/buffer_height;
-
-    glBegin(GL_QUADS);
-    glTexCoord2f(u, v);
-    glVertex2f(0.0f, 0.0f);
-    glTexCoord2f(1.0f, v);
-    glVertex2f(1.0f, 0.0f);
-    glTexCoord2f(1.0f - u, 1.0f - v);
-    glVertex2f(1.0f, 1.0f);
-    glTexCoord2f(u, 1.0f - v);
-    glVertex2f(0.0f, 1.0f);
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
   } else {
     GLvoid* imageData = buffer->map();
     assert( imageData );
@@ -294,7 +252,7 @@ void GLFWDisplay::displayFrame()
     switch (buffer_format) {
           case RT_FORMAT_UNSIGNED_BYTE4:
             gl_data_type = GL_UNSIGNED_BYTE;
-            gl_format    = GL_BGRA;
+            gl_format    = GL_RGBA;
             break;
 
           case RT_FORMAT_FLOAT:

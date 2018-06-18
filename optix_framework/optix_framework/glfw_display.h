@@ -123,7 +123,6 @@ private:
 //  static int            m_old_window_x_offset;
 //  static int            m_old_window_y_offset;
 
-  static unsigned int   m_texId;
   static bool           m_sRGB_supported;
   static bool           m_use_sRGB;
   static bool           m_initialized;
