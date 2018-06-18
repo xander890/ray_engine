@@ -28,8 +28,8 @@
 #include "sky_model.h"
 #include "bssrdf_visualizer.h"
 #include <algorithm>
+#include "image_exporter.h"
 
-using namespace std;
 using optix::uint2;
 using optix::TextureSampler;
 using optix::Program;
@@ -42,8 +42,8 @@ void ObjScene::collect_image(unsigned int frame) const
 {
 	if (!collect_images) return;
 
-	const std::string name = std::string("rendering_") + to_string(frame) + ".raw";
-	export_raw(name, rendering_output_buffer, frame);
+	const std::string name = std::string("rendering_") + std::to_string(frame) + ".raw";
+	exportTexture(name, rendering_output_buffer, frame);
 }
 
 void ObjScene::reset_renderer()
@@ -73,7 +73,7 @@ bool ObjScene::key_pressed(int key, int action, int modifier)
 	case GLFW_KEY_E:
 	{
 		const std::string res = std::string("result_optix.raw");
-		return export_raw(res, rendering_output_buffer, m_frame);
+		return exportTexture(res, rendering_output_buffer, m_frame);
 	}
 	case GLFW_KEY_G:
 	{
@@ -96,7 +96,7 @@ ObjScene::ObjScene(const std::vector<std::string>& obj_filenames)
 	: context(m_context),
 	filenames(obj_filenames), m_frame(0u)
 {
-	current_render_task = make_unique<RenderTaskFrames>(1000, "res.raw", false);
+	current_render_task = std::make_unique<RenderTaskFrames>(1000, "res.raw", false);
 }
 
 ObjScene::ObjScene()
@@ -104,7 +104,7 @@ ObjScene::ObjScene()
      filenames(1, "test.obj"),
 	m_frame(0u)
 {
-	current_render_task = make_unique<RenderTaskFrames>(1000, "res.raw", false);
+	current_render_task = std::make_unique<RenderTaskFrames>(1000, "res.raw", false);
 }
 
 inline ObjScene::~ObjScene()
@@ -123,11 +123,11 @@ bool ObjScene::draw_gui()
 	bool changed = false;
 	ImmediateGUIDraw::TextColored({ 255,0,0,1 }, "Rendering info ");
 	std::stringstream ss;
-	ss << "Current frame: " << to_string(m_frame) << std::endl;
-	ss << "Time (pre trace):   " << to_string(to_milliseconds(render_time_pre_trace)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_pre_trace)) << " FPS)" << std::endl;
-	ss << "Time (render):      " << to_string(to_milliseconds(render_time_main)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_main)) << " FPS)" << std::endl;
-	ss << "Time (post trace):  " << to_string(to_milliseconds(render_time_post)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_post)) << " FPS)" << std::endl;
-	ss << "Time (tonemap/dbg): " << to_string(to_milliseconds(render_time_tonemap)) << " ms (" << to_string(1000.0 / to_milliseconds(render_time_tonemap)) << " FPS)";
+	ss << "Current frame: " << std::to_string(m_frame) << std::endl;
+	ss << "Time (pre trace):   " << std::to_string(to_milliseconds(render_time_pre_trace)) << " ms (" << std::to_string(1000.0 / to_milliseconds(render_time_pre_trace)) << " FPS)" << std::endl;
+	ss << "Time (render):      " << std::to_string(to_milliseconds(render_time_main)) << " ms (" << std::to_string(1000.0 / to_milliseconds(render_time_main)) << " FPS)" << std::endl;
+	ss << "Time (post trace):  " << std::to_string(to_milliseconds(render_time_post)) << " ms (" << std::to_string(1000.0 / to_milliseconds(render_time_post)) << " FPS)" << std::endl;
+	ss << "Time (tonemap/dbg): " << std::to_string(to_milliseconds(render_time_tonemap)) << " ms (" << std::to_string(1000.0 / to_milliseconds(render_time_tonemap)) << " FPS)";
 	ImmediateGUIDraw::Text("%s",ss.str().c_str());
 	static bool debug = parameters.debug_enabled;
 
@@ -141,15 +141,15 @@ bool ObjScene::draw_gui()
 			{
 
 				optix::Buffer b = Buffer::take(buffer);
-				RTsize d = b->getDimensionality();
+				unsigned int d = b->getDimensionality();
 				RTsize * dims = new RTsize[d];
 				b->getSize(d, &dims[0]);
 				void** device_pointer;
 				auto r = rtBufferGetDevicePointer (buffer, 0, device_pointer);
 				if(r == RT_SUCCESS)
-					printf("Buffer %d, size %d (w %d). ptr %p\n", (int)i, (int)b->getElementSize(), dims[0], *device_pointer);
+					printf("Buffer %d, size %lld (w %Id). ptr %p\n", i, b->getElementSize(), dims[0], *device_pointer);
 				else
-					printf("Buffer %d, size %d (w %d).\n", (int)i, (int)b->getElementSize(), (int)dims[0]);
+					printf("Buffer %d, size %Id (w %d).\n", i, b->getElementSize(), (int)dims[0]);
 			}
 		}
 	}
@@ -212,12 +212,13 @@ bool ObjScene::draw_gui()
             mScene->reload();
 		}
 
-		if (ImmediateGUIDraw::Button("Save RAW image"))
+		ImmediateGUIDraw::SameLine();
+		if (ImmediateGUIDraw::Button("Save screenshot"))
 		{
 			std::string filePath;
 			if (Dialogs::saveFileDialog(filePath))
 			{
-				export_raw(filePath, rendering_output_buffer, m_frame);
+				exportTexture(filePath, rendering_output_buffer, m_frame);
 			}
 		}
 
@@ -337,7 +338,7 @@ void ObjScene::create_3d_noise(float frequency)
 
 void ObjScene::initialize_scene(GLFWwindow *)
 {
-	Logger::info << "Initializing scene." << endl;
+	Logger::info << "Initializing scene." << std::endl;
 
 	context->setPrintBufferSize(parameters.print_buffer_size);
     context->setPrintLaunchIndex(parameters.print_index.x,parameters.print_index.y);
@@ -416,13 +417,13 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	Aabb bbox(make_float3(-1,-1,-1), make_float3(1,1,1));
 
 	// Load geometry from OBJ files into the group of scene objects
-	Logger::info << "Loading obj files..." << endl;
+	Logger::info << "Loading obj files..." << std::endl;
 
 	m_scene_bounding_box = bbox;
 	for (unsigned int i = 0; i < filenames.size(); ++i)
 	{
 		// Load OBJ scene
-		Logger::info <<"Loading obj " << filenames[i]  << "..." <<endl;
+		Logger::info <<"Loading obj " << filenames[i]  << "..." << std::endl;
 		ObjLoader loader((Folders::data_folder + filenames[i]).c_str(), context);
         std::vector<std::unique_ptr<Object>>& v = loader.load(optix::Matrix4x4::identity());
 		for (int j = 0; j < v.size(); j++)
@@ -440,7 +441,7 @@ void ObjScene::initialize_scene(GLFWwindow *)
 
     load_default_camera();
 
-	Logger::info << "Loading programs..." << endl;
+	Logger::info << "Loading programs..." << std::endl;
 	// Set top level geometry in acceleration structure. 
 	// The default used by the ObjLoader is SBVH.
 
@@ -457,7 +458,7 @@ void ObjScene::initialize_scene(GLFWwindow *)
 	context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	// Environment cameras
 
-	Logger::info <<"Loading camera parameters..."<<endl;
+	Logger::info <<"Loading camera parameters..."<< std::endl;
 	float max_dim = m_scene_bounding_box.extent(m_scene_bounding_box.longestAxis());
 	
     //create_3d_noise(noise_frequency);
@@ -474,13 +475,13 @@ void ObjScene::initialize_scene(GLFWwindow *)
 
 	context->validate();
 
-	Logger::info << "Compiling context and creating bvhs..." << endl;
+	Logger::info << "Compiling context and creating bvhs..." << std::endl;
 
 	context["max_depth"]->setInt(0);
 	trace();
 	context["max_depth"]->setInt(parameters.max_depth);
 	reset_renderer();
-    Logger::info<<"Scene initialized."<<endl;
+    Logger::info<<"Scene initialized."<< std::endl;
 
 	if(!exists("ray_tracing_parameters.xml"))
 	    save_parameters("ray_tracing_parameters.xml");
@@ -548,7 +549,7 @@ void ObjScene::trace()
 	{
 		if (current_render_task->is_finished())
 		{
-			export_raw(current_render_task->get_destination_file(), rendering_output_buffer, m_frame);
+			exportTexture(current_render_task->get_destination_file(), rendering_output_buffer, m_frame);
 			
 			current_render_task->end();
 		}
@@ -571,7 +572,7 @@ void ObjScene::set_render_task(std::unique_ptr<RenderTask>& task)
 	if (!current_render_task->is_active())
 		current_render_task = std::move(task);
 	else
-		Logger::error << "Wait of end of current task before setting a new one." << endl;
+		Logger::error << "Wait of end of current task before setting a new one." << std::endl;
 }
 
 void ObjScene::start_render_task_on_scene_ready()
@@ -595,74 +596,6 @@ optix::Buffer ObjScene::createPBOOutputBuffer(const char* name, RTformat format,
     buffer->setSize(width, height);
     context[name]->setBuffer(buffer);
 	return buffer;
-}
-
-
-
-bool ObjScene::export_raw(const string& raw_p, optix::Buffer out, int frames)
-{
-	std::string raw_path = raw_p;
-	// export render data
-    if (raw_path.length() == 0)
-    {
-        Logger::error << "Invalid raw file specified" << raw_path << endl;
-        return false;
-    }
-
-	if (raw_path.length() <= 4 || raw_path.substr(raw_path.length() - 4).compare(".raw") != 0)
-	{
-        raw_path += ".raw";
-	}
-
-	RTsize w, h;
-	out->getSize(w, h);
-	std::string txt_file = raw_path.substr(0, raw_path.length() - 4) + ".txt";
-	ofstream ofs_data(txt_file);
-	if (ofs_data.bad())
-	{
-		Logger::error <<  "Unable to open file " << txt_file << endl;
-		return false;
-	}
-	ofs_data << frames << endl << w << " " << h << endl;
-	ofs_data << 1.0 << " " << 1.0f << " " << 1.0f;
-	ofs_data.close();
-
-	RTsize size_buffer = w * h * 4;
-	float* mapped = new float[size_buffer];
-	memcpy(mapped, out->map(), size_buffer * sizeof(float));
-	out->unmap();
-	ofstream ofs_image;
-	ofs_image.open(raw_path, ios::binary);
-	if (ofs_image.bad())
-	{
-		Logger::error <<"Error in exporting file"<<endl;
-		return false;
-	}
-
-	RTsize size_image = w * h * 3;
-	float* converted = new float[size_image];
-	float average = 0.0f;
-	float maxi = -INFINITY;
-	for (int i = 0; i < size_image / 3; ++i)
-	{
-		for (int j = 0; j < 3; ++j)
-		{
-			if (!isfinite(mapped[i * 4 + j]))
-			{
-			}
-			converted[i * 3 + j] = mapped[i * 4 + j];
-			average += mapped[i * 4 + j];
-			maxi = max(maxi, mapped[i * 4 + j]);
-		}
-	}
-	average /= size_image * 3;
-	delete[] mapped;
-	ofs_image.write(reinterpret_cast<const char*>(converted), size_image * sizeof(float));
-	ofs_image.close();
-	delete[] converted;
-	Logger::info <<"Exported buffer to " << raw_path << " (avg: " << to_string(average) << ", max: "<< to_string(maxi) <<")" <<endl;
-
-	return true;
 }
 
 void ObjScene::do_resize(unsigned int , unsigned int )
@@ -693,7 +626,7 @@ void ObjScene::post_draw_callback()
 
 void ObjScene::set_debug_pixel(unsigned int x, unsigned int y)
 {
-	Logger::info <<"Setting debug pixel to " << to_string(x) << " << " << to_string(y) <<endl;
+	Logger::info <<"Setting debug pixel to " << std::to_string(x) << " << " << std::to_string(y) << std::endl;
 	context->setPrintLaunchIndex(x, y);
 	context["debug_index"]->setUint(x, y);
 }
@@ -725,7 +658,7 @@ void ObjScene::set_rendering_method(RenderingMethodType::EnumType t)
 		m = std::make_unique<PathTracing>();
 		break;
 	default:
-		Logger::error<<"The selected rendering method is not valid or no longer supported."<< endl;
+		Logger::error << "The selected rendering method is not valid or no longer supported." << std::endl;
 		break;
 	}
     mScene->set_method(std::move(m));

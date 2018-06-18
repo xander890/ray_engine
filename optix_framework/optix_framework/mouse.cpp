@@ -37,17 +37,7 @@
 //
 //-----------------------------------------------------------------------------
 
-using namespace optix;
-
 namespace {
-
-
-
-  inline float Clamp(float val, float min, float max)
-  {
-    return val > min ? (val < max ? val : max) : min;
-  }
-
 
   float3 projectToSphere( float x, float y, float radius )
   {
@@ -58,15 +48,14 @@ namespace {
       float rad = sqrt(rad2);
       x /= rad;
       y /= rad;
-      return make_float3( x, y, 0.0f );
+      return optix::make_float3( x, y, 0.0f );
     } else {
       float z = sqrt(1-rad2);
-      return make_float3( x, y, z );
+      return optix::make_float3( x, y, z );
     }
   }
 
-
-  Matrix4x4 rotationMatrix( const float3& _to, const float3& _from ) 
+  optix::Matrix4x4 rotationMatrix( const optix::float3& _to, const optix::float3& _from )
   {
     float3 from = normalize( _from );
     float3 to   = normalize( _to );
@@ -74,7 +63,7 @@ namespace {
     float3 v = cross(from, to);
     float  e = dot(from, to);
     if ( e > 1.0f-1.e-9f ) {
-      return Matrix4x4::identity();
+      return optix::Matrix4x4::identity();
     } else {
       float h = 1.0f/(1.0f + e);
       float mtx[16];
@@ -98,99 +87,9 @@ namespace {
       mtx[14] = 0.0f; 
       mtx[15] = 1.0f; 
 
-      return Matrix4x4( mtx );
+      return optix::Matrix4x4( mtx );
     }
   }
-
-
-
-
-  inline float det3 (float a, float b, float c,
-                     float d, float e, float f,
-                     float g, float h, float i)
-  { return a*e*i + d*h*c + g*b*f - g*e*c - d*b*i - a*h*f; }
-
-
-#define mm(i,j) m[i*4+j]
-  float det4( const Matrix4x4& m )
-  {
-    float det;
-    det  = mm(0,0) * det3(mm(1,1), mm(1,2), mm(1,3),
-                          mm(2,1), mm(2,2), mm(2,3),
-                          mm(3,1), mm(3,2), mm(3,3));
-    det -= mm(0,1) * det3(mm(1,0), mm(1,2), mm(1,3),
-                          mm(2,0), mm(2,2), mm(2,3),
-                          mm(3,0), mm(3,2), mm(3,3));
-    det += mm(0,2) * det3(mm(1,0), mm(1,1), mm(1,3),
-                          mm(2,0), mm(2,1), mm(2,3),
-                          mm(3,0), mm(3,1), mm(3,3));
-    det -= mm(0,3) * det3(mm(1,0), mm(1,1), mm(1,2),
-                          mm(2,0), mm(2,1), mm(2,2),
-                          mm(3,0), mm(3,1), mm(3,2));
-    return det;
-  }
-
-  Matrix4x4 inverse( const Matrix4x4& m )
-  {
-    Matrix4x4 inverse;
-    float det = det4( m );
-
-    inverse[0]  =  det3(mm(1,1), mm(1,2), mm(1,3),
-                        mm(2,1), mm(2,2), mm(2,3),
-                        mm(3,1), mm(3,2), mm(3,3)) / det;
-    inverse[1]  = -det3(mm(0,1), mm(0,2), mm(0,3),
-                        mm(2,1), mm(2,2), mm(2,3),
-                        mm(3,1), mm(3,2), mm(3,3)) / det;
-    inverse[2]  =  det3(mm(0,1), mm(0,2), mm(0,3),
-                        mm(1,1), mm(1,2), mm(1,3),
-                        mm(3,1), mm(3,2), mm(3,3)) / det;
-    inverse[3]  = -det3(mm(0,1), mm(0,2), mm(0,3),
-                        mm(1,1), mm(1,2), mm(1,3),
-                        mm(2,1), mm(2,2), mm(2,3)) / det;
-
-    inverse[4]  = -det3(mm(1,0), mm(1,2), mm(1,3),
-                        mm(2,0), mm(2,2), mm(2,3),
-                        mm(3,0), mm(3,2), mm(3,3)) / det;
-    inverse[5]  =  det3(mm(0,0), mm(0,2), mm(0,3),
-                        mm(2,0), mm(2,2), mm(2,3),
-                        mm(3,0), mm(3,2), mm(3,3)) / det;
-    inverse[6]  = -det3(mm(0,0), mm(0,2), mm(0,3),
-                        mm(1,0), mm(1,2), mm(1,3),
-                        mm(3,0), mm(3,2), mm(3,3)) / det;
-    inverse[7]  =  det3(mm(0,0), mm(0,2), mm(0,3),
-                        mm(1,0), mm(1,2), mm(1,3),
-                        mm(2,0), mm(2,2), mm(2,3)) / det;
-
-    inverse[8]  =  det3(mm(1,0), mm(1,1), mm(1,3),
-                        mm(2,0), mm(2,1), mm(2,3),
-                        mm(3,0), mm(3,1), mm(3,3)) / det;
-    inverse[9]  = -det3(mm(0,0), mm(0,1), mm(0,3),
-                        mm(2,0), mm(2,1), mm(2,3),
-                        mm(3,0), mm(3,1), mm(3,3)) / det;
-    inverse[10] =  det3(mm(0,0), mm(0,1), mm(0,3),
-                        mm(1,0), mm(1,1), mm(1,3),
-                        mm(3,0), mm(3,1), mm(3,3)) / det;
-    inverse[11] = -det3(mm(0,0), mm(0,1), mm(0,3),
-                        mm(1,0), mm(1,1), mm(1,3),
-                        mm(2,0), mm(2,1), mm(2,3)) / det;
-
-    inverse[12] = -det3(mm(1,0), mm(1,1), mm(1,2),
-                        mm(2,0), mm(2,1), mm(2,2),
-                        mm(3,0), mm(3,1), mm(3,2)) / det;
-    inverse[13] =  det3(mm(0,0), mm(0,1), mm(0,2),
-                        mm(2,0), mm(2,1), mm(2,2),
-                        mm(3,0), mm(3,1), mm(3,2)) / det;
-    inverse[14] = -det3(mm(0,0), mm(0,1), mm(0,2),
-                        mm(1,0), mm(1,1), mm(1,2),
-                        mm(3,0), mm(3,1), mm(3,2)) / det;
-    inverse[15] =  det3(mm(0,0), mm(0,1), mm(0,2),
-                        mm(1,0), mm(1,1), mm(1,2),
-                        mm(2,0), mm(2,1), mm(2,2)) / det;
-
-    return inverse;
-}
-
-#undef mm
 }
   
   
@@ -299,7 +198,7 @@ void Mouse::translate(int x, int y)
   if(current_interaction.state == GLFW_MOTION) {
     float xmotion =  float(current_interaction.last_x - x)/xres;
     float ymotion = -float(current_interaction.last_y - y)/yres;
-    float2 translation = make_float2(xmotion, ymotion) * translate_speed;
+    float2 translation = optix::make_float2(xmotion, ymotion) * translate_speed;
 
     camera->translate(translation);
   }
@@ -342,7 +241,7 @@ void Mouse::rotate(int x, int y)
     float3 to( projectToSphere( xpos, ypos, 0.8f ) );
     float3 from( current_interaction.rotate_from );
   
-    Matrix4x4 m = rotationMatrix( to, from);
+	optix::Matrix4x4 m = rotationMatrix( to, from);
     current_interaction.rotate_from = to;
     camera->transform( m ); 
   }

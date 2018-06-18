@@ -10,8 +10,6 @@
 #include <memory>
 #include <Eigen/Dense>
 
-using namespace optix;
-using namespace std;
 #define ISFINITE std::isfinite
 
 /*
@@ -46,7 +44,7 @@ float3 assignWithCheck( float3& dst, const float3 &src )
 	return dst;
 }
 
-Matrix4x4 initWithBasis( const float3& u,
+optix::Matrix4x4 initWithBasis( const float3& u,
 		const float3& v,
 		const float3& w,
 		const float3& t )
@@ -72,10 +70,10 @@ Matrix4x4 initWithBasis( const float3& u,
 	m[14] = 0.0f;
 	m[15] = 1.0f;
 
-	return Matrix4x4( m );
+	return optix::Matrix4x4( m );
 }
 
-Matrix3x3 initWithBasis(const float3& u,
+optix::Matrix3x3 initWithBasis(const float3& u,
 	const float3& v,
 	const float3& w)
 {
@@ -92,7 +90,7 @@ Matrix3x3 initWithBasis(const float3& u,
 	m[7] = v.z;
 	m[8] = w.z;
 
-	return Matrix3x3(m);
+	return optix::Matrix3x3(m);
 }
 
 namespace Eigen
@@ -105,7 +103,7 @@ namespace Eigen
 
 	optix::Matrix3x3 eigen_to_optix(Matrix3f & mat)
 	{
-		Matrix3x3 ret;
+		optix::Matrix3x3 ret;
 		Eigen::Map<Eigen::Matrix<float, 3, 3, Eigen::RowMajor>>(ret.getData(), mat.rows(), mat.cols()) = mat;
 		return ret;
 	}
@@ -140,9 +138,9 @@ int Camera::get_id() const
 
 void Camera::init()
 {
-	const string ptx_path = get_path_ptx("pinhole_camera.cu");
-	string camera_name = "pinhole_camera";
-	Program ray_gen_program = mContext->createProgramFromPTXFile(ptx_path, camera_name);
+	const std::string ptx_path = get_path_ptx("pinhole_camera.cu");
+	std::string camera_name = "pinhole_camera";
+	optix::Program ray_gen_program = mContext->createProgramFromPTXFile(ptx_path, camera_name);
 	entry_point = add_entry_point(mContext, ray_gen_program);
 	mContext->setExceptionProgram(entry_point, mContext->createProgramFromPTXFile(ptx_path, "exception"));
 
@@ -206,9 +204,9 @@ void Camera::scaleFOV(float scale)
 	const float fov_min = 0.0f;
 	const float fov_max = 120.0f;
 	float hfov_new = rad2deg(2*atanf(scale*tanf(deg2rad(parameters->hfov*0.5f))));
-	hfov_new = clamp(hfov_new, fov_min, fov_max);
+	hfov_new = optix::clamp(hfov_new, fov_min, fov_max);
 	float vfov_new = rad2deg(2*atanf(scale*tanf(deg2rad(parameters->vfov*0.5f))));
-	vfov_new = clamp(vfov_new, fov_min, fov_max);
+	vfov_new = optix::clamp(vfov_new, fov_min, fov_max);
 
 	parameters->hfov = assignWithCheck( parameters->hfov, hfov_new );
 	parameters->vfov = assignWithCheck( parameters->vfov, vfov_new );
@@ -240,21 +238,21 @@ void Camera::dolly(float scale)
 	setup();
 }
 
-void Camera::transform( const Matrix4x4& trans )
+void Camera::transform( const optix::Matrix4x4& trans )
 {
 	float3 cen = lookat;         // TODO: Add logic for various rotation types (eg, flythrough)
 
-	Matrix4x4 frame = initWithBasis( normalize(data->U),
+	optix::Matrix4x4 frame = initWithBasis( normalize(data->U),
 			normalize(data->V),
 			normalize(-data->W),
 			cen );
-	Matrix4x4 frame_inv = frame.inverse();
+	optix::Matrix4x4 frame_inv = frame.inverse();
 
-	Matrix4x4 final_trans = frame * trans * frame_inv;
-	float4 up4     = make_float4( up );
-	float4 eye4    = make_float4( eye );
+	optix::Matrix4x4 final_trans = frame * trans * frame_inv;
+	optix::float4 up4     = make_float4( up );
+	optix::float4 eye4    = make_float4( eye );
 	eye4.w         = 1.0f;
-	float4 lookat4 = make_float4( lookat );
+	optix::float4 lookat4 = make_float4( lookat );
 	lookat4.w      = 1.0f;
 
 
@@ -283,17 +281,17 @@ void Camera::setParameters(CameraParameters param)
 	parameters = std::make_unique<CameraParameters>(param);
 	if (std::any_of(&parameters->rendering_rect.x, &parameters->rendering_rect.w, [](int & v){ return v == -1; }))
 	{
-		data->rendering_rectangle = make_uint4(0, 0, parameters->width, parameters->height);
+		data->rendering_rectangle = optix::make_uint4(0, 0, parameters->width, parameters->height);
 	}
 	else
 	{
-		data->rendering_rectangle = make_uint4(parameters->rendering_rect.x, parameters->rendering_rect.y, parameters->rendering_rect.z, parameters->rendering_rect.w);
+		data->rendering_rectangle = optix::make_uint4(parameters->rendering_rect.x, parameters->rendering_rect.y, parameters->rendering_rect.z, parameters->rendering_rect.w);
 	}
 	data->downsampling = parameters->downsampling;
 	data->rendering_rectangle.z /= parameters->downsampling;
 	data->rendering_rectangle.w /= parameters->downsampling;
-	data->render_bounds = make_uint4(0, 0, parameters->width, parameters->height);
-	data->camera_size = make_uint2(parameters->width, parameters->height);
+	data->render_bounds = optix::make_uint4(0, 0, parameters->width, parameters->height);
+	data->camera_size = optix::make_uint2(parameters->width, parameters->height);
 	float3 cen = lookat;
     data->view_matrix = initWithBasis( normalize(data->U), normalize(data->V), normalize(-data->W));
 	Eigen::Matrix3f e = Eigen::optix_to_eigen(data->view_matrix);

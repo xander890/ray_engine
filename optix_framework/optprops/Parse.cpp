@@ -10,7 +10,6 @@
 #include <iostream>
 
 using namespace std;
-using namespace CGLA;
 
 namespace
 {
@@ -89,7 +88,7 @@ namespace Util {
 	}
 
 
-	void parse(const char* str,Vec4f& vec) {
+	void parse(const char* str, Vec4f& vec) {
    /* Establish string and get the first token: */
 		const char *btoken=next_btoken(const_cast<char*>(str));
 		char *etoken= next_etoken(btoken);

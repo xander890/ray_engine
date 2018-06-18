@@ -7,8 +7,8 @@
 #include <string>
 #include <complex>
 #include <algorithm>
-#include "Util/XmlParser.h"
-#include "Util/Parse.h"
+#include "XmlParser.h"
+#include "Parse.h"
 #include "Medium.h"
 #include "Interface.h"
 #include "load_mpml.h"

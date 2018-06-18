@@ -6,8 +6,6 @@
 #include <algorithm>
 #include <logger.h>
 
-using namespace std;
-
 #ifdef __unix
 #define fopen_s(pFile,filename,mode) ((*(pFile))=fopen((filename),  (mode)))==NULL
 #endif
@@ -47,10 +45,10 @@ void convert_array_type(int size, std::vector<T>& new_array, S*& old_array)
 
 void get_merl_brdf_list(const char* merl_database, std::vector<std::string>& brdfs)
 {
-    ifstream ifs(merl_database);
+    std::ifstream ifs(merl_database);
     if (!ifs.is_open())
     {
-        cout << "Could not find MERL file database." << endl;
+		std::cout << "Could not find MERL file database." << std::endl;
     }
     std::string line;
     brdfs.clear();
@@ -61,29 +59,29 @@ void get_merl_brdf_list(const char* merl_database, std::vector<std::string>& brd
     ifs.close();
 }
 
-void read_brdf_f(const std::string& merl_folder, const std::string& name, vector<float> & brdf_f)
+void read_brdf_f(const std::string& merl_folder, const std::string& name, std::vector<float> & brdf_f)
 {
     double * brdf_d;
     int size;
-    string file = merl_folder + name;
+	std::string file = merl_folder + name;
     if (read_brdf(file.c_str(), size, brdf_d))
     {
         convert_array_type(size, brdf_f, brdf_d);
         auto c = file.find_last_of(".");
         file.erase(c);
-        Logger::info << "Max: " << to_string(*std::max_element(brdf_f.begin(), brdf_f.end())) << endl;
+        Logger::info << "Max: " << std::to_string(*std::max_element(brdf_f.begin(), brdf_f.end())) << std::endl;
     }
 }
 
-void read_all_brdfs(const char * merl_folder, const char * merl_database, std::map<std::string, vector<float>*>& brdfs)
+void read_all_brdfs(const char * merl_folder, const char * merl_database, std::map<std::string, std::vector<float>*>& brdfs)
 {
     std::vector<std::string> brdf_names;
     get_merl_brdf_list(merl_database, brdf_names);
 
     for (auto name : brdf_names)
 	{
-        string file = (std::string(merl_folder) + name);
-        vector<float> * brdf_f = new vector<float>();
+		std::string file = (std::string(merl_folder) + name);
+		std::vector<float> * brdf_f = new std::vector<float>();
         read_brdf_f(merl_folder, name, *brdf_f);
         brdfs[name] = brdf_f;
 	}

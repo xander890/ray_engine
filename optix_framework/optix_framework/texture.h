@@ -40,6 +40,7 @@ public:
     size_t get_width() const { return mDimensions[0]; }
     size_t get_height() const { return mDimensions[1]; }
     size_t get_depth() const { return mDimensions[2]; }
+	size_t get_dimensionality() const { return mDimensionality; }
 
     TexPtr get_id();
 
@@ -170,7 +171,8 @@ private:
                 cereal::make_nvp("element_size", element_size)
         );
 
-        construct->set_format(element_size, format);
+		const Texture::Format & f = format;
+        construct->set_format(element_size, f);
         construct->set_size(dimensions, dims);
         float * vals = new float[construct->get_number_of_elements()];
         archive.loadBinaryValue(vals,construct->get_number_of_elements()*sizeof(float), "texture");

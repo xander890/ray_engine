@@ -50,13 +50,7 @@ std::unique_ptr<Texture> createOneElementSampler(optix::Context context, const o
 
 bool loadDevilTexture(std::unique_ptr<Texture> &tex, optix::Context context, const std::string& filename)
 {
-	static bool devil_initialized = false;
-
-	if(!devil_initialized)
-	{
-		ilInit();
-		devil_initialized = true;
-	}
+	ilInit();
 
 	ILuint	imgId;
 	ilGenImages(1, &imgId);
@@ -93,7 +87,7 @@ bool loadDevilTexture(std::unique_ptr<Texture> &tex, optix::Context context, con
 	tex->set_data(data, 4*w*h*sizeof(float));
 
 	ilDeleteImages(1, &imgId);
-
+	ilShutDown();
 	return true;
 }
 

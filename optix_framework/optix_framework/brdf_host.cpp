@@ -18,6 +18,7 @@ std::unique_ptr<BRDF> BRDF::create(optix::Context &ctx, BRDFType::Type type)
         case BRDFType::MERL :return std::unique_ptr<BRDF>(new MERLBRDF(ctx, BRDFType::MERL));
         case BRDFType::GGX :return std::unique_ptr<BRDF>(new BRDF(ctx, BRDFType::GGX));
     }
+	return nullptr; 
 }
 
 bool BRDF::on_draw()

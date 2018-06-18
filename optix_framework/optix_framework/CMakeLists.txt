@@ -6,9 +6,7 @@ imgui/imgui_internal.h
 imgui/stb_rect_pack.h
 imgui/stb_textedit.h
 imgui/stb_truetype.h
-
 )
-
 
 set(HEADERS
     cublas_test.h
@@ -58,6 +56,7 @@ set(HEADERS
     host_device_common.h
     host_material.h
     image_loader.h
+    image_exporter.h
     immediate_gui.h
     indexofrefractionmatcher.h
     intersection_refinement.h
@@ -174,6 +173,7 @@ set(SRCS
     brdf_shader.cpp
     host_material.cpp
     image_loader.cpp
+    image_exporter.cpp
     immediate_gui.cpp
     light_host.cpp
     logger.cpp
@@ -223,7 +223,7 @@ CUDA_files/debug_camera.cu
 CUDA_files/environment_map_background.cu
 CUDA_files/env_cameras.cu
 CUDA_files/glass_shader.cu
-        CUDA_files/brdf_shader.cu
+CUDA_files/brdf_shader.cu
 CUDA_files/lambertian_shader.cu
 CUDA_files/metal_shader.cu
 CUDA_files/mirror_shader.cu
@@ -257,5 +257,5 @@ add_library( framework STATIC
 
 CUDA_ADD_CUBLAS_TO_TARGET(framework)
 
-target_link_libraries(framework optprops gel nfd optix ${CUDA_LIBRARIES} glfw ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${IL_LIBRARIES} ${ILU_LIBRARIES})
+target_link_libraries(framework optprops nfd optix ${CUDA_LIBRARIES} glfw ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${IL_LIBRARIES} ${ILU_LIBRARIES})
 target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

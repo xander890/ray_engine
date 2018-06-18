@@ -7,10 +7,9 @@
 #include "logger.h"
 
 using namespace std;
-using namespace optix;
 
-typedef map<string, Medium>::iterator mat_it;
-typedef map<string, Interface>::iterator int_it;
+typedef std::map<std::string, Medium>::iterator mat_it;
+typedef std::map<std::string, Interface>::iterator int_it;
 
 optix::float3 color_to_float3(Color<double> & color)
 {

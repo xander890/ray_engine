@@ -5,9 +5,8 @@
 #include "image_loader.h"
 #include "optix_utils.h"
 #include "dialogs.h"
-
 #pragma warning(disable:4996) 
-using namespace optix;
+
 void EnvironmentMap::init(optix::Context & ctx)
 {
     MissProgram::init(ctx);
@@ -15,7 +14,7 @@ void EnvironmentMap::init(optix::Context & ctx)
     ctx["envmap_enabled"]->setInt(1);
 
     if(envmap_path != "")
-        environment_sampler = loadTexture(context->getContext(), envmap_path, make_float4(1.0f));
+        environment_sampler = loadTexture(context->getContext(), envmap_path, optix::make_float4(1.0f));
 
     properties.environment_map_tex_id = environment_sampler->get_id();
     std::string ptx_path = get_path_ptx("env_cameras.cu");
@@ -30,13 +29,13 @@ void EnvironmentMap::init(optix::Context & ctx)
     sampling_properties.marginal_cdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
     sampling_properties.conditional_cdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
     
-    Program ray_gen_program_1 = ctx->createProgramFromPTXFile(ptx_path, "env_luminance_camera");
+	optix::Program ray_gen_program_1 = ctx->createProgramFromPTXFile(ptx_path, "env_luminance_camera");
 	camera_1 = add_entry_point(ctx, ray_gen_program_1);
 
-	Program ray_gen_program_2 = ctx->createProgramFromPTXFile(ptx_path, "env_marginal_camera");
+	optix::Program ray_gen_program_2 = ctx->createProgramFromPTXFile(ptx_path, "env_marginal_camera");
 	camera_2 = add_entry_point(ctx, ray_gen_program_2);
 	
-	Program ray_gen_program_3 = ctx->createProgramFromPTXFile(ptx_path, "env_pdf_camera");
+	optix::Program ray_gen_program_3 = ctx->createProgramFromPTXFile(ptx_path, "env_pdf_camera");
 	camera_3 = add_entry_point(ctx, ray_gen_program_3);
 
     property_buffer = create_and_initialize_buffer<EnvmapProperties>(context, properties);
@@ -92,9 +91,9 @@ bool EnvironmentMap::get_miss_program(unsigned int ray_type, optix::Context & ct
     return true;
 }
 
-Matrix3x3 get_offset_lightmap_rotation_matrix(float delta_x, float delta_y, float delta_z, const optix::Matrix3x3& current_matrix)
+optix::Matrix3x3 get_offset_lightmap_rotation_matrix(float delta_x, float delta_y, float delta_z, const optix::Matrix3x3& current_matrix)
 {
-    Matrix3x3 matrix = rotation_matrix3x3(ZAXIS, delta_z) * rotation_matrix3x3(YAXIS, delta_y) * rotation_matrix3x3(XAXIS, delta_x);
+	optix::Matrix3x3 matrix = optix::rotation_matrix3x3(optix::ZAXIS, delta_z) * optix::rotation_matrix3x3(optix::YAXIS, delta_y) * optix::rotation_matrix3x3(optix::XAXIS, delta_x);
     matrix = matrix * current_matrix;
     return matrix;
 }

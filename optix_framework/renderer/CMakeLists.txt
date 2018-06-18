@@ -9,7 +9,7 @@ ADD_EXECUTABLE( ${APP_EXE}
                 ${SRCS} ) 
 
 find_package(OpenGL REQUIRED)               
-target_link_libraries(${APP_EXE} framework optprops gel nfd optix ${CUDA_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
+target_link_libraries(${APP_EXE} framework ${CUDA_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 
 macro(copy_dir target folder dest)
 add_custom_command(TARGET ${target} POST_BUILD

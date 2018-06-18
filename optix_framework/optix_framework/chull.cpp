@@ -2,11 +2,6 @@
 #include "folders.h"
 #include "optix_utils.h"
 
-using namespace optix;
-using namespace std;
-
-
-
 void ConvexHull::create_and_bind_optix_data()
 {
 	if (!mIntersectProgram.get()) {

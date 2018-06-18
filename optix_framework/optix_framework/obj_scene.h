@@ -94,7 +94,6 @@ private:
 	optix::Aabb m_scene_bounding_box;
 	optix::Buffer createPBOOutputBuffer(const char* name, RTformat format, RTbuffertype type, unsigned width, unsigned height);
 
-	static bool export_raw(const std::string& name, optix::Buffer buffer, int frames);
 	void set_rendering_method(RenderingMethodType::EnumType t);
 	std::vector<std::string> filenames;
 

@@ -4,7 +4,6 @@
 
 #include <cmath>
 #include <complex>
-#include "CGLA/CGLA.h"
 #include "Medium.h"
 #include "incandescent.h"
 
@@ -36,7 +35,7 @@ Medium blackbody(double T)         // temperature [K]
   {
     double lambda = (emission.wavelength + i*emission.step_size)*1.0e-9; // wavelength [m]
 
-    emission[i] = 2.0*M_PI*c*c*h/(CGLA::int_pow(lambda, 5)*(exp(h*c/(lambda*k*T)) - 1.0))*25.0e-9;
+    emission[i] = 2.0*M_PI*c*c*h/(pow(lambda, 5)*(exp(h*c/(lambda*k*T)) - 1.0))*25.0e-9;
   }
 
   m.name = "blackbody";

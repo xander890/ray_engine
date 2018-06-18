@@ -34,8 +34,6 @@
 // #define NVTX_ENABLE enables the nvToolsExt stuff from Nsight in NsightHelper.h
 //#define NVTX_ENABLE
 
-using namespace optix;
-
 //-----------------------------------------------------------------------------
 // 
 // GLFWDisplay class implementation 
@@ -127,14 +125,14 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene)
     // Initialize camera according to scene params
 
 
-    Buffer buffer = m_scene->get_output_buffer();
+	optix::Buffer buffer = m_scene->get_output_buffer();
     RTsize buffer_width_rts, buffer_height_rts;
     buffer->getSize( buffer_width_rts, buffer_height_rts );
     buffer_width  = static_cast<int>(buffer_width_rts);
     buffer_height = static_cast<int>(buffer_height_rts);
     m_mouse = new Mouse( m_scene->get_camera(), buffer_width, buffer_height );
 	m_mouse->handleMouseFunc(0, 0, -1, GLFW_PRESS, 0);
-  } catch( Exception& e ){
+  } catch( optix::Exception& e ){
     Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }
@@ -177,8 +175,8 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene)
 void GLFWDisplay::resize(GLFWwindow * window, int width, int height)
 {
   // disallow size 0
-  width  = max(1, width);
-  height = max(1, height);
+  width  = optix::max(1, width);
+  height = optix::max(1, height);
   m_scene->get_camera()->setAspectRatio(width / (float)height);
 
   m_scene->signalCameraChanged();
@@ -188,7 +186,7 @@ void GLFWDisplay::resize(GLFWwindow * window, int width, int height)
 
   try {
     m_scene->resize(width, height);
-  } catch( Exception& e ){
+  } catch(optix::Exception& e ){
     Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }
@@ -210,7 +208,7 @@ void GLFWDisplay::displayFrame()
   }
 
   // Draw the resulting image
-  Buffer buffer = m_scene->get_output_buffer(); 
+  optix::Buffer buffer = m_scene->get_output_buffer();
   RTsize buffer_width_rts, buffer_height_rts;
   buffer->getSize( buffer_width_rts, buffer_height_rts );
   int buffer_width  = static_cast<int>(buffer_width_rts);
@@ -360,7 +358,7 @@ void GLFWDisplay::display()
 
       displayFrame();
     }
-  } catch( Exception& e ){
+  } catch(optix::Exception& e ){
     std::cout << ( e.getErrorString().c_str() );
     exit(2);
   }
@@ -381,7 +379,7 @@ void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int act
 			return;
 		}
 	}
-	catch (Exception& e) {
+	catch (optix::Exception& e) {
 		Logger::error << (e.getErrorString().c_str());
 		exit(2);
 	}
@@ -434,7 +432,7 @@ void GLFWDisplay::quit(int return_code)
       }
     }
     exit(return_code);
-  } catch( Exception& e ) {
+  } catch(optix::Exception& e ) {
     Logger::error << ( e.getErrorString().c_str() );
     exit(2);
   }

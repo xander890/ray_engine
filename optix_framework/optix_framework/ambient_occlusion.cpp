@@ -1,6 +1,4 @@
 #include "ambient_occlusion.h"
-using namespace optix;
-
 
 void AmbientOcclusion::pre_trace()
 {

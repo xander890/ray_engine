@@ -7,8 +7,6 @@
 #include <bssrdf_properties.h>
 #include "material.h"
 
-using namespace optix;
-
 _fn float bdp_bssrdf(float d_r, float z_r, optix::float4 props, optix::float4 C) { // Better dipole if z_r = 1/sigma_t_p and d_r = sqrt(z_r^2 + r^2)
 	float sigma_s = props.x, sigma_a = props.y, g = props.z, A = C.w;
 	float sigma_s_p = sigma_s*(1.0 - g);
