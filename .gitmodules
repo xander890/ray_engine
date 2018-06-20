@@ -1,0 +1,6 @@
+[submodule "optix_framework/externals/cereal"]
+	path = optix_framework/externals/cereal
+	url = https://github.com/USCiLab/cereal.git
+[submodule "optix_framework/externals/eigen-git-mirror"]
+	path = optix_framework/externals/eigen-git-mirror
+	url = https://github.com/eigenteam/eigen-git-mirror.git

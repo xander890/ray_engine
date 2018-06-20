@@ -36,7 +36,4 @@ _fn void shadow_hit(PerRayData_shadow & shadow_payload, optix::float3 & emission
 	rtTerminateRay();
 }
 
-//#define TEST_SAMPLING
-#define TEST_SAMPLING_W 0.01f
-
 #endif // light_common_h__

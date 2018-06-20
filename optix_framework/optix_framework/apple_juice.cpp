@@ -11,10 +11,6 @@ using namespace LorenzMie;
 
 namespace
 {
-#ifndef M_PI
-  const double M_PI = 3.14159265358979323846;
-#endif
-
   // Data from Hale and Querry [1973] and Pope and Fry [1997]
   complex<double> refrac_water[] = { complex<double>(1.341, 3.393e-10),
                                      complex<double>(1.339, 2.110e-10),

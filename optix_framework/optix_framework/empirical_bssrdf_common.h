@@ -162,36 +162,6 @@ _fn bool compare_geometries(const BSSRDFGeometry & g1, const BSSRDFGeometry & g2
     return e0 & e1 & e2 & e3 & e4 & e5;
 }
 
-/*
-_fn void empirical_bssrdf_build_geometry_from_exit(const optix::float3& xo, const optix::float3& wo, const optix::float3& no, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
-{
-    geometry.xo = xo;
-    geometry.no = geometry.ni = no;
-    geometry.wo = wo;
-
-    optix::float3 projected = normalize(wo - dot(no, wo) * no);
-    optix::float3 tangent, bitangent;
-
-    if(optix::length(projected) < 1e-6)
-	{
-		create_onb(no,tangent,bitangent); // Everything should be symmetric, so we do not care of the choice of orthonormal basis.
-	}
-	else
-	{
-        float sign = theta_s > 0? -1 : 1;
-        tangent = normalize(projected * cos(phi_o) - sign * cross(no, projected) * sin(phi_o));
-        optix_assert(abs(dot(tangent, no)) < 1e-4);
-        optix_assert(abs(dot(projected, no)) < 1e-4);
-        bitangent = cross(no, tangent);
-	}
-
-    optix::float3 x_vec = cosf(theta_s) * tangent + sinf(theta_s) * bitangent;
-    geometry.xi = geometry.xo - r * x_vec;
-    geometry.wi = sinf(theta_i) * (-tangent) + cosf(theta_i) * no;
-}
-*/
-
-
 _fn void empirical_bssrdf_build_geometry(const optix::float3& xi, const optix::float3& wi, const optix::float3& n, const float& theta_i, const float &r, const float& theta_s, const float& theta_o, const float& phi_o, BSSRDFGeometry & geometry)
 {
     optix::float3 tangent = -(wi - dot(wi,n) * n);

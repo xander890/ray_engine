@@ -1,13 +1,9 @@
 #include "brdf_shader.h"
-#include "folders.h"
 #include "object_host.h"
-#include "brdf_utils.h"
 #include "merl_common.h"
 #include <image_loader.h>
 #include "host_material.h"
-#include "scattering_material.h"
 #include "dialogs.h"
-#include <algorithm>
 
 
 void BRDFShader::initialize_shader(optix::Context context)
@@ -36,7 +32,7 @@ bool BRDFShader::on_draw()
     {
         changed = true;
         mBRDF.reset();
-        mBRDF = std::move(BRDF::create(context, type));
+        mBRDF = BRDF::create(context, type);
         std::string path;
         if(type == BRDFType::MERL && Dialogs::openFileDialog(path))
         {

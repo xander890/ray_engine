@@ -2,12 +2,7 @@
 #include "vector_functions.hpp"
 
 
-/* double3 functions */
-/******************************************************************************/
 
-/** additional constructors
-* @{
-*/
 namespace optix
 {
 

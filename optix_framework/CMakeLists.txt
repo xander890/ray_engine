@@ -38,6 +38,16 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/externals/cereal-1.2.2/include
 )
 
+option(CUDA_GENERATE_DEPENDENCIES_DURING_CONFIGURE "Generate dependencies during configure time instead of only during build time." OFF)
+find_package(CUDA 9.0 REQUIRED)
+mark_as_advanced(CLEAR CUDA_64_BIT_DEVICE_CODE)
+OPTION(CUDA_REMOVE_GLOBAL_MEMORY_SPACE_WARNING "Suppress the \"Advisory: Cannot tell what pointer points to, assuming global memory space\" warning nvcc makes." ON)
+
+# This passes a preprocessor definition to cl.exe when processing CUDA code.
+if(USING_WINDOWS_CL)
+  list(APPEND CUDA_NVCC_FLAGS --compiler-options /D_USE_MATH_DEFINES)
+endif()
+
 # Importing libraries.
 if(UNIX)
 find_package(DevIL)
@@ -55,22 +65,18 @@ include_directories(
 if(UNIX)
 find_package(GLEW)
 else()
-set(GLEW_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew)
-set(GLEW_LIBRARIES  ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew/lib64/glew32.lib)
+set(GLEW_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew/include)
+set(GLEW_LIBRARIES  ${CMAKE_CURRENT_SOURCE_DIR}/externals/glew/lib/Release/x64/glew32.lib)
 endif()
 
 include_directories(
         ${GLEW_INCLUDE_DIRS}
 )
 
-option(CUDA_GENERATE_DEPENDENCIES_DURING_CONFIGURE "Generate dependencies during configure time instead of only during build time." OFF)
-find_package(CUDA 9.0 REQUIRED)
-mark_as_advanced(CLEAR CUDA_64_BIT_DEVICE_CODE)
-OPTION(CUDA_REMOVE_GLOBAL_MEMORY_SPACE_WARNING "Suppress the \"Advisory: Cannot tell what pointer points to, assuming global memory space\" warning nvcc makes." ON)
-
-# This passes a preprocessor definition to cl.exe when processing CUDA code.
-if(USING_WINDOWS_CL)
-  list(APPEND CUDA_NVCC_FLAGS --compiler-options /D_USE_MATH_DEFINES)
+if(UNIX)
+set(OptiX_INSTALL_DIR "~/optix" CACHE PATH "Path to OptiX installed location.")
+else()
+set(OptiX_INSTALL_DIR "C:\\ProgramData\\NVIDIA Corporation\\OptiX SDK 5.1.0" CACHE PATH "Path to OptiX installed location.")
 endif()
 
 find_package(OptiX 5.0 REQUIRED)
@@ -80,11 +86,17 @@ include_directories(
   ${CUDA_INCLUDE_DIRS}
   )
 
+set(EIGEN3_INCLUDE_DIR externals/eigen-git-mirror)
 find_package(Eigen3 REQUIRED)
 include_directories(
   ${EIGEN3_INCLUDE_DIR}
   )
-  
+
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(externals/glfw)  
+
 set(
     CUDA_NVCC_FLAGS
     ${CUDA_NVCC_FLAGS};
@@ -110,7 +122,7 @@ function(generate_ptx target_name)
 endfunction()  
 
 # Targets that we develop here
-add_subdirectory(externals)
+
 add_subdirectory(optprops)
 add_subdirectory(nfd)
 add_subdirectory(optix_framework)

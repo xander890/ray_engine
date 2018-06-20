@@ -10,7 +10,7 @@
 #define fopen_s(pFile,filename,mode) ((*(pFile))=fopen((filename),  (mode)))==NULL
 #endif
 
-inline bool read_brdf(const char *filename, int& n, double*& brdf)
+bool read_brdf(const char *filename, int& n, double*& brdf)
 {
     FILE *f;
     fopen_s(&f, filename, "rb");
@@ -43,22 +43,6 @@ void convert_array_type(int size, std::vector<T>& new_array, S*& old_array)
 	delete[] old_array;
 }
 
-void get_merl_brdf_list(const char* merl_database, std::vector<std::string>& brdfs)
-{
-    std::ifstream ifs(merl_database);
-    if (!ifs.is_open())
-    {
-		std::cout << "Could not find MERL file database." << std::endl;
-    }
-    std::string line;
-    brdfs.clear();
-    while (std::getline(ifs, line))
-    {
-        brdfs.push_back(line);
-    }
-    ifs.close();
-}
-
 void read_brdf_f(const std::string& merl_folder, const std::string& name, std::vector<float> & brdf_f)
 {
     double * brdf_d;
@@ -71,20 +55,6 @@ void read_brdf_f(const std::string& merl_folder, const std::string& name, std::v
         file.erase(c);
         Logger::info << "Max: " << std::to_string(*std::max_element(brdf_f.begin(), brdf_f.end())) << std::endl;
     }
-}
-
-void read_all_brdfs(const char * merl_folder, const char * merl_database, std::map<std::string, std::vector<float>*>& brdfs)
-{
-    std::vector<std::string> brdf_names;
-    get_merl_brdf_list(merl_database, brdf_names);
-
-    for (auto name : brdf_names)
-	{
-		std::string file = (std::string(merl_folder) + name);
-		std::vector<float> * brdf_f = new std::vector<float>();
-        read_brdf_f(merl_folder, name, *brdf_f);
-        brdfs[name] = brdf_f;
-	}
 }
 
 

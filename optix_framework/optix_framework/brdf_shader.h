@@ -26,7 +26,6 @@ private:
     std::unique_ptr<BRDF> mBRDF;
 
 	friend class cereal::access;
-
 	template<class Archive>
 	void serialize(Archive & archive, const std::uint32_t version)
 	{

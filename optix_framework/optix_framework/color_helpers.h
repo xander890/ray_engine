@@ -1,7 +1,7 @@
 #pragma once
-
 #include <optix_world.h>
 #include <optix.h>
+
 // Color space conversions
 _fn optix::float3 Yxy2XYZ( const optix::float3& Yxy )
 {
@@ -20,10 +20,8 @@ _fn optix::float3 XYZ2rgb( const optix::float3& xyz)
 
 _fn optix::float3 Yxy2rgb( optix::float3 Yxy )
 {
-		// First convert to xyz
-	optix::float3 xyz = optix::make_float3( Yxy.y * ( Yxy.x / Yxy.z ),
-		Yxy.x,
-		( 1.0f - Yxy.y - Yxy.z ) * ( Yxy.x / Yxy.z ) );
+	// First convert to xyz
+	optix::float3 xyz = optix::make_float3( Yxy.y * ( Yxy.x / Yxy.z ), Yxy.x, ( 1.0f - Yxy.y - Yxy.z ) * ( Yxy.x / Yxy.z ) );
 
 	const float R = optix::dot( xyz, optix::make_float3(  3.2410f, -1.5374f, -0.4986f ) );
 	const float G = optix::dot( xyz, optix::make_float3( -0.9692f,  1.8760f,  0.0416f ) );
@@ -33,7 +31,6 @@ _fn optix::float3 Yxy2rgb( optix::float3 Yxy )
 
 _fn optix::float3 rgb2Yxy( optix::float3 rgb)
 {
-	
 	// convert to xyz
 	const float X = optix::dot( rgb, optix::make_float3( 0.4124f, 0.3576f, 0.1805f ) );
 	const float Y = optix::dot( rgb, optix::make_float3( 0.2126f, 0.7152f, 0.0722f ) );

@@ -58,11 +58,6 @@ void GLFWDisplay::printUsage()
 
 }
 
-static void error_callback(int error, const char* description)
-{
-	Logger::error << description << std::endl;
-}
-
 void GLFWDisplay::init( int& argc, char** argv )
 {
   m_initialized = true;
@@ -91,10 +86,10 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene)
 	  glfwMakeContextCurrent(m_window);
 
 	  glewInit();
-	  GLint GlewInitResult = glewInit();
-	  if (GLEW_OK != GlewInitResult)
+	  GLint glewInitResult = glewInit();
+	  if (GLEW_OK != glewInitResult)
 	  {
-		  printf("ERROR: %s\n", glewGetErrorString(GlewInitResult));
+		  printf("ERROR: %s\n", glewGetErrorString(glewInitResult));
 		  exit(EXIT_FAILURE);
 	  }
 
@@ -122,8 +117,6 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene)
     m_scene->initialize_scene( m_window );
 
     // Initialize camera according to scene params
-
-
 	optix::Buffer buffer = m_scene->get_output_buffer();
     RTsize buffer_width_rts, buffer_height_rts;
     buffer->getSize( buffer_width_rts, buffer_height_rts );
@@ -198,50 +191,88 @@ void GLFWDisplay::resize(GLFWwindow * window, int width, int height)
 
 void GLFWDisplay::displayFrame()
 {
-  GLboolean sRGB = GL_FALSE;
-  if (m_use_sRGB && m_sRGB_supported) {
-    glGetBooleanv( GL_FRAMEBUFFER_SRGB_CAPABLE_EXT, &sRGB );
-    if (sRGB) {
-      glEnable(GL_FRAMEBUFFER_SRGB_EXT);
-    }
-  }
+	GLboolean sRGB = GL_FALSE;
+	if (m_use_sRGB && m_sRGB_supported) {
+		glGetBooleanv( GL_FRAMEBUFFER_SRGB_CAPABLE_EXT, &sRGB );
+		if (sRGB) {
+			glEnable(GL_FRAMEBUFFER_SRGB_EXT);
+		}
+	}
 
   // Draw the resulting image
   optix::Buffer buffer = m_scene->get_output_buffer();
   RTsize buffer_width_rts, buffer_height_rts;
   buffer->getSize( buffer_width_rts, buffer_height_rts );
-  int buffer_width  = static_cast<int>(buffer_width_rts);
-  int buffer_height = static_cast<int>(buffer_height_rts);
-  RTformat buffer_format = buffer->getFormat();
-  unsigned int vboId = buffer->getGLBOId();
+  const int buffer_width  = static_cast<int>(buffer_width_rts);
+  const int buffer_height = static_cast<int>(buffer_height_rts);
+  const RTformat buffer_format = buffer->getFormat();
+  const unsigned int vboId = buffer->getGLBOId();
 
-  if (vboId)
-  {
-    // send pbo to texture
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vboId);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	if (vboId)
+	{
+		static GLuint texture = 0;
+		if (!texture)
+		{
+			glGenTextures(1, &texture);
+			glBindTexture(GL_TEXTURE_2D, texture);
 
-    RTsize elementSize = buffer->getElementSize();
-    if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
-    else if ((elementSize % 4) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    else if ((elementSize % 2) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-    else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			// Change these to GL_LINEAR for super- or sub-sampling
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    {
-      if(buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
-		  glDrawPixels(buffer_width, buffer_height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-      } else if(buffer_format == RT_FORMAT_FLOAT4) {
-		  glDrawPixels(buffer_width, buffer_height, GL_RGBA, GL_FLOAT, 0);
-	  } else if(buffer_format == RT_FORMAT_FLOAT3) {
-		  glDrawPixels(buffer_width, buffer_height, GL_RGB, GL_FLOAT, 0);
-	  } else if(buffer_format == RT_FORMAT_FLOAT) {
-		  glDrawPixels(buffer_width, buffer_height, GL_RED, GL_FLOAT, 0);
-	  } else {
-        assert(0 && "Unknown buffer format");
-      }
-    }
-    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
+			// GL_CLAMP_TO_EDGE for linear filtering, not relevant for nearest.
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+
+		glBindTexture(GL_TEXTURE_2D, texture);
+		// send pbo to texture
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vboId);
+
+		const RTsize elementSize = buffer->getElementSize();
+		if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
+		else if ((elementSize % 4) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+		else if ((elementSize % 2) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+		else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		    
+		if (buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+		}
+		else if (buffer_format == RT_FORMAT_FLOAT4) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, buffer_width, buffer_height, 0, GL_RGBA, GL_FLOAT, 0);
+		}
+		else if (buffer_format == RT_FORMAT_FLOAT3) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F_ARB, buffer_width, buffer_height, 0, GL_RGB, GL_FLOAT, 0);	
+		}
+		else if (buffer_format == RT_FORMAT_FLOAT) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE32F_ARB, buffer_width, buffer_height, 0, GL_LUMINANCE, GL_FLOAT, 0);
+		}
+		else {
+			assert(0 && "Unknown buffer format");
+		}
+
+		glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
+		glEnable(GL_TEXTURE_2D);
+		
+	    // Initialize offsets to pixel center sampling.
+			
+		float u = 0.5f / buffer_width;
+		float v = 0.5f / buffer_height;
+		
+		glBegin(GL_QUADS);
+		glTexCoord2f(u, v);
+		glVertex2f(0.0f, 0.0f);
+		glTexCoord2f(1.0f, v);
+		glVertex2f(1.0f, 0.0f);
+		glTexCoord2f(1.0f - u, 1.0f - v);
+		glVertex2f(1.0f, 1.0f);
+		glTexCoord2f(u, 1.0f - v);
+		glVertex2f(0.0f, 1.0f);
+		glEnd();
+		
+		glDisable(GL_TEXTURE_2D);
   } else {
     GLvoid* imageData = buffer->map();
     assert( imageData );
@@ -276,7 +307,7 @@ void GLFWDisplay::displayFrame()
             break;
     }
 
-    RTsize elementSize = buffer->getElementSize();
+    const RTsize elementSize = buffer->getElementSize();
     int align = 1;
     if      ((elementSize % 8) == 0) align = 8; 
     else if ((elementSize % 4) == 0) align = 4;

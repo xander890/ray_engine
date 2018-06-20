@@ -140,10 +140,10 @@ set(HEADERS
 )
 
 set(SRCS_IMGUI
-imgui/imgui.cpp
-imgui/imgui_demo.cpp
-imgui/imgui_draw.cpp
-imgui/imgui_impl_glfw_gl3.cpp
+    imgui/imgui.cpp
+    imgui/imgui_demo.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_impl_glfw_gl3.cpp
 )
 
 set(SRCS    
@@ -211,37 +211,37 @@ set(SRCS
 )
 
 set(CUDA_SOURCES
-CUDA_files/absorbing_glass.cu
-CUDA_files/box.cu
-CUDA_files/bssrdf_plane_visualizer.cu
-CUDA_files/chull.cu
-CUDA_files/constant_background.cu
-CUDA_files/constant_shader.cu
-CUDA_files/util_rays.cu
-CUDA_files/dispersion_shader.cu
-CUDA_files/debug_camera.cu
-CUDA_files/environment_map_background.cu
-CUDA_files/env_cameras.cu
-CUDA_files/glass_shader.cu
-CUDA_files/brdf_shader.cu
-CUDA_files/lambertian_shader.cu
-CUDA_files/metal_shader.cu
-CUDA_files/mirror_shader.cu
-CUDA_files/normal_shader.cu
-CUDA_files/pinhole_camera.cu
-CUDA_files/sample_camera.cu
-CUDA_files/sky_model_background.cu
-CUDA_files/sphere.cu
-CUDA_files/subsurface_scattering_shader.cu
-CUDA_files/subsurface_scattering_sampled_default.cu
-CUDA_files/subsurface_scattering_sampled_neural_network.cu
-CUDA_files/subsurface_scattering_sampled_forward_dipole.cu
-CUDA_files/tonemap_camera.cu
-CUDA_files/triangle_mesh.cu
-CUDA_files/uv_shader.cu
-CUDA_files/volume_shader.cu
-CUDA_files/volume_shader_heterogenous.cu
-CUDA_files/wireframe_shader.cu
+    CUDA_files/absorbing_glass.cu
+    CUDA_files/box.cu
+    CUDA_files/bssrdf_plane_visualizer.cu
+    CUDA_files/chull.cu
+    CUDA_files/constant_background.cu
+    CUDA_files/constant_shader.cu
+    CUDA_files/util_rays.cu
+    CUDA_files/dispersion_shader.cu
+    CUDA_files/debug_camera.cu
+    CUDA_files/environment_map_background.cu
+    CUDA_files/env_cameras.cu
+    CUDA_files/glass_shader.cu
+    CUDA_files/brdf_shader.cu
+    CUDA_files/lambertian_shader.cu
+    CUDA_files/metal_shader.cu
+    CUDA_files/mirror_shader.cu
+    CUDA_files/normal_shader.cu
+    CUDA_files/pinhole_camera.cu
+    CUDA_files/sample_camera.cu
+    CUDA_files/sky_model_background.cu
+    CUDA_files/sphere.cu
+    CUDA_files/subsurface_scattering_shader.cu
+    CUDA_files/subsurface_scattering_sampled_default.cu
+    CUDA_files/subsurface_scattering_sampled_neural_network.cu
+    CUDA_files/subsurface_scattering_sampled_forward_dipole.cu
+    CUDA_files/tonemap_camera.cu
+    CUDA_files/triangle_mesh.cu
+    CUDA_files/uv_shader.cu
+    CUDA_files/volume_shader.cu
+    CUDA_files/volume_shader_heterogenous.cu
+    CUDA_files/wireframe_shader.cu
  )
     
 source_group("Headers" FILES ${HEADERS})
@@ -254,8 +254,6 @@ generate_ptx(framework ${HEADERS} ${CUDA_SOURCES} ${OPTIONS})
     
 add_library( framework STATIC
              ${SRCS} ${HEADERS} ${HEADERS_IMGUI} ${SRCS_IMGUI} ${CUDA_SOURCES} ${generated})
-
-CUDA_ADD_CUBLAS_TO_TARGET(framework)
 
 target_link_libraries(framework optprops nfd optix ${CUDA_LIBRARIES} glfw ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${IL_LIBRARIES} ${ILU_LIBRARIES})
 target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

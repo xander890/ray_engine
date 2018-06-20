@@ -22,7 +22,7 @@ if(WIN32)
 file(TO_CMAKE_PATH "${OptiX_INSTALL_DIR}" OptiX_INSTALL_DIR_clean)
 copy_dir(renderer "${OptiX_INSTALL_DIR_clean}/bin64" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/xercesc/dll" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
-copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/glew/dll" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
+copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/glew/bin/Release/x64" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 copy_dir(renderer "${PROJECT_SOURCE_DIR}/externals/devil/lib/" ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 endif()
 
