@@ -35,7 +35,7 @@ include (CompilerInfo)
 include (ConfigCompilerFlags)
 
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/externals/cereal-1.2.2/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/externals/cereal/include/
 )
 
 option(CUDA_GENERATE_DEPENDENCIES_DURING_CONFIGURE "Generate dependencies during configure time instead of only during build time." OFF)
