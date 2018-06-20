@@ -1,6 +1,6 @@
 
 
-#include <device_common_data.h>
+#include <device_common.h>
 #include <float.h>
 #include <material_device.h>
 

@@ -1,7 +1,0 @@
-mtllib procedural_materials.mtl
-g Empty
-v 0.0 0.0 0.0
-v 0.0 0.0 0.0
-v 0.0 0.0 0.0
-usemtl white
-f 1 2 3

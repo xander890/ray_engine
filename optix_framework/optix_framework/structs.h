@@ -3,7 +3,7 @@
 
 #pragma once
 #include <optix_world.h>
-#include "sampler.h"
+#include "sampler_device.h"
 
 struct MPMLMedium
 {

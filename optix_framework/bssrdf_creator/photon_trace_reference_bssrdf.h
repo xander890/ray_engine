@@ -1,15 +1,15 @@
 #pragma once
 
 #include "full_bssrdf_host_device_common.h"
-#include <device_common_data.h>
+#include <device_common.h>
 #include "photon_trace_structs.h"
-#include <random.h>
+#include <random_device.h>
 #include <sampling_helpers.h>
 #include <environment_map.h>
-#include "light.h"
-#include "device_environment_map.h"
-#include "optical_helper.h"
-#include "phase_function.h"
+#include "light_device.h"
+#include "environment_map_device.h"
+#include "optics_utils.h"
+#include "phase_function_device.h"
 #include "empirical_bssrdf_common.h"
 
 // FIXME, we need to remove this or find a better way to express it without overhauling all the parameters.

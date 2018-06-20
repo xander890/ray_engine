@@ -25,9 +25,9 @@
 #include <glm.h>
 #include <string>
 #include <folders.h>
-#include <area_light.h>
+#include <light_common.h>
 #include "shader.h"
-#include "mesh.h"
+#include "mesh_host.h"
 #include "object_host.h"
 
 class MaterialHost;

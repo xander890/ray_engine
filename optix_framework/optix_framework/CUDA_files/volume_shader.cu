@@ -1,15 +1,15 @@
-#include <device_common_data.h>
-#include <random.h>
+#include <device_common.h>
+#include <random_device.h>
 #include <sampling_helpers.h>
-#include <optical_helper.h>
+#include <optics_utils.h>
 #include <environment_map.h>
 #include "structs.h"
 #include "scattering_properties.h"
-#include "light.h"
+#include "light_device.h"
 #include <material_device.h>
-#include "phase_function.h"
+#include "phase_function_device.h"
 #include "volume_path_tracing_common.h"
-#include "bssrdf.h"
+#include "bssrdf_device.h"
 
 using namespace optix;
 

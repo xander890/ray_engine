@@ -2,8 +2,8 @@
 #include "object_host.h"
 #include "merl_common.h"
 #include <image_loader.h>
-#include "host_material.h"
-#include "dialogs.h"
+#include "material_host.h"
+#include "file_dialogs.h"
 
 
 void BRDFShader::initialize_shader(optix::Context context)

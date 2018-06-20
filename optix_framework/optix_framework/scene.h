@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 #include <host_device_common.h>
-#include <optix_serialize.h>
+#include <optix_serialize_utils.h>
 #include "scene_gui.h"
 #include "miss_program.h"
 #include "light_host.h"

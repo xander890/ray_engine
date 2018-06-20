@@ -5,29 +5,29 @@
 #ifndef RAY_ENGINE_SUBSURFACE_SCATTERING_SAMPLED_COMMON_H
 #define RAY_ENGINE_SUBSURFACE_SCATTERING_SAMPLED_COMMON_H
 
-#include <device_common_data.h>
-#include <math_helpers.h>
-#include <random.h>
-#include <optical_helper.h>
+#include <device_common.h>
+#include <math_utils.h>
+#include <random_device.h>
+#include <optics_utils.h>
 #include <structs.h>
-#include <ray_trace_helpers.h>
+#include <ray_tracing_utils.h>
 #include <scattering_properties.h>
 #include <material_device.h>
-#include <light.h>
+#include <light_device.h>
 #include <sampling_helpers.h>
-#include <camera.h>
+#include <camera_common.h>
 
 #ifndef ENABLE_NEURAL_NETWORK
-#include "bssrdf.h"
+#include "bssrdf_device.h"
 #else
-#include <neural_network_device_code.h>
+#include <neural_network_sampler_device.h>
 #endif
 
 rtDeclareVariable(CameraData, camera_data, , );
 
 _fn bool trace_depth_ray(const optix::float3& origin, const optix::float3& direction, optix::float3 & xi, optix::float3 & normal, const float t_min = scene_epsilon, const float t_max = RT_DEFAULT_MAX)
 {
-    PerRayData_normal_depth attribute_fetch_ray_payload = { make_float3(0.0f), RT_DEFAULT_MAX };
+    PerRayData_normal_depth attribute_fetch_ray_payload = { optix::make_float3(0.0f), RT_DEFAULT_MAX };
     optix::Ray attribute_fetch_ray;
     attribute_fetch_ray.ray_type =  RayType::ATTRIBUTE;
     attribute_fetch_ray.tmin = t_min;

@@ -1,12 +1,12 @@
 #include "camera_host.h"
 #include <optix_world.h>
 #include <algorithm>
-#include <camera.h>
+#include <camera_common.h>
 #include "folders.h"
 #include "shader_factory.h"
 #include "immediate_gui.h"
-#include "optix_utils.h"
-#include "math_helpers.h"
+#include "optix_host_utils.h"
+#include "math_utils.h"
 #include <memory>
 #include <Eigen/Dense>
 

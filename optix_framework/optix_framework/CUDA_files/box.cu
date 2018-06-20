@@ -19,7 +19,7 @@
  */
 
 
-#include <device_common_data.h>
+#include <device_common.h>
 #include <optixu/optixu_math_namespace.h>
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixu_aabb_namespace.h>

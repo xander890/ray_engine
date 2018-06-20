@@ -1,8 +1,8 @@
-#include <device_common_data.h>
-#include <color_helpers.h>
-#include <ray_trace_helpers.h>
+#include <device_common.h>
+#include <color_utils.h>
+#include <ray_tracing_utils.h>
 #include <environment_map.h>
-#include <math_helpers.h>
+#include <math_utils.h>
 using namespace optix;
 
 // Window variables

@@ -7,11 +7,11 @@ void SkyModel::update_data()
     if (dot(north, up) != 0.0f)
         throw std::runtime_error("North and up are not perpendicular.");
 
-    perez_data.A = make_float3(0.1787f * turbidity - 1.4630f, -0.0193f * turbidity - 0.2592f, -0.0167f * turbidity - 0.2608f);
-    perez_data.B = make_float3(-0.3554f * turbidity + 0.4275f, -0.0665f * turbidity + 0.0008f, -0.0950f * turbidity + 0.0092f);
-    perez_data.C = make_float3(-0.0227f * turbidity + 5.3251f, -0.0004f * turbidity + 0.2125f, -0.0079f * turbidity + 0.2102f);
-    perez_data.D = make_float3(0.1206f * turbidity - 2.5771f, -0.0641f * turbidity - 0.8989f, -0.0441f * turbidity - 1.6537f);
-    perez_data.E = make_float3(-0.0670f * turbidity + 0.3703f, -0.0033f * turbidity + 0.0452f, -0.0109f * turbidity + 0.0529f);
+    perez_data.A =  optix::make_float3(0.1787f * turbidity - 1.4630f, -0.0193f * turbidity - 0.2592f, -0.0167f * turbidity - 0.2608f);
+    perez_data.B =  optix::make_float3(-0.3554f * turbidity + 0.4275f, -0.0665f * turbidity + 0.0008f, -0.0950f * turbidity + 0.0092f);
+    perez_data.C =  optix::make_float3(-0.0227f * turbidity + 5.3251f, -0.0004f * turbidity + 0.2125f, -0.0079f * turbidity + 0.2102f);
+    perez_data.D =  optix::make_float3(0.1206f * turbidity - 2.5771f, -0.0641f * turbidity - 0.8989f, -0.0441f * turbidity - 1.6537f);
+    perez_data.E =  optix::make_float3(-0.0670f * turbidity + 0.3703f, -0.0033f * turbidity + 0.0452f, -0.0109f * turbidity + 0.0529f);
 
     solar_coords = get_solar_coordinates();
 
@@ -23,7 +23,7 @@ void SkyModel::update_data()
     const float xi = (4.0f / 9.0f - turbidity / 120.0f) * (M_PIf - 2.0f * sun_theta);
 
     // Zenith luminance in Yxy
-    float3 zenith = make_float3(0.0f);
+	optix::float3 zenith =  optix::make_float3(0.0f);
     zenith.x = ((4.0453f * turbidity - 4.9710f) * tan(xi) - 0.2155f * turbidity + 2.4192f) * 1000.0f;
     zenith.y = turbidity * turbidity * (0.00166f*sun_theta_3 - 0.00375f*sun_theta_2 + 0.00209f*sun_theta) +
         turbidity * (-0.02903f*sun_theta_3 + 0.06377f*sun_theta_2 - 0.03202f*sun_theta + 0.00394f) +
@@ -54,7 +54,7 @@ float SkyModel::get_solar_declination()
 	return 0.4093f * sin((float)hour * DECL_CONST);
 }
 
-float2 SkyModel::get_solar_coordinates()
+optix::float2 SkyModel::get_solar_coordinates()
 {
 	float time = (float)hour * M_PIf / 12.0f;
 	float delta = get_solar_declination();
@@ -66,17 +66,17 @@ float2 SkyModel::get_solar_coordinates()
 	float cos_time = cos(time);
 	float theta_s = M_PI_2f - asin(sin_lat * sin_delta - cos_lat * cos_delta * cos_time);
 	float phi_s = atan(- cos_delta * sin_time / (cos_lat * sin_delta - sin_lat * cos_delta * cos_time));
-	return make_float2(theta_s,phi_s);
+	return optix::make_float2(theta_s,phi_s);
 }
 
 
-float3 SkyModel::get_sun_position(float2 & coords)
+optix::float3 SkyModel::get_sun_position(optix::float2 & coords)
 {
 	float sin_theta = sin(coords.x);
 	float cos_theta = cos(coords.x);
 	float sin_phi = sin(coords.y);
 	float cos_phi = cos(coords.y);
-	float3 sun_pos = make_float3(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
+	optix::float3 sun_pos =  optix::make_float3(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
 
 	rotate_to_normal(up, sun_pos);
 
@@ -100,18 +100,18 @@ float SkyModel::calculate_absorption( float sun_theta, float m, float lambda, fl
 
 
 
-float3 SkyModel::get_sky_color(float3 v)
+optix::float3 SkyModel::get_sky_color(optix::float3 v)
 {
 	return sky_color(0,v,sun_position,up,sky_factor,sun_color,perez_data);
 }
 
-float3 SkyModel::get_sun_color()
+optix::float3 SkyModel::get_sun_color()
 {
 
 	float decl_angle = 93.885f - solar_coords.x * 180.0f / M_PIf;
 	float optical_mass = 1.0f / (cos_sun_theta + 0.15f * pow(decl_angle, -1.253f));
 
-	float3 color = make_float3(0.0f);
+	optix::float3 color =  optix::make_float3(0.0f);
 	for(int i = 0; i < 38; i++)
 	{
 		PreethamData data_elem = data[i];

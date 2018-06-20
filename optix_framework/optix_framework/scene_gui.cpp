@@ -11,7 +11,7 @@
 #include <fstream>
 #include "miss_program.h"
 #include "light_host.h"
-#include "dialogs.h"
+#include "file_dialogs.h"
 #include "obj_loader.h"
 #include "sphere.h"
 #include "image_loader.h"
@@ -81,7 +81,7 @@ bool SceneGUI::on_draw(Scene * scene)
             if (ImGui::Selectable("Plint"))
             {
                 std::shared_ptr<Object> c = std::make_shared<Object>(context);
-                auto g = std::make_unique<Plint>(context, optix::make_float3(0), 1, 2, 1);
+                auto g = std::make_unique<Plint>(context, optix::make_float3(0), 1.0f, 2.0f, 1.0f);
                 std::string name = "plint";
                 auto m = get_default_material(context);
                 c->init(name.c_str(), std::move(g), m);
@@ -90,7 +90,7 @@ bool SceneGUI::on_draw(Scene * scene)
             if (ImGui::Selectable("Box"))
             {
                 std::shared_ptr<Object> c = std::make_shared<Object>(context);
-                auto g = std::make_unique<Box>(context, optix::make_float3(0), 1, 1, 1);
+                auto g = std::make_unique<Box>(context, optix::make_float3(0), 1.0f, 1.0f, 1.0f);
                 std::string name = "box";
                 auto m = get_default_material(context);
                 c->init(name.c_str(), std::move(g), m);

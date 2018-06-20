@@ -1,6 +1,6 @@
 #pragma once
 #include "shader.h"
-#include "host_material.h"
+#include "material_host.h"
 
 class DefaultShader : public Shader
 {

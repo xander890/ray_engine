@@ -7,7 +7,7 @@
 #include "scattering_material.h"
 #include <algorithm>
 #include "immediate_gui.h"
-#include "dialogs.h"
+#include "file_dialogs.h"
 #include "image_loader.h"
 #include "obj_loader.h"
 #include "scene_gui.h"

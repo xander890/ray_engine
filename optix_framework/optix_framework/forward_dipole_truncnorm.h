@@ -1,7 +1,7 @@
 #pragma once
 #include "forward_dipole_utils.h"
-#include "random.h"
-#include "sampler.h"
+#include "random_device.h"
+#include "sampler_device.h"
 
 _fn Float2 squareToStdNormal(const Float2 &sample) {
 	Float r = sqrt(-2 * log(1 - sample.x)),

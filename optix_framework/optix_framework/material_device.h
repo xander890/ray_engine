@@ -1,7 +1,7 @@
 #pragma once
-#include <device_common_data.h>
-#include <material.h>
-#include <device_mesh_data.h>
+#include <device_common.h>
+#include <material_common.h>
+#include <mesh_device.h>
 
 using optix::rtTex3D;
 using optix::float3;

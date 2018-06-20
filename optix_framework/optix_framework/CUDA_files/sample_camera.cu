@@ -4,12 +4,12 @@
 
 
 
-#include <device_common_data.h>
-#include <random.h>
+#include <device_common.h>
+#include <random_device.h>
 #include <sampling_helpers.h>
 #include <environment_map.h>
-#include "light.h"
-#include "device_environment_map.h"
+#include "light_device.h"
+#include "environment_map_device.h"
 
 using namespace optix;
 #define DIRLIGHT

@@ -9,40 +9,36 @@ imgui/stb_truetype.h
 )
 
 set(HEADERS
-    cublas_test.h
-    ambient_occlusion.h
+        ambient_occlusion.h
     apple_juice.h
     approximate_dipoles_host.h
-    approximate_directional_dipole.h
-    approximate_standard_dipole.h
-    area_light.h
+        approximate_dipoles_device.h
+        light_common.h
     box.h
-    brdf.h
-    brdf_utils.h
-    bssrdf.h
+        brdf_device.h
+        merl_utils.h
+        bssrdf_device.h
     bssrdf_host.h
-    bssrdf_properties.h
-    bssrdf_visualizer.h
-    camera.h
+        bssrdf_common.h
+        bssrdf_debug_visualizer_shader.h
+        camera_common.h
     camera_host.h
     chull.h
-    colormap.h
-    color_helpers.h
+        color_map_utils.h
+        color_utils.h
     constant_background.h
-    cputimer.h
+        cpu_timer.h
     default_shader.h
-    device_common_data.h
-    device_environment_map.h
-    device_mesh_data.h
-    dialogs.h
-    directional_dipole.h
-    distribution1d.h
-    double_support_optix.h
-    enums.h
-    environment_map.h
+        device_common.h
+        environment_map_device.h
+        mesh_device.h
+        file_dialogs.h
+        directional_dipole_device.h
+        double_support_optix.h
+        environment_map.h
     environment_map_background.h
     folders.h
-    forward_dipole.h
+        forward_dipole_device.h
     forward_dipole_defines.h
     forward_dipole_host.h
     forward_dipole_sampling.h
@@ -54,51 +50,48 @@ set(HEADERS
     glm.h
     brdf_shader.h
     host_device_common.h
-    host_material.h
+        material_host.h
     image_loader.h
     image_exporter.h
     immediate_gui.h
-    indexofrefractionmatcher.h
-    intersection_refinement.h
-    light.h
+        intersection_refinement.h
+        light_device.h
     light_host.h
     logger.h
-    material.h
+        material_common.h
     material_device.h
     material_library.h
-    math_helpers.h
+        math_utils.h
     md5.h
     merl_common.h
-    mesh.h
+        mesh_host.h
     miss_program.h
     mouse.h
     neural_network_sampler.h
-    neural_network_device_code.h
+        neural_network_sampler_device.h
     obj_loader.h
-    obj_scene.h
-    optical_helper.h
-    optix_common.h
-    optix_helpers.h
-    optix_serialize.h
-    optix_utils.h
-    parserstringhelpers.h
+        ray_workbench.h
+        optics_utils.h
+        optix_device_utils.h
+        optix_serialize_utils.h
+        optix_host_utils.h
+        parsing_utils.h
     path_tracing.h
     perlin_noise.h
-    phase_function.h
-    phong.h
-    photon_beam_diffusion.h
+        phase_function_device.h
+        photon_beam_diffusion_device.h
     plint.h
-    presampled_surface_bssrdf.h
-    quantized_diffusion.h
+        presampled_surface_bssrdf_shader.h
+        quantized_diffusion_device.h
     quantized_diffusion_helpers.h
     quantized_diffusion_host.h
-    random.h
+        random_device.h
     raw_loader.h
-    ray_trace_helpers.h
+        ray_tracing_utils.h
     rendering_method.h
     render_task.h
-    sampled_bssrdf.h
-    sampler.h
+        sampled_bssrdf_shader.h
+        sampler_device.h
     sample_scene.h
     sampling_helpers.h
     scattering_material.h
@@ -107,13 +100,11 @@ set(HEADERS
     shader_factory.h
     simplex_noise.h
     simple_tracing.h
-    singular_light.h
-    sky_model.h
+        sky_model.h
     sphere.h
-    standard_dipole.h
-    stringhelpers.h
-    string_utils.h
-    structs.h
+        standard_dipole_device.h
+        string_utils.h
+        structs.h
     transform.h
     volume_path_tracer.h
     bssrdf_loader.h
@@ -121,21 +112,21 @@ set(HEADERS
     empirical_bssrdf_device.h
     empirical_bssrdf_host.h
     empirical_bssrdf_common.h
-    improved_enum.def
+        improved_enum.inc
     volume_path_tracing_common.h 
     subsurface_scattering_sampled_common.h
     subsurface_scattering_sampled.h
-    hemisphere_partitions.h
+        hemisphere_partition_utils.h
     xml_archive.hpp  
     object_host.h  
     scene.h  
     texture.h  
     scene_gui.h  
-    brdf_host.h 
-    brdf_properties.h  
+    brdf_host.h
+        brdf_common.h
     geometry.h  
-    thumbnail.h 
-    microfacets.h 
+    thumbnail.h
+        microfacet_utils.h
     default_shader_common.h
 )
 
@@ -146,23 +137,22 @@ set(SRCS_IMGUI
     imgui/imgui_impl_glfw_gl3.cpp
 )
 
-set(SRCS    
-    cublas_test.cpp
-    bssrdf_loader.cpp
+set(SRCS
+        bssrdf_loader.cpp
     bssrdf_parameter_manager.cpp
     ambient_occlusion.cpp
     apple_juice.cpp
     approximate_dipoles_host.cpp
     box.cpp
-    brdf_utils.cpp
+        merl_utils.cpp
     bssrdf_host.cpp
-    bssrdf_visualizer.cpp
+        bssrdf_debug_visualizer_shader.cpp
     camera_host.cpp
     chull.cpp
     constant_background.cpp
-    cputimer.cpp
+        cpu_timer.cpp
     default_shader.cpp
-    dialogs.cpp
+        file_dialogs.cpp
     environment_map_background.cpp
     empirical_bssrdf_host.cpp
     folders.cpp
@@ -171,27 +161,27 @@ set(SRCS
     glfw_display.cpp
     glm.cpp
     brdf_shader.cpp
-    host_material.cpp
+        material_host.cpp
     image_loader.cpp
     image_exporter.cpp
     immediate_gui.cpp
     light_host.cpp
     logger.cpp
     material_library.cpp
-    mesh.cpp
+        mesh_host.cpp
     miss_program.cpp
     mouse.cpp
     neural_network_sampler.cpp
     obj_loader.cpp
-    obj_scene.cpp
+        ray_workbench.cpp
     path_tracing.cpp
     perlin_noise.cpp
     plint.cpp
-    presampled_surface_bssrdf.cpp
+        presampled_surface_bssrdf_shader.cpp
     quantized_diffusion_host.cpp
     raw_loader.cpp
     render_task.cpp
-    sampled_bssrdf.cpp
+        sampled_bssrdf_shader.cpp
     sample_scene.cpp
     scattering_material.cpp
     shader.cpp

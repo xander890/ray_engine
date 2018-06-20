@@ -41,7 +41,6 @@ int main( int argc, char** argv )
 	std::vector<std::string> filenames;
 	std::string filename = "";
 	std::string output_file = "test.bssrdf";
-	std::string config_file = "config.xml";
 	//std::map<std::string, std::string> parameters;
 	bool auto_mode = false;
 	int frames = -1;

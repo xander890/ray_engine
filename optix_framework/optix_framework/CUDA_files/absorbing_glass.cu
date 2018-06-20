@@ -3,11 +3,11 @@
 // Copyright (c) DTU Informatics 2011
 
 
-#include <device_common_data.h>
+#include <device_common.h>
 #include <structs.h>
-#include <optical_helper.h>
-#include <random.h>
-#include <ray_trace_helpers.h>
+#include <optics_utils.h>
+#include <random_device.h>
+#include <ray_tracing_utils.h>
 #include <material_device.h>
 
 using namespace optix;

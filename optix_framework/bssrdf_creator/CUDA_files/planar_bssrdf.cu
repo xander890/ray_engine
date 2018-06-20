@@ -4,11 +4,11 @@
 // Copyright (c) DTU Informatics 2011
 
 #include "host_device_common.h"
-#include <device_common_data.h>
+#include <device_common.h>
 #include <md5.h>
-#include <material.h>
+#include <material_common.h>
 #include "empirical_bssrdf_common.h"
-#include <bssrdf.h>
+#include <bssrdf_device.h>
 #include "../photon_trace_reference_bssrdf.h"
 using namespace optix;
  

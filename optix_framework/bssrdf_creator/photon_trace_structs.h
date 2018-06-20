@@ -1,6 +1,6 @@
 #pragma once
 #include "host_device_common.h"
-#include "random.h"
+#include "random_device.h"
 #include "empirical_bssrdf_common.h"
 #define PHOTON_STATUS_NEW 0
 #define PHOTON_STATUS_SCATTERING 1
@@ -24,11 +24,11 @@ __device__ __forceinline__ void init_seed(SEED_TYPE & seed, unsigned long long q
 
 #define IMPROVED_ENUM_NAME IntegrationMethod
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(MCML,0) ENUMITEM_VALUE(CONNECTIONS,1) ENUMITEM_VALUE(CONNECTIONS_WITH_FIX,2)
-#include "improved_enum.def"
+#include "improved_enum.inc"
 
 #define IMPROVED_ENUM_NAME BiasMode
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(BIAS_ONLY,0) ENUMITEM_VALUE(BIASED_RESULT,1) ENUMITEM_VALUE(RENDER_ALL,2)
-#include "improved_enum.def"
+#include "improved_enum.inc"
 
 struct PhotonSample
 {

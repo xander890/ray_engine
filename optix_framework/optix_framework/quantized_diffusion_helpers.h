@@ -1,6 +1,6 @@
 #pragma once
 #include "scattering_properties.h"
-#include "optix_helpers.h"
+#include "optix_device_utils.h"
 
 template<typename T>
 _fn T erf_approx(T x) {

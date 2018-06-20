@@ -24,7 +24,7 @@
 #include <optixu/optixu_math_namespace.h>
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixu_aabb_namespace.h>
-#include <device_mesh_data.h>
+#include <mesh_device.h>
 #include "material_device.h"
 
 using namespace optix;

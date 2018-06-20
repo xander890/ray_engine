@@ -3,9 +3,9 @@
 // Copyright (c) DTU Informatics 2011
 
 #include <photon_trace_reference_bssrdf.h>
-#include <device_common_data.h>
+#include <device_common.h>
 #include <md5.h>
-#include <material.h>
+#include <material_common.h>
 using namespace optix;
  
 rtDeclareVariable(BufPtr2D<float>, reference_resulting_flux, , );

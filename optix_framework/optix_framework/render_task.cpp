@@ -2,7 +2,7 @@
 #include <float.h>
 #include "immediate_gui.h"
 #include <sstream>
-#include "dialogs.h"
+#include "file_dialogs.h"
 #include <climits>
 #include <vector>
 

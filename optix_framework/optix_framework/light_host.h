@@ -2,8 +2,8 @@
 #include "sample_scene.h"
 #include <memory>
 #include <optix_world.h>
-#include "optix_serialize.h"
-#include "singular_light.h"
+#include "optix_serialize_utils.h"
+#include "light_common.h"
 
 class SingularLight
 {

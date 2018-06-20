@@ -1,11 +1,11 @@
 #pragma once
 #include "host_device_common.h"
-#include  "bssrdf_properties.h"
+#include  "bssrdf_common.h"
 #include  "material_device.h"
-#include <device_common_data.h>
+#include <device_common.h>
 #include <scattering_properties.h>
 #include "empirical_bssrdf_common.h"
-#include "optix_helpers.h"
+#include "optix_device_utils.h"
 
 #ifdef INCLUDE_PROGRAMS_ONLY
 rtDeclareVariable(rtCallableProgramId<optix::float3(const BSSRDFGeometry, const float, const MaterialDataCommon, unsigned int, TEASampler *)>, empirical_bssrdf, , );

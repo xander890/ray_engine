@@ -1,5 +1,5 @@
 #include <structs.h>
-#include <device_common_data.h>
+#include <device_common.h>
 #include <material_device.h>
 // Standard ray variables
 

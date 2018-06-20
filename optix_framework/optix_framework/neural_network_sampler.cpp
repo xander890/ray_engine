@@ -1,6 +1,6 @@
 #include "neural_network_sampler.h"
 #include "logger.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 #include <Eigen/Dense>
 #include <fstream>
 

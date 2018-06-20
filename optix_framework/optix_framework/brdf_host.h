@@ -1,7 +1,7 @@
 #pragma once
-#include "brdf_properties.h"
-#include "host_material.h"
-#include "optix_serialize.h"
+#include "brdf_common.h"
+#include "material_host.h"
+#include "optix_serialize_utils.h"
 #include <memory>
 
 /*

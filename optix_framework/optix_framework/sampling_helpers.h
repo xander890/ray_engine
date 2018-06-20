@@ -1,7 +1,7 @@
 #pragma once
 #include <optix_world.h>
-#include "math_helpers.h"
-#include "random.h"
+#include "math_utils.h"
+#include "random_device.h"
 
 // Sample hemisphere
 static
@@ -60,8 +60,8 @@ static
 	_fn float get_phong_lobe_pdf( float exponent, const optix::float3 &normal, const optix::float3 &dir_out,
 	const optix::float3 &dir_in, float &bdf_val)
 {  
-	optix::float3 r = -reflect(dir_out, normal);
-	const float cos_theta = fabs(dot(r, dir_in));
+	optix::float3 r = -optix::reflect(dir_out, normal);
+	const float cos_theta = fabs(optix::dot(r, dir_in));
 	const float powered_cos = powf(cos_theta, exponent );
 
 	bdf_val = (exponent+2.0f) / (2.0f*M_PIf) * powered_cos;  
@@ -93,8 +93,8 @@ static
 	optix::float3 D, optix::float3 N)
 {
 	optix::float3 dNdx = dNdP*dPdx;
-	float dDNdx = dot(dDdx,N) + dot(D,dNdx);
-	return dDdx - 2*(dot(D,N)*dNdx + dDNdx*N);
+	float dDNdx = optix::dot(dDdx,N) + optix::dot(D,dNdx);
+	return dDdx - 2*(optix::dot(D,N)*dNdx + dDNdx*N);
 }
 
 // Compute the direction ray differential for refraction
@@ -103,7 +103,7 @@ _fn
 	optix::float3 D, optix::float3 N, float ior, optix::float3 T)
 {
 	float eta;
-	if(dot(D,N) > 0.f) {
+	if(optix::dot(D,N) > 0.f) {
 		eta = ior;
 		N = -N;
 	} else {
@@ -111,10 +111,10 @@ _fn
 	}
 
 	optix::float3 dNdx = dNdP*dPdx;
-	float mu = eta*dot(D,N)-dot(T,N);
-	float TN = -sqrtf(1-eta*eta*(1-dot(D,N)*dot(D,N)));
-	float dDNdx = dot(dDdx,N) + dot(D,dNdx);
-	float dmudx = (eta - (eta*eta*dot(D,N))/TN)*dDNdx;
+	float mu = eta*optix::dot(D,N)-optix::dot(T,N);
+	float TN = -sqrtf(1-eta*eta*(1-optix::dot(D,N)*optix::dot(D,N)));
+	float dDNdx = optix::dot(dDdx,N) + optix::dot(D,dNdx);
+	float dmudx = (eta - (eta*eta*optix::dot(D,N))/TN)*dDNdx;
 	return eta*dDdx - (mu*dNdx+dmudx*N);
 }
 

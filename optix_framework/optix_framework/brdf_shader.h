@@ -1,8 +1,8 @@
 #pragma once
 #include "shader.h"
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 #include "brdf_host.h"
-#include "host_material.h"
+#include "material_host.h"
 
 class BRDFShader : public Shader
 {

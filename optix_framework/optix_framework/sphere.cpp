@@ -1,6 +1,6 @@
 #include "sphere.h"
 #include "folders.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 #include "immediate_gui.h"
 
 void Sphere::load_data(optix::ScopedObj * obj)

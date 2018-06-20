@@ -1,5 +1,5 @@
 
-#include <device_common_data.h>
+#include <device_common.h>
 #include <optixu/optixu_aabb.h>
 #include <float.h>
 

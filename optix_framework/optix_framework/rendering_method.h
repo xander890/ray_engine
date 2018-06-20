@@ -1,7 +1,11 @@
 #pragma once
 #include "folders.h"
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 #include <optix_world.h>
+
+#define IMPROVED_ENUM_NAME RenderingMethodType
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(RECURSIVE_RAY_TRACING,0) ENUMITEM_VALUE(AMBIENT_OCCLUSION,1) ENUMITEM_VALUE(PATH_TRACING,2)
+#include "improved_enum.inc"
 
 /*
 Class abstraction to define a method to render the scene. 

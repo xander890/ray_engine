@@ -1,5 +1,5 @@
 #include "approximate_dipoles_host.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 #include "immediate_gui.h"
 #include "scattering_material.h"
 

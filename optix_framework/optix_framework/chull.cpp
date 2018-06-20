@@ -1,6 +1,6 @@
 #include "chull.h"
 #include "folders.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 
 void ConvexHull::create_and_bind_optix_data()
 {

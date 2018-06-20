@@ -1,6 +1,6 @@
 #include "simple_tracing.h"
 #include "material_library.h"
-#include "optical_helper.h"
+#include "optics_utils.h"
 
 
 void SimpleTracing::init(optix::Context &ctx)

@@ -4,7 +4,6 @@
 #include "rendering_method.h"
 #include <optix_world.h>
 #include <map>
-#include <enums.h>
 #include <memory>
 
 class MaterialHost;

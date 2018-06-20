@@ -1,7 +1,7 @@
 #pragma once
 #include <optix_world.h>
 #include "host_device_common.h"
-#include "optical_helper.h"
+#include "optics_utils.h"
 
 struct ScatteringMaterialProperties
 {

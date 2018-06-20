@@ -1,10 +1,10 @@
 #include "full_bssrdf_generator.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 #include "immediate_gui.h"
-#include "dialogs.h"
+#include "file_dialogs.h"
 #include <fstream>
 #include <camera_host.h>
-#include "cputimer.h"
+#include "cpu_timer.h"
 #include "GLFW/glfw3.h"
 #include "GLFWDisplay.h"
 #include "forward_dipole_test.h"

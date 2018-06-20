@@ -1,6 +1,6 @@
 #pragma once
 #include "bssrdf_host.h"
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 
 /*
 Approximate BSSRDF model from 

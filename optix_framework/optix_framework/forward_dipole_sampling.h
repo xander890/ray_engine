@@ -1,10 +1,10 @@
 #pragma once
-#include "random.h"
+#include "random_device.h"
 #include "forward_dipole_utils.h"
 #include "forward_dipole_truncnorm.h"
 #include <functional>
 #include "forward_dipole_tom748.h"
-#include "sampler.h"
+#include "sampler_device.h"
 
 
 /**
@@ -134,7 +134,7 @@ _fn   void implLengthShortLimitKnownU0(
 		do {
 			t = truncnorm(mean, stddev, 0.0, INFINITY, sampler);
 		} while (t == 0);
-		ps = pow(t, -1. / 3.);
+		ps = powf(t, -1. / 3.);
 		s = ps / p;
 	}
 	else {

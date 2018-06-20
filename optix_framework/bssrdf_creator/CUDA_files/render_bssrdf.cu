@@ -1,10 +1,10 @@
-#include <device_common_data.h>
+#include <device_common.h>
 #include <full_bssrdf_host_device_common.h>
-#include <color_helpers.h>
-#include <ray_trace_helpers.h>
+#include <color_utils.h>
+#include <ray_tracing_utils.h>
 #include <environment_map.h>
-#include <math_helpers.h>
-#include <colormap.h>
+#include <math_utils.h>
+#include <color_map_utils.h>
 #include <photon_trace_reference_bssrdf.h>
 #include <scattering_properties.h>
 using namespace optix;

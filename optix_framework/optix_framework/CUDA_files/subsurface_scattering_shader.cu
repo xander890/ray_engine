@@ -1,14 +1,14 @@
 // 02576 OptiX Rendering Framework
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
-#include <device_common_data.h>
-#include <math_helpers.h>
-#include <random.h>
-#include <bssrdf.h>
+#include <device_common.h>
+#include <math_utils.h>
+#include <random_device.h>
+#include <bssrdf_device.h>
 
-#include <optical_helper.h>
+#include <optics_utils.h>
 #include <structs.h>
-#include <ray_trace_helpers.h>
+#include <ray_tracing_utils.h>
 #include <scattering_properties.h>
 #include <material_device.h>
 

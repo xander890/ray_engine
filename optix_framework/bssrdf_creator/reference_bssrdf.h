@@ -1,6 +1,6 @@
 #pragma once
 #include <shader.h>
-#include <mesh.h>
+#include <mesh_host.h>
 #include <string>
 
 class BSSRDFRenderer;

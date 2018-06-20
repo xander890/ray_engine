@@ -4,7 +4,7 @@
 
 #include "geometry.h"
 #include "folders.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 
 Geometry::~Geometry()
 {

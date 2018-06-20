@@ -1,5 +1,8 @@
 #pragma once
 #include <string>
+#include <optix_math.h>
+#include <vector>
+#include <string>
 
 // Prettifies an enum string. TEST_MY_STRING becomes Test my string.
 inline std::string prettify(const std::string & s)
@@ -19,7 +22,7 @@ inline std::string prettify(const std::string & s)
 
 inline void split_extension(const std::string& filename, std::string & file, std::string & ext) {
 	size_t lastdot = filename.find_last_of(".");
-	if (lastdot == std::string::npos) 
+	if (lastdot == std::string::npos)
 	{
 		file = filename;
 		ext = "";

@@ -1,14 +1,14 @@
 #pragma once
 #include <optix_world.h>
 #include "shader.h"
-#include "enums.h"
+
 #include <memory>
 #include "rendering_method.h"
-#include "host_material.h"
+#include "material_host.h"
 #include "transform.h"
-#include "optix_serialize.h"
-#include "optix_utils.h"
-#include "mesh.h"
+#include "optix_serialize_utils.h"
+#include "optix_host_utils.h"
+#include "mesh_host.h"
 
 class Scene;
 

@@ -1,12 +1,12 @@
-#include <device_common_data.h>
-#include <color_helpers.h>
-#include <ray_trace_helpers.h>
+#include <device_common.h>
+#include <color_utils.h>
+#include <ray_tracing_utils.h>
 #include <environment_map.h>
-#include <math_helpers.h>
-#include <colormap.h>
+#include <math_utils.h>
+#include <color_map_utils.h>
 #include <scattering_properties.h>
-#include <bssrdf.h>
-#include "optical_helper.h"
+#include <bssrdf_device.h>
+#include "optics_utils.h"
 
 using namespace optix; 
 

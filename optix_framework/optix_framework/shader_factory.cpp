@@ -6,9 +6,9 @@
 #include "../optprops/Medium.h"
 #include "../optprops/spectrum2rgb.h"
 #include "logger.h"
-#include "mesh.h"
-#include "presampled_surface_bssrdf.h"
-#include "optix_helpers.h"
+#include "mesh_host.h"
+#include "presampled_surface_bssrdf_shader.h"
+#include "optix_device_utils.h"
 #include "scattering_material.h"
 
 optix::Context ShaderFactory::context = nullptr;

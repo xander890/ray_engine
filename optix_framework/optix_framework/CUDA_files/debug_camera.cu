@@ -1,6 +1,6 @@
-#include <device_common_data.h>
-#include <color_helpers.h>
-#include <ray_trace_helpers.h>
+#include <device_common.h>
+#include <color_utils.h>
+#include <ray_tracing_utils.h>
 #include <environment_map.h>
 
 using namespace optix;

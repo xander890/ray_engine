@@ -2,18 +2,18 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
-#include <device_common_data.h>
-#include <light.h>
-#include <random.h>
+#include <device_common.h>
+#include <light_device.h>
+#include <random_device.h>
 #include <sampling_helpers.h>
-#include <color_helpers.h>
-#include <ray_trace_helpers.h>
+#include <color_utils.h>
+#include <ray_tracing_utils.h>
 
-#include <optical_helper.h>
+#include <optics_utils.h>
 #include <environment_map.h>
-#include <camera.h>
+#include <camera_common.h>
 #include <material_device.h>
-#include "device_environment_map.h"
+#include "environment_map_device.h"
 
 using namespace optix;
 

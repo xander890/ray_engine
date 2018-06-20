@@ -3,12 +3,16 @@
 #include "sample_scene.h"
 #include <memory>
 #include <optix_world.h>
-#include "enums.h"
-#include "camera.h"
-#include "optix_serialize.h"
+
+#include "camera_common.h"
+#include "optix_serialize_utils.h"
 
 using optix::float2;
 using optix::float3;
+
+#define IMPROVED_ENUM_NAME PinholeCameraType
+#define IMPROVED_ENUM_LIST ENUMITEM_VALUE(INVERSE_CAMERA_MATRIX,0) ENUMITEM_VALUE(EYE_LOOKAT_UP_VECTORS,1)
+#include "improved_enum.inc"
 
 enum AspectRatioMode {
     KeepVertical,

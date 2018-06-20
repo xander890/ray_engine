@@ -2,8 +2,8 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
-#include <device_common_data.h>
-#include <color_helpers.h>
+#include <device_common.h>
+#include <color_utils.h>
 #include <environment_map.h>
 
 using optix::float3;

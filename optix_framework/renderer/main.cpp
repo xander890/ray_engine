@@ -1,19 +1,19 @@
 // 02576 OptiX Rendering Framework
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 #include <iostream>
 #include <string>
 #include <algorithm>
 #include <cctype>
 #include <glfw_display.h>
-#include "obj_scene.h"
+#include "ray_workbench.h"
 #include "render_task.h"
 #include "scattering_material.h"
 #include "sky_model.h"
 #include "immediate_gui.h" 
  
-#include "hemisphere_partitions.h"
+#include "hemisphere_partition_utils.h"
 namespace
 {
 	void lower_case(char& x)
@@ -141,7 +141,7 @@ int main( int argc, char** argv )
 
 	try 
 	{
-		ObjScene * scene_o = new ObjScene(filenames);
+		RayWorkbench * scene_o = new RayWorkbench(filenames);
 
 		if (auto_mode)
 		{

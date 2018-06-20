@@ -2,11 +2,11 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
-#include <device_common_data.h>
-#include <color_helpers.h>
+#include <device_common.h>
+#include <color_utils.h>
 #include <environment_map.h>
 #include <material_device.h>
-#include <ray_trace_helpers.h>
+#include <ray_tracing_utils.h>
 
 using namespace optix;
 

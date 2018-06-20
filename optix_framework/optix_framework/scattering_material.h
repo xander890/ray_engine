@@ -5,8 +5,8 @@
 #include <optix_world.h>
 #include "structs.h"
 #include "scattering_properties.h"
-#include "optix_serialize.h"
-#include "enums.h"
+#include "optix_serialize_utils.h"
+
 
 class MaterialHost;
 

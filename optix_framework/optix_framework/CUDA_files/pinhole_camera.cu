@@ -2,10 +2,10 @@
 // Written by Jeppe Revall Frisvad, 2011
 
 
-#include <device_common_data.h>
-#include <random.h>
+#include <device_common.h>
+#include <random_device.h>
 #include <environment_map.h>
-#include <camera.h>
+#include <camera_common.h>
 
 using namespace optix;
 

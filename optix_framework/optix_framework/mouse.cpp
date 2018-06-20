@@ -22,7 +22,7 @@
 #include <Mouse.h>
 #include <optixu/optixu_matrix_namespace.h>
 #include <iostream>
-#include "math_helpers.h"
+#include "math_utils.h"
 #include <GLFW/glfw3.h>
 #include <cmath>
 #define ISFINITE std::isfinite

@@ -1,7 +1,7 @@
 #include "quantized_diffusion_host.h"
 #include "quantized_diffusion_helpers.h"
 #include "immediate_gui.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 #include "logger.h"
 
 QuantizedDiffusion::QuantizedDiffusion(optix::Context & ctx) : BSSRDF(ctx, ScatteringDipole::QUANTIZED_DIFFUSION_BSSRDF)

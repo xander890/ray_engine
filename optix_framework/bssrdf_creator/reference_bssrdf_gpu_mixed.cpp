@@ -1,4 +1,4 @@
-#include <optix_utils.h>
+#include <optix_host_utils.h>
 #include "reference_bssrdf_gpu_mixed.h"
 #include "immediate_gui.h"
 

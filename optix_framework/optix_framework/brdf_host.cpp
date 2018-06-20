@@ -1,6 +1,6 @@
 #include "brdf_host.h"
 #include "merl_common.h"
-#include "brdf_utils.h"
+#include "merl_utils.h"
 #include "string_utils.h"
 #include "immediate_gui.h"
 #include "object_host.h"

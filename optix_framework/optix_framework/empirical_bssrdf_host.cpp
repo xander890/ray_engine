@@ -1,7 +1,7 @@
 #include "empirical_bssrdf_host.h"
 #include "logger.h"
 #include "bssrdf_loader.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 #include "scattering_properties.h"
 #include "empirical_bssrdf_common.h"
 #include "optix_math.h"

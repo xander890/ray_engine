@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
 #include <host_device_common.h>
-#include "bssrdf_properties.h"
-#include "mesh.h"
+#include "bssrdf_common.h"
+#include "mesh_host.h"
 
 class NeuralNetworkSampler
 {

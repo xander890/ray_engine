@@ -1,6 +1,6 @@
 #pragma once
 #include "miss_program.h"
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 
 class ConstantBackground : public MissProgram
 {

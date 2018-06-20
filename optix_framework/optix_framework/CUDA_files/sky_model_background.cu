@@ -2,7 +2,7 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
-#include <device_common_data.h>
+#include <device_common.h>
 #include <structs.h>
 #include <sky_model.h>
 

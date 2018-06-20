@@ -2,11 +2,11 @@
 // Written by Jeppe Revall Frisvad, 2011
 // Copyright (c) DTU Informatics 2011
 
-#include <device_common_data.h>
-#include <color_helpers.h>
+#include <device_common.h>
+#include <color_utils.h>
 #include <environment_map.h>
-#include <device_mesh_data.h>
-#include <camera.h>
+#include <mesh_device.h>
+#include <camera_common.h>
 using namespace optix;
 
 // Standard ray variables

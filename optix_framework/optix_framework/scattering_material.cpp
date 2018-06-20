@@ -1,10 +1,10 @@
 #include "scattering_material.h"
-#include "optical_helper.h"
+#include "optics_utils.h"
 #include <functional>
 #include "immediate_gui.h"
 #include "sampling_helpers.h"
 #include <algorithm>
-#include "enums.h"
+
 #include "string_utils.h"
 
 

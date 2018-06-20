@@ -1,8 +1,8 @@
 #pragma once
 #include "host_device_common.h"
-#include "bssrdf_properties.h"
+#include "bssrdf_common.h"
 #include "scattering_properties.h"
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 #include <memory>
 
 /*

@@ -3,7 +3,7 @@
 #include <host_device_common.h>
 #include <scattering_properties.h>
 #include <full_bssrdf_host_device_common.h>
-#include <bssrdf_properties.h>
+#include <bssrdf_common.h>
 #include <bssrdf_host.h>
 #include "photon_trace_structs.h"
 

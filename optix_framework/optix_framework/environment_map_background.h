@@ -4,7 +4,7 @@
 #include "immediate_gui.h"
 #include "texture.h"
 #include <memory>
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 
 class EnvironmentMap : public MissProgram
 {

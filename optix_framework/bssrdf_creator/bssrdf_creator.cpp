@@ -1,9 +1,9 @@
 #include "bssrdf_creator.h"
 #include "immediate_gui.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 #include <sstream>
 #include <algorithm>
-#include <parserstringhelpers.h>
+#include <parsing_utils.h>
 #include <logger.h>
 
 int BSSRDFRenderer::mGlobalId = 0;

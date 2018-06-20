@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 #include <fstream>
 
 inline bool exists(const char *fileName)

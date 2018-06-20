@@ -3,7 +3,7 @@
 #include <optix_world.h>
 #include <string>
 #include <map>
-#include "math_helpers.h"
+#include "math_utils.h"
 #include "structs.h"
 
 // Optix-friendly wrapper for the Medium and MPML readers from the GEL library

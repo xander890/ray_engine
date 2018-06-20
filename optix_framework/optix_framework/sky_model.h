@@ -1,11 +1,11 @@
 #ifndef sky_model_h__
 #define sky_model_h__
 
-#include "singular_light.h"
+#include "light_common.h"
 
 #include <optix_math.h>
-#include "math_helpers.h"
-#include "color_helpers.h"
+#include "math_utils.h"
+#include "color_utils.h"
 
 
 #pragma once
@@ -37,7 +37,7 @@ static _fn __host__ optix::float3 sky_color(int ray_depth, optix::float3 & v, op
 }
 
 #ifndef __CUDA_ARCH__
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 #include <cmath>
 #include "miss_program.h"
 

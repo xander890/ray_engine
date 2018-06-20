@@ -1,5 +1,5 @@
 #include "reference_bssrdf_gpu.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 #include "photon_trace_structs.h"
 #include "immediate_gui.h"
 #include "string_utils.h"

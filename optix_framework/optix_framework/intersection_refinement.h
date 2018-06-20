@@ -21,7 +21,8 @@
 
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
-
+#include "host_device_common.h"
+#include "crt/device_functions.h"
 
 // Plane intersection -- used for refining triangle hit points.  Note
 // that this skips zero denom check (for rays perpindicular to plane normal)
@@ -44,22 +45,22 @@ _fn optix::float3 offset( const optix::float3& hit_point, const optix::float3& n
   const float offset  = 4096.0f*2.0f;
 
   optix::float3 offset_point = hit_point;
-  if(optix::__float_as_int( hit_point.x )&0x7fffffff  < optix::__float_as_int( epsilon ) ) {
+  if(__float_as_int( hit_point.x )&0x7fffffff  < __float_as_int( epsilon ) ) {
     offset_point.x += epsilon * normal.x;
   } else {
-    offset_point.x = optix::__int_as_float(optix::__float_as_int( offset_point.x ) + int(copysign( offset, hit_point.x )*normal.x) );
+    offset_point.x = __int_as_float(__float_as_int( offset_point.x ) + int(copysign( offset, hit_point.x )*normal.x) );
   }
 
-  if(optix::__float_as_int( hit_point.y )&0x7fffffff  < optix::__float_as_int( epsilon ) ) {
+  if(__float_as_int( hit_point.y )&0x7fffffff  < __float_as_int( epsilon ) ) {
     offset_point.y += epsilon * normal.y;
   } else {
-    offset_point.y = optix::__int_as_float(optix::__float_as_int( offset_point.y ) + int(copysign( offset, hit_point.y )*normal.y) );
+    offset_point.y = __int_as_float(__float_as_int( offset_point.y ) + int(copysign( offset, hit_point.y )*normal.y) );
   }
 
-  if(optix::__float_as_int( hit_point.z )&0x7fffffff  < __float_as_int( epsilon ) ) {
+  if(__float_as_int( hit_point.z )&0x7fffffff  < __float_as_int( epsilon ) ) {
     offset_point.z += epsilon * normal.z;
   } else {
-    offset_point.z = optix::__int_as_float( __float_as_int( offset_point.z ) + int(copysign( offset, hit_point.z )*normal.z) );
+    offset_point.z = __int_as_float( __float_as_int( offset_point.z ) + int(copysign( offset, hit_point.z )*normal.z) );
   }
 
   return offset_point;

@@ -1,6 +1,6 @@
 #pragma once
 #include "host_device_common.h"
-#include "optix_serialize.h"
+#include "optix_serialize_utils.h"
 
 class Geometry
 {

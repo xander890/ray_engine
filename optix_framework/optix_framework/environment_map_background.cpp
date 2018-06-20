@@ -1,10 +1,10 @@
 #include "environment_map_background.h"
-#include "optix_helpers.h"
+#include "optix_device_utils.h"
 #include "folders.h"
 #include "logger.h"
 #include "image_loader.h"
-#include "optix_utils.h"
-#include "dialogs.h"
+#include "optix_host_utils.h"
+#include "file_dialogs.h"
 #pragma warning(disable:4996) 
 
 void EnvironmentMap::init(optix::Context & ctx)

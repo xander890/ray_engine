@@ -32,8 +32,8 @@
 #define BLUE_SCALE (1.66f/1500.0f)
 
 #include "sampling_helpers.h"
-#include "random.h"
-#include "math_helpers.h"
+#include "random_device.h"
+#include "math_utils.h"
 #include "host_device_common.h"
 
 

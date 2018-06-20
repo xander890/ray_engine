@@ -13,7 +13,7 @@
 #include "miss_program.h"
 #include "immediate_gui.h"
 #include "light_host.h"
-#include "area_light.h"
+#include "light_common.h"
 #include "texture.h"
 #include "scene_gui.h"
 
@@ -218,7 +218,9 @@ void Scene::update_area_lights()
         mAreaLightBuffer->setFormat(RT_FORMAT_USER);
         mAreaLightBuffer->setElementSize(sizeof(TriangleLight));
     }
-    mAreaLightBuffer->setSize(max(1, lights.size()));
+
+    int s = std::max(1, (int)lights.size());
+    mAreaLightBuffer->setSize(s);
 	if (lights.size() > 0)
 	{
 		void * buf = mAreaLightBuffer->map();

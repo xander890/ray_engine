@@ -1,6 +1,6 @@
 #include "reference_bssrdf.h"
 #include "immediate_gui.h"
-#include "optix_utils.h"
+#include "optix_host_utils.h"
 #include "GL/glew.h"
 #include <bssrdf_creator.h>
 #include "object_host.h"
