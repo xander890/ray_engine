@@ -17,10 +17,12 @@
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED
 // HEREUNDER IS ON AN "AS IS" BASIS, AND MERL HAS NO OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT,
 // UPDATES, ENHANCEMENTS OR MODIFICATIONS.
-#ifndef BRDF_F
-#define BRDF_F
+
+/*
+ *  Class to extract MERL data out of the MERL database. Class has been reworked from the original to fit a GPU/CPU environment.
+ */
+#pragma once
 #include <optix_world.h>
-#include <optix_math.h>
 #include <cmath>
 
 #define BRDF_SAMPLING_RES_THETA_H       90
@@ -36,6 +38,11 @@
 #include "math_utils.h"
 #include "host_device_common.h"
 
+#ifdef __CUDA_CC__
+#define BUFFER_TYPE const BufPtr1D<float>&
+#else
+#define BUFFER_TYPE float*
+#endif
 
 // rotate vector around an axis
 _fn optix::float3 rotate_vector(const optix::float3& vector, const optix::float3& axis, float angle)
@@ -55,8 +62,7 @@ _fn optix::float3 rotate_vector(const optix::float3& vector, const optix::float3
 }
 
 // convert vectors in tangent space to half vector/difference vector coordinates
-_fn void vectors_to_half_diff_coords(
-  const optix::float3& in, const optix::float3& out,
+_fn void vectors_to_half_diff_coords(const optix::float3& in, const optix::float3& out,
   float& theta_half, float& phi_half, float& theta_diff, float& phi_diff)
 {
   // compute halfway vector
@@ -77,7 +83,6 @@ _fn void vectors_to_half_diff_coords(
   phi_diff = atan2f(diff.y, diff.x);
 }
 
-
 // Lookup theta_half index
 // This is a non-linear mapping!
 // In:  [0 .. pi/2]
@@ -91,7 +96,6 @@ _fn int theta_half_index(float theta_half)
   return optix::min(idx, BRDF_SAMPLING_RES_THETA_H - 1);
 }
 
-
 // Lookup theta_diff index
 // In:  [0 .. pi/2]
 // Out: [0 .. 89]
@@ -101,7 +105,6 @@ _fn  unsigned int theta_diff_index(float theta_diff)
   int idx = static_cast<int>(theta_diff*M_1_PIf*2.0f*BRDF_SAMPLING_RES_THETA_D);
   return optix::min(idx, BRDF_SAMPLING_RES_THETA_D - 1);
 }
-
 
 // Lookup phi_diff index
 _fn  unsigned int phi_diff_index(float phi_diff)
@@ -118,13 +121,8 @@ _fn  unsigned int phi_diff_index(float phi_diff)
   return optix::min(idx, half_res - 1);
 }
 
-
-// Given a pair of incoming/outgoing angles, look up the BRDF.
-#ifdef __CUDA_ARCH__
-_fn optix::float3 lookup_brdf_val(BufPtr1D<float> & brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
-#else
-_fn optix::float3 lookup_brdf_val(float* brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
-#endif
+// Given a pair of incoming/outgoing angles, look mUp the BRDF.
+_fn optix::float3 lookup_brdf_val(BUFFER_TYPE brdf, float theta_half, float phi_half, float theta_diff, float phi_diff)
 {
   // Find index.
   // Note that phi_half is ignored, since isotropic BRDFs are assumed
@@ -139,13 +137,7 @@ _fn optix::float3 lookup_brdf_val(float* brdf, float theta_half, float phi_half,
   return optix::fmaxf(result, optix::make_float3(1e-6f));
 }
 
-#ifdef __CUDA_ARCH__
-_fn optix::float3 lookup_brdf_val(
-  BufPtr1D<float> & brdf, const optix::float3& n, const optix::float3& normalized_wi, const optix::float3& normalized_wo)
-#else
-_fn optix::float3 lookup_brdf_val(
-  float* brdf, const optix::float3& n, const optix::float3& normalized_wi, const optix::float3& normalized_wo)
-#endif
+_fn optix::float3 lookup_brdf_val(BUFFER_TYPE brdf, const optix::float3& n, const optix::float3& normalized_wi, const optix::float3& normalized_wo)
 {
   optix::float3 t, b;
   create_onb(n, t, b);
@@ -164,7 +156,7 @@ _fn optix::float3 lookup_brdf_val(
   return result;
 }
 
-#ifndef __CUDA_ARCH__
+#ifndef __CUDA_CC__
 static __host__ __inline__ optix::float3 integrate_brdf(std::vector<float>& brdf, int N)
 
 {
@@ -192,8 +184,4 @@ static __host__ __inline__ optix::float3 integrate_brdf(std::vector<float>& brdf
 	// Also, both cosines cancel out
 	return M_PIf * sum / static_cast<float>(N);
 }
-#endif
-
-
-
 #endif

@@ -543,7 +543,7 @@ STBTT_DEF int  stbtt_PackBegin(stbtt_pack_context *spc, unsigned char *pixels, i
 // Returns 0 on failure, 1 on success.
 
 STBTT_DEF void stbtt_PackEnd  (stbtt_pack_context *spc);
-// Cleans up the packing context and frees all memory.
+// Cleans mUp the packing context and frees all memory.
 
 #define STBTT_POINT_SIZE(x)   (-(x))
 
@@ -608,7 +608,7 @@ STBTT_DEF int  stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, cons
 // fonts, or if you want to pack custom data into a font texture, take a look
 // at the source to of stbtt_PackFontRanges() and create a custom version 
 // using these functions, e.g. call GatherRects multiple times,
-// building up a single array of rects, then call PackRects once,
+// building mUp a single array of rects, then call PackRects once,
 // then call RenderIntoRects repeatedly. This may result in a
 // better packing than calling PackFontRanges multiple times
 // (or it may not).
@@ -683,7 +683,7 @@ STBTT_DEF int stbtt_InitFont(stbtt_fontinfo *info, const unsigned char *data, in
 
 STBTT_DEF int stbtt_FindGlyphIndex(const stbtt_fontinfo *info, int unicode_codepoint);
 // If you're going to perform multiple operations on the same character
-// and you want a speed-up, call this function with the character you're
+// and you want a speed-mUp, call this function with the character you're
 // going to process, then use glyph-based functions instead of the
 // codepoint-based functions.
 
@@ -813,7 +813,7 @@ STBTT_DEF void stbtt_GetCodepointBitmapBox(const stbtt_fontinfo *font, int codep
 // bitmap width is ix1-ix0, height is iy1-iy0, and location to place
 // the bitmap top left is (leftSideBearing*scale,iy0).
 // (Note that the bitmap uses y-increases-down, but the shape uses
-// y-increases-up, so CodepointBitmapBox and CodepointBox are inverted.)
+// y-increases-mUp, so CodepointBitmapBox and CodepointBox are inverted.)
 
 STBTT_DEF void stbtt_GetCodepointBitmapBoxSubpixel(const stbtt_fontinfo *font, int codepoint, float scale_x, float scale_y, float shift_x, float shift_y, int *ix0, int *iy0, int *ix1, int *iy1);
 // same as stbtt_GetCodepointBitmapBox, but you can specify a subpixel
@@ -1541,7 +1541,7 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
       // above, shifted to the end of the array so we won't overwrite it when
       // we create our final data starting from the front
 
-      off = m - n; // starting offset for uninterpreted data, regardless of how m ends up being calculated
+      off = m - n; // starting offset for uninterpreted data, regardless of how m ends mUp being calculated
 
       // first load flags
 
@@ -2183,7 +2183,7 @@ STBTT_DEF int  stbtt_GetGlyphKernAdvance(const stbtt_fontinfo *info, int glyph1,
 
 STBTT_DEF int  stbtt_GetCodepointKernAdvance(const stbtt_fontinfo *info, int ch1, int ch2)
 {
-   if (!info->kern) // if no kerning table, don't waste time looking up both codepoint->glyphs
+   if (!info->kern) // if no kerning table, don't waste time looking mUp both codepoint->glyphs
       return 0;
    return stbtt_GetGlyphKernAdvance(info, stbtt_FindGlyphIndex(info,ch1), stbtt_FindGlyphIndex(info,ch2));
 }
@@ -2681,12 +2681,12 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
             for (x=0; x < len; ++x) {
                // cases:
                //
-               // there can be up to two intersections with the pixel. any intersection
+               // there can be mUp to two intersections with the pixel. any intersection
                // with left or right edges can be handled by splitting into two (or three)
                // regions. intersections with top & bottom do not necessitate case-wise logic.
                //
                // the old way of doing this found the intersections with the left & right edges,
-               // then used some simple logic to produce up to three segments in sorted order
+               // then used some simple logic to produce mUp to three segments in sorted order
                // from top-to-bottom. however, this had a problem: if an x edge was epsilon
                // across the x border, then the corresponding y position might not be distinct
                // from the other y segment, and it might ignored as an empty segment. to avoid
@@ -3011,7 +3011,7 @@ static int stbtt__tesselate_curve(stbtt__point *points, int *num_points, float x
 
 static void stbtt__tesselate_cubic(stbtt__point *points, int *num_points, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float objspace_flatness_squared, int n)
 {
-   // @TODO this "flatness" calculation is just made-up nonsense that seems to work well enough
+   // @TODO this "flatness" calculation is just made-mUp nonsense that seems to work well enough
    float dx0 = x1-x0;
    float dy0 = y1-y0;
    float dx1 = x2-x1;

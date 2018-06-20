@@ -9,12 +9,12 @@
 class EnvironmentMap : public MissProgram
 {
 public:
-    EnvironmentMap(std::string envmap_file = "");
+    EnvironmentMap(optix::Context & ctx, std::string envmap_file = "");
 
     virtual ~EnvironmentMap();
 
-    virtual void init(optix::Context & ctx) override;
-    virtual void set_into_gpu(optix::Context & ctx) override;
+    virtual void init() override;
+    virtual void load() override;
     virtual bool on_draw() override;
 private:
     virtual bool get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program) override;
@@ -24,7 +24,7 @@ private:
 
     optix::float3 envmap_deltas;
     std::unique_ptr<Texture> environment_sampler = nullptr;
-    optix::Context context;
+    optix::Context mContext;
     optix::Buffer property_buffer;
     optix::Buffer sampling_property_buffer;
 
@@ -35,8 +35,22 @@ private:
     bool resample_envmaps = true;
 
 	friend class cereal::access;
+
+	static void load_and_construct(cereal::XMLInputArchiveOptix & archive, cereal::construct<EnvironmentMap>& construct)
+	{
+		optix::Context ctx = archive.get_context();
+		construct(ctx);
+		archive(
+			cereal::virtual_base_class<MissProgram>(construct.ptr()),
+			cereal::make_nvp("texture", construct->environment_sampler),
+			cereal::make_nvp("delta_rotation", construct->envmap_deltas),
+			cereal::make_nvp("light_multiplier", construct->properties.lightmap_multiplier),
+			cereal::make_nvp("importance_sample", construct->properties.importance_sample_envmap)
+		);
+	}
+
 	template<class Archive>
-	void serialize(Archive & archive)
+	void save(Archive & archive) const
 	{
 		archive(
 			 cereal::virtual_base_class<MissProgram>(this),

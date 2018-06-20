@@ -5,7 +5,7 @@
 void SkyModel::update_data()
 {
     if (dot(north, up) != 0.0f)
-        throw std::runtime_error("North and up are not perpendicular.");
+        throw std::runtime_error("North and mUp are not perpendicular.");
 
     perez_data.A =  optix::make_float3(0.1787f * turbidity - 1.4630f, -0.0193f * turbidity - 0.2592f, -0.0167f * turbidity - 0.2608f);
     perez_data.B =  optix::make_float3(-0.3554f * turbidity + 0.4275f, -0.0665f * turbidity + 0.0008f, -0.0950f * turbidity + 0.0092f);
@@ -37,9 +37,9 @@ void SkyModel::update_data()
     sun_color = get_sun_color() * 0.1f;
 }
 
-void SkyModel::init(optix::Context & ctx)
+void SkyModel::init()
 {
-    MissProgram::init(ctx);
+    MissProgram::init();
     update_data();
 }
 
@@ -234,12 +234,12 @@ const SkyModel::PreethamData SkyModel::data[] =
 	{0.75f, 1825.92f, 0.009f, 0.009f}
 };
 
-void SkyModel::set_into_gpu(optix::Context & context)
+void SkyModel::load()
 {
-    MissProgram::set_into_gpu(context);
-	context["perez_model_data"]->setUserData(sizeof(PerezData), &perez_data);
-	context["sun_position"]->setFloat(sun_position);
-	context["up_vector"]->setFloat(up);
-	context["sky_factor"]->setFloat(sky_factor);
-	context["sun_color"]->setFloat(sun_color);
+    MissProgram::load();
+	mContext["perez_model_data"]->setUserData(sizeof(PerezData), &perez_data);
+	mContext["sun_position"]->setFloat(sun_position);
+	mContext["up_vector"]->setFloat(up);
+	mContext["sky_factor"]->setFloat(sky_factor);
+	mContext["sun_color"]->setFloat(sun_color);
 }

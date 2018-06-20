@@ -125,7 +125,7 @@ bool SceneGUI::on_draw(Scene * scene)
         {
             if (ImGui::Selectable("Constant"))
             {
-                scene->set_miss_program(std::make_unique<ConstantBackground>(optix::make_float3(0.5f)));
+                scene->set_miss_program(std::make_unique<ConstantBackground>(context, optix::make_float3(0.5f)));
             }
 
             if (ImGui::Selectable("Environment map"))
@@ -133,13 +133,13 @@ bool SceneGUI::on_draw(Scene * scene)
                 std::string path;
                 if(Dialogs::openFileDialog(path))
                 {
-                    scene->set_miss_program(std::make_unique<EnvironmentMap>(path));
+                    scene->set_miss_program(std::make_unique<EnvironmentMap>(context, path));
                 }
             }
 
             if (ImGui::Selectable("Sky model"))
             {
-                scene->set_miss_program(std::make_unique<SkyModel>(optix::make_float3(0, 1, 0), optix::make_float3(0, 0, 1)));
+                scene->set_miss_program(std::make_unique<SkyModel>(context, optix::make_float3(0, 1, 0), optix::make_float3(0, 0, 1)));
             }
 
 

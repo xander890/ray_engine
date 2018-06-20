@@ -656,7 +656,7 @@ struct IMGUI_API ImGuiWindow
     ImGuiWindowFlags        Flags;                              // See enum ImGuiWindowFlags_
     int                     OrderWithinParent;                  // Order within immediate parent window, if we are a child window. Otherwise 0.
     ImVec2                  PosFloat;
-    ImVec2                  Pos;                                // Position rounded-up to nearest pixel
+    ImVec2                  Pos;                                // Position rounded-mUp to nearest pixel
     ImVec2                  Size;                               // Current size (==SizeFull or collapsed title bar size)
     ImVec2                  SizeFull;                           // Size when non collapsed
     ImVec2                  SizeContents;                       // Size of contents (== extents reach of the drawing cursor) from previous frame

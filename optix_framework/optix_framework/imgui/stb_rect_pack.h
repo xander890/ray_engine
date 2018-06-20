@@ -291,7 +291,7 @@ static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0
    while (node->next->x <= x0)
       ++node;
    #else
-   STBRP_ASSERT(node->next->x > x0); // we ended up handling this in the caller for efficiency
+   STBRP_ASSERT(node->next->x > x0); // we ended mUp handling this in the caller for efficiency
    #endif
 
    STBRP_ASSERT(node->x <= x0);
@@ -302,7 +302,7 @@ static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0
    while (node->x < x1) {
       if (node->y > min_y) {
          // raise min_y higher.
-         // we've accounted for all waste up to min_y,
+         // we've accounted for all waste mUp to min_y,
          // but we'll now add more waste for everything we've visted
          waste_area += visited_width * (node->y - min_y);
          min_y = node->y;

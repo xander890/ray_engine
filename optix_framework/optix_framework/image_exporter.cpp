@@ -1,7 +1,6 @@
 #include "image_exporter.h"
 #include <fstream>
 #include <algorithm>
-#include <exception>
 #include "IL/il.h"
 #include "IL/ilu.h"
 #include "logger.h"
@@ -16,7 +15,6 @@ inline bool export_raw(const std::string& raw_p, const float * data, int w, int 
 		Logger::error << "Invalid raw file specified" << raw_path << std::endl;
 		return false;
 	}
-
 	if (raw_path.length() <= 4 || raw_path.substr(raw_path.length() - 4).compare(".raw") != 0)
 	{
 		raw_path += ".raw";
@@ -121,7 +119,7 @@ bool exportTexture(const std::string & filename, const float * data, int w, int 
 bool exportTexture(const std::string & filename, const std::unique_ptr<Texture>& tex, const int past_frames)
 {
 	assert(tex->get_dimensionality() == 2);
-	return exportTexture(filename, (float*)tex->get_data(), tex->get_width(), tex->get_height(), past_frames);
+	return exportTexture(filename, (float*)tex->get_data(), (int)tex->get_width(), (int)tex->get_height(), past_frames);
 }
 
 bool exportTexture(const std::string & filename, optix::Buffer buf, const int past_frames)

@@ -54,12 +54,12 @@ RT_PROGRAM void pinhole_camera()
 		TEASampler sampler(launch_dim.x*launch_index.y + launch_index.x, frame);
 		PerRayData_radiance prd = get_starting_payload(&sampler);
 		float2 jitter = sampler.next2D() * camera_data.downsampling;
-		uint2 real_pixel = launch_index * camera_data.downsampling + make_uint2(camera_data.rendering_rectangle.x, camera_data.rendering_rectangle.y);
+		uint2 real_pixel = launch_index * camera_data.downsampling;
 		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(camera_data.camera_size) * 2.0f - 1.0f;
 
 	#ifdef ORTHO
 		float3 direction = normalize(W);
-		float3 origin = eye + ip_coords.x*U + ip_coords.y*V;
+		float3 origin = mEye + ip_coords.x*U + ip_coords.y*V;
 	#else
 		float3 origin = camera_data.eye;
 		float3 direction = normalize(ip_coords.x*camera_data.U + ip_coords.y*camera_data.V + camera_data.W);

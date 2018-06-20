@@ -1,31 +1,34 @@
 #pragma once
 #include <device_common.h>
-#include <material_device.h>
 #include <bssrdf_common.h>
 #include <scattering_properties.h>
-#include <approximate_dipoles_device.h>
 
+// Dipoles
 #ifdef FORWARD_DIPOLE_ONLY
 #include <forward_dipole_device.h>
 #else
+#include <approximate_dipoles_device.h>
 #include <directional_dipole_device.h>
 #include <standard_dipole_device.h>
-#include <bssrdf_common.h>
 #include <quantized_diffusion_device.h>
 #include <photon_beam_diffusion_device.h>
 #include <empirical_bssrdf_device.h>
 #endif
 
-using optix::float3;
+// The type of BSSRDF to render
 rtDeclareVariable(ScatteringDipole::Type, selected_bssrdf, , );
 
-_fn float3 bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
+/*
+ *  Calculates a BSSRDF contribution given geometry, material and sampler.
+ *  recip_ior is the reciprocal of the interface IOR already accounting for the normal.
+ */
+_fn optix::float3 bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
 	const MaterialDataCommon& material, BSSRDFFlags::Type flags, TEASampler & sampler)
 {   
 #ifdef FORWARD_DIPOLE_ONLY
     return forward_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
 #else
-    float3 S = optix::make_float3(0.0f);
+    optix::float3 S = optix::make_float3(0.0f);
     if(selected_bssrdf == ScatteringDipole::APPROX_DIRECTIONAL_DIPOLE_BSSRDF)
     {
         S = approximate_directional_dipole_bssrdf(geometry, recip_ior, material, flags, sampler);
@@ -59,7 +62,7 @@ _fn float3 bssrdf(const BSSRDFGeometry & geometry, const float recip_ior,
 #endif
 }
 
-_fn float3 get_beam_transmittance(const float depth, const ScatteringMaterialProperties& properties)
+_fn optix::float3 get_beam_transmittance(const float depth, const ScatteringMaterialProperties& properties)
 {
 	switch (selected_bssrdf)
 	{

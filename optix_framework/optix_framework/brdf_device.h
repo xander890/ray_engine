@@ -1,20 +1,23 @@
 #pragma once
-#include <device_common.h>
 #include "brdf_common.h"
 #include "material_common.h"
 #include "sampler_device.h"
-#include <merl_common.h>
+#include "merl_common.h"
 #include "microfacet_utils.h"
 #include "ray_tracing_utils.h"
+#include "device_common.h"
 
+// Type of brdf currently selected.
 rtDeclareVariable(BRDFType::Type, selected_brdf, , );
 
+// Common MERL data.
 rtDeclareVariable(optix::float3, merl_brdf_multiplier, , );
 rtDeclareVariable(BufPtr1D<float>, merl_brdf_buffer, ,);
 
-// Inline function to evaluate the BRDF.
-_fn optix::float3 brdf(const BRDFGeometry & geometry,
-        const MaterialDataCommon& material, TEASampler & sampler)
+//
+// Evaluates the BRDF. Pass local geometry, a material and a RNG.
+//
+_fn optix::float3 brdf(const BRDFGeometry & geometry, const MaterialDataCommon& material, TEASampler & sampler)
 {
     optix::float3 f = optix::make_float3(0);
     const float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;

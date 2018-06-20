@@ -5,14 +5,15 @@
 class MissProgram
 {
 public:
-    MissProgram() = default;
+    MissProgram(optix::Context & ctx) : mContext(ctx) {}
 	virtual ~MissProgram() = default;
-    virtual void init(optix::Context & ctx);
-    virtual void set_into_gpu(optix::Context & ctx);
+    virtual void init();
+    virtual void load();
 	virtual bool on_draw() = 0;
 
 protected:
     virtual bool get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program) = 0;
+	optix::Context mContext = nullptr;
 
 private:
     bool mInit = false;

@@ -4,6 +4,10 @@
 #include "brdf_host.h"
 #include "material_host.h"
 
+/*
+ * Shader specialization for a material with a BRDF (analytical or data-driven).
+ * See brdf_host.h for more details on the available BRDFs.
+ */
 class BRDFShader : public Shader
 {
 public:
@@ -19,7 +23,6 @@ public:
     bool on_draw() override;
 
 private:
-
     BRDFShader() : Shader() {}
 
     // FIXME proper duplication.

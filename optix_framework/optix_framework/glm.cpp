@@ -309,7 +309,7 @@ _glmReadMTL(GLMmodel* model, char* name)
   while(fscanf(file, "%s", buf) != EOF) {
     switch(buf[0]) {
       case '#':       /* comment */
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
       case 'n':       /* newmtl */
@@ -318,7 +318,7 @@ _glmReadMTL(GLMmodel* model, char* name)
         sscanf(buf, "%s %s", buf, buf);
         break;
       default:
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
     }
@@ -392,7 +392,7 @@ _glmReadMTL(GLMmodel* model, char* name)
   while(fscanf(file, "%s", buf) != EOF) {
     switch(buf[0]) {
       case '#':       /* comment */
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
       case 'n':       /* newmtl */
@@ -498,7 +498,7 @@ _glmReadMTL(GLMmodel* model, char* name)
           // Check to see if we have scaled textures or not
           fscanf(file, string_litteral, map_name);
           if (strcmp(map_name, "-s") == 0) {
-            // pick up the float scaled textures
+            // pick mUp the float scaled textures
             fscanf(file, "%f %f", &scaling[0], &scaling[1]);
             // Now the name of the file
             fscanf(file, string_litteral, map_name);
@@ -529,13 +529,13 @@ _glmReadMTL(GLMmodel* model, char* name)
                 &model->materials[nummaterials - 1].ambient[2]);
             break;
           default:
-            /* eat up rest of line */
+            /* eat mUp rest of line */
             fgets(buf, sizeof(buf), file);
             break;
         }
         break;
       default:
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
     }
@@ -632,13 +632,13 @@ _glmFirstPass(GLMmodel* model, FILE* file)
   while(fscanf(file, "%s", buf) != EOF) {
     switch(buf[0]) {
       case '#':     /* comment */
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
       case 'v':     /* v, vn, vt */
         switch(buf[1]) {
           case '\0':  { /* vertex */
-                        /* eat up rest of line */
+                        /* eat mUp rest of line */
                         fgets(buf, sizeof(buf), file);
 
                         // TODO: Check if colors for this vertex
@@ -653,12 +653,12 @@ _glmFirstPass(GLMmodel* model, FILE* file)
                         break;
                       }
           case 'n':   /* normal */
-                      /* eat up rest of line */
+                      /* eat mUp rest of line */
                       fgets(buf, sizeof(buf), file);
                       numnormals++;
                       break;
           case 't':   /* texcoord */
-                      /* eat up rest of line */
+                      /* eat mUp rest of line */
                       fgets(buf, sizeof(buf), file);
                       numtexcoords++;
                       break;
@@ -694,7 +694,7 @@ _glmFirstPass(GLMmodel* model, FILE* file)
         group = _glmAddGroup(model, buf);
         break;
       case 'o':
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
       case 'g':       /* group */
@@ -755,7 +755,7 @@ _glmFirstPass(GLMmodel* model, FILE* file)
         break;
 
       default:
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
     }
@@ -830,7 +830,7 @@ _glmSecondPass(GLMmodel* model, FILE* file)
   while(fscanf(file, "%s", buf) != EOF) {
     switch(buf[0]) {
       case '#':       /* comment */
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
       case 'v':       /* v, vn, vt */
@@ -883,11 +883,11 @@ _glmSecondPass(GLMmodel* model, FILE* file)
         group->mtlname = strdup(mtlname);
         break;
       case 'o': 
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
       case 'g':       /* group */
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         sscanf(buf, "%s", buf);
         if (grpname) free(grpname);
@@ -1021,7 +1021,7 @@ _glmSecondPass(GLMmodel* model, FILE* file)
         break;
 
       default:
-        /* eat up rest of line */
+        /* eat mUp rest of line */
         fgets(buf, sizeof(buf), file);
         break;
     }
@@ -1787,7 +1787,7 @@ glmWriteOBJ(GLMmodel* model, char* filename, unsigned int mode)
   if (mode & GLM_MATERIAL && model->mtllibname) {
     fprintf(file, "\nmtllib %s\n\n", model->mtllibname);
     if (_glmWriteMTL(model, filename, model->mtllibname)) {
-      /* Problem opening up the material file for output. */
+      /* Problem opening mUp the material file for output. */
       fclose(file);
       return 1;
     }

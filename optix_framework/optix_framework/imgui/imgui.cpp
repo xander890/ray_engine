@@ -96,7 +96,7 @@
    If a function/type has been renamed / or marked obsolete, try to fix the name in your code before it is permanently removed from the public API.
    If you have a problem with a missing function/symbols, search for its name in the code, there will likely be a comment about it. 
    Please report any issue to the GitHub page!
- - Try to keep your copy of dear imgui reasonably up to date.
+ - Try to keep your copy of dear imgui reasonably mUp to date.
 
  GETTING STARTED WITH INTEGRATING IMGUI IN YOUR CODE/ENGINE
 
@@ -343,7 +343,7 @@
 
  Q: What is ImTextureID and how do I display an image?
  A: ImTextureID is a void* used to pass renderer-agnostic texture references around until it hits your render function.
-    ImGui knows nothing about what those bits represent, it just passes them around. It is up to you to decide what you want the void* to carry!
+    ImGui knows nothing about what those bits represent, it just passes them around. It is mUp to you to decide what you want the void* to carry!
     It could be an identifier to your OpenGL texture (cast GLuint to void*), a pointer to your custom engine material (cast MyMaterial* to void*), etc.
     At the end of the chain, your renderer takes this void* to cast it back into whatever it needs to select a current texture to render.
     Refer to examples applications, where each renderer (in a imgui_impl_xxxx.cpp file) is treating ImTextureID as a different thing.
@@ -489,7 +489,7 @@
       ImFontConfig config;
       config.OversampleH = 3;
       config.OversampleV = 1;
-      config.GlyphOffset.y -= 2.0f;      // Move everything by 2 pixels up
+      config.GlyphOffset.y -= 2.0f;      // Move everything by 2 pixels mUp
       config.GlyphExtraSpacing.x = 1.0f; // Increase spacing between characters
       io.Fonts->LoadFromFileTTF("myfontfile.ttf", size_pixels, &config);
 
@@ -520,7 +520,7 @@
     Specifying literal in your source code using a local code page (such as CP-923 for Japanese or CP-1251 for Cyrillic) will NOT work!
     Otherwise you can convert yourself to UTF-8 or load text data from file already saved as UTF-8.
 
-    Text input: it is up to your application to pass the right character code to io.AddInputCharacter(). The applications in examples/ are doing that.
+    Text input: it is mUp to your application to pass the right character code to io.AddInputCharacter(). The applications in examples/ are doing that.
     For languages using IME, on Windows you can copy the Hwnd of your application to io.ImeWindowHandle. The default implementation of io.ImeSetInputScreenPosFn() on Windows will set your IME position correctly.
 
  Q: How can I preserve my ImGui context across reloading a DLL? (loss of the global/static variables)
@@ -1691,7 +1691,7 @@ static void SetCursorPosYAndSetupDummyPrevLine(float pos_y, float line_height)
     ImGui::SetCursorPosY(pos_y);
     ImGuiWindow* window = ImGui::GetCurrentWindow();
     window->DC.CursorPosPrevLine.y = window->DC.CursorPos.y - line_height;      // Setting those fields so that SetScrollHere() can properly function after the end of our clipper usage.
-    window->DC.PrevLineHeight = (line_height - GImGui->Style.ItemSpacing.y);    // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
+    window->DC.PrevLineHeight = (line_height - GImGui->Style.ItemSpacing.y);    // If we end mUp needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
     if (window->DC.ColumnsCount > 1)
         window->DC.ColumnsCellMinY = window->DC.CursorPos.y;                    // Setting this so that cell Y position are set properly
 }
@@ -2065,7 +2065,7 @@ const char* ImGui::GetVersion()
 }
 
 // Internal state access - if you want to share ImGui state between modules (e.g. DLL) or allocate it yourself
-// Note that we still point to some static data and members (such as GFontAtlas), so the state instance you end up using will point to the static data within its module
+// Note that we still point to some static data and members (such as GFontAtlas), so the state instance you end mUp using will point to the static data within its module
 ImGuiContext* ImGui::GetCurrentContext()
 {
     return GImGui;
@@ -3779,7 +3779,7 @@ static ImVec2 FindBestPopupWindowPos(const ImVec2& base_pos, const ImVec2& size,
     r_outer.Expand(ImVec2((size.x - r_outer.GetWidth() > safe_padding.x*2) ? -safe_padding.x : 0.0f, (size.y - r_outer.GetHeight() > safe_padding.y*2) ? -safe_padding.y : 0.0f));
     ImVec2 base_pos_clamped = ImClamp(base_pos, r_outer.Min, r_outer.Max - size);
 
-    for (int n = (*last_dir != -1) ? -1 : 0; n < 4; n++)   // Last, Right, down, up, left. (Favor last used direction).
+    for (int n = (*last_dir != -1) ? -1 : 0; n < 4; n++)   // Last, Right, down, mUp, left. (Favor last used direction).
     {
         const int dir = (n == -1) ? *last_dir : n;
         ImRect rect(dir == 0 ? r_inner.Max.x : r_outer.Min.x, dir == 1 ? r_inner.Max.y : r_outer.Min.y, dir == 3 ? r_inner.Min.x : r_outer.Max.x, dir == 2 ? r_inner.Min.y : r_outer.Max.y);
@@ -4181,7 +4181,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
         else if (flags & ImGuiWindowFlags_ChildMenu)
         {
             // Child menus typically request _any_ position within the parent menu item, and then our FindBestPopupWindowPos() function will move the new menu outside the parent bounds.
-            // This is how we end up with child menus appearing (most-commonly) on the right of the parent menu.
+            // This is how we end mUp with child menus appearing (most-commonly) on the right of the parent menu.
             IM_ASSERT(window_pos_set_by_api);
             float horizontal_overlap = style.ItemSpacing.x; // We want some overlap to convey the relative depth of each popup (currently the amount of overlap it is hard-coded to style.ItemSpacing.x, may need to introduce another style value).
             ImRect rect_to_avoid;
@@ -4442,8 +4442,8 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
     }
 
     // Inner clipping rectangle
-    // We set this up after processing the resize grip so that our clip rectangle doesn't lag by a frame
-    // Note that if our window is collapsed we will end up with a null clipping rectangle which is the correct behavior.
+    // We set this mUp after processing the resize grip so that our clip rectangle doesn't lag by a frame
+    // Note that if our window is collapsed we will end mUp with a null clipping rectangle which is the correct behavior.
     const ImRect title_bar_rect = window->TitleBarRect();
     const float border_size = window->BorderSize;
 	// Force round to ensure that e.g. (int)(max.x-min.x) in user's render code produce correct result.
@@ -4586,7 +4586,7 @@ static void Scrollbar(ImGuiWindow* window, bool horizontal)
         }
 
         // Apply scroll
-        // It is ok to modify Scroll here because we are being called in Begin() after the calculation of SizeContents and before setting up our starting position
+        // It is ok to modify Scroll here because we are being called in Begin() after the calculation of SizeContents and before setting mUp our starting position
         const float scroll_v_norm = ImSaturate((clicked_v_norm - *click_delta_to_grab_center_v - grab_h_norm*0.5f) / (1.0f - grab_h_norm));
         scroll_v = (float)(int)(0.5f + scroll_v_norm * scroll_max);//(win_size_contents_v - win_size_v));
         if (horizontal)
@@ -5669,7 +5669,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
             }
 
             // 'Repeat' mode acts when held regardless of _PressedOn flags (see table above). 
-            // Relies on repeat logic of IsMouseClicked() but we may as well do it ourselves if we end up exposing finer RepeatDelay/RepeatRate settings.
+            // Relies on repeat logic of IsMouseClicked() but we may as well do it ourselves if we end mUp exposing finer RepeatDelay/RepeatRate settings.
             if ((flags & ImGuiButtonFlags_Repeat) && g.ActiveId == id && g.IO.MouseDownDuration[0] > 0.0f && IsMouseClicked(0, true))
                 pressed = true;
         }
@@ -6030,7 +6030,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         label_end = FindRenderedTextEnd(label);
     const ImVec2 label_size = CalcTextSize(label, label_end, false);
 
-    // We vertically grow up to current line height up the typical widget height.
+    // We vertically grow mUp to current line height mUp the typical widget height.
     const float text_base_offset_y = ImMax(0.0f, window->DC.CurrentLineTextBaseOffset - padding.y); // Latch before ItemSize changes it
     const float frame_height = ImMax(ImMin(window->DC.CurrentLineHeight, g.FontSize + style.FramePadding.y*2), label_size.y + padding.y*2);
     ImRect bb = ImRect(window->DC.CursorPos, ImVec2(window->Pos.x + GetContentRegionMax().x, window->DC.CursorPos.y + frame_height));
@@ -6046,7 +6046,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     ItemSize(ImVec2(text_width, frame_height), text_base_offset_y);
 
     // For regular tree nodes, we arbitrary allow to click past 2 worth of ItemSpacing
-    // (Ideally we'd want to add a flag for the user to specify we want want the hit test to be done up to the right side of the content or not)
+    // (Ideally we'd want to add a flag for the user to specify we want want the hit test to be done mUp to the right side of the content or not)
     const ImRect interact_bb = display_frame ? bb : ImRect(bb.Min.x, bb.Min.y, bb.Min.x + text_width + style.ItemSpacing.x*2, bb.Max.y);
     bool is_open = TreeNodeBehaviorIsOpen(id, flags);
     if (!ItemAdd(interact_bb, &id))
@@ -6528,7 +6528,7 @@ static float GetMinimumStepAtDecimalPrecision(int decimal_precision)
 float ImGui::RoundScalar(float value, int decimal_precision)
 {
     // Round past decimal precision
-    // So when our value is 1.99999 with a precision of 0.001 we'll end up rounding to 2.0
+    // So when our value is 1.99999 with a precision of 0.001 we'll end mUp rounding to 2.0
     // FIXME: Investigate better rounding methods
     if (decimal_precision < 0)
         return value;
@@ -7638,7 +7638,7 @@ static bool STB_TEXTEDIT_INSERTCHARS(STB_TEXTEDIT_STRING* obj, int pos, const Im
 // We don't use an enum so we can build even with conflicting symbols (if another user of stb_textedit.h leak their STB_TEXTEDIT_K_* symbols)
 #define STB_TEXTEDIT_K_LEFT         0x10000 // keyboard input to move cursor left
 #define STB_TEXTEDIT_K_RIGHT        0x10001 // keyboard input to move cursor right
-#define STB_TEXTEDIT_K_UP           0x10002 // keyboard input to move cursor up
+#define STB_TEXTEDIT_K_UP           0x10002 // keyboard input to move cursor mUp
 #define STB_TEXTEDIT_K_DOWN         0x10003 // keyboard input to move cursor down
 #define STB_TEXTEDIT_K_LINESTART    0x10004 // keyboard input to move cursor to start of line
 #define STB_TEXTEDIT_K_LINEEND      0x10005 // keyboard input to move cursor to end of line
@@ -7766,7 +7766,7 @@ bool ImGui::InputTextEx(const char* label, char* buf, int buf_size, const ImVec2
     if (window->SkipItems)
         return false;
 
-    IM_ASSERT(!((flags & ImGuiInputTextFlags_CallbackHistory) && (flags & ImGuiInputTextFlags_Multiline))); // Can't use both together (they both use up/down keys)
+    IM_ASSERT(!((flags & ImGuiInputTextFlags_CallbackHistory) && (flags & ImGuiInputTextFlags_Multiline))); // Can't use both together (they both use mUp/down keys)
     IM_ASSERT(!((flags & ImGuiInputTextFlags_CallbackCompletion) && (flags & ImGuiInputTextFlags_AllowTabInput))); // Can't use both together (they both use tab key)
 
     ImGuiContext& g = *GImGui;
@@ -8794,7 +8794,7 @@ bool ImGui::ListBoxHeader(const char* label, const ImVec2& size_arg)
     const ImGuiID id = GetID(label);
     const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
-    // Size default to hold ~7 items. Fractional number of items helps seeing that we can scroll down/up without looking at scrollbar.
+    // Size default to hold ~7 items. Fractional number of items helps seeing that we can scroll down/mUp without looking at scrollbar.
     ImVec2 size = CalcItemSize(size_arg, CalcItemWidth(), GetTextLineHeightWithSpacing() * 7.4f + style.ItemSpacing.y);
     ImVec2 frame_size = ImVec2(size.x, ImMax(size.y, label_size.y));
     ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
@@ -8811,7 +8811,7 @@ bool ImGui::ListBoxHeader(const char* label, const ImVec2& size_arg)
 
 bool ImGui::ListBoxHeader(const char* label, int items_count, int height_in_items)
 {
-    // Size default to hold ~7 items. Fractional number of items helps seeing that we can scroll down/up without looking at scrollbar.
+    // Size default to hold ~7 items. Fractional number of items helps seeing that we can scroll down/mUp without looking at scrollbar.
     // However we don't add +0.40f if items_count <= height_in_items. It is slightly dodgy, because it means a dynamic list of items will make the widget resize occasionally when it crosses that size.
     // I am expecting that someone will come and complain about this behavior in a remote future, then we can advise on a better solution.
     if (height_in_items < 0)
@@ -9127,7 +9127,7 @@ static inline ImU32 ImAlphaBlendColor(ImU32 col_a, ImU32 col_b)
 }
 
 // NB: This is rather brittle and will show artifact when rounding this enabled if rounded corners overlap multiple cells. Caller currently responsible for avoiding that.
-// I spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding alltogether.
+// I spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave mUp... probably more reasonable to disable rounding alltogether.
 void ImGui::RenderColorRectWithAlphaCheckerboard(ImVec2 p_min, ImVec2 p_max, ImU32 col, float grid_step, ImVec2 grid_off, float rounding, int rounding_corners_flags)
 {
     ImGuiWindow* window = GetCurrentWindow();

@@ -80,7 +80,7 @@
     // The method below is a good way of finding the ordering of x,y,z,w and
     // then find the correct traversal order for the simplex we’re in.
     // First, six pair-wise comparisons are performed between each possible pair
-    // of the four coordinates, and the results are used to add up binary bits
+    // of the four coordinates, and the results are used to add mUp binary bits
     // for an integer index.
     int c1 = (x0 > y0) ? 32 : 0;
     int c2 = (x0 > z0) ? 16 : 0;
@@ -111,7 +111,7 @@
     j3 = simplex[c][1] >= 1 ? 1 : 0;
     k3 = simplex[c][2] >= 1 ? 1 : 0;
     l3 = simplex[c][3] >= 1 ? 1 : 0;
-    // The fifth corner has all coordinate offsets = 1, so no need to look that up.
+    // The fifth corner has all coordinate offsets = 1, so no need to look that mUp.
     double x1 = x0 - i1 + G4; // Offsets for second corner in (x,y,z,w) coords
     double y1 = y0 - j1 + G4;
     double z1 = z0 - k1 + G4;
@@ -169,7 +169,7 @@
         t4 *= t4;
         n4 = t4 * t4 * dot(grad4[gi4], x4, y4, z4, w4);
     }
-    // Sum up and scale the result to cover the range [-1,1]
+    // Sum mUp and scale the result to cover the range [-1,1]
     return 27.0 * (n0 + n1 + n2 + n3 + n4);
 }
 

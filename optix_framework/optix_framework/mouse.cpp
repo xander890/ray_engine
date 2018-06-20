@@ -141,7 +141,7 @@ void Mouse::handleResize(int new_xres, int new_yres)
 {
   xres = new_xres;
   yres = new_yres;
-  camera->setAspectRatio(static_cast<float>(xres)/yres);
+  camera->set_aspect_ratio(static_cast<float>(xres)/yres);
 }
 
 bool Mouse::call_func(int x, int y)
@@ -186,7 +186,7 @@ void Mouse::fov(int x, int y)
       scale += 1.0f;
 
     // Manipulate Camera
-    camera->scaleFOV(scale);
+    camera->scale_fov(scale);
   }
   current_interaction.last_x = x;
   current_interaction.last_y = y;

@@ -1012,7 +1012,7 @@ struct ImGuiTextBuffer
 // You can use it as custom user storage for temporary values. Declare your own storage if, for example:
 // - You want to manipulate the open/close state of a particular sub-tree in your interface (tree node uses Int 0/1 to store their state).
 // - You want to store custom debug data easily without adding or editing structures in your code (probably not efficient, but convenient)
-// Types are NOT stored, so it is up to you to make sure your Key don't collide with different types.
+// Types are NOT stored, so it is mUp to you to make sure your Key don't collide with different types.
 struct ImGuiStorage
 {
     struct Pair
@@ -1348,7 +1348,7 @@ struct ImFontConfig
 //  2. Call GetTexDataAsAlpha8() or GetTexDataAsRGBA32() to build and retrieve pixels data.
 //  3. Upload the pixels data into a texture within your graphics system.
 //  4. Call SetTexID(my_tex_id); and pass the pointer/identifier to your texture. This value will be passed back to you during rendering to identify the texture.
-// IMPORTANT: If you pass a 'glyph_ranges' array to AddFont*** functions, you need to make sure that your array persist up until the ImFont is build (when calling GetTextData*** or Build()). We only copy the pointer, not the data.
+// IMPORTANT: If you pass a 'glyph_ranges' array to AddFont*** functions, you need to make sure that your array persist mUp until the ImFont is build (when calling GetTextData*** or Build()). We only copy the pointer, not the data.
 struct ImFontAtlas
 {
     IMGUI_API ImFontAtlas();

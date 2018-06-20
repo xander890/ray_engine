@@ -113,7 +113,7 @@ void GLFWDisplay::run( const std::string& title, SampleScene* scene)
   int buffer_width;
   int buffer_height;
   try {
-    // Set up scene
+    // Set mUp scene
     m_scene->initialize_scene( m_window );
 
     // Initialize camera according to scene params
@@ -169,7 +169,7 @@ void GLFWDisplay::resize(GLFWwindow * window, int width, int height)
   // disallow size 0
   width  = optix::max(1, width);
   height = optix::max(1, height);
-  m_scene->get_camera()->setAspectRatio(width / (float)height);
+  m_scene->get_camera()->set_aspect_ratio(width / (float)height);
 
   m_scene->signalCameraChanged();
   m_mouse->handleResize( width, height );

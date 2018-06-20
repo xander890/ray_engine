@@ -389,12 +389,11 @@ void RayWorkbench::initialize_scene(GLFWwindow *)
         params.vfov = 53.0f;
         float ratio = params.width / (float)params.height;
         params.hfov = rad2deg(2.0f*atanf(ratio*tanf(deg2rad(0.5f*(params.vfov)))));
-        params.rendering_rect = optix::make_int4(-1);
         auto id = mScene->add_camera(std::make_unique<Camera>(context, params));
         mScene->set_current_camera(id);
         RenderingMethodType::EnumType t = RenderingMethodType::PATH_TRACING;
         set_rendering_method(t);
-		mScene->set_miss_program(std::make_unique<ConstantBackground>(optix::make_float3(0.5f)));
+		mScene->set_miss_program(std::make_unique<ConstantBackground>(context, optix::make_float3(0.5f)));
 
         // Camera must be automatic in this case
         parameters.use_auto_camera = true;
@@ -451,7 +450,7 @@ void RayWorkbench::initialize_scene(GLFWwindow *)
 	// Set top level geometry in acceleration structure. 
 	// The default used by the ObjLoader is SBVH.
 
-	// Set up cameras    
+	// Set mUp cameras    
 	Program ray_gen_program_t = context->createProgramFromPTXFile(get_path_ptx("tonemap_camera.cu"), "tonemap_camera");
 	Program ray_gen_program_d = context->createProgramFromPTXFile(get_path_ptx("debug_camera.cu"), "debug_camera");
 
@@ -686,7 +685,7 @@ void RayWorkbench::load_default_camera()
 
     if (parameters.use_auto_camera)
 	{
-        mScene->get_current_camera()->setEyeLookatUp(eye, m_scene_bounding_box.center(), make_float3(0.0f, 1.0f, 0.0f));
+        mScene->get_current_camera()->set_eye_lookat_up(eye, m_scene_bounding_box.center(), make_float3(0.0f, 1.0f, 0.0f));
 	}
     reset_renderer();
 }

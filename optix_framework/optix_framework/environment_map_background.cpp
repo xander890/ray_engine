@@ -7,14 +7,13 @@
 #include "file_dialogs.h"
 #pragma warning(disable:4996) 
 
-void EnvironmentMap::init(optix::Context & ctx)
+void EnvironmentMap::init()
 {
-    MissProgram::init(ctx);
-    context = ctx;
-    ctx["envmap_enabled"]->setInt(1);
+    MissProgram::init();
+	mContext["envmap_enabled"]->setInt(1);
 
     if(envmap_path != "")
-        environment_sampler = loadTexture(context->getContext(), envmap_path, optix::make_float4(1.0f));
+        environment_sampler = loadTexture(mContext->getContext(), envmap_path, optix::make_float4(1.0f));
 
     properties.environment_map_tex_id = environment_sampler->get_id();
     std::string ptx_path = get_path_ptx("env_cameras.cu");
@@ -22,35 +21,35 @@ void EnvironmentMap::init(optix::Context & ctx)
     auto texture_width = environment_sampler->get_width();
     auto texture_height = environment_sampler->get_height();
 
-    sampling_properties.env_luminance = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
-    sampling_properties.marginal_f = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
-    sampling_properties.marginal_pdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
-    sampling_properties.conditional_pdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
-    sampling_properties.marginal_cdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
-    sampling_properties.conditional_cdf = (context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
+    sampling_properties.env_luminance = (mContext->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
+    sampling_properties.marginal_f = (mContext->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
+    sampling_properties.marginal_pdf = (mContext->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
+    sampling_properties.conditional_pdf = (mContext->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
+    sampling_properties.marginal_cdf = (mContext->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_height)->getId());
+    sampling_properties.conditional_cdf = (mContext->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, texture_width, texture_height)->getId());
     
-	optix::Program ray_gen_program_1 = ctx->createProgramFromPTXFile(ptx_path, "env_luminance_camera");
-	camera_1 = add_entry_point(ctx, ray_gen_program_1);
+	optix::Program ray_gen_program_1 = mContext->createProgramFromPTXFile(ptx_path, "env_luminance_camera");
+	camera_1 = add_entry_point(mContext, ray_gen_program_1);
 
-	optix::Program ray_gen_program_2 = ctx->createProgramFromPTXFile(ptx_path, "env_marginal_camera");
-	camera_2 = add_entry_point(ctx, ray_gen_program_2);
+	optix::Program ray_gen_program_2 = mContext->createProgramFromPTXFile(ptx_path, "env_marginal_camera");
+	camera_2 = add_entry_point(mContext, ray_gen_program_2);
 	
-	optix::Program ray_gen_program_3 = ctx->createProgramFromPTXFile(ptx_path, "env_pdf_camera");
-	camera_3 = add_entry_point(ctx, ray_gen_program_3);
+	optix::Program ray_gen_program_3 = mContext->createProgramFromPTXFile(ptx_path, "env_pdf_camera");
+	camera_3 = add_entry_point(mContext, ray_gen_program_3);
 
-    property_buffer = create_and_initialize_buffer<EnvmapProperties>(context, properties);
-    sampling_property_buffer = create_and_initialize_buffer<EnvmapImportanceSamplingData>(context, sampling_properties);
+    property_buffer = create_and_initialize_buffer<EnvmapProperties>(mContext, properties);
+    sampling_property_buffer = create_and_initialize_buffer<EnvmapImportanceSamplingData>(mContext, sampling_properties);
 
     BufPtr<EnvmapProperties> b = BufPtr<EnvmapProperties>(property_buffer->getId());
-    ctx["envmap_properties"]->setUserData(sizeof(BufPtr<EnvmapProperties>), &b);
+	mContext["envmap_properties"]->setUserData(sizeof(BufPtr<EnvmapProperties>), &b);
 
     BufPtr<EnvmapImportanceSamplingData> b2 = BufPtr<EnvmapImportanceSamplingData>(sampling_property_buffer->getId());
-    ctx["envmap_importance_sampling"]->setUserData(sizeof(BufPtr<EnvmapImportanceSamplingData>), &b2);
+	mContext["envmap_importance_sampling"]->setUserData(sizeof(BufPtr<EnvmapImportanceSamplingData>), &b2);
 }
 
-void EnvironmentMap::set_into_gpu(optix::Context & ctx)
+void EnvironmentMap::load()
 {
-    MissProgram::set_into_gpu(ctx);
+    MissProgram::load();
     void * ptr = property_buffer->map();
     memcpy(ptr, &properties, sizeof(EnvmapProperties));
     property_buffer->unmap();
@@ -108,11 +107,11 @@ void EnvironmentMap::presample_environment_map()
     if (environment_sampler.get() != nullptr)
     {
         Logger::info << "Presampling envmaps... (size " << std::to_string(texture_width) << " " << std::to_string(texture_height) << ")" << std::endl;
-        context->launch(camera_1, texture_width, texture_height);
+        mContext->launch(camera_1, texture_width, texture_height);
         Logger::info << "Step 1 complete." << std::endl;
-        context->launch(camera_2, texture_width, texture_height);
+        mContext->launch(camera_2, texture_width, texture_height);
         Logger::info << "Step 2 complete." << std::endl;
-        context->launch(camera_3, texture_width, texture_height);
+        mContext->launch(camera_3, texture_width, texture_height);
         Logger::info << "Step 3 complete." << std::endl;
         resample_envmaps = false;
         Logger::info << "Done." << std::endl;
@@ -120,8 +119,7 @@ void EnvironmentMap::presample_environment_map()
 
 }
 
-EnvironmentMap::EnvironmentMap(std::string envmap_file) : envmap_path(envmap_file),
-                                                          camera_1(0), camera_2(0), camera_3(0)
+EnvironmentMap::EnvironmentMap(optix::Context & ctx, std::string envmap_file) : MissProgram(ctx), envmap_path(envmap_file), camera_1(0), camera_2(0), camera_3(0)
 {
     envmap_deltas = optix::make_float3(0);
     properties.lightmap_multiplier = optix::make_float3(1.0f);

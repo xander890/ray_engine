@@ -1,10 +1,14 @@
 #pragma once
+#include "bssrdf_parameter_manager.h"
+#include "empirical_bssrdf_common.h"
 #include <string>
 #include <vector>
 #include <map>
-#include "empirical_bssrdf_common.h"
-#include "bssrdf_parameter_manager.h"
 
+/*
+ * Utility class to import and export BSSRDF empirical data. This is largley our defined format. Format prepares a common plain text file (.bssrdf) that includes info on bins, parameters used, etc. Then, a certain number of files is generated, one for each (eta, albedo, g) contribution.
+ *
+ */
 #define USE_SMALL_FILES
 
 #define bssrdf_delimiter std::string("BSSRDF")
@@ -12,11 +16,17 @@
 #define parameter_delimiter std::string("PARAMETER")
 #define shape_delimiter std::string("SHAPE")
 
+/*
+ * Imports BSSRDF data.
+ */
 class BSSRDFImporter
 {
 public:
+	// Provide path to the main .bssrdf file.
 	BSSRDFImporter(const std::string & filename);
-	~BSSRDFImporter() {}
+
+	~BSSRDFImporter() = default;
+
 	void get_dimensions(std::vector<size_t> & dimensions);
 	size_t get_material_slice_size();
 	size_t get_hemisphere_size();
@@ -35,6 +45,9 @@ private:
 	OutputShape::Type mOutputShape;
 };
 
+/*
+* Exports BSSRDF data.
+*/
 class BSSRDFExporter
 {
 public:

@@ -1,14 +1,14 @@
 #pragma once
-/*
-Return a RGB colour value given a scalar v in the range [vmin,vmax]
-In this case each colour component ranges from 0 (no contribution) to
-1 (fully saturated), modifications for other ranges is trivial.
-The colour is clipped at the end of the scales if v is outside
-the range [vmin,vmax]
-*/
 #include <optix_world.h>
 #include "host_device_common.h"
 
+/*
+	Return a RGB colour value given a scalar v in the range [vmin,vmax]
+	In this case each colour component ranges from 0 (no contribution) to
+	1 (fully saturated), modifications for other ranges is trivial.
+	The colour is clipped at the end of the scales if v is outside
+	the range [vmin,vmax]
+*/
 _fn optix::float3 jet(float v, float vmin = 0.0f, float vmax = 1.0f)
 {
 	optix::float3 c = optix::make_float3(1.0,1.0,1.0); // white

@@ -222,7 +222,7 @@ _fn   void implLengthShortLimitMargOverU0(
 		invps_mean = 1 / r; // Heuristic 'guess' to not 'waste' a sample
 	}
 #else
-					  /* Simplest possible choice. This is accurate up to 10% relative
+					  /* Simplest possible choice. This is accurate mUp to 10% relative
 					  * accuracy (and becomes more accurate for r->0). */
 	Float invps_mean = 1 / r;
 #endif

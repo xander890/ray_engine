@@ -29,7 +29,7 @@ _fn Float evalMonopole(
 	calcValues(length, material.sigma_s, material.sigma_a, material.mu, C, D, E, F);
 
 	/* We regularized the sampling of u0, so we should be consistent here.
-	* NOTE: but E can still blow up in the final expression for G (TODO
+	* NOTE: but E can still blow mUp in the final expression for G (TODO
 	* does this happen?) */
 	// DOUBLE
 	Float3 H = E * R - D*uL;

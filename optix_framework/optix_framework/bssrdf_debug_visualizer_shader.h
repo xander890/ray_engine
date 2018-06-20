@@ -1,7 +1,12 @@
+#pragma once
 #include <shader.h>
 #include <mesh_host.h>
 #include <bssrdf_host.h>
 
+/*
+ * Utility shader to visualize the shape of a BSSRDF on a plane.
+ * Does NOT actually render the BSSRDF, this is only for debug purposes.  
+ */
 class BSSRDFPlaneRenderer : public Shader
 {
 public:
@@ -19,11 +24,10 @@ public:
 protected:
 	virtual void reset();
 
-
 	int mCameraWidth;
 	int mCameraHeight;
 
-	// Gui
+	// Gui variables
 	int mShowFalseColors = 1;
 	int mAngle = 45;
 	float mMult = 1.0f;
@@ -34,7 +38,7 @@ protected:
 	std::unique_ptr<BSSRDF> mBSSRDF;
 
 private:
-
+	// Serialization
 	BSSRDFPlaneRenderer() : Shader() {}
 	friend class cereal::access;
 	template<class Archive>

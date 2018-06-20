@@ -1,13 +1,8 @@
-#ifndef sky_model_h__
-#define sky_model_h__
-
+#pragma once
 #include "light_common.h"
-
-#include <optix_math.h>
 #include "math_utils.h"
 #include "color_utils.h"
-
-
+#include <optix_math.h>
 #pragma once
 
 struct PerezData
@@ -17,13 +12,13 @@ struct PerezData
 
 __constant__ const float SKY_SCALE = 0.03f;
 
-static _fn __host__ optix::float3 perez_model(float cos_theta, float gamma, float cos_gamma, PerezData & data)
+static _fn optix::float3 perez_model(float cos_theta, float gamma, float cos_gamma, PerezData & data)
 {
 	const optix::float3 one = optix::make_float3(1.0f);
 	return (one + data.A * exp(data.B / cos_theta)) * (one + data.C * exp(data.D * gamma) + data.E * cos_gamma * cos_gamma);
 }
 
-static _fn __host__ optix::float3 sky_color(int ray_depth, optix::float3 & v, optix::float3& sun_position, optix::float3 & up, optix::float3 & sky_factor, optix::float3 & sun_color, PerezData & data)
+static _fn optix::float3 sky_color(int ray_depth, optix::float3 & v, optix::float3& sun_position, optix::float3 & up, optix::float3 & sky_factor, optix::float3 & sun_color, PerezData & data)
 {
 	float cos_gamma = dot(v, sun_position);
 	float cos_theta = dot(v,up);
@@ -44,13 +39,13 @@ static _fn __host__ optix::float3 sky_color(int ray_depth, optix::float3 & v, op
 class SkyModel : public MissProgram
 {
 public:
-	SkyModel(optix::float3 up = optix::make_float3(0,0,1), optix::float3 north = optix::make_float3(1,0,0)) : up(up), north(north) {  }
+	SkyModel(optix::Context & ctx, optix::float3 up = optix::make_float3(0,0,1), optix::float3 north = optix::make_float3(1,0,0)) : MissProgram(ctx), up(up), north(north) {  }
 	~SkyModel(void);
 	optix::float3 get_sky_color(optix::float3 v);
 	void get_directional_light(SingularLightData & light) const;
 
-    virtual void init(optix::Context & ctx) override;
-    virtual void set_into_gpu(optix::Context & ctx) override;
+    virtual void init() override;
+    virtual void load() override;
 	virtual bool on_draw() override { return false; }
 
 private:
@@ -89,9 +84,23 @@ private:
 private:
     virtual bool get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program) override;
 
+	static void load_and_construct(cereal::XMLInputArchiveOptix & archive, cereal::construct<SkyModel>& construct)
+	{
+		optix::Context ctx = archive.get_context();
+		construct(ctx);
+		archive(cereal::virtual_base_class<MissProgram>(construct.ptr()),
+			cereal::make_nvp("up", construct->up),
+			cereal::make_nvp("north", construct->north),
+			cereal::make_nvp("day", construct->day),
+			cereal::make_nvp("hour", construct->hour),
+			cereal::make_nvp("latitude", construct->latitude),
+			cereal::make_nvp("turbidity", construct->turbidity)
+		);
+	}
+
     friend class cereal::access;
     template<class Archive>
-    void serialize(Archive & archive)
+    void save(Archive & archive) const
     {
         archive(cereal::virtual_base_class<MissProgram>(this), CEREAL_NVP(up), CEREAL_NVP(north), CEREAL_NVP(day), CEREAL_NVP(hour), CEREAL_NVP(latitude) , CEREAL_NVP(turbidity));
     }
@@ -100,5 +109,3 @@ private:
 CEREAL_CLASS_VERSION(SkyModel, 0)
 CEREAL_REGISTER_TYPE(SkyModel)
 #endif // !__CUDA_ARCH__
-
-#endif // sky_model_h__

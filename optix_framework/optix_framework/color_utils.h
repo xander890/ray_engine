@@ -2,7 +2,10 @@
 #include <optix_world.h>
 #include <optix.h>
 
-// Color space conversions
+/*
+ * Utility class for color conversions.
+ */
+
 _fn optix::float3 Yxy2XYZ( const optix::float3& Yxy )
 {
 	return optix::make_float3(  Yxy.y * ( Yxy.x / Yxy.z ),

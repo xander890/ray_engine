@@ -94,14 +94,14 @@ _fn void calcValues(const double length, const Float sigma_s, const Float sigma_
 	* nu0 term in C is simply dropped */
 
 	if (ps < 0.001) {
-		/* Expansion accurate up to a range of 6 orders of ps */
+		/* Expansion accurate mUp to a range of 6 orders of ps */
 		C = 3. / ps + 0.4*ps - 11. / 525.*ps*ps*ps;
 		D = 1.5 / ps - 0.1*ps + 13. / 1050.*ps*ps*ps;
 		E = p * (4.5 / (ps*ps) + 0.3 - 3. / 350 * ps*ps);
 		F = p*p * (4.5 / (ps*ps*ps) + 1.8 / ps - 3. / 350 * ps);
 	}
 	else if (ps > 1.0 / 0.001) {
-		/* Expansion accurate up to a range of 'all' orders of 1/ps (exact
+		/* Expansion accurate mUp to a range of 'all' orders of 1/ps (exact
 		* geometric series) */
 		double series = 1.0 / (ps - 1.0); // = 1/ps + 1/ps^2 + 1/ps^3 + ...
 		C = 1.5 + 0.75 * series;

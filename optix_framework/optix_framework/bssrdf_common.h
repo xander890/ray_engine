@@ -16,7 +16,7 @@
 /*
 	How to sample points around the outgoing xo point of a scattering material.
 	Options are:
-		BSSRDF_SAMPLING_CAMERA_BASED	- Camera eye based sampling (Mertens et al. [2003])
+		BSSRDF_SAMPLING_CAMERA_BASED	- Camera mEye based sampling (Mertens et al. [2003])
 		BSSRDF_SAMPLING_TANGENT_PLANE	- Sample on a disk around the normal n_o, then project down the points.
 		BSSRDF_SAMPLING_MIS_AXIS		- As tangent plane, but selects one of the three axes around the outgoing normal (normal, tangent or bitangent). Technique from King  et al. [2013].
 */

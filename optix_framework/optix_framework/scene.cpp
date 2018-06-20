@@ -67,7 +67,7 @@ bool Scene::on_draw()
 
 void Scene::pre_trace()
 {
-    miss_program->set_into_gpu(context);
+    miss_program->load();
     method->pre_trace();
 
     update_singular_lights();
@@ -155,7 +155,7 @@ void Scene::set_current_camera(int camera_id)
 {
     if(camera_id >= 0 && camera_id < mCameras.size())
     {
-        mCameras[mCurrentCamera]->setAsOtherCamera(mCameras[camera_id]);
+        mCameras[mCurrentCamera]->set_as_other_camera(mCameras[camera_id]);
     }
 }
 
@@ -176,7 +176,7 @@ std::shared_ptr<Camera> Scene::get_camera(int camera_id)
 
 void Scene::set_miss_program(std::unique_ptr<MissProgram> miss)
 {
-    miss->init(context);
+    miss->init();
     miss_program = std::move(miss);
 }
 

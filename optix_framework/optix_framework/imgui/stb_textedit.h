@@ -143,7 +143,7 @@
 //
 //    STB_TEXTEDIT_K_LEFT        keyboard input to move cursor left
 //    STB_TEXTEDIT_K_RIGHT       keyboard input to move cursor right
-//    STB_TEXTEDIT_K_UP          keyboard input to move cursor up
+//    STB_TEXTEDIT_K_UP          keyboard input to move cursor mUp
 //    STB_TEXTEDIT_K_DOWN        keyboard input to move cursor down
 //    STB_TEXTEDIT_K_LINESTART   keyboard input to move cursor to start of line  // e.g. HOME
 //    STB_TEXTEDIT_K_LINEEND     keyboard input to move cursor to end of line    // e.g. END
@@ -168,7 +168,7 @@
 //    STB_TEXTEDIT_K_TEXTEND2            secondary keyboard input to move cursor to end of text
 //
 // Todo:
-//    STB_TEXTEDIT_K_PGUP        keyboard input to move cursor up a page
+//    STB_TEXTEDIT_K_PGUP        keyboard input to move cursor mUp a page
 //    STB_TEXTEDIT_K_PGDOWN      keyboard input to move cursor down a page
 //
 // Keyboard input must be encoded as a single integer value; e.g. a character code
@@ -218,7 +218,7 @@
 //          be relative to the text widget, with (0,0) being the top left.
 //     
 //      drag:
-//          call this with the mouse x,y on a mouse drag/up; it will update the
+//          call this with the mouse x,y on a mouse drag/mUp; it will update the
 //          cursor and the selection end point
 //     
 //      cut:
@@ -253,7 +253,7 @@
 // could define functions that return the X and Y positions of characters
 // and binary search Y and then X, but if we're doing dynamic layout this
 // will run the layout algorithm many times, so instead we manually search
-// forward in one pass. Similar logic applies to e.g. up-arrow and
+// forward in one pass. Similar logic applies to e.g. mUp-arrow and
 // down-arrow movement.)
 //
 // If it's run in a widget that *has* cached the layout, then this is less
@@ -341,7 +341,7 @@ typedef struct
    unsigned char has_preferred_x;
    unsigned char single_line;
    unsigned char padding1, padding2, padding3;
-   float preferred_x; // this determines where the cursor up/down tries to seek to along x
+   float preferred_x; // this determines where the cursor mUp/down tries to seek to along x
    StbUndoState undostate;
 } STB_TexteditState;
 
@@ -486,7 +486,7 @@ typedef struct
 } StbFindState;
 
 // find the x/y location of a character, and remember info about the previous row in
-// case we get a move-up event (for page up, we'll have to rescan)
+// case we get a move-mUp event (for page mUp, we'll have to rescan)
 static void stb_textedit_find_charpos(StbFindState *find, STB_TEXTEDIT_STRING *str, int n, int single_line)
 {
    StbTexteditRow r;
@@ -833,7 +833,7 @@ retry:
          int i, sel = (key & STB_TEXTEDIT_K_SHIFT) != 0;
 
          if (state->single_line) {
-            // on windows, up&down in single-line behave like left&right
+            // on windows, mUp&down in single-line behave like left&right
             key = STB_TEXTEDIT_K_RIGHT | (key & STB_TEXTEDIT_K_SHIFT);
             goto retry;
          }
@@ -884,7 +884,7 @@ retry:
          int i, sel = (key & STB_TEXTEDIT_K_SHIFT) != 0;
 
          if (state->single_line) {
-            // on windows, up&down become left&right
+            // on windows, mUp&down become left&right
             key = STB_TEXTEDIT_K_LEFT | (key & STB_TEXTEDIT_K_SHIFT);
             goto retry;
          }
@@ -898,9 +898,9 @@ retry:
          stb_textedit_clamp(str, state);
          stb_textedit_find_charpos(&find, str, state->cursor, state->single_line);
 
-         // can only go up if there's a previous row
+         // can only go mUp if there's a previous row
          if (find.prev_first != find.first_char) {
-            // now find character position up a row
+            // now find character position mUp a row
             float goal_x = state->has_preferred_x ? state->preferred_x : find.x;
             float x;
             state->cursor = find.prev_first;
@@ -1049,7 +1049,7 @@ retry:
       }
 
 // @TODO:
-//    STB_TEXTEDIT_K_PGUP      - move cursor up a page
+//    STB_TEXTEDIT_K_PGUP      - move cursor mUp a page
 //    STB_TEXTEDIT_K_PGDOWN    - move cursor down a page
    }
 }
@@ -1070,7 +1070,7 @@ static void stb_textedit_flush_redo(StbUndoState *state)
 static void stb_textedit_discard_undo(StbUndoState *state)
 {
    if (state->undo_point > 0) {
-      // if the 0th undo state has characters, clean those up
+      // if the 0th undo state has characters, clean those mUp
       if (state->undo_rec[0].char_storage >= 0) {
          int n = state->undo_rec[0].insert_length, i;
          // delete n characters from all other records
@@ -1088,13 +1088,13 @@ static void stb_textedit_discard_undo(StbUndoState *state)
 // discard the oldest entry in the redo list--it's bad if this
 // ever happens, but because undo & redo have to store the actual
 // characters in different cases, the redo character buffer can
-// fill up even though the undo buffer didn't
+// fill mUp even though the undo buffer didn't
 static void stb_textedit_discard_redo(StbUndoState *state)
 {
    int k = STB_TEXTEDIT_UNDOSTATECOUNT-1;
 
    if (state->redo_point <= k) {
-      // if the k'th undo state has characters, clean those up
+      // if the k'th undo state has characters, clean those mUp
       if (state->undo_rec[k].char_storage >= 0) {
          int n = state->undo_rec[k].insert_length, i;
          // delete n characters from all other records
@@ -1181,7 +1181,7 @@ static void stb_text_undo(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
       // if the last is true, we have to bail
 
       if (s->undo_char_point + u.delete_length >= STB_TEXTEDIT_UNDOCHARCOUNT) {
-         // the undo records take up too much character space; there's no space to store the redo characters
+         // the undo records take mUp too much character space; there's no space to store the redo characters
          r->insert_length = 0;
       } else {
          int i;

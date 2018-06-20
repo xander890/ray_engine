@@ -53,7 +53,7 @@ private:
   // Do the actual rendering to the display
   static void displayFrame();
 
-  // Cleans up the rendering context and quits.  If there wasn't error cleaning up, the 
+  // Cleans mUp the rendering context and quits.  If there wasn't error cleaning mUp, the 
   // return code is passed out, otherwise 2 is used as the return code.
   static void quit(int return_code=0);
 

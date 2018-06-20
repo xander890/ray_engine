@@ -35,7 +35,7 @@ protected:
 public:
 
   // Used to pass current camera info to the ray gen program at render time.
-  // eye - Camera position
+  // mEye - Camera position
   // W   - Viewing direction.             length(W) -> focal distance
   // U   - Horizontal axis of view plane. length(U) -> view plane width at focal distance 
   // V   - Vertical axis of view plane.   length(V) -> view plane height at focal distance 
@@ -93,7 +93,7 @@ public:
   // Optional virtual interface
   //----------------------------------------------------------------------------
   
-  // This cleans up the Context.  If you override it, you should call
+  // This cleans mUp the Context.  If you override it, you should call
   // SampleScene::clean_up() explicitly.
   virtual void   clean_up();
 

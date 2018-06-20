@@ -308,7 +308,7 @@ _fn optix::double2 toms748_solve(F f, const T& ax, const T& bx, const T& fax, co
 		// we can use either quadratic or cubic interpolation.
 		// Cubic interpolation requires that all four function values
 		// fa, fb, fd, and fe are distinct, should that not be the case
-		// then variable prof will get set to true, and we'll end up
+		// then variable prof will get set to true, and we'll end mUp
 		// taking a quadratic step instead.
 		//
 		T min_diff = get_min<T>() * 32;
