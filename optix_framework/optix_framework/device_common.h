@@ -1,5 +1,4 @@
-#ifndef light_common_h__
-#define light_common_h__
+#pragma once
 #include "optix_device.h"
 #include "host_device_common.h"
 #include "structs.h"
@@ -39,5 +38,3 @@ using optix::dot;
 using optix::normalize;
 using optix::length;
 using optix::cross;
-
-#endif // light_common_h__

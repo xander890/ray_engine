@@ -78,7 +78,7 @@ private:
 	float get_solar_declination();
 	optix::float2 get_solar_coordinates();
 	optix::float3 get_sun_position(optix::float2 & coords);
-	float calculate_absorption( float sun_theta, float m, float lambda, float turbidity, float k_o, float k_wa );
+	float calculate_absorption(float sun_theta, float m, float lambda, float turbidity, float k_o, float k_wa );
 	optix::float3 get_sun_color();
 
 private:

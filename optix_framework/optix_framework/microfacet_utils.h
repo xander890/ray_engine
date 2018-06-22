@@ -1,4 +1,5 @@
 #pragma once
+#include "device_common.h"
 #include "host_device_common.h"
 #include "math_utils.h"
 #include "optics_utils.h"
@@ -6,7 +7,6 @@
 #define IMPROVED_ENUM_NAME NormalDistribution
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(BECKMANN,0) ENUMITEM_VALUE(GGX,1)
 #include "improved_enum.inc"
-#include "device_common.h"
 
 _fn float positive_characteristic(const float arg)
 {
@@ -16,11 +16,11 @@ _fn float positive_characteristic(const float arg)
 _fn float beckmann(const optix::float3 & m, const optix::float3 & n, const float alpha)
 {
     const float cos_theta = dot(m,n);
-    const float tan_theta = tanf(acosf(cos_theta));
+	const float cos_theta_sqr = cos_theta * cos_theta;
+	float tan_theta_sqr = (1.0f - cos_theta_sqr) / cos_theta_sqr;
     const float alpha_sq = alpha*alpha;
-    float cos_theta_pow_4 = cos_theta * cos_theta;
-    cos_theta_pow_4 *= cos_theta_pow_4;
-    return positive_characteristic(cos_theta) * expf(-tan_theta*tan_theta/alpha_sq) / (M_PIf * alpha_sq * cos_theta_pow_4);
+    float cos_theta_pow_4 = cos_theta_sqr * cos_theta_sqr;
+    return positive_characteristic(cos_theta) * expf(-tan_theta_sqr /alpha_sq) / (M_PIf * alpha_sq * cos_theta_pow_4);
 }
 
 _fn float beckmann_G1(const optix::float3 & v, const optix::float3 & m, const optix::float3 & n, const float alpha)
@@ -48,6 +48,40 @@ _fn optix::float3 importance_sample_beckmann(const optix::float2& rand, const op
     optix::float3 m = spherical_to_cartesian(theta_m, phi_m);
     rotate_to_normal(n,m);
     return m;
+}
+
+_fn float beckmann_anisotropic(const float cos_theta, const float alpha_x, const float alpha_y)
+{
+	const float cos_theta_sqr = cos_theta * cos_theta;
+	const float sin_theta_sqr = 1.0f - cos_theta_sqr;
+	const float tan_theta_sqr = sin_theta_sqr / cos_theta_sqr;
+	const float corrected_aniso_term = cos_theta_sqr / (alpha_x*alpha_x) + sin_theta_sqr / (alpha_y*alpha_y);
+
+	float cos_theta_pow_4 = cos_theta * cos_theta;
+	cos_theta_pow_4 *= cos_theta_pow_4;
+	return positive_characteristic(cos_theta) * expf(-tan_theta_sqr * corrected_aniso_term) / (M_PIf * alpha_x * alpha_y * cos_theta_pow_4);
+}
+
+_fn float beckmann_anisotropic(const optix::float3 & m, const optix::float3 & n, const float alpha_x, const float alpha_y)
+{
+	return beckmann_anisotropic(dot(m, n), alpha_x, alpha_y);
+}
+
+_fn optix::float3 importance_sample_beckmann_anisotropic_local(const optix::float2& rand, const float alpha_x, const float alpha_y)
+{
+	const float rn = sqrtf(-logf(rand.x));
+	const float phi = 2.0f * M_PIf * rand.y;
+	const float x = alpha_x * rn * cosf(phi);
+	const float y = alpha_y * rn * sinf(phi);
+	optix::float3 m = optix::normalize(optix::make_float3(x, y, 1));
+	return m;
+}
+
+_fn optix::float3 importance_sample_beckmann_anisotropic(const optix::float2& rand, const optix::float3 & n, const float alpha_x, const float alpha_y)
+{
+	optix::float3 m = importance_sample_beckmann_anisotropic_local(rand, alpha_x, alpha_y);
+	rotate_to_normal(n, m);
+	return m;
 }
 
 _fn float ggx(const optix::float3 & m, const optix::float3 & n, const float alpha)

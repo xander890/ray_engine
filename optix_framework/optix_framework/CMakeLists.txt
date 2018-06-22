@@ -128,6 +128,9 @@ set(HEADERS
     thumbnail.h
         microfacet_utils.h
     default_shader_common.h
+    brdf_ridged_qr_host.h
+    brdf_ridged_qr_device.h
+    merl_host.h
 )
 
 set(SRCS_IMGUI
@@ -138,21 +141,21 @@ set(SRCS_IMGUI
 )
 
 set(SRCS
-        bssrdf_loader.cpp
+    bssrdf_loader.cpp
     bssrdf_parameter_manager.cpp
     ambient_occlusion.cpp
     apple_juice.cpp
     approximate_dipoles_host.cpp
     box.cpp
-        merl_utils.cpp
+    merl_utils.cpp
     bssrdf_host.cpp
-        bssrdf_debug_visualizer_shader.cpp
+    bssrdf_debug_visualizer_shader.cpp
     camera_host.cpp
     chull.cpp
     constant_background.cpp
-        cpu_timer.cpp
+    cpu_timer.cpp
     default_shader.cpp
-        file_dialogs.cpp
+    file_dialogs.cpp
     environment_map_background.cpp
     empirical_bssrdf_host.cpp
     folders.cpp
@@ -161,27 +164,27 @@ set(SRCS
     glfw_display.cpp
     glm.cpp
     brdf_shader.cpp
-        material_host.cpp
+    material_host.cpp
     image_loader.cpp
     image_exporter.cpp
     immediate_gui.cpp
     light_host.cpp
     logger.cpp
     material_library.cpp
-        mesh_host.cpp
+    mesh_host.cpp
     miss_program.cpp
     mouse.cpp
     neural_network_sampler.cpp
     obj_loader.cpp
-        ray_workbench.cpp
+    ray_workbench.cpp
     path_tracing.cpp
     perlin_noise.cpp
     plint.cpp
-        presampled_surface_bssrdf_shader.cpp
+    presampled_surface_bssrdf_shader.cpp
     quantized_diffusion_host.cpp
     raw_loader.cpp
     render_task.cpp
-        sampled_bssrdf_shader.cpp
+    sampled_bssrdf_shader.cpp
     sample_scene.cpp
     scattering_material.cpp
     shader.cpp
@@ -198,6 +201,9 @@ set(SRCS
     brdf_host.cpp
     geometry.cpp
     thumbnail.cpp
+    brdf_ridged_qr_host.cpp
+    merl_host.cpp
+
 )
 
 set(CUDA_SOURCES

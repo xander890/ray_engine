@@ -17,6 +17,7 @@ namespace cereal
 		archive(cereal::make_nvp("illum", m.illum));
 		archive(cereal::make_nvp("index_of_refraction", m.index_of_refraction));
 		archive(cereal::make_nvp("roughness", m.roughness));
+		archive(cereal::make_nvp("anisotropy_angle", m.anisotropy_angle));
 	}
 }
 

@@ -6,6 +6,7 @@
 #include "microfacet_utils.h"
 #include "ray_tracing_utils.h"
 #include "device_common.h"
+#include "brdf_ridged_qr_device.h"
 
 // Type of brdf currently selected.
 rtDeclareVariable(BRDFType::Type, selected_brdf, , );
@@ -76,26 +77,50 @@ _fn void importance_sample_new_direction_brdf(BRDFGeometry & geometry,
         }
             break;
         case BRDFType::GGX:
-        {
+		case BRDFType::BECKMANN:
+		{
             optix::float3 k_d = make_float3(optix::rtTex2D<optix::float4>(material.diffuse_map, geometry.texcoord.x, geometry.texcoord.y));
             importance_sampled_brdf = k_d;
 
-            optix::float3 m = importance_sample_ggx(sampler.next2D(), geometry.n, material.roughness);
+			optix::float3 m;
+			if(selected_brdf == BRDFType::BECKMANN)
+			{
+				m = importance_sample_beckmann(sampler.next2D(), geometry.n, material.roughness);
+			}
+			else
+			{
+				m = importance_sample_ggx(sampler.next2D(), geometry.n, material.roughness);
+			}
+
             optix::Ray reflected, refracted;
             float R, cos_theta_signed;
             optix::float3 ff_m;
             const float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
-            get_glass_rays(geometry.wo, relative_ior, make_float3(0), m, ff_m, reflected, refracted, R, cos_theta_signed);
+            get_glass_rays(geometry.wo, relative_ior, optix::make_float3(0), m, ff_m, reflected, refracted, R, cos_theta_signed);
 
             new_direction = reflected.direction;
             geometry.wi = new_direction;
 
             optix::float3 ff_normal = optix::faceforward(geometry.n, geometry.wo, geometry.n);
-            float G = ggx_G1(geometry.wi, ff_m, ff_normal, material.roughness) * ggx_G1(geometry.wo, ff_m, ff_normal, material.roughness);
+
+      		float G;
+			if (selected_brdf == BRDFType::BECKMANN)
+			{
+				G = beckmann_G1_approx(geometry.wi, ff_m, ff_normal, material.roughness) * beckmann_G1_approx(geometry.wo, ff_m, ff_normal, material.roughness);
+			}
+			else
+			{
+				G = ggx_G1(geometry.wi, ff_m, ff_normal, material.roughness) * ggx_G1(geometry.wo, ff_m, ff_normal, material.roughness);
+			}
+			
             float weight = dot(geometry.wo, ff_m) / (dot(geometry.wo, geometry.n) * dot(geometry.n, ff_m)) * G;// * R;
             importance_sampled_brdf *= abs(weight);
         }
             break;
+		case BRDFType::QR_RIDGED:
+		{
+			importance_sample_qr_brdf(geometry, material, sampler, new_direction, importance_sampled_brdf);
+		}
         case BRDFType::NotValidEnumItem:
             break;
     }

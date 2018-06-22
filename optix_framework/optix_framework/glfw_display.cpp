@@ -238,7 +238,7 @@ void GLFWDisplay::displayFrame()
 		else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		    
 		if (buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 		}
 		else if (buffer_format == RT_FORMAT_FLOAT4) {
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, buffer_width, buffer_height, 0, GL_RGBA, GL_FLOAT, 0);

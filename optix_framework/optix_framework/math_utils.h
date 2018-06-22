@@ -115,6 +115,13 @@ _fn void create_onb(const optix::float3& n, optix::float3& U, optix::float3& V, 
   create_onb(W, U, V);
 }
 
+_fn optix::float3 rotate_around(const optix::float3& vector, const optix::float3& axis, const float angle)
+{
+	// Rodrigues formula
+	const float cos_theta = cosf(angle);
+	return cos_theta * vector + optix::cross(axis, vector) * sinf(angle) + axis * optix::dot(axis, vector) * (1 - cos_theta);
+}
+
 /*
 // Create ONB from normal.  Resulting W is parallel to normal
 static

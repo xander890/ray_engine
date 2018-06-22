@@ -21,6 +21,7 @@ public:
     void pre_trace_mesh(Object & object) override;
 	virtual Shader* clone() override { return new BRDFShader(*this); }
     bool on_draw() override;
+	void load_data(MaterialHost &object) override { mBRDF->load(object); }
 
 private:
     BRDFShader() : Shader() {}

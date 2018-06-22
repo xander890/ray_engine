@@ -86,6 +86,7 @@ RTformat Texture::get_optix_format(const RTsize& element_size, const Texture::Fo
         }
 
     }
+	return RT_FORMAT_USER;
 }
 
 void Texture::get_size_and_format(const RTformat & out_format, RTsize & element_size, Texture::Format & format)
@@ -302,6 +303,7 @@ unsigned int Texture::get_gl_element(const RTsize &element_size)
         case 3: return GL_RGB;
         case 4: return GL_RGBA;
     }
+	return 0;
 }
 
 unsigned int Texture::get_gl_format(const Texture::Format &format)

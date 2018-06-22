@@ -1,13 +1,7 @@
-
-set(SRCS    
-    main.cpp
-    )
-
+set(SRCS main.cpp)
 set( APP_EXE renderer )
     
-ADD_EXECUTABLE( ${APP_EXE}
-                ${SRCS} ) 
-
+add_executable(${APP_EXE} ${SRCS}) 
 find_package(OpenGL REQUIRED)               
 target_link_libraries(${APP_EXE} framework ${CUDA_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 

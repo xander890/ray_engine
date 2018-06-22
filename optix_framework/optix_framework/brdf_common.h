@@ -11,7 +11,9 @@
 #define IMPROVED_ENUM_LIST	ENUMITEM_VALUE(LAMBERTIAN,0) \
                             ENUMITEM_VALUE(TORRANCE_SPARROW,1) \
 							ENUMITEM_VALUE(MERL,2) \
-							ENUMITEM_VALUE(GGX,3)
+							ENUMITEM_VALUE(GGX,3) \
+							ENUMITEM_VALUE(BECKMANN, 4) \
+							ENUMITEM_VALUE(QR_RIDGED, 5)
 #include "improved_enum.inc"
 
 

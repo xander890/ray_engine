@@ -4,7 +4,7 @@
 #include "scattering_properties.h"
 #include "optix_serialize_utils.h"
 #include <memory>
-
+ 
 /*
 	Standard interface for BSSRDFs. Extend this interface to implement any BSSRDF model (analytical or empirical).
 	BSSRDFs cannot be created directly. Use the factory method create to generate BSSRDFs according to type.

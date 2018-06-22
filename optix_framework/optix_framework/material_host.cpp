@@ -98,15 +98,19 @@ bool MaterialHost::on_draw(std::string myid = "")
             }
             if (ImmediateGUIDraw::InputFloat(create_id_str("Roughness", id).c_str(), &mMaterialData.roughness))
             {
-                changed = true;
+				changed = true;
             }
+			if (ImmediateGUIDraw::InputFloat(create_id_str("Anisotropy angle", id).c_str(), &mMaterialData.anisotropy_angle))
+			{
+				changed = true;
+			}
 
 			float f = dot(mMaterialData.index_of_refraction, optix::make_float3(1)) / 3.0f;
             if (ImmediateGUIDraw::InputFloat(create_id_str("Index of refraction", id).c_str(), &f))
             {
 				mMaterialData.index_of_refraction = optix::make_float3(f);
-                changed = true;
-            }
+				changed = true;
+			}
             changed |= scattering_material->on_draw(myid);
             ImmediateGUIDraw::TreePop();
         }
@@ -156,6 +160,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : Materia
 	mMaterialData.illum = data->illum;
 	mMaterialData.roughness = sqrtf(2.0f/(data->shininess + 2.0f)); // Karis conversion technique
 	mMaterialData.specular_map = data->specular_tex->get_id();
+	mMaterialData.anisotropy_angle = 0;
 
 	textures.push_back(std::move(mat.ambient_tex));
 	textures.push_back(std::move(mat.diffuse_tex));

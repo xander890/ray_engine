@@ -4,6 +4,7 @@
 #include <image_loader.h>
 #include "material_host.h"
 #include "file_dialogs.h"
+#include "merl_host.h"
 
 
 void BRDFShader::initialize_shader(optix::Context context)
@@ -41,7 +42,7 @@ bool BRDFShader::on_draw()
         }
     }
 
-    changed |= mBRDF->on_draw();
+    mBRDF->on_draw();
     return changed;
 
 }
