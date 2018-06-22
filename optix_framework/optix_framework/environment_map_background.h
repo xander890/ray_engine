@@ -24,7 +24,6 @@ private:
 
     optix::float3 envmap_deltas;
     std::unique_ptr<Texture> environment_sampler = nullptr;
-    optix::Context mContext;
     optix::Buffer property_buffer;
     optix::Buffer sampling_property_buffer;
 
@@ -35,17 +34,18 @@ private:
     bool resample_envmaps = true;
 
 	friend class cereal::access;
+	EnvironmentMap() : MissProgram() {}
 
-	static void load_and_construct(cereal::XMLInputArchiveOptix & archive, cereal::construct<EnvironmentMap>& construct)
+	void load(cereal::XMLInputArchiveOptix & archive)
 	{
 		optix::Context ctx = archive.get_context();
-		construct(ctx);
+		mContext = ctx;
 		archive(
-			cereal::virtual_base_class<MissProgram>(construct.ptr()),
-			cereal::make_nvp("texture", construct->environment_sampler),
-			cereal::make_nvp("delta_rotation", construct->envmap_deltas),
-			cereal::make_nvp("light_multiplier", construct->properties.lightmap_multiplier),
-			cereal::make_nvp("importance_sample", construct->properties.importance_sample_envmap)
+			cereal::virtual_base_class<MissProgram>(this),
+			cereal::make_nvp("texture", environment_sampler),
+			cereal::make_nvp("delta_rotation", envmap_deltas),
+			cereal::make_nvp("light_multiplier", properties.lightmap_multiplier),
+			cereal::make_nvp("importance_sample", properties.importance_sample_envmap)
 		);
 	}
 
@@ -65,3 +65,4 @@ private:
 
 CEREAL_CLASS_VERSION(EnvironmentMap, 0)
 CEREAL_REGISTER_TYPE(EnvironmentMap)
+CEREAL_REGISTER_POLYMORPHIC_RELATION(MissProgram, EnvironmentMap)

@@ -121,6 +121,7 @@ void EnvironmentMap::presample_environment_map()
 
 EnvironmentMap::EnvironmentMap(optix::Context & ctx, std::string envmap_file) : MissProgram(ctx), envmap_path(envmap_file), camera_1(0), camera_2(0), camera_3(0)
 {
+	mContext = ctx;
     envmap_deltas = optix::make_float3(0);
     properties.lightmap_multiplier = optix::make_float3(1.0f);
     properties.importance_sample_envmap = 1;

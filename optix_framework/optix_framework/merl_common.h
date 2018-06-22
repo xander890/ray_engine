@@ -38,7 +38,7 @@
 #include "math_utils.h"
 #include "host_device_common.h"
 
-#ifdef __CUDA_CC__
+#if defined(__CUDA_ARCH__)
 #define BUFFER_TYPE const BufPtr1D<float>&
 #else
 #define BUFFER_TYPE float*
@@ -156,7 +156,8 @@ _fn optix::float3 lookup_brdf_val(BUFFER_TYPE brdf, const optix::float3& n, cons
   return result;
 }
 
-#ifndef __CUDA_CC__
+#if defined(__CUDA_ARCH__)
+#else
 static __host__ __inline__ optix::float3 integrate_brdf(std::vector<float>& brdf, int N)
 
 {

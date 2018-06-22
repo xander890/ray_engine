@@ -90,7 +90,7 @@ _fn void importance_sample_new_direction_brdf(BRDFGeometry & geometry,
             new_direction = reflected.direction;
             geometry.wi = new_direction;
 
-            optix::float3 ff_normal = faceforward(geometry.n, geometry.wo, geometry.n);
+            optix::float3 ff_normal = optix::faceforward(geometry.n, geometry.wo, geometry.n);
             float G = ggx_G1(geometry.wi, ff_m, ff_normal, material.roughness) * ggx_G1(geometry.wo, ff_m, ff_normal, material.roughness);
             float weight = dot(geometry.wo, ff_m) / (dot(geometry.wo, geometry.n) * dot(geometry.n, ff_m)) * G;// * R;
             importance_sampled_brdf *= abs(weight);
