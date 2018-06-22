@@ -25,20 +25,17 @@ private:
 	void load(cereal::XMLInputArchiveOptix & archive)
 	{
 		archive(cereal::base_class<BRDF>(this),
-			cereal::make_nvp("ridge_angle", ridge_angle),
-			cereal::make_nvp("orientation", orientation)
+			cereal::make_nvp("ridge_angle", ridge_angle)
 		);
 	}
 
 	void save(cereal::XMLOutputArchiveOptix & archive) const
 	{
 		archive(cereal::base_class<BRDF>(this),
-			cereal::make_nvp("ridge_angle", ridge_angle),
-			cereal::make_nvp("orientation", orientation)
+			cereal::make_nvp("ridge_angle", ridge_angle)
 		);
 	}
 	float ridge_angle = 20.0f;
-	int orientation = 0;
 };
 
 CEREAL_CLASS_VERSION(RidgedBRDF, 0)

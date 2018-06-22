@@ -8,8 +8,7 @@
 #include "sampler_device.h"
 #include "microfacet_utils.h"
 
-rtDeclareVariable(optix::uint, sample_orientation, , );
-rtDeclareVariable(float, ridge_angle, , );
+rtDeclareVariable(float, ridge_angle, , ) = 20.0f;
 
 _fn optix::float3 qr_plane_projection(const optix::float3& w, const optix::float3& u)
 {
@@ -248,24 +247,7 @@ _fn void importance_sample_qr_brdf(BRDFGeometry & geometry,
 	create_onb(n, u, v);
 	u = rotate_around(u, n, deg2rad(material.anisotropy_angle));
 	v = rotate_around(v, n, deg2rad(material.anisotropy_angle));
-	optix_assert(dot(n, u) < scene_epsilon);
 
-	if (sample_orientation == 0) {
-		//sample orientation 0 degrees
-		u = u;
-		v = v;
-	}
-	else if (sample_orientation == 1) {
-		//sample orientation 90 degrees
-		optix::float3 t = u;
-		u = v;
-		v = t;
-	}
-	else if (sample_orientation == 2) {
-		//sample orientation 180 degrees
-		v = -v;
-		u = -u;
-	}
 	optix::float3 ideal_m = normalize(u * 0.0f + v * sin(slope) + n *cos(slope));
 	//incoming direction projected on the plane n-v
 	optix::float3 w_p_i = qr_plane_projection(w_i, u);
