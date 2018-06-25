@@ -27,7 +27,6 @@ private:
 	bool mHasChanged = true;
 
 	friend class cereal::access;
-
     static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<Transform> & construct )
     {
         construct(archive.get_context());

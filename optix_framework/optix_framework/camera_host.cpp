@@ -120,7 +120,6 @@ bool Camera::on_draw()
     changed |= ImmediateGUIDraw::InputFloat3("Camera mEye", &mEye.x, -1);
     changed |= ImmediateGUIDraw::InputFloat3("Look at", &mLookAt.x, -1);
     changed |= ImmediateGUIDraw::InputFloat3("Up", &mUp.x, -1);
-    changed |= ImmediateGUIDraw::InputInt4("Render Bounds", (int*)&mData->render_bounds.x);
 
     if(changed)
         setup();
@@ -128,8 +127,6 @@ bool Camera::on_draw()
 	return changed;
 }
 
-unsigned int Camera::get_width() const { return mData->render_bounds.z; }
-unsigned int Camera::get_height() const { return mData->render_bounds.w; }
 
 int Camera::get_id() const
 {
@@ -280,8 +277,6 @@ void Camera::set_parameters(CameraParameters param)
 {
 	mParameters = std::make_unique<CameraParameters>(param);
 	mData->downsampling = mParameters->downsampling;
-	mData->render_bounds = optix::make_uint4(0, 0, mParameters->width, mParameters->height);
-	mData->camera_size = optix::make_uint2(mParameters->width, mParameters->height);
 	float3 cen = mLookAt;
     mData->view_matrix = initWithBasis( normalize(mData->U), normalize(mData->V), normalize(-mData->W));
 	Eigen::Matrix3f e = Eigen::optix_to_eigen(mData->view_matrix);

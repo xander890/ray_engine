@@ -222,6 +222,7 @@ set(CUDA_SOURCES
     CUDA_files/brdf_shader.cu
     CUDA_files/lambertian_shader.cu
     CUDA_files/metal_shader.cu
+    CUDA_files/material_labels_shader.cu
     CUDA_files/mirror_shader.cu
     CUDA_files/normal_shader.cu
     CUDA_files/pinhole_camera.cu

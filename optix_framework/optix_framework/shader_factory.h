@@ -6,9 +6,9 @@
 class ShaderFactory
 {
 public:
-    static void init(optix::Context& context);
+    static void init(optix::Context& ctx);
     static std::unique_ptr<Shader> get_shader(int illum);
-    static optix::Program createProgram(std::string file, std::string program_name, std::string suffix="");
+    static optix::Program createProgram(std::string file, std::string program_name, std::string m ="");
 	
 	static void add_shader(std::unique_ptr<Shader> shader);
 	static const std::map<int, std::shared_ptr<Shader>>& get_map() { return mShaderMap; }

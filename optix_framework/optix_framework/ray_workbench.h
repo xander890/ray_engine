@@ -38,6 +38,8 @@ struct RayTracerParameters
     int max_depth = 10;
     float scene_epsilon_fraction = 1e-4f;
     bool use_auto_camera = false;
+	unsigned int screen_width = 512;
+	unsigned int screen_height = 512;
 };
 
 struct TonemapParameters

@@ -11,14 +11,15 @@ using namespace optix;
 
 // Camera variables
 rtDeclareVariable(CameraData,   camera_data, , );
+rtDeclareVariable(optix::uint4, render_bounds, , ); // Bounds, in case we want to limit what to render on the screen.
 
 // Window variables
 rtBuffer<float4, 2> output_buffer;
 
 _fn bool check_bounds()
 {
-	return	launch_index.x >= camera_data.render_bounds.x && launch_index.x < camera_data.render_bounds.x + camera_data.render_bounds.z &&
-		launch_index.y >= camera_data.render_bounds.y && launch_index.y < camera_data.render_bounds.y + camera_data.render_bounds.w;
+	return	launch_index.x >= render_bounds.x && launch_index.x < render_bounds.x + render_bounds.z &&
+		launch_index.y >= render_bounds.y && launch_index.y < render_bounds.y + render_bounds.w;
 }
 
 _fn void trace(const Ray& ray, PerRayData_radiance & prd)
@@ -55,7 +56,7 @@ RT_PROGRAM void pinhole_camera()
 		PerRayData_radiance prd = get_starting_payload(&sampler);
 		float2 jitter = sampler.next2D() * camera_data.downsampling;
 		uint2 real_pixel = launch_index * camera_data.downsampling;
-		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(camera_data.camera_size) * 2.0f - 1.0f;
+		float2 ip_coords = (make_float2(real_pixel) + jitter) / make_float2(launch_dim) * 2.0f - 1.0f;
 
 	#ifdef ORTHO
 		float3 direction = normalize(W);

@@ -22,5 +22,7 @@ RT_PROGRAM void any_hit_shadow() { rtTerminateRay(); }
 // Closest hit program for drawing shading normals
 RT_PROGRAM void shade()
 {
-  prd_radiance.result = make_float3(texcoord, 0);
+    const int material_size = material_buffer.size();
+    const int material_index = get_material_index(texcoord);
+    prd_radiance.result = hsv2rgb((float)material_index / material_size, 1.0, 1.0);
 }

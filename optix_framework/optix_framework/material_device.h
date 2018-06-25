@@ -3,9 +3,6 @@
 #include <material_common.h>
 #include <mesh_device.h>
 
-using optix::rtTex3D;
-using optix::float3;
-
 rtDeclareVariable(MaterialDataCommon, main_material, , );
 rtDeclareVariable(TexPtr, material_selector, , );
 
@@ -13,8 +10,7 @@ rtBuffer<MaterialDataCommon, 1> material_buffer;
 
 _fn unsigned int get_material_index(const optix::float2 & uv)
 {
-    auto res = optix::rtTex2D<optix::int4>(material_selector, uv.x, uv.y);
-    return res.x;
+    return optix::rtTex2D<int>(material_selector, uv.x, uv.y);
 }
 
 _fn MaterialDataCommon get_material(const optix::float2 & uv)

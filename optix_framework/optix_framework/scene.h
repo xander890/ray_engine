@@ -26,7 +26,7 @@ public:
     bool on_draw();
 
     void pre_trace();
-    void trace();
+    void trace(unsigned w, unsigned h);
     void post_trace();
 
     void set_method(std::unique_ptr<RenderingMethod> method);

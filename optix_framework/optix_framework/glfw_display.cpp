@@ -31,13 +31,13 @@
 #include "logger.h"
 #include "camera_host.h"
 
-// #define NVTX_ENABLE enables the nvToolsExt stuff from Nsight in NsightHelper.h
-//#define NVTX_ENABLE
+ // #define NVTX_ENABLE enables the nvToolsExt stuff from Nsight in NsightHelper.h
+ //#define NVTX_ENABLE
 
-//-----------------------------------------------------------------------------
-// 
-// GLFWDisplay class implementation 
-//-----------------------------------------------------------------------------
+ //-----------------------------------------------------------------------------
+ // 
+ // GLFWDisplay class implementation 
+ //-----------------------------------------------------------------------------
 
 Mouse*         GLFWDisplay::m_mouse = nullptr;
 SampleScene*   GLFWDisplay::m_scene = nullptr;
@@ -58,371 +58,376 @@ void GLFWDisplay::printUsage()
 
 }
 
-void GLFWDisplay::init( int& argc, char** argv )
+void GLFWDisplay::init(int& argc, char** argv)
 {
-  m_initialized = true;
+    m_initialized = true;
 
-  if (m_requires_display)
-  {
-	  if (!glfwInit())
-	  {
-		  Logger::error << "Error initializing GLFW " << std::endl;
-	  }
-  }
+    if (m_requires_display)
+    {
+        if (!glfwInit())
+        {
+            Logger::error << "Error initializing GLFW " << std::endl;
+        }
+    }
 }
 
-void GLFWDisplay::run( const std::string& title, SampleScene* scene)
+void GLFWDisplay::run(const std::string& title, SampleScene* scene)
 {
-  if ( !m_initialized ) {
-    std::cerr << "ERROR - GLFWDisplay::run() called before GLFWDisplay::init()" << std::endl;
-    exit(2);
-  }
-  m_scene = scene;
-  m_title = title;
+    if (!m_initialized) {
+        std::cerr << "ERROR - GLFWDisplay::run() called before GLFWDisplay::init()" << std::endl;
+        exit(2);
+    }
+    m_scene = scene;
+    m_title = title;
 
-  if (m_requires_display)
-  {
-	  m_window = glfwCreateWindow(1, 1, m_title.c_str(), nullptr, nullptr);
-	  glfwMakeContextCurrent(m_window);
+    if (m_requires_display)
+    {
+        m_window = glfwCreateWindow(1, 1, m_title.c_str(), nullptr, nullptr);
+        glfwMakeContextCurrent(m_window);
 
-	  glewInit();
-	  GLint glewInitResult = glewInit();
-	  if (GLEW_OK != glewInitResult)
-	  {
-		  printf("ERROR: %s\n", glewGetErrorString(glewInitResult));
-		  exit(EXIT_FAILURE);
-	  }
+        glewInit();
+        GLint glewInitResult = glewInit();
+        if (GLEW_OK != glewInitResult)
+        {
+            printf("ERROR: %s\n", glewGetErrorString(glewInitResult));
+            exit(EXIT_FAILURE);
+        }
 
-	  if (glewIsSupported("GL_EXT_texture_sRGB GL_EXT_framebuffer_sRGB")) {
-		  m_sRGB_supported = true;
-	  }
+        if (glewIsSupported("GL_EXT_texture_sRGB GL_EXT_framebuffer_sRGB")) {
+            m_sRGB_supported = true;
+        }
 
-	  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-	  if (!m_window)
-	  {
-		  glfwTerminate();
-		  exit(EXIT_FAILURE);
-	  }
-  }
-  else
-  {
-	  m_window = nullptr;
-  }
+        if (!m_window)
+        {
+            glfwTerminate();
+            exit(EXIT_FAILURE);
+        }
+    }
+    else
+    {
+        m_window = nullptr;
+    }
 
-  int buffer_width;
-  int buffer_height;
-  try {
-    // Set mUp scene
-    m_scene->initialize_scene( m_window );
+    int buffer_width;
+    int buffer_height;
+    try {
+        // Set mUp scene
+        m_scene->initialize_scene(m_window);
 
-    // Initialize camera according to scene params
-	optix::Buffer buffer = m_scene->get_output_buffer();
-    RTsize buffer_width_rts, buffer_height_rts;
-    buffer->getSize( buffer_width_rts, buffer_height_rts );
-    buffer_width  = static_cast<int>(buffer_width_rts);
-    buffer_height = static_cast<int>(buffer_height_rts);
-    m_mouse = new Mouse( m_scene->get_camera(), buffer_width, buffer_height );
-	m_mouse->handleMouseFunc(0, 0, -1, GLFW_PRESS, 0);
-  } catch( optix::Exception& e ){
-    Logger::error << ( e.getErrorString().c_str() );
-    exit(2);
-  }
+        // Initialize camera according to scene params
+        optix::Buffer buffer = m_scene->get_output_buffer();
+        RTsize buffer_width_rts, buffer_height_rts;
+        buffer->getSize(buffer_width_rts, buffer_height_rts);
+        buffer_width = static_cast<int>(buffer_width_rts);
+        buffer_height = static_cast<int>(buffer_height_rts);
+        m_mouse = new Mouse(m_scene->get_camera(), buffer_width, buffer_height);
+        m_mouse->handleMouseFunc(0, 0, -1, GLFW_PRESS, 0);
+    }
+    catch (optix::Exception& e) {
+        Logger::error << (e.getErrorString().c_str());
+        exit(2);
+    }
 
-  m_scene->scene_initialized();
+    m_scene->scene_initialized();
 
-  if (m_requires_display)
-  {
+    if (m_requires_display)
+    {
 
-	  glfwSetWindowSize(m_window, buffer_width, buffer_height);
-	  // Initialize state
-	  glMatrixMode(GL_PROJECTION);
-	  glLoadIdentity();
-	  glOrtho(0, 1, 0, 1, -1, 1);
-	  glMatrixMode(GL_MODELVIEW);
-	  glLoadIdentity();
-	  glViewport(0, 0, buffer_width, buffer_height);
+        glfwSetWindowSize(m_window, buffer_width, buffer_height);
+        // Initialize state
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, 1, 0, 1, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glViewport(0, 0, buffer_width, buffer_height);
 
-	  glfwSetKeyCallback(m_window, keyPressed);
-	  glfwSetMouseButtonCallback(m_window, mouseButton);
-	  glfwSetCursorPosCallback(m_window, mouseMotion);
-	  glfwSetWindowSizeCallback(m_window, resize);
+        glfwSetKeyCallback(m_window, keyPressed);
+        glfwSetMouseButtonCallback(m_window, mouseButton);
+        glfwSetCursorPosCallback(m_window, mouseMotion);
+        glfwSetWindowSizeCallback(m_window, resize);
 
-	  while (!glfwWindowShouldClose(m_window))
-	  {
-		  glfwPollEvents();
-		  display();
-	  }
-  }
-  else
-  {
-	  while (true)
-	  {
-		  display();
-	  }
-  }
+        while (!glfwWindowShouldClose(m_window))
+        {
+            glfwPollEvents();
+            display();
+        }
+    }
+    else
+    {
+        while (true)
+        {
+            display();
+        }
+    }
 }
 
 
 void GLFWDisplay::resize(GLFWwindow * window, int width, int height)
 {
-  // disallow size 0
-  width  = optix::max(1, width);
-  height = optix::max(1, height);
-  m_scene->get_camera()->set_aspect_ratio(width / (float)height);
+    // disallow size 0
+    width = optix::max(1, width);
+    height = optix::max(1, height);
+    m_scene->get_camera()->set_aspect_ratio(width / (float)height);
 
-  m_scene->signalCameraChanged();
-  m_mouse->handleResize( width, height );
+    m_scene->signalCameraChanged();
+    m_mouse->handleResize(width, height);
 
-  glfwSetWindowSize(window, width, height);
+    glfwSetWindowSize(window, width, height);
 
-  try {
-    m_scene->resize(width, height);
-  } catch(optix::Exception& e ){
-    Logger::error << ( e.getErrorString().c_str() );
-    exit(2);
-  }
+    try {
+        m_scene->resize(width, height);
+    }
+    catch (optix::Exception& e) {
+        Logger::error << (e.getErrorString().c_str());
+        exit(2);
+    }
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0, 1, 0, 1, -1, 1);
-  glViewport(0, 0, width, height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, -1, 1);
+    glViewport(0, 0, width, height);
 }
 
 void GLFWDisplay::displayFrame()
 {
-	GLboolean sRGB = GL_FALSE;
-	if (m_use_sRGB && m_sRGB_supported) {
-		glGetBooleanv( GL_FRAMEBUFFER_SRGB_CAPABLE_EXT, &sRGB );
-		if (sRGB) {
-			glEnable(GL_FRAMEBUFFER_SRGB_EXT);
-		}
-	}
+    GLboolean sRGB = GL_FALSE;
+    if (m_use_sRGB && m_sRGB_supported) {
+        glGetBooleanv(GL_FRAMEBUFFER_SRGB_CAPABLE_EXT, &sRGB);
+        if (sRGB) {
+            glEnable(GL_FRAMEBUFFER_SRGB_EXT);
+        }
+    }
 
-  // Draw the resulting image
-  optix::Buffer buffer = m_scene->get_output_buffer();
-  RTsize buffer_width_rts, buffer_height_rts;
-  buffer->getSize( buffer_width_rts, buffer_height_rts );
-  const int buffer_width  = static_cast<int>(buffer_width_rts);
-  const int buffer_height = static_cast<int>(buffer_height_rts);
-  const RTformat buffer_format = buffer->getFormat();
-  const unsigned int vboId = buffer->getGLBOId();
+    // Draw the resulting image
+    optix::Buffer buffer = m_scene->get_output_buffer();
+    RTsize buffer_width_rts, buffer_height_rts;
+    buffer->getSize(buffer_width_rts, buffer_height_rts);
+    const int buffer_width = static_cast<int>(buffer_width_rts);
+    const int buffer_height = static_cast<int>(buffer_height_rts);
+    const RTformat buffer_format = buffer->getFormat();
+    const unsigned int vboId = buffer->getGLBOId();
 
-	if (vboId)
-	{
-		static GLuint texture = 0;
-		if (!texture)
-		{
-			glGenTextures(1, &texture);
-			glBindTexture(GL_TEXTURE_2D, texture);
+    if (vboId)
+    {
+        static GLuint texture = 0;
+        if (!texture)
+        {
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
 
-			// Change these to GL_LINEAR for super- or sub-sampling
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            // Change these to GL_LINEAR for super- or sub-sampling
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-			// GL_CLAMP_TO_EDGE for linear filtering, not relevant for nearest.
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            // GL_CLAMP_TO_EDGE for linear filtering, not relevant for nearest.
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-			glBindTexture(GL_TEXTURE_2D, 0);
-		}
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
 
-		glBindTexture(GL_TEXTURE_2D, texture);
-		// send pbo to texture
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vboId);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        // send pbo to texture
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vboId);
 
-		const RTsize elementSize = buffer->getElementSize();
-		if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
-		else if ((elementSize % 4) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-		else if ((elementSize % 2) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-		else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		    
-		if (buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-		}
-		else if (buffer_format == RT_FORMAT_FLOAT4) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, buffer_width, buffer_height, 0, GL_RGBA, GL_FLOAT, 0);
-		}
-		else if (buffer_format == RT_FORMAT_FLOAT3) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F_ARB, buffer_width, buffer_height, 0, GL_RGB, GL_FLOAT, 0);	
-		}
-		else if (buffer_format == RT_FORMAT_FLOAT) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE32F_ARB, buffer_width, buffer_height, 0, GL_LUMINANCE, GL_FLOAT, 0);
-		}
-		else {
-			assert(0 && "Unknown buffer format");
-		}
+        const RTsize elementSize = buffer->getElementSize();
+        if ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
+        else if ((elementSize % 4) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        else if ((elementSize % 2) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+        else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-		glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
-		glEnable(GL_TEXTURE_2D);
-		
-	    // Initialize offsets to pixel center sampling.
-			
-		float u = 0.5f / buffer_width;
-		float v = 0.5f / buffer_height;
-		
-		glBegin(GL_QUADS);
-		glTexCoord2f(u, v);
-		glVertex2f(0.0f, 0.0f);
-		glTexCoord2f(1.0f, v);
-		glVertex2f(1.0f, 0.0f);
-		glTexCoord2f(1.0f - u, 1.0f - v);
-		glVertex2f(1.0f, 1.0f);
-		glTexCoord2f(u, 1.0f - v);
-		glVertex2f(0.0f, 1.0f);
-		glEnd();
-		
-		glDisable(GL_TEXTURE_2D);
-  } else {
-    GLvoid* imageData = buffer->map();
-    assert( imageData );
+        if (buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        }
+        else if (buffer_format == RT_FORMAT_FLOAT4) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, buffer_width, buffer_height, 0, GL_RGBA, GL_FLOAT, 0);
+        }
+        else if (buffer_format == RT_FORMAT_FLOAT3) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F_ARB, buffer_width, buffer_height, 0, GL_RGB, GL_FLOAT, 0);
+        }
+        else if (buffer_format == RT_FORMAT_FLOAT) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE32F_ARB, buffer_width, buffer_height, 0, GL_LUMINANCE, GL_FLOAT, 0);
+        }
+        else {
+            assert(0 && "Unknown buffer format");
+        }
 
-    GLenum gl_data_type = GL_FALSE;
-    GLenum gl_format = GL_FALSE;
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+        glEnable(GL_TEXTURE_2D);
 
-    switch (buffer_format) {
-          case RT_FORMAT_UNSIGNED_BYTE4:
+        // Initialize offsets to pixel center sampling.
+
+        float u = 0.5f / buffer_width;
+        float v = 0.5f / buffer_height;
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(u, v);
+        glVertex2f(0.0f, 0.0f);
+        glTexCoord2f(1.0f, v);
+        glVertex2f(1.0f, 0.0f);
+        glTexCoord2f(1.0f - u, 1.0f - v);
+        glVertex2f(1.0f, 1.0f);
+        glTexCoord2f(u, 1.0f - v);
+        glVertex2f(0.0f, 1.0f);
+        glEnd();
+
+        glDisable(GL_TEXTURE_2D);
+    }
+    else {
+        GLvoid* imageData = buffer->map();
+        assert(imageData);
+
+        GLenum gl_data_type = GL_FALSE;
+        GLenum gl_format = GL_FALSE;
+
+        switch (buffer_format) {
+        case RT_FORMAT_UNSIGNED_BYTE4:
             gl_data_type = GL_UNSIGNED_BYTE;
-            gl_format    = GL_RGBA;
+            gl_format = GL_RGBA;
             break;
 
-          case RT_FORMAT_FLOAT:
+        case RT_FORMAT_FLOAT:
             gl_data_type = GL_FLOAT;
-            gl_format    = GL_LUMINANCE;
+            gl_format = GL_LUMINANCE;
             break;
 
-          case RT_FORMAT_FLOAT3:
+        case RT_FORMAT_FLOAT3:
             gl_data_type = GL_FLOAT;
-            gl_format    = GL_RGB;
+            gl_format = GL_RGB;
             break;
 
-          case RT_FORMAT_FLOAT4:
+        case RT_FORMAT_FLOAT4:
             gl_data_type = GL_FLOAT;
-            gl_format    = GL_RGBA;
+            gl_format = GL_RGBA;
             break;
 
-          default:
+        default:
             fprintf(stderr, "Unrecognized buffer data type or format.\n");
             exit(2);
             break;
+        }
+
+        const RTsize elementSize = buffer->getElementSize();
+        int align = 1;
+        if ((elementSize % 8) == 0) align = 8;
+        else if ((elementSize % 4) == 0) align = 4;
+        else if ((elementSize % 2) == 0) align = 2;
+        glPixelStorei(GL_UNPACK_ALIGNMENT, align);
+
+        glDrawPixels(static_cast<GLsizei>(buffer_width), static_cast<GLsizei>(buffer_height),
+            gl_format, gl_data_type, imageData);
+
+        buffer->unmap();
+
     }
-
-    const RTsize elementSize = buffer->getElementSize();
-    int align = 1;
-    if      ((elementSize % 8) == 0) align = 8; 
-    else if ((elementSize % 4) == 0) align = 4;
-    else if ((elementSize % 2) == 0) align = 2;
-    glPixelStorei(GL_UNPACK_ALIGNMENT, align);
-
-    glDrawPixels( static_cast<GLsizei>( buffer_width ), static_cast<GLsizei>( buffer_height ),
-      gl_format, gl_data_type, imageData);
-
-    buffer->unmap();
-
-  }
-  if (m_use_sRGB && m_sRGB_supported && sRGB) {
-    glDisable(GL_FRAMEBUFFER_SRGB_EXT);
-  }
+    if (m_use_sRGB && m_sRGB_supported && sRGB) {
+        glDisable(GL_FRAMEBUFFER_SRGB_EXT);
+    }
 }
 
 void GLFWDisplay::display()
 {
 
-  bool display_requested = m_requires_display;
-  m_mouse->setCamera(m_scene->get_camera());
+    bool display_requested = m_requires_display;
+    m_mouse->setCamera(m_scene->get_camera());
 
     try {
-    // render the scene
-    // Don't be tempted to just start filling in the values outside of a constructor,
-    // because if you add a parameter it's easy to forget to add it here.
+        // render the scene
+        // Don't be tempted to just start filling in the values outside of a constructor,
+        // because if you add a parameter it's easy to forget to add it here.
 
-    {
-      m_scene->trace( );
+        {
+            m_scene->trace();
+        }
+
+        if (display_requested && m_display_frames) {
+            // Only enable for debugging
+            // glClearColor(1.0, 0.0, 0.0, 0.0);
+            // glClear(GL_COLOR_BUFFER_BIT);
+
+            displayFrame();
+        }
     }
-
-    if( display_requested && m_display_frames ) {
-      // Only enable for debugging
-      // glClearColor(1.0, 0.0, 0.0, 0.0);
-      // glClear(GL_COLOR_BUFFER_BIT);
-
-      displayFrame();
+    catch (optix::Exception& e) {
+        std::cout << (e.getErrorString().c_str());
+        exit(2);
     }
-  } catch(optix::Exception& e ){
-    std::cout << ( e.getErrorString().c_str() );
-    exit(2);
-  }
-  m_scene->post_draw_callback();
+    m_scene->post_draw_callback();
 
-  std::string debug;
+    std::string debug;
 
-  if ( display_requested && m_display_frames ) {
-    // Swap buffers
-	  glfwSwapBuffers(m_window);
-  }
+    if (display_requested && m_display_frames) {
+        // Swap buffers
+        glfwSwapBuffers(m_window);
+    }
 }
 
 void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int action, int modifier)
 {
-	try {
-		if (m_scene->key_pressed(key, action, modifier)) {
-			return;
-		}
-	}
-	catch (optix::Exception& e) {
-		Logger::error << (e.getErrorString().c_str());
-		exit(2);
-	}
+    try {
+        if (m_scene->key_pressed(key, action, modifier)) {
+            return;
+        }
+    }
+    catch (optix::Exception& e) {
+        Logger::error << (e.getErrorString().c_str());
+        exit(2);
+    }
 
-	switch (key) {
-	case GLFW_KEY_ESCAPE:
-	case GLFW_KEY_Q:
-		quit();
-		break;
-        default:
-		return;
-	}
+    switch (key) {
+    case GLFW_KEY_ESCAPE:
+    case GLFW_KEY_Q:
+        quit();
+        break;
+    default:
+        return;
+    }
 }
 
 void GLFWDisplay::mouseButton(GLFWwindow * window, int button, int action, int modifiers)
 {
-	double xd, yd;
-	glfwGetCursorPos(window, &xd, &yd);
-	int x = static_cast<int>(xd);
-	int y = static_cast<int>(yd);
-	if (!m_scene->mouse_pressed(x,y,button, action, modifiers))
-	{
-		m_mouse->handleMouseFunc(x,y,button, action, modifiers);
-		m_scene->signalCameraChanged();
-	}
+    double xd, yd;
+    glfwGetCursorPos(window, &xd, &yd);
+    int x = static_cast<int>(xd);
+    int y = static_cast<int>(yd);
+    if (!m_scene->mouse_pressed(x, y, button, action, modifiers))
+    {
+        m_mouse->handleMouseFunc(x, y, button, action, modifiers);
+        m_scene->signalCameraChanged();
+    }
 }
 
 void GLFWDisplay::mouseMotion(GLFWwindow * window, double xd, double yd)
 {
-	int x = static_cast<int>(xd);
-	int y = static_cast<int>(yd);
-	m_mouse->handleMoveFunc(x, y);
-	if (m_mouse->handleMoveFunc(x, y))
-	{
-		m_scene->signalCameraChanged();
-	}
+    int x = static_cast<int>(xd);
+    int y = static_cast<int>(yd);
+    m_mouse->handleMoveFunc(x, y);
+    if (m_mouse->handleMoveFunc(x, y))
+    {
+        m_scene->signalCameraChanged();
+    }
 }
 
 
 void GLFWDisplay::quit(int return_code)
 {
-  try {
-    if(m_scene)
-    {
-      m_scene->clean_up();
-      if (m_scene->get_context().get() != 0)
-      {
-        Logger::error << ( "Derived scene class failed to call SampleScene::clean_up()" );
-        exit(2);
-      }
+    try {
+        if (m_scene)
+        {
+            m_scene->clean_up();
+            if (m_scene->get_context().get() != 0)
+            {
+                Logger::error << ("Derived scene class failed to call SampleScene::clean_up()");
+                exit(2);
+            }
+        }
+        exit(return_code);
     }
-    exit(return_code);
-  } catch(optix::Exception& e ) {
-    Logger::error << ( e.getErrorString().c_str() );
-    exit(2);
-  }
+    catch (optix::Exception& e) {
+        Logger::error << (e.getErrorString().c_str());
+        exit(2);
+    }
 }

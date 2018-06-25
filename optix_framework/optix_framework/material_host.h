@@ -5,6 +5,7 @@
 #include "texture.h"
 #include "scattering_material.h"
 #include "shader.h"
+#include "shader_factory.h"
 
 struct ObjMaterial;
 class Scene;
@@ -73,23 +74,11 @@ private:
 		archive(cereal::make_nvp("scattering_material",scattering_material));
 		archive(cereal::make_nvp("is_emissive", mIsEmissive));
 		archive(cereal::make_nvp("textures", textures));
+        archive(cereal::make_nvp("shader_type", "extended"));
         archive(cereal::make_nvp("shader", mShader));
     }
 
-	static void load_and_construct( cereal::XMLInputArchiveOptix & archive, cereal::construct<MaterialHost> & construct )
-	{
-		construct(archive.get_context());
-		archive(cereal::make_nvp("name", construct->mMaterialName));
-		archive(cereal::make_nvp("material_data", construct->mMaterialData));
-		archive(cereal::make_nvp("scattering_material", construct->scattering_material));
-		archive(cereal::make_nvp("is_emissive", construct->mIsEmissive));
-		archive(cereal::make_nvp("textures", construct->textures));
-        archive(cereal::make_nvp("shader",construct->mShader));
-        construct->mReloadShader = true;
-        construct->mMaterialData.ambient_map = construct->textures[0]->get_id();
-		construct->mMaterialData.diffuse_map = construct->textures[1]->get_id();
-		construct->mMaterialData.specular_map = construct->textures[2]->get_id();
-	}
+    static void load_and_construct(cereal::XMLInputArchiveOptix& archive, cereal::construct<MaterialHost>& construct);
 
 	optix::Context mContext;
 	bool mIsEmissive = false;

@@ -74,14 +74,14 @@ private:
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive(cereal::make_nvp("name", info.shader_name),cereal::make_nvp("shader_path", info.shader_path), cereal::make_nvp("illum", info.illum));
+        throw std::logic_error("Not implemented!");
     }
 
 };
 
 template<>
-inline void Shader::serialize(cereal::XMLInputArchiveOptix & archive)
-{
-    archive(cereal::make_nvp("name", info.shader_name),cereal::make_nvp("shader_path", info.shader_path), cereal::make_nvp("illum", info.illum));
-    context = archive.get_context();
-}
+void Shader::serialize(cereal::XMLOutputArchiveOptix & archive);
+
+template<>
+void Shader::serialize(cereal::XMLInputArchiveOptix & archive);
+

@@ -19,15 +19,13 @@ struct CameraParameters
 {
     float hfov = 60;
     float vfov = 60;
-    int width = 512;
-    int height = 512;
     int downsampling = 1;
     AspectRatioMode::Type ratio_mode = AspectRatioMode::KEEP_VERTICAL;
 
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( CEREAL_NVP(hfov), CEREAL_NVP(vfov), CEREAL_NVP(width), CEREAL_NVP(height), CEREAL_NVP(downsampling), CEREAL_NVP(ratio_mode));
+        archive( CEREAL_NVP(hfov), CEREAL_NVP(vfov), CEREAL_NVP(downsampling), CEREAL_NVP(ratio_mode));
     }
 };
 
@@ -52,8 +50,6 @@ public:
     void set_eye_lookat_up(float3 eye, float3 lookat, float3 up);
     void set_as_other_camera(std::shared_ptr<Camera>& camera);
 	virtual bool on_draw();
-	unsigned int get_width() const;
-	unsigned int get_height() const;
 	int get_id() const;
 	unsigned int get_entry_point() const { return mEntryPoint; }
 

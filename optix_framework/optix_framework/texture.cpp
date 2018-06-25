@@ -194,13 +194,8 @@ void Texture::set_size(size_t dimensions, size_t *dims)
         mDimensions[i] = (i < dimensions)? dims[i] : 1;
     }
     textureBuffer->setSize(mDimensionality, &mDimensions[0]);
-
-    if(mData != nullptr)
-    {
-        delete[] mData;
-    }
+    delete[] mData;
     mData = new float[get_number_of_elements()];
-
 }
 
 void Texture::set_format(const RTformat &format)

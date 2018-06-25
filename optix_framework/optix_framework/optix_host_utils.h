@@ -18,6 +18,19 @@ template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsi
 	return r;
 }
 
+template<typename T> void resize_glbo_buffer(optix::Buffer & buffer, unsigned int new_size)
+{
+	GLint buf = buffer->getGLBOId();
+	assert(buf != 0);
+
+	GLint bind;
+	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &bind);
+	glBindBuffer(GL_ARRAY_BUFFER, buf);
+	glBufferData(GL_ARRAY_BUFFER, new_size * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, bind);
+	buffer->setSize(new_size);
+}
+
 template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsigned int type, RTformat format, unsigned int width, unsigned int height)
 {
 	optix::Buffer buf = create_glbo_buffer<T>(ctx, type, format, width*height);
@@ -25,18 +38,11 @@ template<typename T> optix::Buffer create_glbo_buffer(optix::Context & ctx, unsi
 	return buf;
 }
 
-template<typename T> void resize_glbo_buffer(optix::Buffer & buffer, unsigned int size)
+template<typename T> void resize_glbo_buffer(optix::Buffer & buffer, unsigned int new_size_x, unsigned int new_size_y)
 {
-	GLuint buf = buffer->getGLBOId();
-
-	GLint bind;
-	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &bind);
-	glBindBuffer(GL_ARRAY_BUFFER, buf);
-	glBufferData(GL_ARRAY_BUFFER, size * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, bind);
-	buffer->setSize(size);
+	resize_glbo_buffer<T>(buffer, new_size_x*new_size_y);
+	buffer->setSize(new_size_x, new_size_y);
 }
-
 
 template<typename T> optix::Buffer create_buffer(optix::Context & ctx, unsigned int type, int size)
 {

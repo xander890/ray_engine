@@ -1,5 +1,6 @@
 #include "default_shader.h"
 #include "object_host.h"
+#include "shader_factory.h"
 
 std::vector<ShaderInfo> DefaultShader::default_shaders = 
 {
@@ -10,7 +11,8 @@ std::vector<ShaderInfo> DefaultShader::default_shaders =
 	ShaderInfo(5, "normal_shader.cu", "Normals"),
 	ShaderInfo(6, "uv_shader.cu", "UVs"),
 	ShaderInfo(7, "wireframe_shader.cu", "Wireframe"),
-	//ShaderInfo(7, "absorbing_glass.cu", "Absorption glass"),
+    ShaderInfo(8, "material_labels_shader.cu", "Material labels"),
+    //ShaderInfo(7, "absorbing_glass.cu", "Absorption glass"),
 	ShaderInfo(11, "metal_shader.cu", "Metal")
 };
 
@@ -22,5 +24,18 @@ void DefaultShader::initialize_shader(optix::Context ctx)
 void DefaultShader::initialize_material(MaterialHost &object)
 {
     Shader::initialize_material(object);
+}
+
+template <>
+void DefaultShader::serialize<cereal::XMLOutputArchiveOptix>(cereal::XMLOutputArchiveOptix& archive)
+{
+    archive(cereal::base_class<Shader>(this));
+}
+
+template <>
+void DefaultShader::serialize<cereal::XMLInputArchiveOptix>(cereal::XMLInputArchiveOptix& archive)
+{
+    archive(cereal::base_class<Shader>(this));
+
 }
 

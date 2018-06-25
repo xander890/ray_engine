@@ -88,9 +88,9 @@ void Scene::post_trace()
     });
 }
 
-void Scene::trace()
+void Scene::trace(unsigned w, unsigned h)
 {
-    context->launch(get_current_camera()->get_entry_point(), get_current_camera()->get_width(), get_current_camera()->get_height());
+    context->launch(get_current_camera()->get_entry_point(), w, h);
 }
 
 void Scene::set_method(std::unique_ptr<RenderingMethod> m)

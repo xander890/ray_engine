@@ -296,6 +296,34 @@ void MaterialHost::load_shader()
     mShader->load_data(*this);
 }
 
+void MaterialHost::load_and_construct(cereal::XMLInputArchiveOptix& archive, cereal::construct<MaterialHost>& construct)
+{
+    construct(archive.get_context());
+    archive(cereal::make_nvp("name", construct->mMaterialName));
+    archive(cereal::make_nvp("material_data", construct->mMaterialData));
+    archive(cereal::make_nvp("scattering_material", construct->scattering_material));
+    archive(cereal::make_nvp("is_emissive", construct->mIsEmissive));
+    archive(cereal::make_nvp("textures", construct->textures));
+
+    std::string shader_type;
+    archive(cereal::make_nvp("shader_type", shader_type));
+
+    if (shader_type == "illum")
+    {
+        int illum;
+        archive(cereal::make_nvp("shader", illum));
+        construct->mShader = ShaderFactory::get_shader(illum);
+    }
+    else
+    {
+        archive(cereal::make_nvp("shader", construct->mShader));
+    }
+    construct->mReloadShader = true;
+    construct->mMaterialData.ambient_map = construct->textures[0]->get_id();
+    construct->mMaterialData.diffuse_map = construct->textures[1]->get_id();
+    construct->mMaterialData.specular_map = construct->textures[2]->get_id();
+}
+
 MaterialHost::~MaterialHost()
 {
     if(mShader != nullptr && mMaterial.get() != nullptr)

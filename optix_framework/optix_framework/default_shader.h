@@ -5,6 +5,7 @@
 class DefaultShader : public Shader
 {
 public:
+    friend class ShaderFactory;
     virtual ~DefaultShader() = default;
     DefaultShader(const ShaderInfo& shader_info) : Shader(shader_info) {}
     
@@ -12,7 +13,6 @@ public:
     void initialize_material(MaterialHost &object) override;
     void pre_trace_mesh(Object & object) override {}
 
-    static std::vector<ShaderInfo> default_shaders;
 	virtual Shader* clone() override { return new DefaultShader(*this); }
 
 private:
@@ -22,10 +22,17 @@ private:
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive(cereal::base_class<Shader>(this));
+        throw std::logic_error("Not implemented!");
     }
 
+    static std::vector<ShaderInfo> default_shaders;
 };
+
+template<>
+void DefaultShader::serialize(cereal::XMLOutputArchiveOptix & archive);
+
+template<>
+void DefaultShader::serialize(cereal::XMLInputArchiveOptix & archive);
 
 CEREAL_CLASS_VERSION(DefaultShader, 0)
 CEREAL_REGISTER_TYPE(DefaultShader)
