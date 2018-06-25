@@ -27,6 +27,7 @@ std::unique_ptr<Texture> Object::create_label_texture(optix::Context ctx, const 
         }
     }
     ret->update();
+    ret->get_sampler()->setFilteringModes(RT_FILTER_NEAREST, RT_FILTER_NEAREST, RT_FILTER_NONE);
     return ret;
 }
 
@@ -41,7 +42,6 @@ Object::Object(optix::Context ctx) : mContext(ctx)
     optix::float4 default_label = optix::make_float4(0.0f);
     mMaterialSelectionTexture->set_data(&default_label.x, 4*sizeof(float));
     mMaterialSelectionTextureLabel = create_label_texture(ctx, mMaterialSelectionTexture);
-
 }
 
 void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost>& material)
@@ -226,7 +226,7 @@ bool Object::on_draw()
                     {
                         mMaterialSelectionTexture = loadTexture(mContext, d, optix::make_float4(0));
                         mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture);
-                        mMaterialSelectionTextureLabel->get_sampler()->setFilteringModes(RT_FILTER_NEAREST, RT_FILTER_NEAREST, RT_FILTER_NONE);
+                        
                         load_materials();
                     }
                 }
