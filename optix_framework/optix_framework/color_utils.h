@@ -13,7 +13,7 @@ _fn optix::float3 Yxy2XYZ( const optix::float3& Yxy )
 		( 1.0f - Yxy.y - Yxy.z ) * ( Yxy.x / Yxy.z ) );
 }
 
-_fn optix::float3 XYZ2rgb( const optix::float3& xyz)
+_fn optix::float3 XYZ2rgb( const optix::float3& xyz) 
 {
 	const float R = optix::dot( xyz, optix::make_float3(  3.2410f, -1.5374f, -0.4986f ) );
 	const float G = optix::dot( xyz, optix::make_float3( -0.9692f,  1.8760f,  0.0416f ) );

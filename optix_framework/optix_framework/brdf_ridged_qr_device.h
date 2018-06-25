@@ -109,6 +109,8 @@ _fn void qr_sample_anisotropic_beckmann_normal(const optix::float3& ideal_m, con
 		m = -v;
 		return;
 	}
+
+
 	optix::float3 u_m = normalize(cross(ideal_m, v));
 	optix::float3 v_m = normalize(cross(ideal_m, u_m));
 	optix::float3 local_n = importance_sample_beckmann_anisotropic_local(optix::make_float2(z1,z2), a_u, a_v);
@@ -124,9 +126,7 @@ _fn float qr_eval_anisotropic_beckmann_D(const optix::float3& ideal_m, const opt
 		return D;
 	}
 	optix::float3 u_m = normalize(cross(ideal_m, v));
-	optix::float3 v_m = normalize(cross(ideal_m, u_m));
-	optix::float3 local_n = optix::make_float3(dot(m, u_m), dot(m, v_m), dot(m, ideal_m));
-	D = beckmann_anisotropic(dot(local_n, optix::make_float3(0,0,1)), a_u, a_v);
+	D = beckmann_anisotropic(m, ideal_m, u_m, a_u, a_v);
 	return D;
 }
 //Gaussian random number
@@ -248,7 +248,7 @@ _fn void importance_sample_qr_brdf(BRDFGeometry & geometry,
 	u = rotate_around(u, n, deg2rad(material.anisotropy_angle));
 	v = rotate_around(v, n, deg2rad(material.anisotropy_angle));
 
-	optix::float3 ideal_m = normalize(u * 0.0f + v * sin(slope) + n *cos(slope));
+	optix::float3 ideal_m = normalize(u * 0.0f + v * sin(slope) + n * cos(slope));
 	//incoming direction projected on the plane n-v
 	optix::float3 w_p_i = qr_plane_projection(w_i, u);
 	float theta_p = acos(dot(w_p_i, n));

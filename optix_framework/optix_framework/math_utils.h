@@ -152,7 +152,6 @@ _fn void create_onb( const optix::float3& n, optix::float3& U, optix::float3& V)
 }
 */
 // Projects and normalizes vector on plane defined by normal
-static
 _fn optix::float3 project_on_plane(const optix::float3& n, const optix::float3& v)
 {
 	return optix::normalize(v - n * optix::dot(n, v));

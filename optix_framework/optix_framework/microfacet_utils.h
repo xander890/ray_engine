@@ -50,21 +50,26 @@ _fn optix::float3 importance_sample_beckmann(const optix::float2& rand, const op
     return m;
 }
 
-_fn float beckmann_anisotropic(const float cos_theta, const float alpha_x, const float alpha_y)
+_fn float beckmann_anisotropic(const float cos_theta, const float cos_phi, const float alpha_x, const float alpha_y)
 {
 	const float cos_theta_sqr = cos_theta * cos_theta;
 	const float sin_theta_sqr = 1.0f - cos_theta_sqr;
 	const float tan_theta_sqr = sin_theta_sqr / cos_theta_sqr;
-	const float corrected_aniso_term = cos_theta_sqr / (alpha_x*alpha_x) + sin_theta_sqr / (alpha_y*alpha_y);
+	const float cos_phi_sqr = cos_phi * cos_phi;
+	const float sin_phi_sqr = 1 - cos_phi_sqr;
+	const float corrected_aniso_term = cos_phi_sqr / (alpha_x*alpha_x) + sin_phi_sqr / (alpha_y*alpha_y);
 
-	float cos_theta_pow_4 = cos_theta * cos_theta;
-	cos_theta_pow_4 *= cos_theta_pow_4;
+	float cos_theta_pow_4 = cos_theta_sqr * cos_theta_sqr;
 	return positive_characteristic(cos_theta) * expf(-tan_theta_sqr * corrected_aniso_term) / (M_PIf * alpha_x * alpha_y * cos_theta_pow_4);
 }
 
-_fn float beckmann_anisotropic(const optix::float3 & m, const optix::float3 & n, const float alpha_x, const float alpha_y)
+_fn float beckmann_anisotropic(const optix::float3 & m, const optix::float3 & n, const optix::float3 & u, const float alpha_x, const float alpha_y)
 {
-	return beckmann_anisotropic(dot(m, n), alpha_x, alpha_y);
+	optix_assert(dot(u, n) < 1e-6f);
+	float cos_theta = dot(m, n);
+	optix::float3 projected_m = normalize(project_on_plane(m, n));
+	float cos_phi = dot(projected_m, u);
+	return beckmann_anisotropic(cos_theta, cos_phi, alpha_x, alpha_y);
 }
 
 _fn optix::float3 importance_sample_beckmann_anisotropic_local(const optix::float2& rand, const float alpha_x, const float alpha_y)
@@ -73,7 +78,7 @@ _fn optix::float3 importance_sample_beckmann_anisotropic_local(const optix::floa
 	const float phi = 2.0f * M_PIf * rand.y;
 	const float x = alpha_x * rn * cosf(phi);
 	const float y = alpha_y * rn * sinf(phi);
-	optix::float3 m = optix::normalize(optix::make_float3(x, y, 1));
+	optix::float3 m = optix::normalize(optix::make_float3(-x, -y, 1));
 	return m;
 }
 
