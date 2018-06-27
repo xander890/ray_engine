@@ -13,7 +13,7 @@ using optix::float3;
 #include "improved_enum.inc"
 
 /*
- * Struct to store the camera "intrinsic parameter". At the moment they can model only a pinhole camera.
+ * Struct to store the camera "intrinsic parameters". At the moment they can model only a pinhole camera.
  */
 struct CameraParameters
 {

@@ -41,7 +41,7 @@ void BSSRDFPlaneRenderer::initialize_shader(optix::Context ctx)
 	Shader::initialize_shader(ctx);
 	//in static constructor
 
-	std::string ptx_path_output = get_path_ptx("bssrdf_plane_visualizer.cu");
+	std::string ptx_path_output = Folders::get_path_to_ptx("bssrdf_plane_visualizer.cu");
 	optix::Program ray_gen_program_output = context->createProgramFromPTXFile(ptx_path_output, "render");
 
 	if (entry_point_output == -1)

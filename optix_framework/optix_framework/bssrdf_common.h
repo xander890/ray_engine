@@ -72,6 +72,10 @@ struct ApproximateBSSRDFProperties
 	int pad1;
 };
 
+/*
+ * Additional properties for the quantized diffusion model (mostly to precompute)
+ * FIXME move me into some common file for quantized diffusion
+ */
 struct QuantizedDiffusionProperties
 {
 	BufPtr1D<optix::float3> precomputed_bssrdf;
@@ -80,6 +84,9 @@ struct QuantizedDiffusionProperties
 	int use_precomputed_qd		DEFAULT(0);
 };
 
+/*
+ *  Two points on the surface with realitive attributes to evaluate the bssrdf.
+ */
 struct BSSRDFGeometry
 {
     optix::float3 xi;
@@ -90,10 +97,13 @@ struct BSSRDFGeometry
     optix::float3 no;
 };
 
+/*
+ * Properties used to importance sample the BSSRDF.
+ */
 struct BSSRDFSamplingProperties
 {
-	BssrdfSamplingType::Type        			sampling_method						DEFAULT(BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE);
-    BssrdfSamplePointOnTangentTechnique::Type   sampling_tangent_plane_technique    DEFAULT(BssrdfSamplePointOnTangentTechnique::EXPONENTIAL_DISK);
+	BssrdfSamplingType::Type        			sampling_method						DEFAULT(BssrdfSamplingType::BSSRDF_SAMPLING_TANGENT_PLANE); // See above
+    BssrdfSamplePointOnTangentTechnique::Type   sampling_tangent_plane_technique    DEFAULT(BssrdfSamplePointOnTangentTechnique::EXPONENTIAL_DISK); // Se above
 	int 										use_jacobian						DEFAULT(0);
 	float 										d_max								DEFAULT(1.0f);
 	float 										dot_no_ni_min						DEFAULT(0.001f);

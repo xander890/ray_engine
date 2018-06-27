@@ -135,7 +135,7 @@ int Camera::get_id() const
 
 void Camera::init()
 {
-	const std::string ptx_path = get_path_ptx("pinhole_camera.cu");
+	const std::string ptx_path = Folders::get_path_to_ptx("pinhole_camera.cu");
 	std::string camera_name = "pinhole_camera";
 	optix::Program ray_gen_program = mContext->createProgramFromPTXFile(ptx_path, camera_name);
 	mEntryPoint = add_entry_point(mContext, ray_gen_program);

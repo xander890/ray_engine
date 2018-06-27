@@ -1,11 +1,14 @@
 #pragma once
-#include "vector_functions.hpp"
+#include "host_device_common.h"
+/*
+ * Small helper class to enable LIMITED double support in OptiX. This was not a thing as of OptiX 4, check if this is still the case.
+ */
 
-
+using optix::double2;
+using optix::make_double2;
 
 namespace optix
 {
-
 	__forceinline__ RT_HOSTDEVICE double2 operator*(const double2& a, const double2& b)
 	{
 		return make_double2(a.x * b.x, a.y * b.y);

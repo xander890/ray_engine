@@ -5,12 +5,12 @@
 void ConvexHull::create_and_bind_optix_data()
 {
 	if (!mIntersectProgram.get()) {
-		std::string path = get_path_ptx("chull.cu");
+		std::string path = Folders::get_path_to_ptx("chull.cu");
 		mIntersectProgram = mContext->createProgramFromPTXFile(path, "chull_intersect");
 	}
 
 	if (!mBoundingboxProgram.get()) {
-		std::string path = get_path_ptx("chull.cu");
+		std::string path = Folders::get_path_to_ptx("chull.cu");
 		mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "chull_bounds");
 	}
 	if (!mBBoxBuffer.get())

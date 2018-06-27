@@ -7,6 +7,10 @@
 #include "empirical_bssrdf_common.h"
 #include "optix_device_utils.h"
 
+/*
+ * In this file we handle reading from an empirical bssrdf. This includes raveling and unraveling indices, interpolation, and tangent plane selection.
+ */
+
 #ifdef INCLUDE_PROGRAMS_ONLY
 rtDeclareVariable(rtCallableProgramId<optix::float3(const BSSRDFGeometry, const float, const MaterialDataCommon, unsigned int, TEASampler *)>, empirical_bssrdf, , );
 #else
@@ -201,7 +205,7 @@ _fn optix::float3 eval_empbssrdf(const BSSRDFGeometry geom, const float n1_over_
     }
     else if(non_planar_geometry_handle == EmpiricalBSSRDFNonPlanarity::MUTUAL_ROTATION)
     {
-        // FIXME implement me
+        // TODO implement me
     }
 
     empirical_bssrdf_get_geometry(geometry, theta_i, r, theta_s, theta_o, phi_o);

@@ -157,7 +157,7 @@ bool RayWorkbench::draw_gui()
     if (ImmediateGUIDraw::Button("Serialize"))
     {
         std::string path;
-        if (Dialogs::saveFileDialog(path))
+        if (Dialogs::save_file_dialog(path))
         {
             serialize_scene(path);
         }
@@ -167,7 +167,7 @@ bool RayWorkbench::draw_gui()
     if (ImmediateGUIDraw::Button("Load scene..."))
     {
         std::string path;
-        if (Dialogs::openFileDialog(path))
+        if (Dialogs::open_file_dialog(path))
         {
             load_scene(path);
         }
@@ -216,7 +216,7 @@ bool RayWorkbench::draw_gui()
         if (ImmediateGUIDraw::Button("Save screenshot"))
         {
             std::string filePath;
-            if (Dialogs::saveFileDialog(filePath))
+            if (Dialogs::save_file_dialog(filePath))
             {
                 exportTexture(filePath, rendering_output_buffer, m_frame);
             }
@@ -454,8 +454,8 @@ void RayWorkbench::initialize_scene(GLFWwindow *)
     // The default used by the ObjLoader is SBVH.
 
     // Set mUp cameras    
-    Program ray_gen_program_t = context->createProgramFromPTXFile(get_path_ptx("tonemap_camera.cu"), "tonemap_camera");
-    Program ray_gen_program_d = context->createProgramFromPTXFile(get_path_ptx("debug_camera.cu"), "debug_camera");
+    Program ray_gen_program_t = context->createProgramFromPTXFile(Folders::get_path_to_ptx("tonemap_camera.cu"), "tonemap_camera");
+    Program ray_gen_program_d = context->createProgramFromPTXFile(Folders::get_path_to_ptx("debug_camera.cu"), "debug_camera");
 
     tonemap_entry_point = add_entry_point(context, ray_gen_program_t);
     debug_entry_point = add_entry_point(context, ray_gen_program_d);
@@ -476,7 +476,7 @@ void RayWorkbench::initialize_scene(GLFWwindow *)
     context["scene_epsilon"]->setFloat(parameters.scene_epsilon_fraction * max_dim);
     // Prepare to run 
 
-    if (GLFWDisplay::isDisplayAvailable())
+    if (GLFWDisplay::is_display_available())
         gui = std::make_unique<ImmediateGUI>();
 
     context["show_difference_image"]->setInt(show_difference_image);

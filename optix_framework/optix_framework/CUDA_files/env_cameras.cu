@@ -19,9 +19,9 @@ RT_PROGRAM void env_luminance_camera()
   sincosf(theta, &sin_theta, &cos_theta);
   sincosf(phi, &sin_phi, &cos_phi);
   float3 dir = make_float3(sin_theta*sin_phi, -cos_theta, -sin_theta*cos_phi);
-  float2 uv2 = direction_to_uv_coord_cubemap(dir, envmap_properties->lightmap_rotation_matrix);
-  float3 texel = make_float3(rtTex2D<float4>(envmap_properties->environment_map_tex_id, uv2.x, uv2.y));
-  envmap_importance_sampling->env_luminance[launch_index] = luminance_NTSC(texel)*sin_theta;
+  float2 uv2 = direction_to_uv_coord_cubemap(dir, envmap_properties.lightmap_rotation_matrix);
+  float3 texel = make_float3(rtTex2D<float4>(envmap_properties.environment_map_tex_id, uv2.x, uv2.y));
+  envmap_importance_sampling.env_luminance[launch_index] = luminance_NTSC(texel)*sin_theta;
 }
 
 RT_PROGRAM void env_marginal_camera()
@@ -32,15 +32,15 @@ RT_PROGRAM void env_marginal_camera()
     for(uint i = 0; i < launch_dim.x; ++i)
     {
       uint2 idx = make_uint2(i, launch_index.y);
-      c_f_sum += envmap_importance_sampling->env_luminance[idx];
+      c_f_sum += envmap_importance_sampling.env_luminance[idx];
     }
-    envmap_importance_sampling->marginal_f[launch_index.y] = c_f_sum / launch_dim.x;
+    envmap_importance_sampling.marginal_f[launch_index.y] = c_f_sum / launch_dim.x;
   }
 }
 
 RT_PROGRAM void env_pdf_camera()
 {
-    EnvmapImportanceSamplingData& d = *envmap_importance_sampling;
+    EnvmapImportanceSamplingData& d = envmap_importance_sampling;
     d.conditional_pdf[launch_index] = d.env_luminance[launch_index] / d.marginal_f[launch_index.y];
     float cdf_sum = 0.0f;
     for(uint i = 0; i <= launch_index.x; ++i)

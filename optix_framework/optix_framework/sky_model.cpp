@@ -127,7 +127,7 @@ optix::float3 SkyModel::get_sun_color()
 bool SkyModel::get_miss_program(unsigned ray_type, optix::Context& ctx, optix::Program& program)
 {
     const char * prog = ray_type ==  RayType::SHADOW ? "miss_shadow" : "miss";
-    program = ctx->createProgramFromPTXFile(get_path_ptx("sky_model_background.cu"), prog);
+    program = ctx->createProgramFromPTXFile(Folders::get_path_to_ptx("sky_model_background.cu"), prog);
     return true;
 }
 

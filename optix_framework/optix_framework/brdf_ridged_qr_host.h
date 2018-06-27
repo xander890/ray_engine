@@ -22,19 +22,9 @@ private:
 
 	// Serialization classes
 	friend class cereal::access;
-	void load(cereal::XMLInputArchiveOptix & archive)
-	{
-		archive(cereal::base_class<BRDF>(this),
-			cereal::make_nvp("ridge_angle", ridge_angle)
-		);
-	}
+    void load(cereal::XMLInputArchiveOptix& archive);
 
-	void save(cereal::XMLOutputArchiveOptix & archive) const
-	{
-		archive(cereal::base_class<BRDF>(this),
-			cereal::make_nvp("ridge_angle", ridge_angle)
-		);
-	}
+    void save(cereal::XMLOutputArchiveOptix& archive) const;
 	float ridge_angle = 20.0f;
 };
 

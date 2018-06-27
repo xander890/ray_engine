@@ -5,6 +5,10 @@
 #include "bssrdf_loader.h"
 #include "empirical_bssrdf_common.h"
 
+/*
+ * Specialization of BSSRDF class to represent an empirical BSSRDF. The empirical BSSRDF consist of a series of axes values (albedo, eta, g, theta_s, r, theta_i, etc.) and a table of corresponding values. This class handles reading  the BSSRDF and uploading it to the GPU in a appropriate fashion.
+ */
+
 class BSSRDFImporter;
 
 class EmpiricalBSSRDF : public BSSRDF
@@ -33,7 +37,7 @@ private:
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		// FIXME handle load save properly.
+		// TODO handle load save properly.
 		archive(
 				cereal::base_class<BSSRDF>(this)
 		);

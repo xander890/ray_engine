@@ -16,14 +16,14 @@ using optix::float4;
 
 _fn void get_environment_map_color(const float3& direction, float3 & color)
 {
-    const float2 uv = direction_to_uv_coord_cubemap(direction, envmap_properties->lightmap_rotation_matrix);
-    color = make_float3(rtTex2D<float4>(envmap_properties->environment_map_tex_id, uv.x, uv.y)) * envmap_properties->lightmap_multiplier;
+    const float2 uv = direction_to_uv_coord_cubemap(direction, envmap_properties.lightmap_rotation_matrix);
+    color = make_float3(rtTex2D<float4>(envmap_properties.environment_map_tex_id, uv.x, uv.y)) * envmap_properties.lightmap_multiplier;
 }
 
 // Miss program returning background color
 RT_PROGRAM void miss()
 {
-  float3 color = make_float3(0.0f);
+  float3 color = optix::make_float3(0.0f);
   if (prd_radiance.flags & RayFlags::USE_EMISSION)
   {
 	get_environment_map_color(ray.direction, color);
@@ -35,7 +35,7 @@ RT_PROGRAM void miss()
 // Miss program returning background color
 RT_PROGRAM void miss_shadow()
 {
-	float3 color = make_float3(0.0f);
+	float3 color = optix::make_float3(0.0f);
 	get_environment_map_color(ray.direction, color);
 	prd_shadow.emission = color;
 	prd_shadow.attenuation = 1.0f;

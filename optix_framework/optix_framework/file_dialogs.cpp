@@ -2,7 +2,7 @@
 #include "nfd/include/nfd.h"
 
 
-bool Dialogs::openFileDialog(std::string& selectedFilePath, const std::string& filters)
+bool Dialogs::open_file_dialog(std::string& selectedFilePath, const std::string& filters)
 {
 	nfdchar_t *outPath = nullptr;
 	nfdresult_t result = NFD_OpenDialog(filters.c_str(), nullptr, &outPath);
@@ -21,7 +21,7 @@ bool Dialogs::openFileDialog(std::string& selectedFilePath, const std::string& f
 	return false;
 }
 
-bool Dialogs::saveFileDialog(std::string& selectedFilePath, const std::string& filters)
+bool Dialogs::save_file_dialog(std::string& selectedFilePath, const std::string& filters)
 {
 	nfdchar_t *outPath = nullptr;
 	nfdresult_t result = NFD_SaveDialog(filters.c_str(), nullptr, &outPath);

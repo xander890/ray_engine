@@ -1,6 +1,9 @@
 #pragma once
 #include "host_device_common.h"
 #include "optix_serialize_utils.h"
+/*
+ * Wrapper class for all Geometry. A geometry in this framework. 
+ */
 
 class Geometry
 {

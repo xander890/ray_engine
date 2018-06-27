@@ -39,30 +39,25 @@
  // GLFWDisplay class implementation 
  //-----------------------------------------------------------------------------
 
-Mouse*         GLFWDisplay::m_mouse = nullptr;
-SampleScene*   GLFWDisplay::m_scene = nullptr;
-GLFWwindow*    GLFWDisplay::m_window = nullptr;
-bool           GLFWDisplay::m_display_frames = true;
+Mouse*         GLFWDisplay::mMouse = nullptr;
+SampleScene*   GLFWDisplay::mScene = nullptr;
+GLFWwindow*    GLFWDisplay::mWindow = nullptr;
+bool           GLFWDisplay::mDisplayedFrames = true;
 
-bool           GLFWDisplay::m_sRGB_supported = false;
-bool           GLFWDisplay::m_use_sRGB = false;
+bool           GLFWDisplay::mIssRGBSupported = false;
+bool           GLFWDisplay::mUsesRGB = false;
 
-bool           GLFWDisplay::m_initialized = false;
-std::string    GLFWDisplay::m_title = "";
+bool           GLFWDisplay::mInitialized = false;
+std::string    GLFWDisplay::mTitle = "";
 
-bool            GLFWDisplay::m_requires_display = true;
+bool            GLFWDisplay::mRequiresDisplay = true;
 
-
-void GLFWDisplay::printUsage()
-{
-
-}
 
 void GLFWDisplay::init(int& argc, char** argv)
 {
-    m_initialized = true;
+    mInitialized = true;
 
-    if (m_requires_display)
+    if (mRequiresDisplay)
     {
         if (!glfwInit())
         {
@@ -73,17 +68,17 @@ void GLFWDisplay::init(int& argc, char** argv)
 
 void GLFWDisplay::run(const std::string& title, SampleScene* scene)
 {
-    if (!m_initialized) {
+    if (!mInitialized) {
         std::cerr << "ERROR - GLFWDisplay::run() called before GLFWDisplay::init()" << std::endl;
         exit(2);
     }
-    m_scene = scene;
-    m_title = title;
+    mScene = scene;
+    mTitle = title;
 
-    if (m_requires_display)
+    if (mRequiresDisplay)
     {
-        m_window = glfwCreateWindow(1, 1, m_title.c_str(), nullptr, nullptr);
-        glfwMakeContextCurrent(m_window);
+        mWindow = glfwCreateWindow(1, 1, mTitle.c_str(), nullptr, nullptr);
+        glfwMakeContextCurrent(mWindow);
 
         glewInit();
         GLint glewInitResult = glewInit();
@@ -94,12 +89,12 @@ void GLFWDisplay::run(const std::string& title, SampleScene* scene)
         }
 
         if (glewIsSupported("GL_EXT_texture_sRGB GL_EXT_framebuffer_sRGB")) {
-            m_sRGB_supported = true;
+            mIssRGBSupported = true;
         }
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-        if (!m_window)
+        if (!mWindow)
         {
             glfwTerminate();
             exit(EXIT_FAILURE);
@@ -107,35 +102,35 @@ void GLFWDisplay::run(const std::string& title, SampleScene* scene)
     }
     else
     {
-        m_window = nullptr;
+        mWindow = nullptr;
     }
 
     int buffer_width;
     int buffer_height;
     try {
         // Set mUp scene
-        m_scene->initialize_scene(m_window);
+        mScene->initialize_scene(mWindow);
 
         // Initialize camera according to scene params
-        optix::Buffer buffer = m_scene->get_output_buffer();
+        optix::Buffer buffer = mScene->get_output_buffer();
         RTsize buffer_width_rts, buffer_height_rts;
         buffer->getSize(buffer_width_rts, buffer_height_rts);
         buffer_width = static_cast<int>(buffer_width_rts);
         buffer_height = static_cast<int>(buffer_height_rts);
-        m_mouse = new Mouse(m_scene->get_camera(), buffer_width, buffer_height);
-        m_mouse->handleMouseFunc(0, 0, -1, GLFW_PRESS, 0);
+        mMouse = new Mouse(mScene->get_camera(), buffer_width, buffer_height);
+        mMouse->handleMouseFunc(0, 0, -1, GLFW_PRESS, 0);
     }
     catch (optix::Exception& e) {
         Logger::error << (e.getErrorString().c_str());
         exit(2);
     }
 
-    m_scene->scene_initialized();
+    mScene->scene_initialized();
 
-    if (m_requires_display)
+    if (mRequiresDisplay)
     {
 
-        glfwSetWindowSize(m_window, buffer_width, buffer_height);
+        glfwSetWindowSize(mWindow, buffer_width, buffer_height);
         // Initialize state
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -144,12 +139,12 @@ void GLFWDisplay::run(const std::string& title, SampleScene* scene)
         glLoadIdentity();
         glViewport(0, 0, buffer_width, buffer_height);
 
-        glfwSetKeyCallback(m_window, keyPressed);
-        glfwSetMouseButtonCallback(m_window, mouseButton);
-        glfwSetCursorPosCallback(m_window, mouseMotion);
-        glfwSetWindowSizeCallback(m_window, resize);
+        glfwSetKeyCallback(mWindow, key_pressed);
+        glfwSetMouseButtonCallback(mWindow, mouse_button);
+        glfwSetCursorPosCallback(mWindow, mouse_moving);
+        glfwSetWindowSizeCallback(mWindow, resize);
 
-        while (!glfwWindowShouldClose(m_window))
+        while (!glfwWindowShouldClose(mWindow))
         {
             glfwPollEvents();
             display();
@@ -170,15 +165,15 @@ void GLFWDisplay::resize(GLFWwindow * window, int width, int height)
     // disallow size 0
     width = optix::max(1, width);
     height = optix::max(1, height);
-    m_scene->get_camera()->set_aspect_ratio(width / (float)height);
+    mScene->get_camera()->set_aspect_ratio(width / (float)height);
 
-    m_scene->signalCameraChanged();
-    m_mouse->handleResize(width, height);
+    mScene->signalCameraChanged();
+    mMouse->handleResize(width, height);
 
     glfwSetWindowSize(window, width, height);
 
     try {
-        m_scene->resize(width, height);
+        mScene->resize(width, height);
     }
     catch (optix::Exception& e) {
         Logger::error << (e.getErrorString().c_str());
@@ -191,10 +186,10 @@ void GLFWDisplay::resize(GLFWwindow * window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void GLFWDisplay::displayFrame()
+void GLFWDisplay::display_frame()
 {
     GLboolean sRGB = GL_FALSE;
-    if (m_use_sRGB && m_sRGB_supported) {
+    if (mUsesRGB && mIssRGBSupported) {
         glGetBooleanv(GL_FRAMEBUFFER_SRGB_CAPABLE_EXT, &sRGB);
         if (sRGB) {
             glEnable(GL_FRAMEBUFFER_SRGB_EXT);
@@ -202,7 +197,7 @@ void GLFWDisplay::displayFrame()
     }
 
     // Draw the resulting image
-    optix::Buffer buffer = m_scene->get_output_buffer();
+    optix::Buffer buffer = mScene->get_output_buffer();
     RTsize buffer_width_rts, buffer_height_rts;
     buffer->getSize(buffer_width_rts, buffer_height_rts);
     const int buffer_width = static_cast<int>(buffer_width_rts);
@@ -323,7 +318,7 @@ void GLFWDisplay::displayFrame()
         buffer->unmap();
 
     }
-    if (m_use_sRGB && m_sRGB_supported && sRGB) {
+    if (mUsesRGB && mIssRGBSupported && sRGB) {
         glDisable(GL_FRAMEBUFFER_SRGB_EXT);
     }
 }
@@ -331,44 +326,40 @@ void GLFWDisplay::displayFrame()
 void GLFWDisplay::display()
 {
 
-    bool display_requested = m_requires_display;
-    m_mouse->setCamera(m_scene->get_camera());
+    bool display_requested = mRequiresDisplay;
+    mMouse->setCamera(mScene->get_camera());
 
-    try {
-        // render the scene
-        // Don't be tempted to just start filling in the values outside of a constructor,
-        // because if you add a parameter it's easy to forget to add it here.
+    try 
+    {
+        mScene->trace();
 
-        {
-            m_scene->trace();
-        }
-
-        if (display_requested && m_display_frames) {
+        if (display_requested && mDisplayedFrames) {
             // Only enable for debugging
             // glClearColor(1.0, 0.0, 0.0, 0.0);
             // glClear(GL_COLOR_BUFFER_BIT);
 
-            displayFrame();
+            display_frame();
         }
     }
     catch (optix::Exception& e) {
         std::cout << (e.getErrorString().c_str());
         exit(2);
     }
-    m_scene->post_draw_callback();
+
+    mScene->post_draw_callback();
 
     std::string debug;
 
-    if (display_requested && m_display_frames) {
+    if (display_requested && mDisplayedFrames) {
         // Swap buffers
-        glfwSwapBuffers(m_window);
+        glfwSwapBuffers(mWindow);
     }
 }
 
-void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int action, int modifier)
+void GLFWDisplay::key_pressed(GLFWwindow * window, int key, int scancode, int action, int modifier)
 {
     try {
-        if (m_scene->key_pressed(key, action, modifier)) {
+        if (mScene->key_pressed(key, action, modifier)) {
             return;
         }
     }
@@ -387,27 +378,27 @@ void GLFWDisplay::keyPressed(GLFWwindow * window, int key, int scancode, int act
     }
 }
 
-void GLFWDisplay::mouseButton(GLFWwindow * window, int button, int action, int modifiers)
+void GLFWDisplay::mouse_button(GLFWwindow * window, int button, int action, int modifiers)
 {
     double xd, yd;
     glfwGetCursorPos(window, &xd, &yd);
     int x = static_cast<int>(xd);
     int y = static_cast<int>(yd);
-    if (!m_scene->mouse_pressed(x, y, button, action, modifiers))
+    if (!mScene->mouse_pressed(x, y, button, action, modifiers))
     {
-        m_mouse->handleMouseFunc(x, y, button, action, modifiers);
-        m_scene->signalCameraChanged();
+        mMouse->handleMouseFunc(x, y, button, action, modifiers);
+        mScene->signalCameraChanged();
     }
 }
 
-void GLFWDisplay::mouseMotion(GLFWwindow * window, double xd, double yd)
+void GLFWDisplay::mouse_moving(GLFWwindow * window, double xd, double yd)
 {
     int x = static_cast<int>(xd);
     int y = static_cast<int>(yd);
-    m_mouse->handleMoveFunc(x, y);
-    if (m_mouse->handleMoveFunc(x, y))
+    mMouse->handleMoveFunc(x, y);
+    if (mMouse->handleMoveFunc(x, y))
     {
-        m_scene->signalCameraChanged();
+        mScene->signalCameraChanged();
     }
 }
 
@@ -415,10 +406,10 @@ void GLFWDisplay::mouseMotion(GLFWwindow * window, double xd, double yd)
 void GLFWDisplay::quit(int return_code)
 {
     try {
-        if (m_scene)
+        if (mScene)
         {
-            m_scene->clean_up();
-            if (m_scene->get_context().get() != 0)
+            mScene->clean_up();
+            if (mScene->get_context().get() != 0)
             {
                 Logger::error << ("Derived scene class failed to call SampleScene::clean_up()");
                 exit(2);

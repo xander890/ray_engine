@@ -2,7 +2,6 @@
 #include "host_device_common.h"
 #include "bssrdf_common.h"
 #include "math_utils.h"
-//#define USE_OLD_STORAGE
 
 // Ways to handle non-planar geometry.
 #define IMPROVED_ENUM_NAME EmpiricalBSSRDFNonPlanarity
@@ -14,22 +13,33 @@
 							ENUMITEM_VALUE(MUTUAL_ROTATION,5)
 #include "improved_enum.inc"
 
+// Shape of the final empirical BSSRDF data, at the lowest denomination. Can be hemisphere or plane.
 #define IMPROVED_ENUM_NAME OutputShape
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(PLANE,0) ENUMITEM_VALUE(HEMISPHERE,1)
 #include "improved_enum.inc"
 
 #define DEFAULT_SHAPE OutputShape::PLANE
 
+/*
+ * Struct that describes storage for the different parameters of the empirical bssrdf. This are the vbalues at the axes. Of a multidimensional array.
+ */
 struct EmpiricalParameterBuffer
 {
 	rtBufferId<float> buffers[5];
 };
 
+/*
+ * Stores the actual BSSRDF table. One for colorband, R G B.
+ */
 struct EmpiricalDataBuffer
 {
 	rtBufferId<float> buffers[3]; //R,G,B
-    int test;
+    int pad;
 };
+
+/*
+ * Conversions
+*/
 
 #define UNIFORM_POLAR_STORAGE 0
 #define HEMI_UNIFORM_POLAR_STORAGE 1

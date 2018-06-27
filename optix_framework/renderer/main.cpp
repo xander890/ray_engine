@@ -35,8 +35,6 @@ void printUsageAndExit( const std::string& argv0 )
 	   << "options: --rectangle <ox oy w h>     renctangle to render." << std::endl
 	   << std::endl;
 
-  GLFWDisplay::printUsage();
-
   exit(0);
 }
 
@@ -113,7 +111,7 @@ int main( int argc, char** argv )
 	}
 	}
 
-	GLFWDisplay::setRequiresDisplay(!nodisplay);
+	GLFWDisplay::set_requires_display(!nodisplay);
 	GLFWDisplay::init( argc, argv );
 	
 	std::unique_ptr<RenderTask> task = nullptr;

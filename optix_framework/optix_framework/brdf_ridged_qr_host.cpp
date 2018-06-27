@@ -19,4 +19,18 @@ bool RidgedBRDF::on_draw()
 	return changed;		
 }
 
+void RidgedBRDF::load(cereal::XMLInputArchiveOptix& archive)
+{
+    archive(cereal::base_class<BRDF>(this),
+            cereal::make_nvp("ridge_angle", ridge_angle)
+    );
+}
+
+void RidgedBRDF::save(cereal::XMLOutputArchiveOptix& archive) const
+{
+    archive(cereal::base_class<BRDF>(this),
+            cereal::make_nvp("ridge_angle", ridge_angle)
+    );
+}
+
 

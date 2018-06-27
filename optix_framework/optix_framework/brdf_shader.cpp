@@ -35,7 +35,7 @@ bool BRDFShader::on_draw()
         mBRDF.reset();
         mBRDF = BRDF::create(context, type);
         std::string path;
-        if(type == BRDFType::MERL && Dialogs::openFileDialog(path))
+        if(type == BRDFType::MERL && Dialogs::open_file_dialog(path))
         {
             MERLBRDF* other = dynamic_cast<MERLBRDF*>(mBRDF.get());
             other->load_brdf_file(path);

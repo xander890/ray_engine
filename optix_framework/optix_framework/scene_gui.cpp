@@ -33,7 +33,7 @@ bool SceneGUI::on_draw(Scene * scene)
         if(ImmediateGUIDraw::Button("Load from file..."))
         {
             std::string path;
-            if(Dialogs::openFileDialog(path))
+            if(Dialogs::open_file_dialog(path))
             {
                 ObjLoader* loader = new ObjLoader(path.c_str(), scene->context);
                 std::vector<std::unique_ptr<Object>>& v = loader->load();
@@ -131,7 +131,7 @@ bool SceneGUI::on_draw(Scene * scene)
             if (ImGui::Selectable("Environment map"))
             {
                 std::string path;
-                if(Dialogs::openFileDialog(path))
+                if(Dialogs::open_file_dialog(path))
                 {
                     scene->set_miss_program(std::make_unique<EnvironmentMap>(context, path));
                 }

@@ -12,12 +12,12 @@ void Sphere::load_data(optix::ScopedObj * obj)
 void Sphere::create_and_bind_optix_data()
 {
 	if (!mIntersectProgram.get()) {
-		std::string path = get_path_ptx("sphere.cu");
+		std::string path = Folders::get_path_to_ptx("sphere.cu");
 		mIntersectProgram = mContext->createProgramFromPTXFile(path, "sphere_intersect");
 	}
 
 	if (!mBoundingboxProgram.get()) {
-		std::string path = get_path_ptx("sphere.cu");
+		std::string path = Folders::get_path_to_ptx("sphere.cu");
 		mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "sphere_bounds");
 	}
 	if (!mBBoxBuffer.get())

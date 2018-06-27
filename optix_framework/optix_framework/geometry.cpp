@@ -25,13 +25,13 @@ void Geometry::create_and_bind_optix_data()
 {
     if (!mIntersectProgram.get())
     {
-        std::string path = get_path_ptx("triangle_mesh.cu");
+        std::string path = Folders::get_path_to_ptx("triangle_mesh.cu");
         mIntersectProgram = mContext->createProgramFromPTXFile(path, "mesh_intersect");
     }
 
     if (!mBoundingboxProgram.get())
     {
-        std::string path = get_path_ptx("triangle_mesh.cu");
+        std::string path = Folders::get_path_to_ptx("triangle_mesh.cu");
         mBoundingboxProgram = mContext->createProgramFromPTXFile(path, "mesh_bounds");
     }
     if (!mBBoxBuffer.get())

@@ -25,7 +25,7 @@ void PresampledSurfaceBssrdf::initialize_shader(optix::Context ctx)
     Shader::initialize_shader(ctx);
     //in static constructor
 
-    std::string ptx_path = get_path_ptx("sample_camera.cu");
+    std::string ptx_path = Folders::get_path_to_ptx("sample_camera.cu");
     optix::Program ray_gen_program = context->createProgramFromPTXFile( ptx_path, "sample_camera" );
 	
     entry_point = add_entry_point(context, ray_gen_program);

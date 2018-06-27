@@ -6,6 +6,9 @@
 #include <memory>
 #include "optix_serialize_utils.h"
 
+/*
+ * Miss program describing an environment map.
+ */
 class EnvironmentMap : public MissProgram
 {
 public:
@@ -18,49 +21,24 @@ public:
     virtual bool on_draw() override;
 private:
     virtual bool get_miss_program(unsigned int ray_type, optix::Context & ctx, optix::Program & program) override;
-    
-    EnvmapProperties properties;
-    EnvmapImportanceSamplingData sampling_properties;
+  
+    EnvmapProperties mProperties;
+    EnvmapImportanceSamplingData mSamplingProperties;
 
-    optix::float3 envmap_deltas;
-    std::unique_ptr<Texture> environment_sampler = nullptr;
-    optix::Buffer property_buffer;
-    optix::Buffer sampling_property_buffer;
+    optix::float3 mEnvmapRotationDeltas;
+    std::unique_ptr<Texture> mEnvmapTexture = nullptr;
 
-    unsigned int camera_1, camera_2, camera_3;
-	std::string envmap_path = "";
+    unsigned int mEntryPoint1, mEntryPoint2, mEntryPoint3;
+	std::string mEnvmapPath = "";
 
     void presample_environment_map();
-    bool resample_envmaps = true;
+    bool mResample = true;
 
+    // Serialization
 	friend class cereal::access;
-	EnvironmentMap() : MissProgram() {}
-
-	void load(cereal::XMLInputArchiveOptix & archive)
-	{
-		optix::Context ctx = archive.get_context();
-		mContext = ctx;
-		archive(
-			cereal::virtual_base_class<MissProgram>(this),
-			cereal::make_nvp("texture", environment_sampler),
-			cereal::make_nvp("delta_rotation", envmap_deltas),
-			cereal::make_nvp("light_multiplier", properties.lightmap_multiplier),
-			cereal::make_nvp("importance_sample", properties.importance_sample_envmap)
-		);
-	}
-
-	template<class Archive>
-	void save(Archive & archive) const
-	{
-		archive(
-			 cereal::virtual_base_class<MissProgram>(this),
-	    	 cereal::make_nvp("texture", environment_sampler),
-			 cereal::make_nvp("delta_rotation", envmap_deltas),
-             cereal::make_nvp("light_multiplier", properties.lightmap_multiplier),
-             cereal::make_nvp("importance_sample", properties.importance_sample_envmap)
-		);
-	}
-
+    EnvironmentMap() = default;
+    void load(cereal::XMLInputArchiveOptix& archive);
+    void save(cereal::XMLOutputArchiveOptix& archive) const;
 };
 
 CEREAL_CLASS_VERSION(EnvironmentMap, 0)

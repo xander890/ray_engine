@@ -91,3 +91,12 @@ _fn void get_glass_rays(const optix::float3& wo, const float ior, const optix::f
 	reflected_ray = optix::make_Ray(hit_pos, reflected_dir,  RayType::RADIANCE, scene_epsilon, RT_DEFAULT_MAX);
 }
 
+_fn void shadow_hit(PerRayData_shadow & shadow_payload, optix::float3 & emission)
+{
+    if (!(emission.x + emission.y + emission.z > 0.0f))
+    {
+        shadow_payload.attenuation = 0.0f;
+    }
+
+    rtTerminateRay();
+}

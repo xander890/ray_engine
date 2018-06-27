@@ -67,7 +67,7 @@ optix::Program ShaderFactory::createProgram(std::string file, std::string progra
     optix::Program result;
     try
     {
-        std::string ptx_path = get_path_ptx(file);
+        std::string ptx_path = Folders::get_path_to_ptx(file);
         std::string full_name = get_full_program_name(program_name, method);
         result = context->createProgramFromPTXFile(ptx_path, full_name);
     }
@@ -75,7 +75,7 @@ optix::Program ShaderFactory::createProgram(std::string file, std::string progra
     {
         Logger::warning << "Warning: function <" << get_full_program_name(program_name, method) << "> not found in file " << file << ". Reverting to full raytrace." << std::endl;
         // Fall back to standard ray tracing
-        result = context->createProgramFromPTXFile(get_path_ptx(file), program_name);
+        result = context->createProgramFromPTXFile(Folders::get_path_to_ptx(file), program_name);
     }
     return result;
 }
@@ -100,7 +100,7 @@ void ShaderFactory::init(optix::Context& ctx)
     ShaderInfo bssrdf = ShaderInfo(17, "subsurface_scattering_shader.cu", "Point cloud BSSRDF"); 
 	add_shader(std::make_unique<PresampledSurfaceBssrdf>(bssrdf));
 
-    for (const ShaderInfo& n: DefaultShader::default_shaders)
+    for (const ShaderInfo& n: DefaultShader::mDefaultShaders)
     {
         add_shader(std::make_unique<DefaultShader>(n));
     }

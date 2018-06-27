@@ -222,7 +222,7 @@ bool Object::on_draw()
                 if (ImmediateGUIDraw::Button("Load material selection texture..."))
                 {
                     std::string d;
-                    if (Dialogs::openFileDialog(d))
+                    if (Dialogs::open_file_dialog(d))
                     {
                         mMaterialSelectionTexture = loadTexture(mContext, d, optix::make_float4(0));
                         mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture);

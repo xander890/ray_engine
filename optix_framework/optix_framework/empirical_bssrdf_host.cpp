@@ -47,7 +47,6 @@ EmpiricalBSSRDF::EmpiricalBSSRDF(optix::Context & context): BSSRDF(context, Scat
     mDataBuffers.buffers[0] = 0;
     mDataBuffers.buffers[1] = 0;
     mDataBuffers.buffers[2] = 0;
-    mDataBuffers.test = 1;
 
     mBSSRDFFile = Folders::data_folder + "/bssrdf/test.bssrdf";
 }
@@ -71,7 +70,6 @@ void EmpiricalBSSRDF::load(const optix::float3 &relative_ior, const ScatteringMa
         mContext["empirical_bssrdf_parameters"]->setUserData(sizeof(EmpiricalParameterBuffer), &mParameterBuffers);
         auto id1 = rtBufferId<int>(mParameterSizeBuffer->getId());
         mContext["empirical_bssrdf_parameters_size"]->setUserData(sizeof(rtBufferId<int>), &id1);
-        mDataBuffers.test = 50;
 
         std::vector<size_t> state;
         bool found = true;

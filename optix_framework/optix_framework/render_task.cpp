@@ -19,7 +19,7 @@ bool RenderTask::on_draw()
 	if (!is_active() && ImmediateGUIDraw::Button("Choose destination file..."))
 	{
 		std::string filePath;
-		if (Dialogs::saveFileDialog(filePath))
+		if (Dialogs::save_file_dialog(filePath))
 		{
 			changed = true;
 			destination_file = filePath;
