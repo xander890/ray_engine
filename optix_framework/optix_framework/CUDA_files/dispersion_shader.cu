@@ -69,7 +69,7 @@ RT_PROGRAM void shade()
 
 		Ray reflected_ray, refracted_ray;
 		float R, cos_theta;
-		float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+		float relative_ior = get_monochromatic_ior(material);
 
 		get_glass_rays(ray.direction, relative_ior, hit_pos, normal, normal, reflected_ray, refracted_ray, R, cos_theta);
 

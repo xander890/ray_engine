@@ -225,7 +225,7 @@ bool RayWorkbench::draw_gui()
     }
 
     static optix::uint4 render_bounds = optix::make_uint4(0, 0, parameters.screen_width, parameters.screen_height);
-    if (ImmediateGUIDraw::InputInt4("Maximum ray depth", (int*)&render_bounds.x))
+    if (ImmediateGUIDraw::InputInt4("Render bounds", (int*)&render_bounds.x))
     {
         changed = true;
         context["render_bounds"]->setUint(render_bounds);

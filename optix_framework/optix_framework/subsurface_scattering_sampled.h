@@ -50,7 +50,7 @@ _fn void _shade()
 	float3 wo = -ray.direction;
 	const MaterialDataCommon material = get_material(xo);
 	const ScatteringMaterialProperties& props = material.scattering_properties;
-	float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+	float relative_ior = get_monochromatic_ior(material);
 	float recip_ior = 1.0f / relative_ior;
 	float reflect_xi = sampler->next1D();
 	prd_radiance.result = make_float3(0.0f);

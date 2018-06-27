@@ -15,20 +15,7 @@ _fn optix::float3 qr_plane_projection(const optix::float3& w, const optix::float
 	optix::float3 w_p = normalize(w - dot(w, u) * u);
 	return w_p;
 }
-_fn void qr_create_onb(const optix::float3& n, optix::float3& u, optix::float3& v, const float& t_x, const float& t_y)
-{
-	//create_onb(n, u, v);
-	//return;
-	const int span = 10;
-	const int vshift = int(t_y* span + 1) % 2;
-	bool toggle = int(t_x * span + vshift) % 2 == 0;
-	if (toggle) {
-		create_onb(n, u, v);
-	}
-	else {
-		create_onb(n, v, u);
-	}
-}
+
 _fn optix::uint qr_ridge_side(const optix::float3& w_p, const optix::float3& v, const float& theta_p, const float& slope, float& weight, const float& z)
 {
 	//ridge_side=1 if w_p hit the slope, ridge_side = 0 if w_p hit the edge
@@ -233,10 +220,12 @@ _fn void importance_sample_qr_brdf(BRDFGeometry & geometry,
 	optix::float3 w_i = geometry.wo;
 	optix::float3 rho_d = make_float3(optix::rtTex2D<optix::float4>(material.diffuse_map, geometry.texcoord.x, geometry.texcoord.y));
 
-	const float relative_ior = dot(material.index_of_refraction, optix::make_float3(1.0f)) / 3.0f;
+	const float relative_ior = get_monochromatic_ior(material);
 	float ior1_over_ior2 = 1.0f / relative_ior;
 	float slope = deg2rad(ridge_angle);
-	float roughness = material.roughness;
+
+    float a_v = material.roughness.x;
+    float a_u = material.roughness.y;
 	optix::uint ridge_side = 1;
 	//used normal
 	optix::float3 n = ffnormal;
@@ -259,8 +248,7 @@ _fn void importance_sample_qr_brdf(BRDFGeometry & geometry,
 	float z2 = sampler.next1D();
 	optix::float3 m;
 
-	float a_v = roughness;
-	float a_u = roughness / 4.0f;
+
 	qr_sample_anisotropic_beckmann_normal(ideal_m, u, v, m, a_u, a_v, z1, z2, ridge_side);
 	//qr_sample_normal(n, u, v, m, slope, ridge_side, roughness, z2);
 	//qr_sample_gaussian_normal(n, u, v, m, slope, ridge_side, roughness, seed);

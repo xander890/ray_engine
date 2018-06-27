@@ -4,13 +4,12 @@
 
 struct MaterialDataCommon
 {
-    int    illum;
+    int illum;
 	optix::float3  index_of_refraction;
-	float  roughness;
+	optix::float2  roughness;
 	float  anisotropy_angle;
     TexPtr ambient_map;
     TexPtr diffuse_map;
     TexPtr specular_map;
     ScatteringMaterialProperties scattering_properties;
-	int test;
 };

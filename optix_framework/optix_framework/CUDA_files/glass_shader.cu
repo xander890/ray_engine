@@ -58,11 +58,12 @@ _fn void _shade()
         prd.flags |= RayFlags::USE_EMISSION;
         float3 n = normal;
 
-        optix::float3 m = importance_sample_ggx(sampler.next2D(), n, material.roughness);
+        float r = get_monochromatic_roughness(material);
+        optix::float3 m = importance_sample_ggx(sampler.next2D(), n, r);
         optix::Ray reflected, refracted;
         float R, cos_theta_signed;
         optix::float3 ff_m;
-        float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+        float relative_ior = get_monochromatic_ior(material);
         get_glass_rays(wo, relative_ior, make_float3(0), m, ff_m, reflected, refracted, R, cos_theta_signed);
 
         float xi = sampler.next1D();
@@ -72,7 +73,7 @@ _fn void _shade()
         rtTrace(top_object, ray_t, prd);
 
         optix::float3 ff_normal = faceforward(n, wo, n);
-        float G = ggx_G1(wi, ff_m, ff_normal, material.roughness) * ggx_G1(wo, ff_m, ff_normal, material.roughness);
+        float G = ggx_G1(wi, ff_m, ff_normal, r) * ggx_G1(wo, ff_m, ff_normal, r);
         float weight = dot(wo, ff_m) / (dot(wo, n) * dot(n, ff_m)) * G;
         float importance_sampled_brdf = abs(weight);
         prd_radiance.result = prd.result * importance_sampled_brdf * beam_T;

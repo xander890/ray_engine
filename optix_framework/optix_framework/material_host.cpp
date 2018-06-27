@@ -68,7 +68,6 @@ bool MaterialHost::on_draw(std::string myid = "")
 			if(shader_changed)
 				mReloadShader = true;
 
-
 			changed |= shader_changed;
             ImmediateGUIDraw::TreePop();
         }
@@ -96,10 +95,26 @@ bool MaterialHost::on_draw(std::string myid = "")
                textures[2]->set_texel_ptr(&ks_gui, 0, 0);
                 textures[2]->update();
             }
-            if (ImmediateGUIDraw::InputFloat(create_id_str("Roughness", id).c_str(), &mMaterialData.roughness))
+
+            static bool anisotropic = true;
+            if (anisotropic)
             {
-				changed = true;
+                if (ImmediateGUIDraw::InputFloat2(create_id_str("Roughness", id).c_str(), &mMaterialData.roughness.x))
+                {
+                    changed = true;
+                }
             }
+            else
+            {
+                if (ImmediateGUIDraw::InputFloat(create_id_str("Roughness", id).c_str(), &mMaterialData.roughness.x))
+                {
+                    changed = true;
+                    mMaterialData.roughness.y = mMaterialData.roughness.x;
+                }
+            }
+            ImmediateGUIDraw::SameLine();
+            ImmediateGUIDraw::Checkbox("Anisotropic", &anisotropic);
+
 			if (ImmediateGUIDraw::InputFloat(create_id_str("Anisotropy angle", id).c_str(), &mMaterialData.anisotropy_angle))
 			{
 				changed = true;
@@ -158,7 +173,7 @@ MaterialHost::MaterialHost(optix::Context & context, ObjMaterial& mat) : Materia
 	mMaterialData.ambient_map = data->ambient_tex->get_id();
 	mMaterialData.diffuse_map = data->diffuse_tex->get_id();
 	mMaterialData.illum = data->illum;
-	mMaterialData.roughness = sqrtf(2.0f/(data->shininess + 2.0f)); // Karis conversion technique
+	mMaterialData.roughness = optix::make_float2(sqrtf(2.0f/(data->shininess + 2.0f))); // Karis conversion technique
 	mMaterialData.specular_map = data->specular_tex->get_id();
 	mMaterialData.anisotropy_angle = 0;
 

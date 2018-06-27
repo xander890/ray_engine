@@ -148,7 +148,7 @@ RT_PROGRAM void shade()
     float3 w_i = -ray.direction;
     const MaterialDataCommon & material = get_material(texcoord);
     const ScatteringMaterialProperties& props = material.scattering_properties;
-    float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+    float relative_ior = get_monochromatic_ior(material);
     float n1_over_n2 = 1.0f / relative_ior;
     float cos_theta_in = dot(normal, w_i);
     float3 beam_T = make_float3(1.0f);

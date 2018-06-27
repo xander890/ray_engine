@@ -31,3 +31,13 @@ _fn MaterialDataCommon get_material()
     optix_assert(material_buffer.size() > 0);
     return material_buffer[0];
 }
+
+_fn float get_monochromatic_ior(const MaterialDataCommon& mat)
+{
+    return dot(mat.index_of_refraction, optix::make_float3(1.0f / 3.0f));
+}
+
+_fn float get_monochromatic_roughness(const MaterialDataCommon& mat)
+{
+    return dot(mat.roughness, optix::make_float2(0.5f));
+}

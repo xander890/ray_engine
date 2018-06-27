@@ -27,9 +27,7 @@ class ImmediateGUI
 public:
 
 	ImmediateGUI(GLFWwindow * window = nullptr);
-
 	virtual ~ImmediateGUI();
-
 
 	bool keyPressed(int key, int action, int modifier);
 	// Use this to add additional keys. Some are already handled but

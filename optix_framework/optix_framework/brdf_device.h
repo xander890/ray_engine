@@ -21,7 +21,7 @@ rtDeclareVariable(BufPtr1D<float>, merl_brdf_buffer, ,);
 _fn optix::float3 brdf(const BRDFGeometry & geometry, const MaterialDataCommon& material, TEASampler & sampler)
 {
     optix::float3 f = optix::make_float3(0);
-    const float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+    const float relative_ior = get_monochromatic_ior(material);
 
     switch (selected_brdf)
     {
@@ -36,14 +36,14 @@ _fn optix::float3 brdf(const BRDFGeometry & geometry, const MaterialDataCommon& 
             optix::float3 k_d = make_float3(optix::rtTex2D<optix::float4>(material.diffuse_map, geometry.texcoord.x, geometry.texcoord.y));
             optix::float3 k_s = make_float3(optix::rtTex2D<optix::float4>(material.specular_map, geometry.texcoord.x, geometry.texcoord.y));
             optix::float3 f_d = k_d * M_1_PIf;
-            f = f_d + torrance_sparrow_brdf(geometry.n, normalize(geometry.wi), normalize(geometry.wo), relative_ior, material.roughness) * k_s;
+            f = f_d + torrance_sparrow_brdf(geometry.n, normalize(geometry.wi), normalize(geometry.wo), relative_ior, get_monochromatic_roughness(material)) * k_s;
         }
             break;
         case BRDFType::GGX:
         {
             optix::float3 k_d = make_float3(optix::rtTex2D<optix::float4>(material.diffuse_map, geometry.texcoord.x, geometry.texcoord.y));
             optix::float3 f_d = k_d * M_1_PIf;
-            f = f_d * walter_brdf(geometry.n, normalize(geometry.wi), normalize(geometry.wo), NormalDistribution::GGX, relative_ior, material.roughness);
+            f = f_d * walter_brdf(geometry.n, normalize(geometry.wi), normalize(geometry.wo), NormalDistribution::GGX, relative_ior, get_monochromatic_roughness(material));
         }
             break;
         case BRDFType::MERL:
@@ -81,21 +81,22 @@ _fn void importance_sample_new_direction_brdf(BRDFGeometry & geometry,
 		{
             optix::float3 k_d = make_float3(optix::rtTex2D<optix::float4>(material.diffuse_map, geometry.texcoord.x, geometry.texcoord.y));
             importance_sampled_brdf = k_d;
+            const float roughness = get_monochromatic_roughness(material);
 
 			optix::float3 m;
 			if(selected_brdf == BRDFType::BECKMANN)
 			{
-				m = importance_sample_beckmann(sampler.next2D(), geometry.n, material.roughness);
+				m = importance_sample_beckmann(sampler.next2D(), geometry.n, roughness);
 			}
 			else
 			{
-				m = importance_sample_ggx(sampler.next2D(), geometry.n, material.roughness);
+				m = importance_sample_ggx(sampler.next2D(), geometry.n, roughness);
 			}
 
             optix::Ray reflected, refracted;
             float R, cos_theta_signed;
             optix::float3 ff_m;
-            const float relative_ior = dot(material.index_of_refraction, optix::make_float3(1)) / 3.0f;
+            const float relative_ior = get_monochromatic_ior(material);
             get_glass_rays(geometry.wo, relative_ior, optix::make_float3(0), m, ff_m, reflected, refracted, R, cos_theta_signed);
 
             new_direction = reflected.direction;
@@ -106,11 +107,11 @@ _fn void importance_sample_new_direction_brdf(BRDFGeometry & geometry,
       		float G;
 			if (selected_brdf == BRDFType::BECKMANN)
 			{
-				G = beckmann_G1_approx(geometry.wi, ff_m, ff_normal, material.roughness) * beckmann_G1_approx(geometry.wo, ff_m, ff_normal, material.roughness);
+				G = beckmann_G1_approx(geometry.wi, ff_m, ff_normal, roughness) * beckmann_G1_approx(geometry.wo, ff_m, ff_normal, roughness);
 			}
 			else
 			{
-				G = ggx_G1(geometry.wi, ff_m, ff_normal, material.roughness) * ggx_G1(geometry.wo, ff_m, ff_normal, material.roughness);
+				G = ggx_G1(geometry.wi, ff_m, ff_normal, roughness) * ggx_G1(geometry.wo, ff_m, ff_normal, roughness);
 			}
 			
             float weight = dot(geometry.wo, ff_m) / (dot(geometry.wo, geometry.n) * dot(geometry.n, ff_m)) * G;// * R;

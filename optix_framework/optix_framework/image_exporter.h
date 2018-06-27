@@ -1,8 +1,6 @@
-
 #pragma once
 
 #include <optixu/optixpp_namespace.h>
-
 #include <string>
 #include <iosfwd>
 #include <memory>

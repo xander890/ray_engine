@@ -10,7 +10,6 @@
 
 class Thumbnail;
 
-
 class Texture
 {
 public:
@@ -139,6 +138,7 @@ private:
     {
         std::string mode;
         archive(cereal::make_nvp("mode", mode));
+
         if(mode == "file")
         {
             std::string filename;
