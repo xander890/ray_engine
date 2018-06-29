@@ -13,7 +13,7 @@
 #include "scene_gui.h"
 #include "scene.h"
 
-std::unique_ptr<Texture> Object::create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr, size_t number_of_labels)
+std::unique_ptr<Texture> Object::create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr)
 {
     std::unique_ptr<Texture> ret = std::make_unique<Texture>(ctx, Texture::INT, 1);
     ret->set_size(ptr->get_width(), ptr->get_height());
@@ -22,7 +22,7 @@ std::unique_ptr<Texture> Object::create_label_texture(optix::Context ctx, const 
         for(size_t j = 0; j < ptr->get_height(); j++)
         {
             float value = ((optix::float4*)ptr->get_texel_ptr(i,j))->x;
-            int val = (int)(number_of_labels * value);
+            int val = value > 0.5f ? 1 : 0;
             ret->set_texel_ptr(&val, i, j);
         }
     }
@@ -41,7 +41,7 @@ Object::Object(optix::Context ctx) : mScene(nullptr), mContext(ctx)
     mMaterialSelectionTexture->set_size(1);
     optix::float4 default_label = optix::make_float4(0.0f);
     mMaterialSelectionTexture->set_data(&default_label.x, 4 * sizeof(float));
-    mMaterialSelectionTextureLabel = create_label_texture(ctx, mMaterialSelectionTexture, 1);
+    mMaterialSelectionTextureLabel = create_label_texture(ctx, mMaterialSelectionTexture);
 }
 
 void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost>& material)
@@ -67,7 +67,7 @@ void Object::load_materials()
     {
         mMaterialBuffer->setSize(mMaterials.size());
 
-        mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture, n);
+        mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture);
 
         create_and_bind_optix_data();
 
