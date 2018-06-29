@@ -37,13 +37,13 @@ Scene::Scene(optix::Context context)
 {
     this->context = context;
     mMeshes.clear();
-    scene = context->createGroup();
+    mOptixGroup = context->createGroup();
     acceleration = context->createAcceleration("Bvh");
-    scene->setAcceleration(acceleration);
+    mOptixGroup->setAcceleration(acceleration);
     acceleration->markDirty();
-    scene->setChildCount(0);
-    context["top_object"]->set(scene);
-    context["top_shadower"]->set(scene);
+    mOptixGroup->setChildCount(0);
+    context["top_object"]->set(mOptixGroup);
+    context["top_shadower"]->set(mOptixGroup);
     mLights.clear();
     mCameras.clear();
 
@@ -106,9 +106,9 @@ void Scene::set_method(std::unique_ptr<RenderingMethod> m)
 int Scene::add_object(std::shared_ptr<Object> object)
 {
     object->transform_changed_event = std::bind(&Scene::transform_changed, this);
-    object->scene = this;
+    object->mScene = this;
     mMeshes.push_back(object);
-    scene->addChild(mMeshes.back()->get_dynamic_handle());
+    mOptixGroup->addChild(mMeshes.back()->get_dynamic_handle());
     mMeshes.back()->load();
     update_area_lights();
     return (int)mMeshes.size() - 1;
@@ -146,7 +146,7 @@ int Scene::add_light(std::unique_ptr<SingularLight> light)
 
 void Scene::transform_changed()
 {
-    scene->getAcceleration()->markDirty();
+    mOptixGroup->getAcceleration()->markDirty();
 }
 
 
@@ -243,9 +243,9 @@ void Scene::remove_object(int object_id)
 {
     if(object_id >= 0 && object_id < mMeshes.size())
     {
-        scene->removeChild(mMeshes[object_id]->get_dynamic_handle());
+        mOptixGroup->removeChild(mMeshes[object_id]->get_dynamic_handle());
         mMeshes.erase(mMeshes.begin() + object_id);
-        scene->getAcceleration()->markDirty();
+        mOptixGroup->getAcceleration()->markDirty();
         for(auto & m : mMeshes)
         {
             m->mAcceleration->markDirty();
@@ -276,7 +276,7 @@ Scene::~Scene()
     mLights.clear();
     mCameras.clear();
     mMeshes.clear();
-    scene->destroy();
+    mOptixGroup->destroy();
     acceleration->destroy();
     method.reset();
     miss_program.reset();

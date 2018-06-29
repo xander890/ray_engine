@@ -316,7 +316,7 @@ unsigned int Texture::get_gl_format(const Texture::Format &format)
     }
 }
 
-Texture::Texture(Texture && tex)
+Texture::Texture(Texture && tex) noexcept
 {
     mID = tex.mID;
     textureBuffer = tex.textureBuffer;

@@ -55,7 +55,7 @@ private:
     std::vector<std::shared_ptr<Object>> mMeshes;
     std::vector<std::shared_ptr<Camera>> mCameras;
     std::vector<std::shared_ptr<SingularLight>> mLights;
-    optix::Group scene;
+    optix::Group mOptixGroup;
     optix::Acceleration acceleration;
     optix::Context context;
     std::unique_ptr<RenderingMethod> method;

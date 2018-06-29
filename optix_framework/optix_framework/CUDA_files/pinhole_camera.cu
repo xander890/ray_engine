@@ -47,6 +47,7 @@ _fn PerRayData_radiance get_starting_payload(TEASampler * sampler)
 	return prd;
 }
 
+
 RT_PROGRAM void pinhole_camera()
 {
     optix_print("Frame %d!\n", frame);
@@ -72,7 +73,6 @@ RT_PROGRAM void pinhole_camera()
 	{
 		output_buffer[launch_index] = make_float4(0);
 	}
-
 }
 
 

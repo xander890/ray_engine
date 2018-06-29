@@ -1,7 +1,6 @@
 #pragma once
 #include <optix_world.h>
 #include "shader.h"
-
 #include <memory>
 #include "rendering_method.h"
 #include "material_host.h"
@@ -25,6 +24,7 @@ public:
     void load();
 
     void add_material(std::shared_ptr<MaterialHost> material);
+    void remove_material(int material_id);
 
     std::shared_ptr<MaterialHost> get_main_material() { return mMaterials[0]; }
     const std::vector<std::shared_ptr<MaterialHost>> & get_materials() { return mMaterials; }
@@ -42,7 +42,7 @@ public:
     typedef std::function<void()> TransformChangedDelegate;
     TransformChangedDelegate transform_changed_event = nullptr;
 
-    const Scene& get_scene() const { return *scene; }
+    const Scene& get_scene() const { return *mScene; }
     const std::string& get_name() { return mMeshName; }
 
     optix::GeometryInstance& get_instance() {return mGeometryInstance; }
@@ -67,7 +67,7 @@ private:
 
         construct->create_and_bind_optix_data();
         construct->mReloadMaterials = construct->mReloadGeometry = true;
-        construct->mMaterialSelectionTextureLabel = create_label_texture(archive.get_context(), construct->mMaterialSelectionTexture);
+        construct->mMaterialSelectionTextureLabel = create_label_texture(archive.get_context(), construct->mMaterialSelectionTexture, construct->mMaterials.size());
     }
 
     template<class Archive>
@@ -81,7 +81,7 @@ private:
     }
 
     int mMeshID;
-    Scene* scene;
+    Scene* mScene;
     friend class Scene;
 
     optix::GeometryInstance mGeometryInstance = nullptr;
@@ -99,5 +99,5 @@ private:
 
     bool mReloadGeometry = true;
     bool mReloadMaterials = true;
-    static std::unique_ptr<Texture> create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr);
+    static std::unique_ptr<Texture> create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr, size_t number_of_labels);
 };

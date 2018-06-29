@@ -1,29 +1,13 @@
-// 02576 OptiX Rendering Framework
-// Written by Jeppe Revall Frisvad, 2011
-// Copyright (c) DTU Informatics 2011
 #include "optix_serialize_utils.h"
-#include <iostream>
-#include <string>
-#include <algorithm>
-#include <cctype>
-#include <glfw_display.h>
+#include "glfw_display.h"
 #include "ray_workbench.h"
 #include "render_task.h"
-#include "scattering_material.h"
-#include "sky_model.h"
-#include "immediate_gui.h" 
  
-#include "hemisphere_partition_utils.h"
 namespace
 {
-	void lower_case(char& x)
-  {   
-    x = tolower(x); 
-  } 
-
-	inline void lower_case_string(std::string& s)
+	void lower_case_string(std::string& s)
 	{
-    for_each(s.begin(), s.end(), lower_case);
+        for_each(s.begin(), s.end(), [](char & x) { x = tolower(x); });
 	}
 }
 

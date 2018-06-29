@@ -26,7 +26,7 @@ public:
     };
 
     Texture(optix::Context context, const Texture::Format & format = FLOAT, const RTsize & element_size = 4);
-    Texture(Texture && tex);
+    Texture(Texture && tex) noexcept;
     ~Texture();
     void set_size(size_t width, size_t height = 0, size_t depth = 0);
     void set_size(size_t dimensions, size_t * dims);

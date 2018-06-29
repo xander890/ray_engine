@@ -25,12 +25,11 @@ namespace cereal
 class MaterialHost
 {
 public:
-	MaterialHost(optix::Context& ctx, ObjMaterial& data);
+	MaterialHost(optix::Context& context, ObjMaterial& mat);
 	MaterialHost(optix::Context& ctx);
-
 	~MaterialHost();
 
-	bool on_draw(std::string id);
+	bool on_draw(std::string myid);
     const MaterialDataCommon& get_data(); 
     std::string get_name() { return mMaterialName; }
 	bool has_changed();
@@ -62,7 +61,6 @@ private:
     std::unique_ptr<Shader> mShader;
 	bool mReloadShader = true;
 
-
 	static std::unique_ptr<ObjMaterial> user_defined_material;
 
 	friend class cereal::access;
@@ -74,7 +72,7 @@ private:
 		archive(cereal::make_nvp("scattering_material",scattering_material));
 		archive(cereal::make_nvp("is_emissive", mIsEmissive));
 		archive(cereal::make_nvp("textures", textures));
-        archive(cereal::make_nvp("shader_type", "extended"));
+        archive(cereal::make_nvp("shader_type", std::string("extended")));
         archive(cereal::make_nvp("shader", mShader));
     }
 

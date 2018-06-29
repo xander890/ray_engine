@@ -121,7 +121,7 @@ void Shader::serialize(cereal::XMLInputArchiveOptix & archive)
 template<>
 void Shader::serialize(cereal::XMLOutputArchiveOptix & archive)
 {
-    archive(cereal::make_nvp("type", "expanded"));
+    archive(cereal::make_nvp("type", std::string("expanded")));
     archive(cereal::make_nvp("name", info.shader_name), cereal::make_nvp("shader_path", info.shader_path), cereal::make_nvp("illum", info.illum));
 
 }

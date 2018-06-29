@@ -16,7 +16,7 @@ _fn unsigned int get_material_index(const optix::float2 & uv)
 _fn MaterialDataCommon get_material(const optix::float2 & uv)
 {
     unsigned int idx = get_material_index(uv);
-    optix_assert(idx < material_buffer.size());
+    optix_assert(idx < material_buffer.size());  
     return material_buffer[idx];
 }
 

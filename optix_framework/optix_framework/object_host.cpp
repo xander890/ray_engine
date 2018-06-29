@@ -13,16 +13,16 @@
 #include "scene_gui.h"
 #include "scene.h"
 
-std::unique_ptr<Texture> Object::create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr)
+std::unique_ptr<Texture> Object::create_label_texture(optix::Context ctx, const std::unique_ptr<Texture>& ptr, size_t number_of_labels)
 {
     std::unique_ptr<Texture> ret = std::make_unique<Texture>(ctx, Texture::INT, 1);
     ret->set_size(ptr->get_width(), ptr->get_height());
-    for(int i = 0; i < ptr->get_width(); i++)
+    for(size_t i = 0; i < ptr->get_width(); i++)
     {
-        for(int j = 0; j < ptr->get_height(); j++)
+        for(size_t j = 0; j < ptr->get_height(); j++)
         {
             float value = ((optix::float4*)ptr->get_texel_ptr(i,j))->x;
-            int val = value > 0.5? 1 : 0;
+            int val = (int)(number_of_labels * value);
             ret->set_texel_ptr(&val, i, j);
         }
     }
@@ -31,7 +31,7 @@ std::unique_ptr<Texture> Object::create_label_texture(optix::Context ctx, const 
     return ret;
 }
 
-Object::Object(optix::Context ctx) : mContext(ctx)
+Object::Object(optix::Context ctx) : mScene(nullptr), mContext(ctx)
 {
     static int id = 0;
     mMeshID = id++;
@@ -40,8 +40,8 @@ Object::Object(optix::Context ctx) : mContext(ctx)
     mMaterialSelectionTexture = std::make_unique<Texture>(ctx, Texture::FLOAT, 4);
     mMaterialSelectionTexture->set_size(1);
     optix::float4 default_label = optix::make_float4(0.0f);
-    mMaterialSelectionTexture->set_data(&default_label.x, 4*sizeof(float));
-    mMaterialSelectionTextureLabel = create_label_texture(ctx, mMaterialSelectionTexture);
+    mMaterialSelectionTexture->set_data(&default_label.x, 4 * sizeof(float));
+    mMaterialSelectionTextureLabel = create_label_texture(ctx, mMaterialSelectionTexture, 1);
 }
 
 void Object::init(const char *name, std::unique_ptr<Geometry> geometry, std::shared_ptr<MaterialHost>& material)
@@ -65,11 +65,15 @@ void Object::load_materials()
 
     if(mReloadMaterials)
     {
+        mMaterialBuffer->setSize(mMaterials.size());
+
+        mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture, n);
+
         create_and_bind_optix_data();
 
         for(auto & m : mMaterials)
         {
-            m->scene = scene;
+            m->scene = mScene;
             m->reload_shader();
         }
 
@@ -100,7 +104,7 @@ void Object::load_geometry()
         return;
 
 	mAcceleration->markDirty();
-	scene->get_acceleration()->markDirty();
+	mScene->get_acceleration()->markDirty();
     create_and_bind_optix_data();
 
     BufPtr<optix::Aabb> bptr = BufPtr<optix::Aabb>(mGeometry->get_bounding_box_buffer()->getId());
@@ -180,11 +184,21 @@ void Object::create_and_bind_optix_data()
 
 void Object::add_material(std::shared_ptr<MaterialHost> material)
 {
-    material->scene = scene;
+    material->scene = mScene;
     mMaterials.push_back(material);
     mMaterialBuffer->setSize(mMaterials.size());
     mReloadMaterials = true;
     load_materials();
+}
+
+void Object::remove_material(int material_id)
+{
+    if (material_id >= 0 && material_id < mMaterials.size())
+    {
+        mMaterials.erase(mMaterials.begin() + material_id);
+        mReloadMaterials = true;
+        load_materials();
+    }
 }
 
 
@@ -224,9 +238,7 @@ bool Object::on_draw()
                     std::string d;
                     if (Dialogs::open_file_dialog(d))
                     {
-                        mMaterialSelectionTexture = loadTexture(mContext, d, optix::make_float4(0));
-                        mMaterialSelectionTextureLabel = create_label_texture(mContext, mMaterialSelectionTexture);
-                        
+                        mMaterialSelectionTexture = loadTexture(mContext, d, optix::make_float4(0));                       
                         load_materials();
                     }
                 }
@@ -239,6 +251,20 @@ bool Object::on_draw()
                 load_materials();
             }
 
+            if (ImGui::Button("Remove material..."))
+                ImGui::OpenPopup("removematerialpopup");
+
+            if (ImGui::BeginPopup("removematerialpopup"))
+            {
+                for (int i = 0; i < mMaterials.size(); i++)
+                {
+                    if (ImGui::Selectable(mMaterials[i]->get_name().c_str()))
+                    {
+                        remove_material(i);
+                    }
+                }
+                ImGui::EndPopup();
+            }
 
             for (int i = 0; i < mMaterials.size(); i++)
             {
