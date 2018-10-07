@@ -51,7 +51,7 @@ inline bool export_raw(const std::string& raw_p, const float * data, int w, int 
 	{
 		for (int j = 0; j < 3; ++j)
 		{
-			if (!isfinite(mapped[i * 4 + j]))
+			if (!std::isfinite(mapped[i * 4 + j]))
 			{
 			}
 			converted[i * 3 + j] = mapped[i * 4 + j];

@@ -97,6 +97,10 @@ bool ParameterState::operator==(const ParameterState& b) const
 	return equal;
 }
 
+size_t *ParameterState::data() {
+    return &mData[0];
+}
+
 size_t BSSRDFParameterManager::size() const
 {
 	std::vector<size_t> dims = get_dimensions();

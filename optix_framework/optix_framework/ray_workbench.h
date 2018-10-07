@@ -11,6 +11,7 @@
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixpp_namespace.h>
 #include <sample_scene.h>
+#include "immediate_gui.h"
 
 #include <functional>
 #include <camera_host.h>
@@ -19,7 +20,6 @@
 #include "scene.h"
 
 class MissProgram;
-class ImmediateGUI;
 class RenderTask;
 struct TriangleLight;
 class Object;

@@ -20,7 +20,7 @@ void ReferenceBSSRDFGPU::init()
 	}
 
 	BSSRDFRenderer::init();
-	std::string ptx_path = get_path_ptx(ptx_file);
+	std::string ptx_path = Folders::get_path_to_ptx(ptx_file);
 
 	if (entry_point == -1)
     {
@@ -102,7 +102,7 @@ bool ReferenceBSSRDFGPU::on_draw(unsigned int flags)
 		reset();
 	}
 	ImmediateGUIDraw::InputInt(GUI_LABEL("Maximum frames: ", mId), (int*)&mMaxFrames);
-	std::string photons = std::string("Photons cast: ") + std::to_string(mPhotons) + " (Efficiency: " + std::to_string(((double)mPhotons)/(((double)mSamples)*(mRenderedFrames+1)));
+	std::string photons = std::string("Photons cast: ") + std::to_string(mPhotons);
 	ImmediateGUIDraw::Text("%s",photons.c_str());
 
 	return changed;

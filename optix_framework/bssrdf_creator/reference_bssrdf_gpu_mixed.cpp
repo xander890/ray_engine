@@ -1,4 +1,5 @@
 #include <optix_host_utils.h>
+#include <parsing_utils.h>
 #include "reference_bssrdf_gpu_mixed.h"
 #include "immediate_gui.h"
 
@@ -7,7 +8,7 @@ void ReferenceBSSRDFGPUMixed::init()
     mRenderer2->init();
     mRenderer1->init();
 
-    std::string ptx_path = get_path_ptx("reference_bssrdf_gpu_mixed.cu");
+    std::string ptx_path = Folders::get_path_to_ptx("reference_bssrdf_gpu_mixed.cu");
     optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "post");
 
     if (entry_point_sum == -1)

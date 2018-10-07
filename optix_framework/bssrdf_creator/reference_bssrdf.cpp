@@ -7,7 +7,7 @@
 
 int HemisphereBSSRDFShader::entry_point_output = -1;
 
-HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader & other) : Shader(ShaderInfo(other.illum, other.shader_path, other.shader_name))
+HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader & other) : Shader(ShaderInfo(other.info.illum, other.info.shader_path, other.info.shader_name))
 {
 	mCameraWidth = other.mCameraWidth;
 	mCameraHeight = other.mCameraHeight;
@@ -17,7 +17,7 @@ HemisphereBSSRDFShader::HemisphereBSSRDFShader(HemisphereBSSRDFShader & other) :
 
 void HemisphereBSSRDFShader::init_output()
 {
-	std::string ptx_path_output = get_path_ptx("render_bssrdf.cu");
+	std::string ptx_path_output = Folders::get_path_to_ptx("render_bssrdf.cu");
 	optix::Program ray_gen_program_output = context->createProgramFromPTXFile(ptx_path_output, "render_ref");
 
 	if(entry_point_output == -1)
@@ -68,7 +68,7 @@ void HemisphereBSSRDFShader::initialize_shader(optix::Context ctx)
 
 }
 
-void HemisphereBSSRDFShader::initialize_mesh(Object& object)
+void HemisphereBSSRDFShader::initialize_material(MaterialHost &material)
 {
 
 }
@@ -103,7 +103,7 @@ bool HemisphereBSSRDFShader::on_draw()
 	return false;
 }
 
-void HemisphereBSSRDFShader::load_data(Object & object)
+void HemisphereBSSRDFShader::load_data(MaterialHost & material)
 {
 	int s = mBSSRDFHemisphereTex->getId();
 	context["resulting_flux_tex"]->setUserData(sizeof(TexPtr),&(s));
@@ -112,10 +112,10 @@ void HemisphereBSSRDFShader::load_data(Object & object)
 
 	if (mUseMeshParameters)
 	{
-		ref_impl->set_material_parameters(object.get_main_material()->get_data().scattering_properties.albedo.x,
-			object.get_main_material()->get_data().scattering_properties.extinction.x,
-			object.get_main_material()->get_data().scattering_properties.meancosine.x,
-			object.get_main_material()->get_data().relative_ior);
+		ref_impl->set_material_parameters(material.get_data().scattering_properties.albedo.x,
+			material.get_data().scattering_properties.extinction.x,
+			material.get_data().scattering_properties.meancosine.x,
+			material.get_data().index_of_refraction.x);
 
 	}
 

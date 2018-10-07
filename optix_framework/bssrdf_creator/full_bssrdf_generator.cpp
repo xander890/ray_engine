@@ -4,9 +4,10 @@
 #include "file_dialogs.h"
 #include <fstream>
 #include <camera_host.h>
+#include <parsing_utils.h>
 #include "cpu_timer.h"
 #include "GLFW/glfw3.h"
-#include "GLFWDisplay.h"
+#include "glfw_display.h"
 #include "forward_dipole_test.h"
 #include "reference_bssrdf_gpu_mixed.h"
 
@@ -87,7 +88,7 @@ std::string gui_string(std::vector<float> & data)
 	return ss.str();
 }
 
-FullBSSRDFGenerator::FullBSSRDFGenerator(const char * config , bool offline) : config_file(config), start_offline_rendering(offline)
+FullBSSRDFGenerator::FullBSSRDFGenerator(bool offline) : start_offline_rendering(offline)
 {
 	current_render_task = std::make_unique<RenderTaskTimeorFrames>(100, 10.0f, "test.bssrdf", false);
 }
@@ -122,15 +123,15 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window)
 
 	set_render_mode(mCurrentRenderMode, mSimulate);
 
-	std::string ptx_path_output = get_path_ptx("render_bssrdf.cu");
+	std::string ptx_path_output = Folders::get_path_to_ptx("render_bssrdf.cu");
 	optix::Program ray_gen_program_output = m_context->createProgramFromPTXFile(ptx_path_output, "render_ref");
 
 	if (entry_point_output == -1)
 		entry_point_output = add_entry_point(m_context, ray_gen_program_output);
 
-	if (GLFWDisplay::isDisplayAvailable())
+	if (GLFWDisplay::is_display_available())
 	{
-		result_buffer = create_glbo_buffer < optix::float4 >(m_context, RT_BUFFER_INPUT_OUTPUT, WINDOW_SIZE * WINDOW_SIZE);
+		result_buffer = create_glbo_buffer<optix::float4>(m_context, RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT4, WINDOW_SIZE * WINDOW_SIZE);
 	}
 	else
 	{
@@ -167,11 +168,17 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window)
 		mCurrentHemisphereData = new float[mCurrentBssrdfRenderer->get_storage_size()];
 	}
 
-	mParametersSimulation.parameters[eta_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "eta", mParametersOriginal.parameters[eta_index], "Eta indices to scan.");
-	mParametersSimulation.parameters[g_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "g", mParametersOriginal.parameters[g_index], "Eta indices to scan.");
-	mParametersSimulation.parameters[albedo_index] = ConfigParameters::get_parameter <std::vector<float>>("simulation", "albedo", mParametersOriginal.parameters[albedo_index], "Eta indices to scan.");
+	mParametersSimulation.parameters[eta_index] = mParametersOriginal.parameters[eta_index];
+	mParametersSimulation.parameters[g_index] = mParametersOriginal.parameters[g_index];
+	mParametersSimulation.parameters[albedo_index] = mParametersOriginal.parameters[albedo_index];
+
+    load_parameters("simulation_parameters.xml");
 
 	mExternalBSSRDFBuffer = m_context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, 1);
+
+
+    if (!exists("simulation_parameters.xml"))
+        save_parameters("simulation_parameters.xml");
 
 }
 
@@ -268,7 +275,7 @@ void FullBSSRDFGenerator::trace()
 
         auto time1 = currentTime();
         frame++;
-		auto dur = time1 - mCurrentStartTime;
+        auto dur = time1 - mCurrentStartTime;
 		update_rendering(std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count() / 1e9);
 	}
 }
@@ -363,7 +370,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 		if (!mSimulate)
 		{
 			static ScatteringDipole::Type dipole =  std::dynamic_pointer_cast<BSSRDFRendererModel>(mCurrentBssrdfRenderer)->get_dipole();
-			if (BSSRDF::dipole_selector_gui(dipole))
+			if (BSSRDF::bssrdf_selection_gui(dipole))
 			{
 				std::dynamic_pointer_cast<BSSRDFRendererModel>(mCurrentBssrdfRenderer)->set_dipole(dipole);
 			}
@@ -398,7 +405,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 				}
                 auto ns = BSSRDFParameterManager::get_parameter_names(mCurrentBssrdfRenderer->get_shape());
 
-                if (ImmediateGUIDraw::Combo(ns[i].c_str(), (int*)&index.mData[i], s.c_str(), (int)mLoader->get_parameters().at(i).size()))
+                if (ImmediateGUIDraw::Combo(ns[i].c_str(), (int*)index.data()[i], s.c_str(), (int)mLoader->get_parameters().at(i).size()))
 				{
 					float * data = (float*)mExternalBSSRDFBuffer->map();
 					mLoader->load_hemisphere(data, index.mData);
@@ -422,7 +429,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 		if (ImmediateGUIDraw::Button("Choose bssrdf path...##BSSRDFExtPathButton"))
 		{
 			std::string filePath;
-			if (Dialogs::openFileDialog(filePath))
+			if (Dialogs::open_file_dialog(filePath))
 			{
 				mExternalFilePath = filePath;
 			}
@@ -706,4 +713,26 @@ Camera *FullBSSRDFGenerator::get_camera()
 {
 	CameraParameters c;
 	return new Camera(m_context, c);
+}
+
+void FullBSSRDFGenerator::load_parameters(const std::string &config_file)
+{
+    if (!exists(config_file.c_str()))
+        return;
+    cereal::XMLInputArchiveOptix archive(m_context, config_file);
+    archive(cereal::make_nvp("data_folder", Folders::data_folder));
+    archive(cereal::make_nvp("ptx_folder", Folders::ptx_path));
+    archive(cereal::make_nvp("eta_values", mParametersSimulation.parameters[eta_index]));
+    archive(cereal::make_nvp("albedo_values", mParametersSimulation.parameters[albedo_index]));
+    archive(cereal::make_nvp("g_values", mParametersSimulation.parameters[g_index]));
+}
+
+void FullBSSRDFGenerator::save_parameters(const std::string &config_file)
+{
+    cereal::XMLOutputArchiveOptix archive(config_file);
+    archive(cereal::make_nvp("data_folder", Folders::data_folder));
+    archive(cereal::make_nvp("ptx_folder", Folders::ptx_path));
+    archive(cereal::make_nvp("eta_values", mParametersSimulation.parameters[eta_index]));
+    archive(cereal::make_nvp("albedo_values", mParametersSimulation.parameters[albedo_index]));
+    archive(cereal::make_nvp("g_values", mParametersSimulation.parameters[g_index]));
 }

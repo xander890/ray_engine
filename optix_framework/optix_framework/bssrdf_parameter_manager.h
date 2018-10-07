@@ -36,9 +36,8 @@ public:
 	const size_t& operator[](const size_t& idx) const;
 	size_t& operator[](const size_t& idx);
 	bool operator==(const ParameterState& b) const;
-
-private:
-	std::vector<size_t> mData;
+	size_t* data();
+    std::vector<size_t> mData;
 };
 
 /*

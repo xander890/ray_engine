@@ -34,12 +34,8 @@ include (CompilerInfo)
 # Check for specific machine/compiler options.
 include (ConfigCompilerFlags)
 
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/externals/cereal/include/
-)
-
 option(CUDA_GENERATE_DEPENDENCIES_DURING_CONFIGURE "Generate dependencies during configure time instead of only during build time." OFF)
-find_package(CUDA 9.0 REQUIRED)
+find_package(CUDA 8.0 REQUIRED)
 mark_as_advanced(CLEAR CUDA_64_BIT_DEVICE_CODE)
 OPTION(CUDA_REMOVE_GLOBAL_MEMORY_SPACE_WARNING "Suppress the \"Advisory: Cannot tell what pointer points to, assuming global memory space\" warning nvcc makes." ON)
 
@@ -86,7 +82,9 @@ include_directories(
   ${CUDA_INCLUDE_DIRS}
   )
 
+if(WIN32)
 set(EIGEN3_INCLUDE_DIR externals/eigen-git-mirror)
+endif()
 find_package(Eigen3 REQUIRED)
 include_directories(
   ${EIGEN3_INCLUDE_DIR}
@@ -122,9 +120,10 @@ function(generate_ptx target_name)
 endfunction()  
 
 # Targets that we develop here
-
+set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
+add_subdirectory(externals/cereal)
 add_subdirectory(optprops)
 add_subdirectory(nfd)
 add_subdirectory(optix_framework)
 add_subdirectory(renderer)
-#add_subdirectory(bssrdf_creator)
+add_subdirectory(bssrdf_creator)

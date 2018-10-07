@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <parsing_utils.h>
 #include <logger.h>
+#include <folders.h>
 
 int BSSRDFRenderer::mGlobalId = 0;
 
@@ -307,7 +308,7 @@ void BSSRDFRenderer::set_size(optix::uint2 new_size)
 void BSSRDFRendererModel::init()
 {
 	BSSRDFRenderer::init();
-	std::string ptx_path = get_path_ptx("planar_bssrdf.cu");
+	std::string ptx_path = Folders::get_path_to_ptx("planar_bssrdf.cu");
 	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
 	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
 
@@ -357,7 +358,7 @@ void BSSRDFRendererModel::load_data()
 {
 	BSSRDFRenderer::load_data();
 	ScatteringMaterialProperties* cc = reinterpret_cast<ScatteringMaterialProperties*>(mProperties->map());
-	mBSSRDF->load(1.1f, *cc);
+	mBSSRDF->load(optix::make_float3(1.1f), *cc);
 	auto type = mBSSRDF->get_type();
 	context["selected_bssrdf"]->setUserData(sizeof(ScatteringDipole::Type), &type);
 	mProperties->unmap();
@@ -366,7 +367,7 @@ void BSSRDFRendererModel::load_data()
 void BSSRDFRendererSimulated::init()
 {
 	BSSRDFRenderer::init();
-	std::string ptx_path = get_path_ptx("reference_bssrdf.cu");
+	std::string ptx_path = Folders::get_path_to_ptx("reference_bssrdf.cu");
 	optix::Program ray_gen_program = context->createProgramFromPTXFile(ptx_path, "reference_bssrdf_camera");
 	optix::Program ray_gen_program_post = context->createProgramFromPTXFile(ptx_path, "post_process_bssrdf");
 

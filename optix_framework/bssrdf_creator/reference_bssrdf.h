@@ -11,12 +11,12 @@ public:
 	HemisphereBSSRDFShader(const ShaderInfo& shader_info, std::unique_ptr<BSSRDFRenderer>& creator, int camera_width, int camera_height);
 
 	void initialize_shader(optix::Context) override;
-	void initialize_mesh(Object& object) override;
+	void initialize_material(MaterialHost& material) override;
 	void pre_trace_mesh(Object& object) override;
 	void post_trace_mesh(Object& object) override;
 	bool on_draw() override;
 	Shader* clone() override { return new HemisphereBSSRDFShader(*this); }
-	void load_data(Object & object) override;
+	void load_data(MaterialHost & object) override;
 	
 	void set_use_mesh_parameters(bool val)
 	{

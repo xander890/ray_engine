@@ -5,7 +5,7 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
-#include <GLFWDisplay.h>
+#include <glfw_display.h>
 #include "render_task.h"
 #include "full_bssrdf_generator.h"
 
@@ -29,8 +29,6 @@ void printUsageAndExit( const std::string& argv0 )
        << "         --shader         | -sh <shader>  specify the closest hit program to be used for shading" << std::endl
 	   << "options: --rectangle <ox oy w h>     renctangle to render." << std::endl
 	   << std::endl;
-
-  GLFWDisplay::printUsage();
 
   exit(0);
 }
@@ -76,8 +74,7 @@ int main( int argc, char** argv )
 	}
 	//if ( filenames.size() == 0 )
 	//  filenames.push_back(string("./meshes/") + "closed_bunny_vn.obj");
-	ConfigParameters::init(config_file);
-	GLFWDisplay::setRequiresDisplay(!nodisplay);
+	GLFWDisplay::set_requires_display(!nodisplay);
 	GLFWDisplay::init( argc, argv );
 
 	std::unique_ptr<RenderTask> task = nullptr;
@@ -105,7 +102,7 @@ int main( int argc, char** argv )
 
 	try 
 	{
-		SampleScene * scene  = new FullBSSRDFGenerator(config_file.c_str(), auto_mode);
+		SampleScene * scene  = new FullBSSRDFGenerator(auto_mode);
 		if(auto_mode)
 		{
 			((FullBSSRDFGenerator*)scene)->set_render_task(task);

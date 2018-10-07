@@ -31,7 +31,7 @@ static _fn optix::float3 sky_color(int ray_depth, optix::float3 & v, optix::floa
 	return Yxy2rgb(lum) * SKY_SCALE / 1000.0f;
 }
 
-#ifndef __CUDA_ARCH__
+#ifndef __CUDACC__
 #include "optix_serialize_utils.h"
 #include <cmath>
 #include "miss_program.h"

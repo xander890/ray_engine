@@ -1,5 +1,5 @@
 #pragma once
-#include "SampleScene.h"
+#include "sample_scene.h"
 #include <memory>
 #include <bssrdf_creator.h>
 #include <bssrdf_loader.h>
@@ -19,7 +19,7 @@ public:
 
 	enum RenderMode { RENDER_BSSRDF = 0, SHOW_EXISTING_BSSRDF = 1};
 
-	FullBSSRDFGenerator(const char * config, bool offline_render);
+	FullBSSRDFGenerator(bool offline_render);
 	~FullBSSRDFGenerator();
 	void initialize_scene(GLFWwindow * window) override;
 
@@ -53,7 +53,6 @@ private:
 	std::shared_ptr<BSSRDFRenderer>	 mCurrentBssrdfRenderer = nullptr;
 	std::shared_ptr<BSSRDFRendererSimulated>	 mBssrdfReferenceSimulator = nullptr;
 	std::shared_ptr<BSSRDFRendererModel>		 mBssrdfModelSimulator = nullptr;
-	std::string config_file;
 
 	int entry_point_output = -1;
 	optix::Buffer mBSSRDFBufferTexture = nullptr;
@@ -75,7 +74,7 @@ private:
 	int mSimulationMaxIterations = (int)1e9;
 
 	float * mCurrentHemisphereData = nullptr;
-	bool mPaused = false;
+	bool mPaused = true;
 	bool mFastMode = false;
     bool mNormalize = true;
 	bool mDebug = false;
@@ -87,11 +86,15 @@ private:
 	std::string mExternalFilePath = "test.bssrdf";
 
 	std::unique_ptr<RenderTask> current_render_task;
-	bool mSimulate = 1;
+	bool mSimulate = true;
 	void set_render_mode(RenderMode m, bool isSimulated);
 	bool start_offline_rendering = false;
 
 	float mCurrentAverage = 0, mCurrentMax = 0;
     std::chrono::time_point<std::chrono::high_resolution_clock>  mCurrentStartTime;
+
+	void save_parameters(const std::string & config_file);
+	void load_parameters(const std::string & config_file);
+
 };
 

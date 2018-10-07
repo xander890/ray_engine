@@ -19,7 +19,7 @@
  * SUCH DAMAGES
  */
 
-#include <Mouse.h>
+#include "mouse.h"
 #include <optixu/optixu_matrix_namespace.h>
 #include <iostream>
 #include "math_utils.h"

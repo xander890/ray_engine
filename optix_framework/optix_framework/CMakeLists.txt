@@ -252,5 +252,6 @@ generate_ptx(framework ${HEADERS} ${CUDA_SOURCES} ${OPTIONS})
 add_library( framework STATIC
              ${SRCS} ${HEADERS} ${HEADERS_IMGUI} ${SRCS_IMGUI} ${CUDA_SOURCES} ${generated})
 
-target_link_libraries(framework optprops nfd optix ${CUDA_LIBRARIES} glfw ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${IL_LIBRARIES} ${ILU_LIBRARIES})
+target_link_libraries(framework optprops nfd optix ${CUDA_LIBRARIES} glfw ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${IL_LIBRARIES} ${ILU_LIBRARIES} cereal)
 target_include_directories( framework PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+

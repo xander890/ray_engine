@@ -18,7 +18,7 @@
 #define IMPROVED_ENUM_LIST ENUMITEM_VALUE(PLANE,0) ENUMITEM_VALUE(HEMISPHERE,1)
 #include "improved_enum.inc"
 
-#define DEFAULT_SHAPE OutputShape::PLANE
+#define DEFAULT_SHAPE OutputShape::HEMISPHERE
 
 /*
  * Struct that describes storage for the different parameters of the empirical bssrdf. This are the vbalues at the axes. Of a multidimensional array.
@@ -105,10 +105,10 @@ _fn optix::float2 get_normalized_hemisphere_buffer_coordinates(OutputShape::Type
         get_normalized_polar(phi_o, theta_o, buffer_x_normalized, buffer_y_normalized);
     else
         get_normalized_cartesian(phi_o, theta_o, buffer_x_normalized, buffer_y_normalized);
-            optix_assert(buffer_y_normalized >= 0.0f);
-            optix_assert(buffer_y_normalized <= 1.0f);
-            optix_assert(buffer_x_normalized <= 1.0f);
-            optix_assert(buffer_x_normalized >= 0.0f);
+            //optix_assert(buffer_y_normalized >= 0.0f);
+            //optix_assert(buffer_y_normalized <= 1.0f);
+            //optix_assert(buffer_x_normalized <= 1.0f);
+            //optix_assert(buffer_x_normalized >= 0.0f);
     return optix::make_float2(buffer_x_normalized, buffer_y_normalized);
 }
 

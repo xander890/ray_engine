@@ -6,6 +6,9 @@
 #include <structs.h>
 #include <sky_model.h>
 
+using optix::float3;
+using optix::make_float3;
+
 // Standard ray variables
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 rtDeclareVariable(PerRayData_shadow, prd_shadow, rtPayload, );
