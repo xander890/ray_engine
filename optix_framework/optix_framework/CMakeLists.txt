@@ -107,7 +107,7 @@ set(HEADERS
         structs.h
     transform.h
     volume_path_tracer.h
-    bssrdf_loader.h
+        empirical_bssrdf.h
     bssrdf_parameter_manager.h
     empirical_bssrdf_device.h
     empirical_bssrdf_host.h
@@ -141,7 +141,7 @@ set(SRCS_IMGUI
 )
 
 set(SRCS
-    bssrdf_loader.cpp
+        empirical_bssrdf.cpp
     bssrdf_parameter_manager.cpp
     ambient_occlusion.cpp
     apple_juice.cpp

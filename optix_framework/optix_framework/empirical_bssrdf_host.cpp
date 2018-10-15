@@ -1,18 +1,20 @@
 #include "empirical_bssrdf_host.h"
 #include "logger.h"
-#include "bssrdf_loader.h"
+#include "empirical_bssrdf.h"
 #include "optix_host_utils.h"
 #include "scattering_properties.h"
 #include "empirical_bssrdf_common.h"
 #include "optix_math.h"
 #include "folders.h"
 
-void EmpiricalBSSRDF::prepare_buffers()
+void EmpiricalBSSRDFImpl::prepare_buffers()
 {
-    mBSSRDFLoader = std::make_unique<BSSRDFImporter>(mBSSRDFFile);
+    mBSSRDFManager = std::make_unique<EmpiricalBSSRDF>();
+    mBSSRDFManager->set_filename(mBSSRDFFile);
+    mBSSRDFManager->load_header(mBSSRDFFile);
 
     // First, allocating data buffers, one per wavelength.
-    size_t s = mBSSRDFLoader->get_material_slice_size();
+    size_t s = mBSSRDFManager->get_material_slice_size();
     for(int i = 0; i < 3; i++)
     {
         auto buf = create_buffer<float>(mContext, RT_BUFFER_INPUT_OUTPUT, s);
@@ -21,8 +23,7 @@ void EmpiricalBSSRDF::prepare_buffers()
     }
 
     // Parameter buffers. Some extra care is needed for theta_o, phi_o, since in the reader they are dealt with differently.
-    std::vector<size_t> full_dimensions;
-    mBSSRDFLoader->get_dimensions(full_dimensions);
+    std::vector<size_t> full_dimensions = mBSSRDFManager->get_material_geometry_hemisphere_dimensions();
     mParameterSizeBuffer = create_buffer<int>(mContext, RT_BUFFER_INPUT, 5);
     int* buf = reinterpret_cast<int*>(mParameterSizeBuffer->map());
     buf[0] = (int)full_dimensions[theta_s_index];
@@ -32,17 +33,16 @@ void EmpiricalBSSRDF::prepare_buffers()
     buf[3] = (int)full_dimensions[dim_2_index];
     mParameterSizeBuffer->unmap();
 
-    auto parameters = mBSSRDFLoader->get_parameters();
+    auto parameters = mBSSRDFManager->get_parameters_copy();
     mParameterBuffers.buffers[0] = create_and_initialize_buffer(mContext, parameters[theta_s_index] )->getId();
     mParameterBuffers.buffers[1] = create_and_initialize_buffer(mContext,parameters[r_index] )->getId();
     mParameterBuffers.buffers[2] = create_and_initialize_buffer(mContext, parameters[theta_i_index] )->getId();
     mParameterBuffers.buffers[4] = create_and_initialize_buffer(mContext, parameters[dim_1_index] )->getId();
     mParameterBuffers.buffers[3] = create_and_initialize_buffer(mContext, parameters[dim_2_index] )->getId();
-    mManager = std::make_unique<BSSRDFParameterManager>(parameters);
     mInitialized = true;
 }
 
-EmpiricalBSSRDF::EmpiricalBSSRDF(optix::Context & context): BSSRDF(context, ScatteringDipole::EMPIRICAL_BSSRDF)
+EmpiricalBSSRDFImpl::EmpiricalBSSRDFImpl(optix::Context & context): BSSRDF(context, ScatteringDipole::EMPIRICAL_BSSRDF)
 {
     mDataBuffers.buffers[0] = 0;
     mDataBuffers.buffers[1] = 0;
@@ -52,7 +52,7 @@ EmpiricalBSSRDF::EmpiricalBSSRDF(optix::Context & context): BSSRDF(context, Scat
 }
 
 
-void EmpiricalBSSRDF::load(const optix::float3 &relative_ior, const ScatteringMaterialProperties &props)
+void EmpiricalBSSRDFImpl::load(const optix::float3 &relative_ior, const ScatteringMaterialProperties &props)
 {
     if(!mInitialized)
     {
@@ -78,13 +78,13 @@ void EmpiricalBSSRDF::load(const optix::float3 &relative_ior, const ScatteringMa
         for(int i = 0; i < 3; i++)
         {
             // We find the corresponding index for the material properties.
-            mManager->get_material_index(optix::getByIndex(props.albedo,i), optix::getByIndex(props.meancosine,i), rel_ior, state);
+            mBSSRDFManager->get_material_index(optix::getByIndex(props.albedo,i), optix::getByIndex(props.meancosine,i), rel_ior, state);
             optix::Buffer buf = mContext->getBufferFromId(mDataBuffers.buffers[i].getId());
             RTsize w;
             buf->getSize(w);
 
             float * data = reinterpret_cast<float*>(buf->map());
-            found &= mBSSRDFLoader->load_material_slice(data, state);
+            found &= mBSSRDFManager->load_material_slice(data, state);
 
             float mx = 0.0f;
             for(int i = 0; i < w; i++)
@@ -113,7 +113,7 @@ void EmpiricalBSSRDF::load(const optix::float3 &relative_ior, const ScatteringMa
     }
 }
 
-bool EmpiricalBSSRDF::on_draw()
+bool EmpiricalBSSRDFImpl::on_draw()
 {
     bool changed = false;
     if(ImmediateGUIDraw::InputFloat("Correction" ,&mCorrection))

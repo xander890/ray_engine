@@ -2,7 +2,7 @@
 #include "sample_scene.h"
 #include <memory>
 #include <bssrdf_creator.h>
-#include <bssrdf_loader.h>
+#include <empirical_bssrdf.h>
 #include <reference_bssrdf_gpu.h>
 #include <chrono>
 #include "string_utils.h"
@@ -65,9 +65,9 @@ private:
 	int mFresnelMode = BSSRDF_RENDER_MODE_FULL_BSSRDF;
 	std::unique_ptr<ImmediateGUI> gui;
 
-	BSSRDFParameterManager mParametersSimulation;
-	BSSRDFParameterManager mParametersOriginal;
-	ParameterState mState;
+    std::unique_ptr<EmpiricalBSSRDF> mSimulationBSSRDF = nullptr;
+	std::unique_ptr<EmpiricalBSSRDF> mLoadedBSSRDF = nullptr;
+	ParameterStateNew mSimulationState;
 
 	int mSimulationSamplesPerFrame = (int)1e7;
 	int mSimulationMaxFrames = 100;
@@ -79,8 +79,6 @@ private:
     bool mNormalize = true;
 	bool mDebug = false;
 	RenderMode mCurrentRenderMode = RENDER_BSSRDF;
-	std::unique_ptr<BSSRDFExporter> mExporter = nullptr;
-	std::unique_ptr<BSSRDFImporter> mLoader = nullptr;
 
 	optix::Buffer mExternalBSSRDFBuffer;
 	std::string mExternalFilePath = "test.bssrdf";

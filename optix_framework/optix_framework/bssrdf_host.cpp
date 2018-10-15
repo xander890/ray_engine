@@ -48,7 +48,7 @@ std::unique_ptr<BSSRDF> BSSRDF::create(optix::Context & ctx, ScatteringDipole::T
 	case ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF:
 		return std::unique_ptr<BSSRDF>(new ForwardDipole(ctx));
 	case ScatteringDipole::EMPIRICAL_BSSRDF:
-		return std::unique_ptr<BSSRDF>(new EmpiricalBSSRDF(ctx));
+		return std::unique_ptr<BSSRDF>(new EmpiricalBSSRDFImpl(ctx));
 	case ScatteringDipole::STANDARD_DIPOLE_BSSRDF:
 	default:
 		return std::unique_ptr<BSSRDF>(new BSSRDF(ctx, ScatteringDipole::STANDARD_DIPOLE_BSSRDF));

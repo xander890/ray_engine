@@ -2,7 +2,7 @@
 
 #include <immediate_gui.h>
 #include "bssrdf_host.h"
-#include "bssrdf_loader.h"
+#include "empirical_bssrdf.h"
 #include "empirical_bssrdf_common.h"
 
 /*
@@ -11,11 +11,11 @@
 
 class BSSRDFImporter;
 
-class EmpiricalBSSRDF : public BSSRDF
+class EmpiricalBSSRDFImpl : public BSSRDF
 {
 public:
-	EmpiricalBSSRDF(optix::Context & ctx);
-    ~EmpiricalBSSRDF() {}
+	EmpiricalBSSRDFImpl(optix::Context & ctx);
+    ~EmpiricalBSSRDFImpl() {}
 	void load(const optix::float3 &relative_ior, const ScatteringMaterialProperties &props) override;
 	bool on_draw() override;
 
@@ -26,8 +26,7 @@ private:
     optix::Buffer mParameterSizeBuffer;
     EmpiricalDataBuffer mDataBuffers;
     std::string mBSSRDFFile;
-    std::unique_ptr<BSSRDFImporter> mBSSRDFLoader = nullptr;
-    std::unique_ptr<BSSRDFParameterManager> mManager = nullptr;
+    std::unique_ptr<EmpiricalBSSRDF> mBSSRDFManager = nullptr;
 
 	float mCorrection = 1.0f;
 	unsigned int mInterpolation = 0;

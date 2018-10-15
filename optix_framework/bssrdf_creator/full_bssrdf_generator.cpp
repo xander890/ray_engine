@@ -88,7 +88,7 @@ std::string gui_string(std::vector<float> & data)
 	return ss.str();
 }
 
-FullBSSRDFGenerator::FullBSSRDFGenerator(bool offline) : start_offline_rendering(offline)
+FullBSSRDFGenerator::FullBSSRDFGenerator(bool offline) : start_offline_rendering(offline), mSimulationState(ParameterStateNew::invalid_index)
 {
 	current_render_task = std::make_unique<RenderTaskTimeorFrames>(100, 10.0f, "test.bssrdf", false);
 }
@@ -168,9 +168,7 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window)
 		mCurrentHemisphereData = new float[mCurrentBssrdfRenderer->get_storage_size()];
 	}
 
-	mParametersSimulation.parameters[eta_index] = mParametersOriginal.parameters[eta_index];
-	mParametersSimulation.parameters[g_index] = mParametersOriginal.parameters[g_index];
-	mParametersSimulation.parameters[albedo_index] = mParametersOriginal.parameters[albedo_index];
+    mSimulationBSSRDF = std::make_unique<EmpiricalBSSRDF>();
 
     load_parameters("simulation_parameters.xml");
 
@@ -393,26 +391,26 @@ void FullBSSRDFGenerator::post_draw_callback()
 	}
 	else if(mCurrentRenderMode == SHOW_EXISTING_BSSRDF)
 	{
-		if (mLoader != nullptr)
+		if (mLoadedBSSRDF != nullptr)
 		{
-			static ParameterState index({0,0,0,0,0,0});
+			static ParameterStateNew index = mLoadedBSSRDF->begin_index();
 			for (int i = 0; i < 6; i++)
 			{
 				std::string s;
-				for (int k = 0; k < mLoader->get_parameters().at(i).size(); k++)
+				for (int k = 0; k < mLoadedBSSRDF->get_parameters_copy().at(i).size(); k++)
 				{
-					s += std::to_string(mLoader->get_parameters().at(i)[k]) + '\0';
+					s += std::to_string(mLoadedBSSRDF->get_parameters_copy().at(i)[k]) + '\0';
 				}
-                auto ns = BSSRDFParameterManager::get_parameter_names(mCurrentBssrdfRenderer->get_shape());
+                auto ns = EmpiricalBSSRDF::get_parameter_names(mCurrentBssrdfRenderer->get_shape());
 
-                if (ImmediateGUIDraw::Combo(ns[i].c_str(), (int*)index.data()[i], s.c_str(), (int)mLoader->get_parameters().at(i).size()))
+                if (ImmediateGUIDraw::Combo(ns[i].c_str(), (int*)index.data()[i], s.c_str(), (int)mLoadedBSSRDF->get_parameters_copy().at(i).size()))
 				{
 					float * data = (float*)mExternalBSSRDFBuffer->map();
-					mLoader->load_hemisphere(data, index.mData);
+                    mLoadedBSSRDF->load_hemisphere(data, index);
 					mExternalBSSRDFBuffer->unmap();
 
 					float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
-					mParametersSimulation.get_parameters(index, theta_i, r, theta_s, albedo, g, eta);
+                    mLoadedBSSRDF->get_parameters(index, theta_i, r, theta_s, albedo, g, eta);
 					// Second one is ignored anyways in this configuration...
 					mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 					mCurrentBssrdfRenderer->set_material_parameters(albedo, 1, g, eta);
@@ -448,31 +446,30 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 		if (data.size() == 0)
 		{
-			for (int i = 0; i < mParametersSimulation.parameters.size(); i++)
+			for (int i = 0; i < mSimulationBSSRDF->get_parameters_copy().size(); i++)
 			{
 				data.push_back(new char[256]);
-				std::string s = gui_string(mParametersSimulation.parameters[i]);
+				std::string s = gui_string(mSimulationBSSRDF->get_parameters_copy()[i]);
 				s.copy(&data[i][0], s.size());
 				data[i][s.size()] = '\0';
 			}
 		}
 
-		for (int i = 0; i < mParametersSimulation.parameters.size(); i++)
+		for (int i = 0; i < 6; i++)
 		{
-            auto ns = BSSRDFParameterManager::get_parameter_names(mCurrentBssrdfRenderer->get_shape());
+            auto ns = EmpiricalBSSRDF::get_parameter_names(mCurrentBssrdfRenderer->get_shape());
 			if (ImGui::InputText((std::string("Simulated ") + ns[i]).c_str(), data[i], 256, ImGuiInputTextFlags_EnterReturnsTrue))
 			{
 				std::vector<float> c = tovalue<std::vector<float>>(std::string(data[i]));
 				std::string s = gui_string(c);
 				s.copy(&data[i][0], s.size());
-				mParametersSimulation.parameters[i].clear();
-				mParametersSimulation.parameters[i].insert(mParametersSimulation.parameters[i].begin(), c.begin(), c.end());
+                mSimulationBSSRDF->set_parameter_values(i, c);
 			}
 		}
 
 		if (ImmediateGUIDraw::Button("Reset parameters"))
 		{
-			mParametersSimulation.parameters = mParametersOriginal.parameters;
+            mSimulationBSSRDF->reset_parameters();
 		}
 	}
 
@@ -499,10 +496,10 @@ void FullBSSRDFGenerator::post_draw_callback()
 		current_render_task->on_draw();
 		if (current_render_task->is_active())
 		{
-			const float progress_total = flatten_index(mState.mData, mParametersSimulation.get_dimensions()) / (float)mParametersSimulation.get_size();
-			const auto dims = mParametersSimulation.get_dimensions();
+			const float progress_total = mSimulationState.flatten() / (float)mSimulationBSSRDF->get_material_geometry_combinations();
+			const auto dims = mSimulationBSSRDF->get_material_geometry_dimensions();
 			const size_t material_size = dims[theta_i_index] * dims[theta_s_index] * dims[r_index];
-			const float progress_bssrdf = (flatten_index(mState.mData, mParametersSimulation.get_dimensions()) % material_size) / (float)material_size;
+			const float progress_bssrdf = (mSimulationState.flatten() % material_size) / (float)material_size;
 			ImmediateGUIDraw::ProgressBar(progress_total, ImVec2(-1,0),"Simulation progress");
 			ImmediateGUIDraw::ProgressBar(progress_bssrdf, ImVec2(-1, 0),"Current material progress");
 
@@ -526,20 +523,23 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 void FullBSSRDFGenerator::start_rendering()
 {
+    auto parameters = mSimulationBSSRDF->get_parameters_copy();
 	Logger::info << "Simulation started. " << std::endl;
 	Logger::info << current_render_task->to_string() << std::endl;
 	Logger::info << "Destination file: " << current_render_task->get_destination_file() << std::endl;
-	Logger::info << "Eta:     " << tostring(mParametersSimulation.parameters[eta_index]) << std::endl;
-	Logger::info << "G:       " << tostring(mParametersSimulation.parameters[g_index]) << std::endl;
-	Logger::info << "Albedo:  " << tostring(mParametersSimulation.parameters[albedo_index]) << std::endl;
-	Logger::info << "Theta s: " << tostring(mParametersSimulation.parameters[theta_s_index]) << std::endl;
-	Logger::info << "R:       " << tostring(mParametersSimulation.parameters[r_index]) << std::endl;
-	Logger::info << "Theta i: " << tostring(mParametersSimulation.parameters[theta_i_index]) << std::endl;
+	Logger::info << "Eta:     " << tostring(parameters[eta_index]) << std::endl;
+	Logger::info << "G:       " << tostring(parameters[g_index]) << std::endl;
+	Logger::info << "Albedo:  " << tostring(parameters[albedo_index]) << std::endl;
+	Logger::info << "Theta s: " << tostring(parameters[theta_s_index]) << std::endl;
+	Logger::info << "R:       " << tostring(parameters[r_index]) << std::endl;
+	Logger::info << "Theta i: " << tostring(parameters[theta_i_index]) << std::endl;
 	current_render_task->start();
 
-	mExporter = std::make_unique<BSSRDFExporter>(mCurrentBssrdfRenderer->get_shape(), current_render_task->get_destination_file(), mParametersSimulation, mCurrentBssrdfRenderer->get_size().y, mCurrentBssrdfRenderer->get_size().x);
+    mSimulationBSSRDF->set_shape(mCurrentBssrdfRenderer->get_shape());
+    mSimulationBSSRDF->set_filename(current_render_task->get_destination_file());
+    mSimulationBSSRDF->set_hemisphere_size(mCurrentBssrdfRenderer->get_size().x, mCurrentBssrdfRenderer->get_size().x);
 
-	mState = ParameterState({ 0,0,0,0,0,0 });
+	mSimulationState = mSimulationBSSRDF->begin_index();
 
 	if (mSimulate)
 	{
@@ -550,13 +550,15 @@ void FullBSSRDFGenerator::start_rendering()
     mCurrentBssrdfRenderer->set_read_only(true);
 	float extinction = 1.0f;
 	float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
-	mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
+    mSimulationBSSRDF->get_parameters(mSimulationState, theta_i, r, theta_s, albedo, g, eta);
 
 	mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 	mCurrentBssrdfRenderer->set_material_parameters(albedo, extinction, g, eta);
 	mFastMode = false;
 	mPaused = false;
+    mSimulationBSSRDF->save_header(mSimulationBSSRDF->get_filename());
     mCurrentStartTime = currentTime();
+
 }
 
 void FullBSSRDFGenerator::update_rendering(float time_past)
@@ -565,34 +567,30 @@ void FullBSSRDFGenerator::update_rendering(float time_past)
 	{
 		if (current_render_task->is_finished())
 		{
-			Logger::info << "Simulation frame " << flatten_index(mState.mData, mParametersSimulation.get_dimensions()) + 1 << "/" << mParametersSimulation.get_size() << " complete. ";
+			Logger::info << "Simulation frame " << mSimulationState.flatten() + 1 << "/" << mSimulationBSSRDF->get_material_geometry_combinations() << " complete. ";
 			if (mSimulate)
 			{
 				Logger::info << std::dynamic_pointer_cast<BSSRDFRendererSimulated>(mCurrentBssrdfRenderer)->get_samples() << " samples. ";
 			}
 			float theta_i; optix::float2 r; optix::float2 theta_s; float albedo;  float g; float eta;
-			mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
+            mSimulationBSSRDF->get_parameters(mSimulationState, theta_i, r, theta_s, albedo, g, eta);
 			Logger::info <<  std::endl;
 
-			std::vector<size_t> original_state;
-			if (!mParametersOriginal.get_index(theta_i, r.x, theta_s.x, albedo, g, eta, original_state))
-				Logger::error << "Index mismatch" << std::endl;
-
             Logger::info << "Parameters: r " << r.x << " " << r.y << "; " << "theta_s " << theta_s.x << " " << theta_s.y << std::endl;
-			Logger::info << "Index: " << mState.tostring() << "(simulation) "<< ParameterState(original_state).tostring() << "(original) Parameters: eta " << eta << " g " << g << " albedo " << albedo << std::endl;
-			std::cout << "Average: " << std::scientific << average(mCurrentHemisphereData, mExporter->get_hemisphere_size()) << std::defaultfloat << std::endl;
-			mExporter->set_hemisphere(mCurrentHemisphereData, mState.mData);
-			mState = mParametersSimulation.next(mState);
+			Logger::info << "Index: " << mSimulationState.tostring() << "(simulation) Parameters: eta " << eta << " g " << g << " albedo " << albedo << std::endl;
+			std::cout << "Average: " << std::scientific << average(mCurrentHemisphereData, mSimulationBSSRDF->get_hemisphere_size()) << std::defaultfloat << std::endl;
+            mSimulationBSSRDF->set_hemisphere(mCurrentHemisphereData, mSimulationState);
+            mSimulationState = mSimulationState.next(mSimulationState);
 			float extinction = 1.0f;
 
-			if (!mParametersSimulation.is_valid(mState))
+			if (!mSimulationState.is_valid())
 			{
 				end_rendering();
                 mCurrentStartTime = currentTime();
 			}
 			else
 			{
-				mParametersSimulation.get_parameters(mState, theta_i, r, theta_s, albedo, g, eta);
+                mSimulationBSSRDF->get_parameters(mSimulationState, theta_i, r, theta_s, albedo, g, eta);
 				mCurrentBssrdfRenderer->set_geometry_parameters(theta_i, r, theta_s);
 				mCurrentBssrdfRenderer->set_material_parameters(albedo, extinction, g, eta);
 				current_render_task->start();
@@ -649,20 +647,21 @@ void FullBSSRDFGenerator::scene_initialized()
 
 void FullBSSRDFGenerator::set_external_bssrdf(const std::string & file)
 {
-	mLoader = std::make_unique<BSSRDFImporter>(file);
-	auto dim1 = mLoader->get_hemisphere_dimension_1();
-	auto dim2 = mLoader->get_hemisphere_dimension_2();
+	mLoadedBSSRDF = std::make_unique<EmpiricalBSSRDF>();
+    mLoadedBSSRDF->load_header(file);
+	auto dim1 = mLoadedBSSRDF->get_dimension_1();
+	auto dim2 = mLoadedBSSRDF->get_dimension_2();
 
-	auto sl = mLoader->get_material_slice_size();
+	auto sl = mLoadedBSSRDF->get_material_slice_size();
 	float * d2 = new float[sl];
-	mLoader->load_material_slice(d2, {0,0,0});
+    mLoadedBSSRDF->load_material_slice(d2, {0,0,0});
 	float mx = get_max(d2, sl);
 	Logger::info << "Calculated max: " << mx << std::endl;
 
 
 	mExternalBSSRDFBuffer->setSize(dim1,dim2);
 	float * data = (float*)mExternalBSSRDFBuffer->map();
-	mLoader->load_hemisphere(data, {0,0,0,0,0,0});
+    mLoadedBSSRDF->load_hemisphere(data, mLoadedBSSRDF->begin_index());
 	mExternalBSSRDFBuffer->unmap();
     set_render_mode(mCurrentRenderMode, mSimulate);
 }
@@ -694,8 +693,8 @@ void FullBSSRDFGenerator::set_render_mode(RenderMode m, bool isSimulated)
     }
     else
     {
-        if(mLoader != nullptr)
-            shape = mLoader->get_shape();
+        if(mLoadedBSSRDF != nullptr)
+            shape = mLoadedBSSRDF->get_shape();
     }
     m_context["reference_bssrdf_output_shape"]->setUserData(sizeof(OutputShape::Type), &shape);
 }
@@ -722,9 +721,13 @@ void FullBSSRDFGenerator::load_parameters(const std::string &config_file)
     cereal::XMLInputArchiveOptix archive(m_context, config_file);
     archive(cereal::make_nvp("data_folder", Folders::data_folder));
     archive(cereal::make_nvp("ptx_folder", Folders::ptx_path));
-    archive(cereal::make_nvp("eta_values", mParametersSimulation.parameters[eta_index]));
-    archive(cereal::make_nvp("albedo_values", mParametersSimulation.parameters[albedo_index]));
-    archive(cereal::make_nvp("g_values", mParametersSimulation.parameters[g_index]));
+	std::string tmp;
+    archive(cereal::make_nvp("eta_values", tmp));
+    mSimulationBSSRDF->set_parameter_values(eta_index, tovalue<std::vector<float>>(tmp));
+    archive(cereal::make_nvp("albedo_values",tmp));
+    mSimulationBSSRDF->set_parameter_values(albedo_index, tovalue<std::vector<float>>(tmp));
+    mSimulationBSSRDF->set_parameter_values(g_index, tovalue<std::vector<float>>(tmp));
+    archive(cereal::make_nvp("g_values", tmp));
 }
 
 void FullBSSRDFGenerator::save_parameters(const std::string &config_file)
@@ -732,7 +735,7 @@ void FullBSSRDFGenerator::save_parameters(const std::string &config_file)
     cereal::XMLOutputArchiveOptix archive(config_file);
     archive(cereal::make_nvp("data_folder", Folders::data_folder));
     archive(cereal::make_nvp("ptx_folder", Folders::ptx_path));
-    archive(cereal::make_nvp("eta_values", mParametersSimulation.parameters[eta_index]));
-    archive(cereal::make_nvp("albedo_values", mParametersSimulation.parameters[albedo_index]));
-    archive(cereal::make_nvp("g_values", mParametersSimulation.parameters[g_index]));
+    archive(cereal::make_nvp("eta_values", tostring(mSimulationBSSRDF->get_parameters_copy()[eta_index])));
+    archive(cereal::make_nvp("albedo_values", tostring(mSimulationBSSRDF->get_parameters_copy()[albedo_index])));
+    archive(cereal::make_nvp("g_values", tostring(mSimulationBSSRDF->get_parameters_copy()[g_index])));
 }
