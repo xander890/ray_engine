@@ -61,7 +61,7 @@ private:
 	optix::TextureSampler mBSSRDFHemisphereTexNearest = nullptr;
 	float mScaleMultiplier = 1.f;
 	unsigned int mShowFalseColors = 1;
-	unsigned int mInterpolation = 0;
+	unsigned int mInterpolation = 1;
 	int mFresnelMode = BSSRDF_RENDER_MODE_FULL_BSSRDF;
 	std::unique_ptr<ImmediateGUI> gui;
 
@@ -74,7 +74,7 @@ private:
 	int mSimulationMaxIterations = (int)1e9;
 
 	float * mCurrentHemisphereData = nullptr;
-	bool mPaused = true;
+	bool mPaused = false;
 	bool mFastMode = false;
     bool mNormalize = true;
 	bool mDebug = false;

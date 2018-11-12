@@ -47,5 +47,6 @@ public:
 
     int entry_point_sum = -1;
     optix::Buffer mBSSRDFSumBuffer;
+    ReferenceRendererPreset::Type mPreset = ReferenceRendererPreset::MCML_REFERENCE;
 };
 

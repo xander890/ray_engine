@@ -114,8 +114,10 @@ void FullBSSRDFGenerator::initialize_scene(GLFWwindow * window)
 	m_context["debug_index"]->setUint(optix::make_uint2(0, 0));
 	m_context["bad_color"]->setFloat(optix::make_float3(0.5, 0, 0));
 
-	mBssrdfReferenceSimulator = std::make_shared<ReferenceBSSRDFGPUMixed>(m_context, DEFAULT_SHAPE, optix::make_int2(100, 100), (int)10e5);
+	auto c = std::make_shared<ReferenceBSSRDFGPUMixed>(m_context, DEFAULT_SHAPE, optix::make_int2(160, 40), (int)10e5);
+    mBssrdfReferenceSimulator = c;
 	mBssrdfReferenceSimulator->init();
+    c->set_preset(ReferenceRendererPreset::MIXED_BIAS_REDUCTION);
 
 	mBssrdfModelSimulator = std::make_shared<BSSRDFRendererModel>(m_context);
 	mBssrdfModelSimulator->set_dipole(ScatteringDipole::FORWARD_SCATTERING_DIPOLE_BSSRDF);

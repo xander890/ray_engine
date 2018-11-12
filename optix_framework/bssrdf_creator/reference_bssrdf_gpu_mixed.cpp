@@ -63,11 +63,10 @@ bool ReferenceBSSRDFGPUMixed::on_draw(unsigned int flags)
         c.push_back(s.c_str());
     }
 
-    static ReferenceRendererPreset::Type rendering_preset;
-    if (ImmediateGUIDraw::Combo(GUI_LABEL("Rendering preset", mId), (int *) &rendering_preset, &c[0], c.size(), c.size()))
+    if (ImmediateGUIDraw::Combo(GUI_LABEL("Rendering preset", mId), (int *) &mPreset, &c[0], c.size(), c.size()))
     {
         changed = true;
-        set_preset(rendering_preset);
+        set_preset(mPreset);
     }
 
     changed |= ImmediateGUIDraw::Combo(GUI_LABEL("Renderer to use", mId), (int *) &mRendererToUse, "Renderer 1\0Renderer 2\0Both", 3);
@@ -135,6 +134,7 @@ optix::Buffer ReferenceBSSRDFGPUMixed::get_output_buffer()
 
 void ReferenceBSSRDFGPUMixed::set_preset(ReferenceRendererPreset::Type preset)
 {
+    mPreset = preset;
     switch (preset)
     {
 
