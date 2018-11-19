@@ -448,7 +448,7 @@ void FullBSSRDFGenerator::post_draw_callback()
 
 		if (data.size() == 0)
 		{
-			for (int i = 0; i < mSimulationBSSRDF->get_parameters_copy().size(); i++)
+			for (int i = 0; i < 6; i++)
 			{
 				data.push_back(new char[256]);
 				std::string s = gui_string(mSimulationBSSRDF->get_parameters_copy()[i]);
